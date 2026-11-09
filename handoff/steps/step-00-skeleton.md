@@ -2,7 +2,7 @@
 
 Step id: step-00-skeleton          Revision: r1
 Repo: https://github.com/G-TileEngine/tileengine (private; never push to `main`)
-Base commit: `<base: main @ the commit Chief Of Staff pushes with the kit>` (the Architect writes the hash here at publish). Today `main` holds only `README.md`; CoS's kit commit may also add `BUILD_GUIDE.md`, `docs/STATES.md` and `src/types/core-types.ts`. QA diffs `<base>..<head>`.
+Base commit: `b52eff7` on `main` (Chief Of Staff's kit push; parent `8039a33`). `main` holds `README.md`, `BUILD_GUIDE.md`, `docs/STATES.md`, `src/types/core-types.ts` and `handoff/`, so all three kit files are already at the base. QA diffs `b52eff7..<head>`.
 Branch: `step/step-00-skeleton-r<N>` (r1 first), created from the base **before your first commit** (`git checkout -b step/step-00-skeleton-r1`). Never commit to `main`. Finish with a PR to `main`.
 Hand-back location: in the repo, on that branch: `handback/step-00-skeleton/r<N>/` (see HAND-BACK.md)
 Depends on: nothing
