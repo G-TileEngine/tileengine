@@ -1,0 +1,4 @@
+ src/core/rng/index.ts  |   1 +
+ src/core/rng/rng.ts    |  64 ++++++++++++++++++++++++++++++
+ tests/core/rng.test.ts | 103 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 168 insertions(+)
