@@ -4,10 +4,32 @@ import type { Sq } from "../../types/core-types.ts";
 /** One step (`frames[i]`, effect-order §A). `ms` is whole sim ms (integer-ms law); `kind` is passed through, or null when absent. */
 export type FxStep = { readonly kind: string | null; readonly ms: number };
 
+export type FxRelease = "together" | "split";
+export type FxEase = "linear" | "out" | "in-out";
+export type FxRamp = { readonly from: number; readonly to: number };
+export type FxLook = {
+  readonly ease: FxEase;
+  readonly tint: { readonly from: string; readonly to: string } | null;
+  readonly scale: FxRamp | null;
+  readonly glow: FxRamp | null;
+  readonly fade: FxRamp | null;
+};
+export type FxSpread = { readonly jitter: number; readonly delay: number; readonly scale: number };
+export type FxStyle = {
+  readonly release: FxRelease;
+  readonly look: FxLook;
+  readonly spread: FxSpread;
+  readonly volley: boolean;                    // a row, a spin, or a free-fire: copies may spread
+  readonly carry: boolean;                     // a straight, a swerve, or a bounce: a later step may keep copies
+  readonly lock: "target" | "free" | null;
+  readonly count: number | null;
+};
 /** A read `fx-order` asset: the timing part of a SKILLRIG v1 block. Engine sequencing data, never game rules. */
 export type FxOrder = {
   readonly steps: readonly FxStep[];          // the steps that play, in list order (at most six)
   readonly inactive: readonly FxStep[];       // steps past the cap: kept, never played (see FX_FORMAT)
+  readonly styles: readonly FxStyle[];        // drawing data, one per playing step (look, release, copies)
+  readonly inactiveStyles: readonly FxStyle[]; // styles past the cap: kept, never played
   readonly connect: number;                   // fraction through the last step where the hit applies
   readonly damage: number | null;             // passed through untouched; null = no hit amount (effect-order §A)
   readonly raw: Readonly<Record<string, unknown>>;  // the parsed JSON, kept for later steps
@@ -81,3 +103,40 @@ export type FxShot = {
 /** Pierce flight lengths are the caller's input (presets hold the values). Whole ms; null when that mode is not used. */
 export type FxFlight = { readonly totalMs: number | null; readonly msPerTile: number | null };
 export type FxEffectPlan = FxPlan & { readonly notices: readonly Notice[] };
+
+/** Painter-facing look, release and copy data. Tunable clamps and the copy hash live in the caller's FxLookTune. */
+export type FxLookTune = {
+  readonly jitterMax: number;
+  readonly delayMax: number;
+  readonly spreadScaleMax: number;
+  readonly lookScaleMin: number;
+  readonly lookScaleMax: number;
+  readonly lookGlowMax: number;
+  readonly copyScaleMin: number;
+  readonly copyScaleMax: number;
+  readonly fillCount: number;
+  readonly unitA: number;
+  readonly unitB: number;
+  readonly unitC: number;
+  readonly scaleLane: number;
+  readonly inOut: number;
+};
+export type FxCopy = {
+  readonly index: number;
+  readonly dc: number;
+  readonly dr: number;
+  readonly scale: number;
+  readonly lag: number;
+  readonly startMs: number;
+};
+export type FxStepLook = {
+  readonly index: number;
+  readonly at: number;
+  readonly ms: number;
+  readonly look: FxLook;
+  readonly release: FxRelease;
+  readonly copies: readonly FxCopy[];
+};
+export type FxLookPlan = { readonly steps: readonly FxStepLook[]; readonly endMs: number; readonly notices: readonly Notice[] };
+export type FxLookSample = { readonly k: number; readonly tint: FxLook["tint"]; readonly scale: number | null; readonly glow: number | null; readonly fade: number | null };
+export type FxCopySample = { readonly u: number; readonly hidden: boolean; readonly scale: number; readonly dc: number; readonly dr: number };

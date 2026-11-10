@@ -1,5 +1,5 @@
 import type { Notice } from "../../core/notice.ts";
-import type { FxRead, FxReadLimits, FxStep } from "./types.ts";
+import type { FxEase, FxRamp, FxRead, FxReadLimits, FxStep, FxStyle } from "./types.ts";
 
 /** Format limits and fill-ins the docs state, each cited. The only numbers in src/fx; the rest come in FxReadLimits. */
 export const FX_FORMAT = {
@@ -18,6 +18,51 @@ function limitsOk(limits: FxReadLimits): boolean {
   const span = limits.minConnect >= 0 && limits.maxConnect <= 1 && limits.minConnect <= limits.maxConnect;
   return step && fill && span;
 }
+const num = (value: unknown): number | null => (typeof value === "number" && Number.isFinite(value) ? value : null);
+function frameKind(row: Record<string, unknown>): string | null {
+  if (typeof row.kind === "string") return row.kind;
+  const motion = plain(row.motion) ? row.motion : null;
+  return motion !== null && typeof motion.kind === "string" ? motion.kind : null;
+}
+function rampOf(value: unknown): FxRamp | null {
+  if (!plain(value)) return null;
+  const from = num(value.from);
+  const to = num(value.to);
+  if (from !== null && to !== null) return { from, to };
+  if (from !== null) return { from, to: from };
+  if (to !== null) return { from: to, to };
+  return null;
+}
+function styleOf(row: Record<string, unknown>, kind: string | null): FxStyle {
+  const look = plain(row.look) ? row.look : null;
+  const tint = look !== null && plain(look.tint) ? look.tint : null;
+  const tintFrom = tint !== null && typeof tint.from === "string" ? tint.from : null;
+  const tintTo = tint !== null && typeof tint.to === "string" ? tint.to : null;
+  const ease: FxEase = look !== null && (look.ease === "out" || look.ease === "in-out") ? look.ease : "linear";
+  const spread = plain(row.spread) ? row.spread : null;
+  const field = (value: unknown): number => { const got = num(value); return got === null ? 0 : got; };
+  const motion = plain(row.motion) ? row.motion : null;
+  const lock = motion !== null && (motion.lock === "free" || motion.lock === "target") ? motion.lock : null;
+  return {
+    release: row.release === "split" ? "split" : "together",
+    look: {
+      ease,
+      tint: tintFrom !== null && tintTo !== null ? { from: tintFrom, to: tintTo } : null,
+      scale: look === null ? null : rampOf(look.scale),
+      glow: look === null ? null : rampOf(look.glow),
+      fade: look === null ? null : rampOf(look.fade),
+    },
+    spread: {
+      jitter: spread === null ? 0 : field(spread.jitter),
+      delay: spread === null ? 0 : field(spread.delay),
+      scale: spread === null ? 0 : field(spread.scale),
+    },
+    volley: kind === "row" || kind === "orbit" || (kind === "straight" && lock === "free"),
+    carry: kind === "straight" || kind === "swerve" || kind === "bounce",
+    lock,
+    count: motion === null ? null : num(motion.count),
+  };
+}
 export function readFxOrder(text: string, limits: FxReadLimits): FxRead {
   if (!limitsOk(limits)) throw new RangeError("readFxOrder: limits out of range");
   const open = text.indexOf("{"), close = text.lastIndexOf("}");
@@ -29,7 +74,7 @@ export function readFxOrder(text: string, limits: FxReadLimits): FxRead {
   const notices: Notice[] = [];
   const all: FxStep[] = parsed.frames.map((frame) => {
     const row = plain(frame) ? frame : {};
-    const kind = typeof row.kind === "string" ? row.kind : null;
+    const kind = frameKind(row);
     const seconds = row.seconds;
     if (typeof seconds !== "number" || !Number.isFinite(seconds)) {
       notices.push(note("fxFilled", "A step with no length was filled in."));
@@ -42,6 +87,10 @@ export function readFxOrder(text: string, limits: FxReadLimits): FxRead {
   });
   const steps = all.slice(0, FX_FORMAT.maxSteps);
   const inactive = all.slice(FX_FORMAT.maxSteps);
+  const styled = parsed.frames.map((frame) => {
+    const row = plain(frame) ? frame : {};
+    return styleOf(row, frameKind(row));
+  });
   if (inactive.length > 0) notices.push(note("fxOverCap", "Steps past the cap are kept and not played."));
   let reel = false;
   for (const step of steps) reel = step.kind === "reel";
@@ -54,5 +103,5 @@ export function readFxOrder(text: string, limits: FxReadLimits): FxRead {
   const given = parsed.damage;
   const damage = typeof given === "number" && Number.isFinite(given) ? given : null;
   if (given !== undefined && given !== null && damage === null) notices.push(note("fxNotNumber", "The hit amount is not a number."));
-  return { order: { steps, inactive, connect, damage, raw: parsed }, notices };
+  return { order: { steps, inactive, styles: styled.slice(0, FX_FORMAT.maxSteps), inactiveStyles: styled.slice(FX_FORMAT.maxSteps), connect, damage, raw: parsed }, notices };
 }
