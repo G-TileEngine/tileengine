@@ -4,7 +4,7 @@ Step id: step-07-events-log          Revision: r<N> (r1 first; r2, r3… only af
 Repo: https://github.com/G-TileEngine/tileengine (read it; you do not push anything — see Delivery)
 Base commit: `<base: main's SHA after step-06-pipes was accepted>` (the Architect writes the hash here at publish; the diff is always `<base>..<head>`)
 Branch: `step/step-07-events-log-r<N>`, created from the base. Never commit to `main`. Chief Of Staff pushes your branch and opens the PR to `main`.
-Delivery (CN-003): `git bundle create step-07-events-log-r<N>.bundle <base>..step/step-07-events-log-r<N>`, then `git bundle verify`; upload the bundle plus a copy of HAND-BACK.md to the CEO's Drive. HANDBACK.md's PR line: `PR: opened by Chief Of Staff from the bundle`.
+Delivery (CN-003): `git bundle create step-07-events-log-r<N>.bundle <base>..step/step-07-events-log-r<N>`, then `git bundle verify`; upload the bundle plus a copy of HAND-BACK.md to the CEO's Drive. HANDBACK.md's PR line: `PR: opened by Chief Of Staff from the bundle`. On Drive, never move, rename, overwrite or delete any file you did not upload in this chat; if a file with your bundle's name already exists, add a suffix to yours (e.g. `-chatB`) and name it in the hand-back.
 Hand-back location: in the repo, on that branch: `handback/step-07-events-log/r<N>/` (HAND-BACK.md), committed as the branch's last commit
 Depends on: step-02-clock, step-04-units-occupancy, step-05-rng, step-06-pipes
 Read first: BUILD_GUIDE.md §2 law 5, M4, M9; §4 (command-log header)

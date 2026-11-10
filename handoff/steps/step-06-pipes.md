@@ -2,13 +2,13 @@
 
 Step id: step-06-pipes          Revision: r<N> (r1 first; r2, r3… only after a REJECT)
 Repo: https://github.com/G-TileEngine/tileengine (read it; you do not push anything — see Delivery)
-Base commit: `<base: main's SHA after step-05-rng was accepted>` (the Architect writes the hash here at publish; the diff is always `<base>..<head>`)
+Base commit: `bf383fe` on `main` (step-05-rng r1 build A merged, PR #6); the diff is always `bf383fe..<head>`
 Branch: `step/step-06-pipes-r<N>`, created from the base. Never commit to `main`. Chief Of Staff pushes your branch and opens the PR to `main`.
-Delivery (CN-003): `git bundle create step-06-pipes-r<N>.bundle <base>..step/step-06-pipes-r<N>`, then `git bundle verify`; upload the bundle plus a copy of HAND-BACK.md to the CEO's Drive. HANDBACK.md's PR line: `PR: opened by Chief Of Staff from the bundle`.
+Delivery (CN-003): `git bundle create step-06-pipes-r<N>.bundle bf383fe..step/step-06-pipes-r<N>`, then `git bundle verify`; upload the bundle plus a copy of HAND-BACK.md to the CEO's Drive. HANDBACK.md's PR line: `PR: opened by Chief Of Staff from the bundle`. On Drive, never move, rename, overwrite or delete any file you did not upload in this chat; if a file with your bundle's name already exists, add a suffix to yours (e.g. `-chatB`) and name it in the hand-back.
 Hand-back location: in the repo, on that branch: `handback/step-06-pipes/r<N>/` (HAND-BACK.md), committed as the branch's last commit
 Depends on: step-04-units-occupancy (also step-03 for `Grid`)
 Read first: BUILD_GUIDE.md §2 law 3, M9
-Kit: kit-2, 2026-11-09. Engine Architect. The interfaces below were prototyped and run green (`npm run green`) on Node 24.22.1 against `src/types/core-types.ts` sha256 `055a182c…`; since CN-004 (step 02) the repo holds `f00c722c0fc64322fcda7fe057c49ba6a94c3fd64c1b29f302c0bb3bb3492c23`, add-only: every type quoted here is unchanged. The prototype is not attached: write your own code to these quotes.
+Kit: kit-2, 2026-11-09. Engine Architect. The interfaces below were prototyped and run green (`npm run green`) on Node 24.22.1 against `src/types/core-types.ts` sha256 `055a182c…`; since CN-004 (step 02) the repo holds `f00c722c0fc64322fcda7fe057c49ba6a94c3fd64c1b29f302c0bb3bb3492c23`, add-only: every type quoted here is unchanged. `main` `bf383fe` is green with it (Architect check, 72/0). The prototype is not attached: write your own code to these quotes.
 
 > Working style: use your helper agents, take your time, self-review against Acceptance + QA checklist before hand-back (see BUILD_GUIDE).
 
