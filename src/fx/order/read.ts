@@ -7,6 +7,7 @@ export const FX_FORMAT = {
   maxSteps: 6,                       // six steps at most (SKILLRIG.md:36); 7+ kept inactive (project-format §6.7 K-4)
   connect: 0.92, reelConnect: 0.42,  // missing connect: 0.92, an old reel 0.42 (SKILLRIG.md:178, :165)
   msPerSecond: 1000,
+  maxTaps: 8,                        // a bounce hits at most eight tapped squares (SKILLRIG.md:94)
 } as const;
 
 const note = (code: string, message: string): Notice => ({ code, message });
