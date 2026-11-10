@@ -1,0 +1,56 @@
+
+> tileengine-engine@0.0.0 test
+> node --test "tests/**/*.test.ts"
+
+TAP version 13
+# Subtest: gates: check:state passes on src and on a clean fixture
+ok 1 - gates: check:state passes on src and on a clean fixture
+  ---
+  duration_ms: 40.990268
+  type: 'test'
+  ...
+# Subtest: gates: check:state fails on direct phase writes and a second transition function
+ok 2 - gates: check:state fails on direct phase writes and a second transition function
+  ---
+  duration_ms: 19.159155
+  type: 'test'
+  ...
+# Subtest: gates: check:law passes on src and fails on a law-breaking core fixture
+ok 3 - gates: check:law passes on src and fails on a law-breaking core fixture
+  ---
+  duration_ms: 156.503232
+  type: 'test'
+  ...
+# Subtest: gates: eslint allows the frame loop only in src/runtime/host/raf-driver.ts
+ok 4 - gates: eslint allows the frame loop only in src/runtime/host/raf-driver.ts
+  ---
+  duration_ms: 496.005125
+  type: 'test'
+  ...
+# Subtest: gates: eslint rejects wall time, Math.random, rule words and upward imports in src/core
+ok 5 - gates: eslint rejects wall time, Math.random, rule words and upward imports in src/core
+  ---
+  duration_ms: 40.567069
+  type: 'test'
+  ...
+# Subtest: smoke: engine root exports name and version
+ok 6 - smoke: engine root exports name and version
+  ---
+  duration_ms: 0.917642
+  type: 'test'
+  ...
+# Subtest: smoke: core-types.ts is the pinned DSK copy
+ok 7 - smoke: core-types.ts is the pinned DSK copy
+  ---
+  duration_ms: 0.561027
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1025.161526

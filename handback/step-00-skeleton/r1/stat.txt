@@ -1,0 +1,18 @@
+ .dependency-cruiser.cjs                   | 20 ++++++++++++
+ .gitignore                                |  5 +++
+ eslint.config.mjs                         | 54 +++++++++++++++++++++++++++++++
+ package.json                              | 26 +++++++++++++++
+ scripts/check-law.sh                      | 36 +++++++++++++++++++++
+ scripts/check-state.sh                    | 23 +++++++++++++
+ src/core/.gitkeep                         |  0
+ src/index.ts                              |  3 ++
+ src/state/.gitkeep                        |  0
+ tests/fixtures/law-bad/core/bad.ts        |  4 +++
+ tests/fixtures/law-bad/rules/deck.ts      |  2 ++
+ tests/fixtures/law-good/rules/cardinal.ts |  2 ++
+ tests/fixtures/state-bad/bad.ts           |  5 +++
+ tests/fixtures/state-good/state/xgo.ts    |  4 +++
+ tests/gates.test.ts                       | 51 +++++++++++++++++++++++++++++
+ tests/smoke.test.ts                       | 15 +++++++++
+ tsconfig.json                             | 23 +++++++++++++
+ 17 files changed, 273 insertions(+)
