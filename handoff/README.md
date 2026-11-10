@@ -1,6 +1,6 @@
 # Grok Build kit (kit-2, 2026-11-09)
 
-Owner: Engine Architect. **Status: kit-2 — QA's kit-review findings B1, B2, M1–M4 addressed; steps 00–07 written. Ready for QA's re-review, then Chief Of Staff. Not sent to Grok Build yet.** Canonical location: `/workspace/tileengine/handoff/` (this folder). The older copy in `/workspace/tileengine/docs/grok-build-kit/` is superseded. The workflow background is in `/workspace/tileengine/docs/grok-build-handoff-plan.md` (DRAFT; the decisions below win where they differ).
+Owner: Engine Architect. **Status: kit-2 — QA's kit-review findings B1, B2, M1–M4 addressed; steps 00–08 written. Ready for QA's re-review, then Chief Of Staff. Not sent to Grok Build yet.** Canonical location: `/workspace/tileengine/handoff/` (this folder). The older copy in `/workspace/tileengine/docs/grok-build-kit/` is superseded. The workflow background is in `/workspace/tileengine/docs/grok-build-handoff-plan.md` (DRAFT; the decisions below win where they differ).
 
 ## Where things go
 - **Repo:** https://github.com/G-TileEngine/tileengine (visibility is the CEO's call). `README.md` on `main` is owned by CoS; steps never edit it. Nobody pushes to `main`; it changes only by merged PR.
@@ -31,8 +31,9 @@ Owner: Engine Architect. **Status: kit-2 — QA's kit-review findings B1, B2, M1
 | `steps/step-05-rng.md` | mulberry32, named streams, save/restore, golden vectors | 00 | 153 |
 | `steps/step-06-pipes.md` | UNIT and TILE only; edge targets = TILE + side; no target = no pipe; roster; `toCell` | 03, 04 | 152 |
 | `steps/step-07-events-log.md` | Core events (DSK `CoreEventMap` incl. `actionLogged`; `LogSeq` 0 = none applied) with a mode registry; M4 actions; command log + header; unit-level replay | 02, 04, 05, 06 | 192 |
+| `steps/step-08-project-reader.md` | Read-only project reader: map, stage, manifest, placements (structure only, `stage.seed` as-is); carries CN-005 | 03, 05 | 173 |
 
-Later (outlines in `/workspace/tileengine/docs/core-spine-slices.md`): step-08 project reader, step-09 sim harness (`SimSnapshot`, `replayTicks(n)`, headless `advance(ms)`), step-10 effect order rebuilt from the design docs (`docs/effect-order-from-docs.md`; no BTF copy, CEO 2026-11-09) + lane-label adapter.
+Later (outlines in `/workspace/tileengine/docs/core-spine-slices.md`): step-09 sim harness (`SimSnapshot`, `replayTicks(n)`, headless `advance(ms)`), step-10 effect order rebuilt from the design docs (`docs/effect-order-from-docs.md`; no BTF copy, CEO 2026-11-09) + lane-label adapter.
 
 **Verification:** step 00 was rebuilt from its file alone in a clean `/tmp` folder and is green (`pass 7`). Every interface quoted in steps 01–07 was prototyped on top of it and the prototype is green (all six gates); the golden RNG vectors, the clock worked example and the push/hook logs come from that prototype.
 
@@ -54,7 +55,7 @@ Later (outlines in `/workspace/tileengine/docs/core-spine-slices.md`): step-08 p
 | §2 outcomes, rework, 3 rejects | HAND-BACK "Outcomes and rework" (`step/<step-id>-r<N+1>` branch, new PR, same base) |
 | §2 Change Notice | CHANGE-NOTICE-TEMPLATE.md + `change-notices/`; CN-001 issued |
 | §5.1 guide contents | BUILD_GUIDE §1–§9 |
-| §5.2 six sections, 150–400 lines | STEP-TEMPLATE; steps 00–07 are 150–400 lines each (table above) |
+| §5.2 six sections, 150–400 lines | STEP-TEMPLATE; steps 00–08 are 150–400 lines each (table above) |
 | §5.3 one version of each signature | STATES §4 = the only `Phase`/`Event`/`xGo` quote; sim time = integer ms in GUIDE, STATES, ARCH §2.3 and step 02 (CN-001); one rAF path string |
 | §5.4 step 0 = Grok Build's example + `check:state` | `steps/step-00-skeleton.md`; re-pinned core-types sha; green from a clean copy |
 | §5.5 where hand-backs go and base commit | HAND-BACK "Where" + every step header (repo, base, branch, in-repo hand-back) |
