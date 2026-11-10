@@ -2,11 +2,11 @@
 
 Step id: step-01-state-tables          Revision: r<N> (r1 first; r2, r3… only after a REJECT)
 Repo: https://github.com/G-TileEngine/tileengine (read it; you do not push anything — see Delivery)
-Base commit: `a30041e` on `main` (step-00-skeleton r1 merged, PR #1); the diff is always `a30041e..<head>`
+Base commit: `6b10de4` on `main` (6b10de48d568c5266247c05f1c63f0abbaa8d1c9: step-00-skeleton r1 merged as a30041e, then the CN-002/CN-003 kit docs); the diff is always `6b10de4..<head>`
 Branch: `step/step-01-state-tables-r<N>`, created from the base. Never commit to `main`. Chief Of Staff pushes your branch and opens the PR to `main`.
 Hand-back location: in the repo, on that branch: `handback/step-01-state-tables/r<N>/` (HAND-BACK.md), committed as the branch's last commit
-Delivery: `git bundle create step-01-state-tables-r<N>.bundle a30041e..step/step-01-state-tables-r<N>`, then `git bundle verify` it; upload the bundle and a copy of HAND-BACK.md to the CEO's Drive. In HAND-BACK.md write `PR: opened by Chief Of Staff from the bundle` (never a stale or guessed PR state; QA note, step 00).
-Carries: CN-002 (attached; `change-notices/CN-002-no-card-types-camelcase.md`) and CN-003 (attached; delivery by bundle — BUILD_GUIDE §8 and HAND-BACK.md on `main` already say the same once CoS pushes them). Node: record `node -v` in the hand-back; use Node 24 (the kit's version) — `.nvmrc` below pins it.
+Delivery: `git bundle create step-01-state-tables-r<N>.bundle 6b10de4..step/step-01-state-tables-r<N>`, then `git bundle verify` it; upload the bundle and a copy of HAND-BACK.md to the CEO's Drive. In HAND-BACK.md write `PR: opened by Chief Of Staff from the bundle` (never a stale or guessed PR state; QA note, step 00).
+Carries: CN-002 (attached; `change-notices/CN-002-no-card-types-camelcase.md`) and CN-003 (attached; delivery by bundle — BUILD_GUIDE §8 and HAND-BACK.md at the base already say the same). Node: record `node -v` in the hand-back; use Node 24 (the kit's version) — `.nvmrc` below pins it.
 Depends on: step-00-skeleton
 Read first: BUILD_GUIDE.md §2 (M2), §5; `docs/STATES.md` §2, §3, §4, §6 (all binding for this step)
 Kit: kit-2, 2026-11-09. Engine Architect. The interfaces below were prototyped and run green (`npm run green`) on Node 24.22.1 against `src/types/core-types.ts` sha256 `055a182cee1b5b674388c63d0a316b3df5cb97626d383f9c9e86a65debd402a3`. The prototype is not attached: write your own code to these quotes.
