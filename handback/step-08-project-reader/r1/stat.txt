@@ -1,0 +1,16 @@
+ .dependency-cruiser.cjs                    |   2 +-
+ src/project/read/guard.ts                  |  33 ++++++
+ src/project/read/index.ts                  |   7 ++
+ src/project/read/manifest.ts               |  26 +++++
+ src/project/read/map.ts                    |  42 +++++++
+ src/project/read/placements.ts             |  44 +++++++
+ src/project/read/stage.ts                  |  82 +++++++++++++
+ tests/fixtures/project/map-12x12.json      | 181 +++++++++++++++++++++++++++++
+ tests/fixtures/project/map-6x9.json        |  71 +++++++++++
+ tests/fixtures/project/stage-fixed.json    |  72 ++++++++++++
+ tests/fixtures/project/stage-weighted.json |  56 +++++++++
+ tests/project/guard.test.ts                |  38 ++++++
+ tests/project/map.test.ts                  |  32 +++++
+ tests/project/placements.test.ts           |  46 ++++++++
+ tests/project/stage.test.ts                |  27 +++++
+ 15 files changed, 758 insertions(+), 1 deletion(-)

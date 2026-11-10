@@ -1,0 +1,15 @@
+M	.dependency-cruiser.cjs
+A	src/project/read/guard.ts
+A	src/project/read/index.ts
+A	src/project/read/manifest.ts
+A	src/project/read/map.ts
+A	src/project/read/placements.ts
+A	src/project/read/stage.ts
+A	tests/fixtures/project/map-12x12.json
+A	tests/fixtures/project/map-6x9.json
+A	tests/fixtures/project/stage-fixed.json
+A	tests/fixtures/project/stage-weighted.json
+A	tests/project/guard.test.ts
+A	tests/project/map.test.ts
+A	tests/project/placements.test.ts
+A	tests/project/stage.test.ts
