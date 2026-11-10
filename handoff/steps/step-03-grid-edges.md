@@ -2,13 +2,13 @@
 
 Step id: step-03-grid-edges          Revision: r<N> (r1 first; r2, r3… only after a REJECT)
 Repo: https://github.com/G-TileEngine/tileengine (read it; you do not push anything — see Delivery)
-Base commit: `<base: main's SHA after step-02-clock was accepted>` (the Architect writes the hash here at publish; the diff is always `<base>..<head>`)
+Base commit: `9c540c9` on `main` (step-02-clock r1 build A merged, PR #3); the diff is always `9c540c9..<head>`
 Branch: `step/step-03-grid-edges-r<N>`, created from the base. Never commit to `main`. Chief Of Staff pushes your branch and opens the PR to `main`.
-Delivery (CN-003): `git bundle create step-03-grid-edges-r<N>.bundle <base>..step/step-03-grid-edges-r<N>`, then `git bundle verify`; upload the bundle plus a copy of HAND-BACK.md to the CEO's Drive. HANDBACK.md's PR line: `PR: opened by Chief Of Staff from the bundle`.
+Delivery (CN-003): `git bundle create step-03-grid-edges-r<N>.bundle 9c540c9..step/step-03-grid-edges-r<N>`, then `git bundle verify`; upload the bundle plus a copy of HAND-BACK.md to the CEO's Drive. HANDBACK.md's PR line: `PR: opened by Chief Of Staff from the bundle`.
 Hand-back location: in the repo, on that branch: `handback/step-03-grid-edges/r<N>/` (HAND-BACK.md), committed as the branch's last commit
 Depends on: step-00-skeleton (independent of 01–02 in code; ordered after them)
 Read first: BUILD_GUIDE.md §2 laws 2, 10, M8; §4 (types: one source)
-Kit: kit-2, 2026-11-09. Engine Architect. The interfaces below were prototyped and run green (`npm run green`) on Node 24.22.1 against `src/types/core-types.ts` sha256 `055a182c…`; since CN-004 (step 02) the repo holds `f00c722c0fc64322fcda7fe057c49ba6a94c3fd64c1b29f302c0bb3bb3492c23`, add-only: every type quoted here is unchanged. The prototype is not attached: write your own code to these quotes.
+Kit: kit-2, 2026-11-09. Engine Architect. The interfaces below were prototyped and run green (`npm run green`) on Node 24.22.1 against `src/types/core-types.ts` sha256 `055a182c…`; since CN-004 (step 02) the repo holds `f00c722c0fc64322fcda7fe057c49ba6a94c3fd64c1b29f302c0bb3bb3492c23`, add-only: every type quoted here is unchanged. `main` `9c540c9` is green with it (Architect check, 33/0). The prototype is not attached: write your own code to these quotes.
 
 > Working style: use your helper agents, take your time, self-review against Acceptance + QA checklist before hand-back (see BUILD_GUIDE).
 
@@ -129,7 +129,7 @@ Edge storage with an opposite canonical side: `chess/game/towerTerrain.ts:58` `E
 ## Do not touch
 - `src/types/core-types.ts`, `BUILD_GUIDE.md`, `docs/STATES.md`, `scripts/check-state.sh`, `scripts/check-law.sh`, `eslint.config.mjs`, `.dependency-cruiser.cjs`, `tsconfig.json` (change only by Change Notice).
 - `package.json` and `package-lock.json`: no new dependency, no script change.
-- `tests/smoke.test.ts`, `tests/gates.test.ts`, `tests/fixtures/**`.
+- `tests/smoke.test.ts`, `tests/gates.test.ts`, `tests/fixtures/**`, except the two new files this step creates: `tests/fixtures/maps/grid-4x3.json` and `tests/fixtures/maps/grid-6x9.json`.
 - Anything outside this repo: `/workspace/g-tile-engine/**`, `/workspace/tileengine/**`, `/workspace/towerchess*`. Read BTF intent only from the file:line notes quoted here; never open or copy BTF code.
 - `src/state/**`, `src/core/clock/**`, `src/rules/**`.
 - No `src/core/path/**` (future module).
@@ -143,7 +143,7 @@ Edge storage with an opposite canonical side: `chess/game/towerTerrain.ts:58` `E
 - [ ] `rg -n -i 'phase|hp|damage|cost' src/core` prints nothing.
 - [ ] `rg -n 'push_into_walls' src/core/grid` prints nothing (knob not read by the grid).
 - [ ] Every non-fatal case in Behaviour 2–4 yields a notice with the exact code (tests above).
-- [ ] `git diff --stat <base>..<head> -- . ':!package-lock.json' ':!handback'` shows ≤ 400 changed lines (src + tests); each file within its size limit above.
+- [ ] `git diff --stat <base>..<head> -- . ':!package-lock.json' ':!handback' ':!tests/fixtures/maps/grid-4x3.json' ':!tests/fixtures/maps/grid-6x9.json'` shows ≤ 400 changed lines (src + tests); each file within its size limit above. The two JSON fixtures are excluded from the cap (Size, STEP-TEMPLATE).
 - [ ] `git diff --name-status <base>..<head> -- . ':!handback'` lists exactly the files in "Files to create or change" (anything extra is named and justified in the Decisions note).
 - [ ] Hand-back `handback/step-03-grid-edges/r<N>/` complete per HAND-BACK.md, with the PR line as in Delivery; the bundle verifies and its branch tip is the hand-back commit; nothing committed to `main`.
 
