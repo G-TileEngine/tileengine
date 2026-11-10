@@ -1,0 +1,13 @@
+ .dependency-cruiser.cjs              |  1 +
+ package.json                         |  1 +
+ scripts/sim.ts                       | 32 ++++++++++++++++++++++++
+ src/runtime/input/gestures.ts        | 41 +++++++++++++++++++++++++++++++
+ src/runtime/input/index.ts           |  2 ++
+ src/runtime/input/types.ts           | 29 ++++++++++++++++++++++
+ src/sim/driver-phase.ts              |  3 ++-
+ src/sim/index.ts                     |  1 +
+ src/sim/intents.ts                   | 25 +++++++++++++++++++
+ tests/runtime/input/gestures.test.ts | 47 ++++++++++++++++++++++++++++++++++++
+ tests/sim/intents.test.ts            | 43 +++++++++++++++++++++++++++++++++
+ tests/sim/script.test.ts             | 11 +++++++++
+ 12 files changed, 235 insertions(+), 1 deletion(-)
