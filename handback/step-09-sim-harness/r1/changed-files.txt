@@ -1,0 +1,9 @@
+A	src/sim/actions.ts
+A	src/sim/index.ts
+A	src/sim/run.ts
+A	src/sim/types.ts
+A	src/sim/world.ts
+A	tests/sim/actions.test.ts
+A	tests/sim/input.ts
+A	tests/sim/replay.test.ts
+A	tests/sim/world.test.ts

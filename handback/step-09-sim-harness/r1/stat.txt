@@ -1,0 +1,10 @@
+ src/sim/actions.ts        | 18 ++++++++++++++++
+ src/sim/index.ts          |  4 ++++
+ src/sim/run.ts            | 51 ++++++++++++++++++++++++++++++++++++++++++++++
+ src/sim/types.ts          | 42 ++++++++++++++++++++++++++++++++++++++
+ src/sim/world.ts          | 43 +++++++++++++++++++++++++++++++++++++++
+ tests/sim/actions.test.ts | 33 ++++++++++++++++++++++++++++++
+ tests/sim/input.ts        | 14 +++++++++++++
+ tests/sim/replay.test.ts  | 52 +++++++++++++++++++++++++++++++++++++++++++++++
+ tests/sim/world.test.ts   | 37 +++++++++++++++++++++++++++++++++
+ 9 files changed, 294 insertions(+)
