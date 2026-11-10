@@ -8,7 +8,7 @@ Delivery (CN-003): `git bundle create step-03-grid-edges-r<N>.bundle <base>..ste
 Hand-back location: in the repo, on that branch: `handback/step-03-grid-edges/r<N>/` (HAND-BACK.md), committed as the branch's last commit
 Depends on: step-00-skeleton (independent of 01–02 in code; ordered after them)
 Read first: BUILD_GUIDE.md §2 laws 2, 10, M8; §4 (types: one source)
-Kit: kit-2, 2026-11-09. Engine Architect. The interfaces below were prototyped and run green (`npm run green`) on Node 24.22.1 against `src/types/core-types.ts` sha256 `055a182cee1b5b674388c63d0a316b3df5cb97626d383f9c9e86a65debd402a3`. The prototype is not attached: write your own code to these quotes.
+Kit: kit-2, 2026-11-09. Engine Architect. The interfaces below were prototyped and run green (`npm run green`) on Node 24.22.1 against `src/types/core-types.ts` sha256 `055a182c…`; since CN-004 (step 02) the repo holds `f00c722c0fc64322fcda7fe057c49ba6a94c3fd64c1b29f302c0bb3bb3492c23`, add-only: every type quoted here is unchanged. The prototype is not attached: write your own code to these quotes.
 
 > Working style: use your helper agents, take your time, self-review against Acceptance + QA checklist before hand-back (see BUILD_GUIDE).
 
