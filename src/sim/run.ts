@@ -28,12 +28,13 @@ export function snapshot(world: SimWorld): SimSnapshot {
       offset: u.offset === null ? null : { dx: u.offset.dx, dy: u.offset.dy }, facing: u.facing, alive: u.alive,
     })),
     occupancy,
+    phases: { ...world.phases },
     logSeq: log.lastSeq(),
   };
 }
 export function replay(input: SimInput, log: CommandLog, untilTick: number): SimWorld {
   const world = createWorld({ ...input, hostSeed: log.header.seed });
-  if (world.seed !== log.header.seed) throw new Error(`seed ${world.seed}`);
+  if (world.seed !== log.header.seed) throw new Error(`replay: world seed ${world.seed} is not the log seed ${log.header.seed}`);
   let at = 0;
   for (const entry of log.entries()) {
     if (entry.tick > untilTick) break;
@@ -46,6 +47,7 @@ export function replay(input: SimInput, log: CommandLog, untilTick: number): Sim
 }
 export function restore(input: SimInput, log: CommandLog, snap: SimSnapshot): SimWorld {
   const world = replay(input, log, snap.tick);
+  world.phases = { ...snap.phases };
   if (JSON.stringify(snapshot(world)) !== JSON.stringify(snap)) throw new Error("restore: snapshot does not match the log");
   return world;
 }
