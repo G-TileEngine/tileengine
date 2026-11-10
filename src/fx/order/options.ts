@@ -13,6 +13,20 @@ export const FX_OPTION_VALUES: { readonly [K in keyof FxOptions]: readonly FxOpt
   simultaneous_wipe: ["draw", "attacker_wins", "defender_wins"],
   seam_object_vs_immaculate_ray: ["blocks", "passes"],
   obstacles_block_leap: [false, true],
+  landing_neighbours: ["eight", "four"],
+  landing_across_seam: ["blocked", "allowed"],
+  multi_hit_order: ["near_to_far"],
+  rehit_same_body: ["never"],
+  simultaneous_hits: ["sequential_list_order"],
+  crossing_order: ["by_due_time_then_seq"],
+  trap_trigger: ["any_move_end", "voluntary_steps_only"],
+  modifier_stacking: ["additive_before_mitigation"],
+  turn_end_effects: ["at_next_side_start", "side_end"],
+  stun_count: ["victim_turn_start"],
+  last_stand_release: ["before_held_deaths_and_ticks"],
+  fuse_pause_during: ["spells", "all_resolution"],
+  pierce_flight: ["fixed_total", "per_tile"],
+  impact_burst: ["per_body", "once_at_contact"],
 };
 
 /** Values that follow a design doc, not current play (effect-order-from-docs.md, silent spots: reel and knock). */
