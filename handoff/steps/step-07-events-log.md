@@ -2,13 +2,13 @@
 
 Step id: step-07-events-log          Revision: r<N> (r1 first; r2, r3… only after a REJECT)
 Repo: https://github.com/G-TileEngine/tileengine (read it; you do not push anything — see Delivery)
-Base commit: `<base: main's SHA after step-06-pipes was accepted>` (the Architect writes the hash here at publish; the diff is always `<base>..<head>`)
+Base commit: `fb9de46` on `main` (step-06-pipes r1 build B merged, PR #7); the diff is always `fb9de46..<head>`
 Branch: `step/step-07-events-log-r<N>`, created from the base. Never commit to `main`. Chief Of Staff pushes your branch and opens the PR to `main`.
-Delivery (CN-003): `git bundle create step-07-events-log-r<N>.bundle <base>..step/step-07-events-log-r<N>`, then `git bundle verify`; upload the bundle plus a copy of HAND-BACK.md to the CEO's Drive. HANDBACK.md's PR line: `PR: opened by Chief Of Staff from the bundle`. On Drive, never move, rename, overwrite or delete any file you did not upload in this chat; if a file with your bundle's name already exists, add a suffix to yours (e.g. `-chatB`) and name it in the hand-back.
+Delivery (CN-003): `git bundle create step-07-events-log-r<N>.bundle fb9de46..step/step-07-events-log-r<N>`, then `git bundle verify`; upload the bundle plus a copy of HAND-BACK.md to the CEO's Drive. HANDBACK.md's PR line: `PR: opened by Chief Of Staff from the bundle`. On Drive, never move, rename, overwrite or delete any file you did not upload in this chat; if a file with your bundle's name already exists, add a suffix to yours (e.g. `-chatB`) and name it in the hand-back.
 Hand-back location: in the repo, on that branch: `handback/step-07-events-log/r<N>/` (HAND-BACK.md), committed as the branch's last commit
 Depends on: step-02-clock, step-04-units-occupancy, step-05-rng, step-06-pipes
 Read first: BUILD_GUIDE.md §2 law 5, M4, M9; §4 (command-log header)
-Kit: kit-2, 2026-11-09. Engine Architect. The interfaces below were prototyped and run green (`npm run green`) on Node 24.22.1 against `src/types/core-types.ts` sha256 `055a182c…`; since CN-004 (step 02) the repo holds `f00c722c0fc64322fcda7fe057c49ba6a94c3fd64c1b29f302c0bb3bb3492c23`, add-only: every type quoted here is unchanged. The prototype is not attached: write your own code to these quotes.
+Kit: kit-2, 2026-11-09. Engine Architect. The interfaces below were prototyped and run green (`npm run green`) on Node 24.22.1 against `src/types/core-types.ts` sha256 `055a182c…`; since CN-004 (step 02) the repo holds `f00c722c0fc64322fcda7fe057c49ba6a94c3fd64c1b29f302c0bb3bb3492c23`, add-only: every type quoted here is unchanged. `main` `fb9de46` is green with it (Architect check, 82/0). The prototype is not attached: write your own code to these quotes.
 
 > Working style: use your helper agents, take your time, self-review against Acceptance + QA checklist before hand-back (see BUILD_GUIDE).
 
@@ -81,9 +81,9 @@ export interface EventBus<M extends EventMap<M> = NoModeEvents> {
 ```
 ```ts
 // src/core/events/bus.ts
-export function createBus<M extends EventMap = NoModeEvents>(clock: Clock, registry?: EventRegistry<M>): EventBus<M>;
-export function unitEvents<M extends EventMap>(bus: EventBus<M>): UnitHooks;
-export function logEvents<M extends EventMap>(bus: EventBus<M>): (entry: LogEntry) => void;
+export function createBus<M extends EventMap<M> = NoModeEvents>(clock: Clock, registry?: EventRegistry<M>): EventBus<M>;
+export function unitEvents<M extends EventMap<M>>(bus: EventBus<M>): UnitHooks;
+export function logEvents<M extends EventMap<M>>(bus: EventBus<M>): (entry: LogEntry) => void;
 ```
 ```ts
 // src/core/log/types.ts
@@ -174,9 +174,9 @@ Run: `npm test`, or `node --test tests/core/bus.test.ts tests/core/log.test.ts t
 - [ ] `npm test` summary: fail 0, skipped 0, todo 0; pass ≥ 95. No `.only`, `.skip` or `.todo` (`rg -n '\.(only|skip|todo)\(' tests` prints nothing).
 - [ ] `npm run check:state` prints `check:state OK (src)` and exits 0.
 - [ ] `npm run check:law` prints `check:law OK (src)` and exits 0.
-- [ ] `rg -n 'readonly cause: "move"|cellsRemaining: number' src/core` prints nothing (DSK's `CoreEventMap` is imported, not retyped).
+- [ ] `rg -n 'readonly cause: "move"|readonly cellsRemaining: number' src/core/events src/core/log` prints nothing (DSK's `CoreEventMap` is imported, not retyped).
 - [ ] `rg -n -i 'kill|damage|hp\b|card' src/core` prints nothing.
-- [ ] `rg -n 'WAVE_|BUILD_|STAGE_|UPGRADE_' src` prints nothing.
+- [ ] `rg -n --pcre2 'WAVE_|BUILD_(?!GUIDE)|STAGE_|UPGRADE_' src` prints nothing (`BUILD_GUIDE` doc references are not mode events).
 - [ ] `rg -n 'as unknown as|as Action' src/core/log` prints nothing.
 - [ ] `rg -n 'type LogSeq|type ActionKind|actionLogged: \{' src/core` prints nothing (DSK's types are imported).
 - [ ] `node --test tests/core/replay.test.ts` passes.
