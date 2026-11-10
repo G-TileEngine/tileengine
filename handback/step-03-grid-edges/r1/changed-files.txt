@@ -1,0 +1,8 @@
+A	src/core/grid/grid.ts
+A	src/core/grid/index.ts
+A	src/core/grid/types.ts
+A	src/core/notice.ts
+A	tests/core/edges.test.ts
+A	tests/core/grid.test.ts
+A	tests/fixtures/maps/grid-4x3.json
+A	tests/fixtures/maps/grid-6x9.json

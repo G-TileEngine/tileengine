@@ -1,0 +1,7 @@
+ src/core/grid/grid.ts    | 131 +++++++++++++++++++++++++++++++++++++++++++++++
+ src/core/grid/index.ts   |   3 ++
+ src/core/grid/types.ts   |  27 ++++++++++
+ src/core/notice.ts       |   4 ++
+ tests/core/edges.test.ts |  67 ++++++++++++++++++++++++
+ tests/core/grid.test.ts  | 121 +++++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 353 insertions(+)
