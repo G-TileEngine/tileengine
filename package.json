@@ -14,6 +14,7 @@
     "deps": "depcruise src --config .dependency-cruiser.cjs",
     "check:state": "sh scripts/check-state.sh",
     "check:law": "sh scripts/check-law.sh",
+    "sim": "node scripts/sim.ts",
     "green": "npm test && npm run typecheck && npm run lint && npm run deps && npm run check:state && npm run check:law"
   },
   "devDependencies": {

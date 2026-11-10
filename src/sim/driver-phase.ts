@@ -11,7 +11,8 @@ export function runMatch(world: SimWorld, opts: MatchOptions): MatchResult {
   const events: Event[] = [];
   const mark = (e: Event): void => {
     events.push(e);
-    const battle = world.phases.battle ?? "play.loading";
+    const battle = world.phases.battle;
+    if (battle === undefined) throw new Error("runMatch: battle phase missing");
     world.phases = { ...world.phases, battle: xGo(battle, e) };
   };
   mark({ type: "BATTLE_READY" });
