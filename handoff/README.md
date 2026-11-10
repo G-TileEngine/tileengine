@@ -1,6 +1,6 @@
 # Grok Build kit (kit-2, 2026-11-09)
 
-Owner: Engine Architect. **Status: kit-2 — QA's kit-review findings B1, B2, M1–M4 addressed; steps 00–09 written. Ready for QA's re-review, then Chief Of Staff. Not sent to Grok Build yet.** Canonical location: `/workspace/tileengine/handoff/` (this folder). The older copy in `/workspace/tileengine/docs/grok-build-kit/` is superseded. The workflow background is in `/workspace/tileengine/docs/grok-build-handoff-plan.md` (DRAFT; the decisions below win where they differ).
+Owner: Engine Architect. **Status: kit-2 — QA's kit-review findings B1, B2, M1–M4 addressed; steps 00–09 and 09b written. Ready for QA's re-review, then Chief Of Staff. Not sent to Grok Build yet.** Canonical location: `/workspace/tileengine/handoff/` (this folder). The older copy in `/workspace/tileengine/docs/grok-build-kit/` is superseded. The workflow background is in `/workspace/tileengine/docs/grok-build-handoff-plan.md` (DRAFT; the decisions below win where they differ).
 
 ## Where things go
 - **Repo:** https://github.com/G-TileEngine/tileengine (visibility is the CEO's call). `README.md` on `main` is owned by CoS; steps never edit it. Nobody pushes to `main`; it changes only by merged PR.
@@ -13,7 +13,7 @@ Owner: Engine Architect. **Status: kit-2 — QA's kit-review findings B1, B2, M1
 |---|---|---|---|
 | `BUILD_GUIDE.md` | repo root | Root guide: goal, mode order, laws incl. M1–M9 and MODES-v2 hooks, layout, state rule, green, never-do, repo/branch/hand-back | 110 |
 | `STATES.md` | repo `docs/STATES.md` | State tables (Modes Designer input, Architect types); PROPOSED idle/TD notes; parked RPG/RTS | 228 |
-| `/workspace/tileengine/data/core-types.ts` | repo `src/types/core-types.ts` | DSK's core types r14 / catalogue rev 17 (`UnitId`, `CoreDeck` (presentation/loader only), `CoreEventMap` incl. `actionLogged`, `LogSeq`, `ActionKind`, `ModeEventMap`, project-wide `OccupancyPolicy`, lanes, paths; no eslint-disable), byte-identical (sha256 `055a182cee1b5b674388c63d0a316b3df5cb97626d383f9c9e86a65debd402a3`, 22:4x UK time) | — |
+| `/workspace/tileengine/data/core-types.ts` | repo `src/types/core-types.ts` | DSK's core types r14 / catalogue rev 17 (`UnitId`, `CoreDeck` (presentation/loader only), `CoreEventMap` incl. `actionLogged`, `LogSeq`, `ActionKind`, `ModeEventMap`, project-wide `OccupancyPolicy`, lanes, paths; no eslint-disable). **Repo pin since CN-004 (carried by step 02): sha256 `f00c722c0fc64322fcda7fe057c49ba6a94c3fd64c1b29f302c0bb3bb3492c23`** (adds `audio: 1`, `CORE_EVENT_KEYS`, `UiEventMap`; checked on `main` `92e4e96`). This `data/` file is still the pre-CN-004 copy (`055a182c…`), so it is not byte-identical to the repo; the repo file is the reference | — |
 | `STEP-TEMPLATE.md` | kit only | Template for every step file | 46 |
 | `HAND-BACK.md` | kit + attached to every step | What Grok Build returns and where (in-repo, PR) | 56 |
 | `CHANGE-NOTICE-TEMPLATE.md` | kit only | Old / New / Affected / Action | 13 |
@@ -33,10 +33,11 @@ Owner: Engine Architect. **Status: kit-2 — QA's kit-review findings B1, B2, M1
 | `steps/step-07-events-log.md` | Core events (DSK `CoreEventMap` incl. `actionLogged`; `LogSeq` 0 = none applied) with a mode registry; M4 actions; command log + header; unit-level replay | 02, 04, 05, 06 | 193 |
 | `steps/step-08-project-reader.md` | Read-only project reader: map, stage, manifest, placements (structure only, `stage.seed` as-is); carries CN-005 | 03, 05 | 173 |
 | `steps/step-09-sim-harness.md` | Headless world from the reader, M4 `submit` on the one clock, `SimSnapshot`, `replayTicks(n)`, headless `advance(ms)`, replay / restore by tick replay (drivers, AI hook, intents deferred) | 02, 03, 04, 05, 07, 08 | 174 |
+| `steps/step-09b-match-drivers.md` | Phase driver (`runMatch`, tactics tables via `xGo`) and tick driver (`runTicks`), AI hook `proposeActions(world, side, budget)` (M6), turn fuse on the one clock (user ms or off; BTF 60000 is preset data), pluggable `VictoryRule`, `phases` in `SimSnapshot`, 50-seed matches | 01, 02, 09 | 208 |
 
-Later (outlines in `/workspace/tileengine/docs/core-spine-slices.md`): the rest of the step-09 outline (phase/tick drivers, AI hook, intents, fuse, 50-seed matches, `sim` script), step-10 effect order rebuilt from the design docs (`docs/effect-order-from-docs.md`; no BTF copy, CEO 2026-11-09) + lane-label adapter.
+Later (outlines in `/workspace/tileengine/docs/core-spine-slices.md`): step-09c input and tooling (intents incl. `BoxSelect`, tap/drag mappers, the `sim` script), step-10 effect order rebuilt from the design docs (`docs/effect-order-from-docs.md`; no BTF copy, CEO 2026-11-09) + lane-label adapter.
 
-**Verification:** step 00 was rebuilt from its file alone in a clean `/tmp` folder and is green (`pass 7`). Every interface quoted in steps 01–08 was prototyped on top of it and the prototype is green (all six gates); the golden RNG vectors, the clock worked example, the push/hook logs and the step-08 reader (108/0) come from that prototype. Step 09 was prototyped on top of `main` `193900d` (117/0).
+**Verification:** step 00 was rebuilt from its file alone in a clean `/tmp` folder and is green (`pass 7`). Every interface quoted in steps 01–08 was prototyped on top of it and the prototype is green (all six gates); the golden RNG vectors, the clock worked example, the push/hook logs and the step-08 reader (108/0) come from that prototype. Step 09 was prototyped on top of `main` `193900d` (117/0); step 09b on top of `main` `92e4e96` (123/0).
 
 ## QA checklist coverage (`docs/qa/handback-checklist.md`)
 | Checklist item | Covered by |
@@ -56,7 +57,7 @@ Later (outlines in `/workspace/tileengine/docs/core-spine-slices.md`): the rest 
 | §2 outcomes, rework, 3 rejects | HAND-BACK "Outcomes and rework" (`step/<step-id>-r<N+1>` branch, new PR, same base) |
 | §2 Change Notice | CHANGE-NOTICE-TEMPLATE.md + `change-notices/`; CN-001 issued |
 | §5.1 guide contents | BUILD_GUIDE §1–§9 |
-| §5.2 six sections, 150–400 lines | STEP-TEMPLATE; steps 00–09 are 150–400 lines each (table above) |
+| §5.2 six sections, 150–400 lines | STEP-TEMPLATE; steps 00–09b are 150–400 lines each (table above) |
 | §5.3 one version of each signature | STATES §4 = the only `Phase`/`Event`/`xGo` quote; sim time = integer ms in GUIDE, STATES, ARCH §2.3 and step 02 (CN-001); one rAF path string |
 | §5.4 step 0 = Grok Build's example + `check:state` | `steps/step-00-skeleton.md`; re-pinned core-types sha; green from a clean copy |
 | §5.5 where hand-backs go and base commit | HAND-BACK "Where" + every step header (repo, base, branch, in-repo hand-back) |
