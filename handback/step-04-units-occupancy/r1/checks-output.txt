@@ -1,0 +1,21 @@
+
+> tileengine-engine@0.0.0 lint
+> eslint --max-warnings 0 .
+
+
+> tileengine-engine@0.0.0 deps
+> depcruise src --config .dependency-cruiser.cjs
+
+
+✔ no dependency violations found (20 modules, 41 dependencies cruised)
+
+
+> tileengine-engine@0.0.0 check:state
+> sh scripts/check-state.sh
+
+check:state OK (src)
+
+> tileengine-engine@0.0.0 check:law
+> sh scripts/check-law.sh
+
+check:law OK (src)
