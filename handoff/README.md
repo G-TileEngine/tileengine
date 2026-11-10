@@ -1,12 +1,12 @@
 # Grok Build kit (kit-2, 2026-11-09)
 
-Owner: Engine Architect. **Status: kit-2 — QA's kit-review findings B1, B2, M1–M4 addressed; steps 00–09, 09b, 09c, 10 and 10b written. Ready for QA's re-review, then Chief Of Staff. Not sent to Grok Build yet.** Canonical location: `/workspace/tileengine/handoff/` (this folder). The older copy in `/workspace/tileengine/docs/grok-build-kit/` is superseded. The workflow background is in `/workspace/tileengine/docs/grok-build-handoff-plan.md` (DRAFT; the decisions below win where they differ).
+Owner: Engine Architect. **Status: 10b merged at `d9ca13b` (2026-11-10). Next: chaos-player planning; step-10c proposed.** Canonical location: `/workspace/tileengine/handoff/` (this folder). The older copy in `/workspace/tileengine/docs/grok-build-kit/` is superseded. The workflow background is in `/workspace/tileengine/docs/grok-build-handoff-plan.md` (DRAFT; the decisions below win where they differ).
 
 ## Where things go
 - **Repo:** https://github.com/G-TileEngine/tileengine (visibility is the CEO's call). `README.md` on `main` is owned by CoS; steps never edit it. Nobody pushes to `main`; it changes only by merged PR.
 - **Publishing (CoS):** push one kit commit to `main` with `BUILD_GUIDE.md` (root), `docs/STATES.md`, `src/types/core-types.ts` (or attach them to step 00). That commit is step 00's base. The Architect then writes each step's base SHA into the step file before it is sent.
-- **Per step:** Grok Build works on branch `step/<step-id>-r<N>` from the base (`main`'s SHA after the previous accepted step), commits the hand-back in-repo at `handback/<step-id>/r<N>/` as the last commit, and delivers a verified git bundle plus HAND-BACK.md to the CEO's Drive; Chief Of Staff pushes the branch and opens the PR to `main` (CN-003). Architect review → QA (G1–G10 on a clean clone of the branch) → RaiKynn accepts via CoS → the Architect merges and tags `accepted/<step-id>`.
-- **Change Notices:** `change-notices/CN-<NNN>-<slug>.md` here, attached to the step that carries them. Issued: `CN-001-sim-time-ms.md` (sim time is integer ms; carried by step 02), `CN-005-project-reads-notice.md` (`src/project` may import the type-only `Notice`; carried by step 08), `CN-006-input-layer-sim-script.md` (`src/runtime/input` layer, the `sim` npm script and `scripts/sim.ts`, BUILD_GUIDE §3; carried by step 09c), `CN-007-fx-layer.md` (`src/fx` layer: one depcruise line and two BUILD_GUIDE §3 lines; carried by step 10).
+- **Per step:** Grok Build works on branch `step/<step-id>-r<N>` from the base (`main`'s SHA after the previous accepted step), commits the hand-back in-repo at `handback/<step-id>/r<N>/` as the last commit, and delivers a verified git bundle plus HAND-BACK.md to the CEO's Drive; Chief Of Staff pushes the branch and opens the PR to `main` (CN-003). Architect review → QA (G1–G10 on a clean clone of the branch) → RaiKynn accepts via CoS → the Architect merges. Tagging is not used; merge commits on `main` are the record.
+- **Change Notices:** `change-notices/CN-<NNN>-<slug>.md` here, attached to the step that carries them. Issued: `CN-001-sim-time-ms.md` (sim time is integer ms; carried by step 02), `CN-002-no-card-types-camelcase.md` (no-card-types also catches camelCase Card/Deck names; carried by step 01), `CN-003-delivery-bundle.md` (delivery is a git bundle to the CEO's Drive; Chief Of Staff opens the PR; carried by step 01), `CN-004-core-types-audio-ui-keys.md` (core-types adds `audio: 1`, `CORE_EVENT_KEYS` and `UiEventMap`; carried by step 02), `CN-005-project-reads-notice.md` (`src/project` may import the type-only `Notice`; carried by step 08), `CN-006-input-layer-sim-script.md` (`src/runtime/input` layer, the `sim` npm script and `scripts/sim.ts`, BUILD_GUIDE §3; carried by step 09c), `CN-007-fx-layer.md` (`src/fx` layer: one depcruise line and two BUILD_GUIDE §3 lines; carried by step 10).
 
 ## Files
 | File | Goes where when published | What | Lines |
@@ -24,12 +24,12 @@ Owner: Engine Architect. **Status: kit-2 — QA's kit-review findings B1, B2, M1
 | Step file | Slice | Depends on | Lines |
 |---|---|---|---|
 | `steps/step-00-skeleton.md` | Repo skeleton, lint/dep gates, `check:state`, `check:law` (one rAF exception file) | — | 400 |
-| `steps/step-01-state-tables.md` | Shared + tactics flow + tactics input tables, `xGo`, rejected-edge no-op, untargeted `CHOOSE_ACTION` | 00 | 176 |
-| `steps/step-02-clock.md` | One clock, integer sim ms (CN-001), game speed, sim timers, turn fuse | 00, 01 | 156 |
-| `steps/step-03-grid-edges.md` | `{c,r}` grid from `CoreMap`, tile types, edge walls, blocking objects, forced-move checks, notices | 00 | 152 |
-| `steps/step-04-units-occupancy.md` | Units, one occupancy table with a policy (`strict1`), `moveTo`/`push`/`remove`, landedOn/pushBlocked hooks, reach | 03 | 175 |
-| `steps/step-05-rng.md` | mulberry32, named streams, save/restore, golden vectors | 00 | 153 |
-| `steps/step-06-pipes.md` | UNIT and TILE only; edge targets = TILE + side; no target = no pipe; roster; `toCell` | 03, 04 | 152 |
+| `steps/step-01-state-tables.md` | Shared + tactics flow + tactics input tables, `xGo`, rejected-edge no-op, untargeted `CHOOSE_ACTION` | 00 | 183 |
+| `steps/step-02-clock.md` | One clock, integer sim ms (CN-001), game speed, sim timers, turn fuse | 00, 01 | 161 |
+| `steps/step-03-grid-edges.md` | `{c,r}` grid from `CoreMap`, tile types, edge walls, blocking objects, forced-move checks, notices | 00 | 153 |
+| `steps/step-04-units-occupancy.md` | Units, one occupancy table with a policy (`strict1`), `moveTo`/`push`/`remove`, landedOn/pushBlocked hooks, reach | 03 | 176 |
+| `steps/step-05-rng.md` | mulberry32, named streams, save/restore, golden vectors | 00 | 154 |
+| `steps/step-06-pipes.md` | UNIT and TILE only; edge targets = TILE + side; no target = no pipe; roster; `toCell` | 03, 04 | 153 |
 | `steps/step-07-events-log.md` | Core events (DSK `CoreEventMap` incl. `actionLogged`; `LogSeq` 0 = none applied) with a mode registry; M4 actions; command log + header; unit-level replay | 02, 04, 05, 06 | 193 |
 | `steps/step-08-project-reader.md` | Read-only project reader: map, stage, manifest, placements (structure only, `stage.seed` as-is); carries CN-005 | 03, 05 | 173 |
 | `steps/step-09-sim-harness.md` | Headless world from the reader, M4 `submit` on the one clock, `SimSnapshot`, `replayTicks(n)`, headless `advance(ms)`, replay / restore by tick replay (drivers, AI hook, intents deferred) | 02, 03, 04, 05, 07, 08 | 174 |
