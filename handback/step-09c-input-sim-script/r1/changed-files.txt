@@ -1,0 +1,12 @@
+M	.dependency-cruiser.cjs
+M	package.json
+A	scripts/sim.ts
+A	src/runtime/input/gestures.ts
+A	src/runtime/input/index.ts
+A	src/runtime/input/types.ts
+M	src/sim/driver-phase.ts
+M	src/sim/index.ts
+A	src/sim/intents.ts
+A	tests/runtime/input/gestures.test.ts
+A	tests/sim/intents.test.ts
+A	tests/sim/script.test.ts
