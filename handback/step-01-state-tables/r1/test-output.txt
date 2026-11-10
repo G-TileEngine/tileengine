@@ -1,0 +1,30 @@
+
+> tileengine-engine@0.0.0 test
+> node --test "tests/**/*.test.ts"
+
+✔ gates: check:state passes on src and on a clean fixture (40.24251ms)
+✔ gates: check:state fails on direct phase writes and a second transition function (18.688483ms)
+✔ gates: check:law passes on src and fails on a law-breaking core fixture (188.264637ms)
+✔ gates: eslint allows the frame loop only in src/runtime/host/raf-driver.ts (510.769086ms)
+✔ gates: eslint rejects wall time, Math.random, rule words and upward imports in src/core (20.957925ms)
+✔ smoke: engine root exports name and version (0.904791ms)
+✔ smoke: core-types.ts is the pinned DSK copy (0.596571ms)
+✔ ALL_PHASES and ALL_EVENT_TYPES are exhaustive (1.397792ms)
+✔ every phase is reachable (0.413852ms)
+✔ only play.result is terminal (1.256224ms)
+✔ the three tables merge with no duplicate key (0.963861ms)
+✔ a duplicate (from, event) throws (0.475435ms)
+✔ scripted battle reaches play.result (1.72445ms)
+✔ overlay rows push and pop (0.206618ms)
+✔ every row of every table is accepted (1.128971ms)
+✔ CHOOSE_ACTION with next resolving skips targeting (0.162898ms)
+✔ no row → xGo returns from (2.879357ms)
+✔ illegal next on a pick-list row → from (0.180074ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1545.618046
