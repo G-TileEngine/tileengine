@@ -1,12 +1,12 @@
 # Grok Build kit (kit-2, 2026-11-09)
 
-Owner: Engine Architect. **Status: kit-2 — QA's kit-review findings B1, B2, M1–M4 addressed; steps 00–08 written. Ready for QA's re-review, then Chief Of Staff. Not sent to Grok Build yet.** Canonical location: `/workspace/tileengine/handoff/` (this folder). The older copy in `/workspace/tileengine/docs/grok-build-kit/` is superseded. The workflow background is in `/workspace/tileengine/docs/grok-build-handoff-plan.md` (DRAFT; the decisions below win where they differ).
+Owner: Engine Architect. **Status: kit-2 — QA's kit-review findings B1, B2, M1–M4 addressed; steps 00–09 written. Ready for QA's re-review, then Chief Of Staff. Not sent to Grok Build yet.** Canonical location: `/workspace/tileengine/handoff/` (this folder). The older copy in `/workspace/tileengine/docs/grok-build-kit/` is superseded. The workflow background is in `/workspace/tileengine/docs/grok-build-handoff-plan.md` (DRAFT; the decisions below win where they differ).
 
 ## Where things go
 - **Repo:** https://github.com/G-TileEngine/tileengine (visibility is the CEO's call). `README.md` on `main` is owned by CoS; steps never edit it. Nobody pushes to `main`; it changes only by merged PR.
 - **Publishing (CoS):** push one kit commit to `main` with `BUILD_GUIDE.md` (root), `docs/STATES.md`, `src/types/core-types.ts` (or attach them to step 00). That commit is step 00's base. The Architect then writes each step's base SHA into the step file before it is sent.
 - **Per step:** Grok Build works on branch `step/<step-id>-r<N>` from the base (`main`'s SHA after the previous accepted step), commits the hand-back in-repo at `handback/<step-id>/r<N>/` as the last commit, and delivers a verified git bundle plus HAND-BACK.md to the CEO's Drive; Chief Of Staff pushes the branch and opens the PR to `main` (CN-003). Architect review → QA (G1–G10 on a clean clone of the branch) → RaiKynn accepts via CoS → the Architect merges and tags `accepted/<step-id>`.
-- **Change Notices:** `change-notices/CN-<NNN>-<slug>.md` here, attached to the step that carries them. Issued: `CN-001-sim-time-ms.md` (sim time is integer ms; carried by step 02).
+- **Change Notices:** `change-notices/CN-<NNN>-<slug>.md` here, attached to the step that carries them. Issued: `CN-001-sim-time-ms.md` (sim time is integer ms; carried by step 02), `CN-005-project-reads-notice.md` (`src/project` may import the type-only `Notice`; carried by step 08).
 
 ## Files
 | File | Goes where when published | What | Lines |
@@ -30,12 +30,13 @@ Owner: Engine Architect. **Status: kit-2 — QA's kit-review findings B1, B2, M1
 | `steps/step-04-units-occupancy.md` | Units, one occupancy table with a policy (`strict1`), `moveTo`/`push`/`remove`, landedOn/pushBlocked hooks, reach | 03 | 175 |
 | `steps/step-05-rng.md` | mulberry32, named streams, save/restore, golden vectors | 00 | 153 |
 | `steps/step-06-pipes.md` | UNIT and TILE only; edge targets = TILE + side; no target = no pipe; roster; `toCell` | 03, 04 | 152 |
-| `steps/step-07-events-log.md` | Core events (DSK `CoreEventMap` incl. `actionLogged`; `LogSeq` 0 = none applied) with a mode registry; M4 actions; command log + header; unit-level replay | 02, 04, 05, 06 | 192 |
+| `steps/step-07-events-log.md` | Core events (DSK `CoreEventMap` incl. `actionLogged`; `LogSeq` 0 = none applied) with a mode registry; M4 actions; command log + header; unit-level replay | 02, 04, 05, 06 | 193 |
 | `steps/step-08-project-reader.md` | Read-only project reader: map, stage, manifest, placements (structure only, `stage.seed` as-is); carries CN-005 | 03, 05 | 173 |
+| `steps/step-09-sim-harness.md` | Headless world from the reader, M4 `submit` on the one clock, `SimSnapshot`, `replayTicks(n)`, headless `advance(ms)`, replay / restore by tick replay (drivers, AI hook, intents deferred) | 02, 03, 04, 05, 07, 08 | 174 |
 
-Later (outlines in `/workspace/tileengine/docs/core-spine-slices.md`): step-09 sim harness (`SimSnapshot`, `replayTicks(n)`, headless `advance(ms)`), step-10 effect order rebuilt from the design docs (`docs/effect-order-from-docs.md`; no BTF copy, CEO 2026-11-09) + lane-label adapter.
+Later (outlines in `/workspace/tileengine/docs/core-spine-slices.md`): the rest of the step-09 outline (phase/tick drivers, AI hook, intents, fuse, 50-seed matches, `sim` script), step-10 effect order rebuilt from the design docs (`docs/effect-order-from-docs.md`; no BTF copy, CEO 2026-11-09) + lane-label adapter.
 
-**Verification:** step 00 was rebuilt from its file alone in a clean `/tmp` folder and is green (`pass 7`). Every interface quoted in steps 01–07 was prototyped on top of it and the prototype is green (all six gates); the golden RNG vectors, the clock worked example and the push/hook logs come from that prototype.
+**Verification:** step 00 was rebuilt from its file alone in a clean `/tmp` folder and is green (`pass 7`). Every interface quoted in steps 01–08 was prototyped on top of it and the prototype is green (all six gates); the golden RNG vectors, the clock worked example, the push/hook logs and the step-08 reader (108/0) come from that prototype. Step 09 was prototyped on top of `main` `193900d` (117/0).
 
 ## QA checklist coverage (`docs/qa/handback-checklist.md`)
 | Checklist item | Covered by |
@@ -55,7 +56,7 @@ Later (outlines in `/workspace/tileengine/docs/core-spine-slices.md`): step-09 s
 | §2 outcomes, rework, 3 rejects | HAND-BACK "Outcomes and rework" (`step/<step-id>-r<N+1>` branch, new PR, same base) |
 | §2 Change Notice | CHANGE-NOTICE-TEMPLATE.md + `change-notices/`; CN-001 issued |
 | §5.1 guide contents | BUILD_GUIDE §1–§9 |
-| §5.2 six sections, 150–400 lines | STEP-TEMPLATE; steps 00–08 are 150–400 lines each (table above) |
+| §5.2 six sections, 150–400 lines | STEP-TEMPLATE; steps 00–09 are 150–400 lines each (table above) |
 | §5.3 one version of each signature | STATES §4 = the only `Phase`/`Event`/`xGo` quote; sim time = integer ms in GUIDE, STATES, ARCH §2.3 and step 02 (CN-001); one rAF path string |
 | §5.4 step 0 = Grok Build's example + `check:state` | `steps/step-00-skeleton.md`; re-pinned core-types sha; green from a clean copy |
 | §5.5 where hand-backs go and base commit | HAND-BACK "Where" + every step header (repo, base, branch, in-repo hand-back) |
