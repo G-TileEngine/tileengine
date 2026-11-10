@@ -1,0 +1,9 @@
+A	src/core/events/bus.ts
+A	src/core/events/index.ts
+A	src/core/events/types.ts
+A	src/core/log/index.ts
+A	src/core/log/log.ts
+A	src/core/log/types.ts
+A	tests/core/bus.test.ts
+A	tests/core/log.test.ts
+A	tests/core/replay.test.ts

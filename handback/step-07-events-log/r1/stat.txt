@@ -1,0 +1,10 @@
+ src/core/events/bus.ts    | 61 +++++++++++++++++++++++++++++++++
+ src/core/events/index.ts  |  3 ++
+ src/core/events/types.ts  | 25 ++++++++++++++
+ src/core/log/index.ts     |  3 ++
+ src/core/log/log.ts       | 70 ++++++++++++++++++++++++++++++++++++++
+ src/core/log/types.ts     | 36 ++++++++++++++++++++
+ tests/core/bus.test.ts    | 76 +++++++++++++++++++++++++++++++++++++++++
+ tests/core/log.test.ts    | 86 +++++++++++++++++++++++++++++++++++++++++++++++
+ tests/core/replay.test.ts | 38 +++++++++++++++++++++
+ 9 files changed, 398 insertions(+)
