@@ -1,0 +1,17 @@
+ .nvmrc                                  |  1 +
+ scripts/check-law.sh                    |  2 +-
+ src/state/.gitkeep                      |  0
+ src/state/index.ts                      |  6 +++
+ src/state/shared.table.ts               | 14 +++++++
+ src/state/tactics.flow.table.ts         | 17 ++++++++
+ src/state/tactics.input.table.ts        | 15 +++++++
+ src/state/types.ts                      | 66 +++++++++++++++++++++++++++++++
+ src/state/xgo.ts                        | 36 +++++++++++++++++
+ tests/fixtures/law-bad/rules/card-id.ts |  2 +
+ tests/state/helpers.ts                  | 25 ++++++++++++
+ tests/state/tables.coverage.test.ts     | 59 ++++++++++++++++++++++++++++
+ tests/state/tables.merge.test.ts        | 15 +++++++
+ tests/state/tactics.script.test.ts      | 69 +++++++++++++++++++++++++++++++++
+ tests/state/xgo.accepts.test.ts         | 34 ++++++++++++++++
+ tests/state/xgo.rejected-noop.test.ts   | 37 ++++++++++++++++++
+ 16 files changed, 397 insertions(+), 1 deletion(-)

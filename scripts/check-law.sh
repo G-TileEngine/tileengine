@@ -24,7 +24,7 @@ gate no-eslint-disable -e 'eslint-disable'
 # No BTF/chess trees: nothing may reference the BTF folders.
 gate no-btf-path -e 'g-tile-engine' -e 'towerchess'
 # Rules never depend on cards: no identifier ending in Card(s)/Deck(s) in src/ (CoreDeck: card-hand presentation and loader only). Cardinal etc. pass.
-gate no-card-types -g '!**/types/core-types.ts' -e '\b\w*(Card|Deck)s?\b'
+gate no-card-types -g '!**/types/core-types.ts' -e '\b\w*(Card|Deck)(s|[A-Z]\w*)?\b'
 # Core: no game rules (ENGINE.md "Do not") and no phase logic (MODES-v1 M2).
 if [ -d "$ROOT/core" ]; then
   out=$(rg -n -i -g '*.ts' -e '\b(hp|maxhp|mana|cost|deck|damage|cards?|phase\w*)\b' "$ROOT/core")

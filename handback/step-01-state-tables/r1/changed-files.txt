@@ -1,0 +1,16 @@
+A	.nvmrc
+M	scripts/check-law.sh
+D	src/state/.gitkeep
+A	src/state/index.ts
+A	src/state/shared.table.ts
+A	src/state/tactics.flow.table.ts
+A	src/state/tactics.input.table.ts
+A	src/state/types.ts
+A	src/state/xgo.ts
+A	tests/fixtures/law-bad/rules/card-id.ts
+A	tests/state/helpers.ts
+A	tests/state/tables.coverage.test.ts
+A	tests/state/tables.merge.test.ts
+A	tests/state/tactics.script.test.ts
+A	tests/state/xgo.accepts.test.ts
+A	tests/state/xgo.rejected-noop.test.ts
