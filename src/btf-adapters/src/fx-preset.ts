@@ -1,4 +1,4 @@
-import type { FxFlight, FxOptions, FxReadLimits } from "../../fx/order/index.ts";
+import type { FxFlight, FxLookTune, FxOptions, FxReadLimits } from "../../fx/order/index.ts";
 
 /** The BTF preset: how BTF currently plays (CEO and CoS rulings 2026-11-09). Plain data the caller passes to src/fx. */
 export const BTF_FX_PRESET: FxOptions = {
@@ -21,3 +21,11 @@ export const BTF_FX_FLIGHT: FxFlight = { totalMs: 400, msPerTile: null };
 /** BTF read limits: min step 0.20 s is PROVISIONAL pending CEO (SKILLRIG.md:86; the catalogue slider allows 0.15 s);
  *  fill-in 0.48 s and connect 0.02–1 are CEO-approved (2026-11-10; catalogue effect.steps default, effect.connect). */
 export const BTF_FX_READ_LIMITS: FxReadLimits = { minStepMs: 200, fillStepMs: 480, minConnect: 0.02, maxConnect: 1 };
+
+/** BTF look and copy tunables (SKILLRIG normalize/paint): spread and look clamps, the copy hash, and ease-in-out. */
+export const BTF_FX_LOOK: FxLookTune = {
+  jitterMax: 0.8, delayMax: 0.75, spreadScaleMax: 0.6,
+  lookScaleMin: 0.35, lookScaleMax: 2.6, lookGlowMax: 48,
+  copyScaleMin: 0.35, copyScaleMax: 1.8, fillCount: 6,
+  unitA: 127.1, unitB: 311.7, unitC: 43758.5453, scaleLane: 3, inOut: 3,
+};
