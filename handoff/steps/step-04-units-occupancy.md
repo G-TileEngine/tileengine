@@ -2,13 +2,13 @@
 
 Step id: step-04-units-occupancy          Revision: r<N> (r1 first; r2, r3… only after a REJECT)
 Repo: https://github.com/G-TileEngine/tileengine (read it; you do not push anything — see Delivery)
-Base commit: `<base: main's SHA after step-03-grid-edges was accepted>` (the Architect writes the hash here at publish; the diff is always `<base>..<head>`)
+Base commit: `3e93c30` on `main` (step-03-grid-edges r1 build A merged, PR #4); the diff is always `3e93c30..<head>`
 Branch: `step/step-04-units-occupancy-r<N>`, created from the base. Never commit to `main`. Chief Of Staff pushes your branch and opens the PR to `main`.
-Delivery (CN-003): `git bundle create step-04-units-occupancy-r<N>.bundle <base>..step/step-04-units-occupancy-r<N>`, then `git bundle verify`; upload the bundle plus a copy of HAND-BACK.md to the CEO's Drive. HANDBACK.md's PR line: `PR: opened by Chief Of Staff from the bundle`.
+Delivery (CN-003): `git bundle create step-04-units-occupancy-r<N>.bundle 3e93c30..step/step-04-units-occupancy-r<N>`, then `git bundle verify`; upload the bundle plus a copy of HAND-BACK.md to the CEO's Drive. HANDBACK.md's PR line: `PR: opened by Chief Of Staff from the bundle`.
 Hand-back location: in the repo, on that branch: `handback/step-04-units-occupancy/r<N>/` (HAND-BACK.md), committed as the branch's last commit
 Depends on: step-03-grid-edges
 Read first: BUILD_GUIDE.md §2 laws 3, 4, 10, M3, M4; §4
-Kit: kit-2, 2026-11-09. Engine Architect. The interfaces below were prototyped and run green (`npm run green`) on Node 24.22.1 against `src/types/core-types.ts` sha256 `055a182c…`; since CN-004 (step 02) the repo holds `f00c722c0fc64322fcda7fe057c49ba6a94c3fd64c1b29f302c0bb3bb3492c23`, add-only: every type quoted here is unchanged. The prototype is not attached: write your own code to these quotes.
+Kit: kit-2, 2026-11-09. Engine Architect. The interfaces below were prototyped and run green (`npm run green`) on Node 24.22.1 against `src/types/core-types.ts` sha256 `055a182c…`; since CN-004 (step 02) the repo holds `f00c722c0fc64322fcda7fe057c49ba6a94c3fd64c1b29f302c0bb3bb3492c23`, add-only: every type quoted here is unchanged. `main` `3e93c30` is green with it (Architect check, 47/0). The prototype is not attached: write your own code to these quotes.
 
 > Working style: use your helper agents, take your time, self-review against Acceptance + QA checklist before hand-back (see BUILD_GUIDE).
 
@@ -161,7 +161,7 @@ Run: `npm test`, or `node --test tests/core/units.test.ts tests/core/push.test.t
 - [ ] `npm test` summary: fail 0, skipped 0, todo 0; pass ≥ 61. No `.only`, `.skip` or `.todo` (`rg -n '\.(only|skip|todo)\(' tests` prints nothing).
 - [ ] `npm run check:state` prints `check:state OK (src)` and exits 0.
 - [ ] `npm run check:law` prints `check:law OK (src)` and exits 0.
-- [ ] `rg -n 'new Map<number' src/core` shows exactly one occupancy table (in `units.ts`).
+- [ ] `rg -n 'new Map<number' src/core/unit` shows exactly one occupancy table (in `units.ts`).
 - [ ] `rg -n -i 'kill|damage|hp|phase' src/core` prints nothing.
 - [ ] `rg -n '"move" \| "forced"|"wall-block" \| "edge"' src/core/unit` prints nothing (vocabularies derived from core-types `CoreEventMap`).
 - [ ] `rg -n 'softStack|laneSlots' src/core` prints nothing (future policies are not built; the names come only from core-types).
