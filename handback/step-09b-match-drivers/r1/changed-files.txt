@@ -1,0 +1,10 @@
+A	src/sim/driver-phase.ts
+A	src/sim/driver-tick.ts
+M	src/sim/index.ts
+M	src/sim/run.ts
+M	src/sim/types.ts
+M	src/sim/world.ts
+A	tests/sim/ai.ts
+A	tests/sim/match.test.ts
+M	tests/sim/replay.test.ts
+M	tests/sim/world.test.ts

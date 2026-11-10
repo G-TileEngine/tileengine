@@ -39,5 +39,5 @@ export function createWorld(input: SimInput): SimWorld {
   const placed = resolvePlacements(stage.doc, map.doc, input.chosen, (w) => pool.weighted(w));
   for (const p of placed.placements) units.place(p);
   const notices: Notice[] = [...grid.notices, ...placed.notices, ...units.notices];
-  return { seed, clock, grid, units, bus, log, rng: createRng(streamSeed(seed, "match")), notices };
+  return { seed, clock, grid, units, bus, log, rng: createRng(streamSeed(seed, "match")), notices, phases: { battle: "play.loading" } };
 }

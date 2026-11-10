@@ -49,4 +49,6 @@ test("snapshot → restore → replayTicks(n) equals n ticks straight", () => {
   replayTicks(back, 37);
   assert.deepEqual(snapshot(back), snapshot(straight));
   assert.throws(() => restore(input("stage-fixed"), log, { ...snap, logSeq: 99 }), /does not match/);
+  const other = createWorld(input("stage-weighted"));
+  assert.throws(() => replay(input("stage-fixed"), parsed(other), 0), /replay: world seed 24301 is not the log seed 7/);
 });

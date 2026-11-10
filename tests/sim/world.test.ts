@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createRng, streamSeed } from "../../src/core/rng/index.ts";
-import { readStage, resolvePlacements } from "../../src/project/read/index.ts";
+import { readMap, readStage, resolvePlacements } from "../../src/project/read/index.ts";
 import { createWorld } from "../../src/sim/index.ts";
 import { input } from "./input.ts";
 
@@ -18,9 +18,10 @@ test("the host seed is used when the stage has none; picks use the pool stream",
   const src = input("stage-weighted");
   const w = createWorld(src);
   const stage = readStage(src.stage);
-  if (!stage.ok) throw new Error("stage");
+  const map = readMap(src.map);
+  if (!stage.ok || !map.ok) throw new Error("stage");
   const pool = createRng(streamSeed(7, "pool"));
-  const placed = resolvePlacements(stage.doc, { cols: 12, rows: 12 }, src.chosen, (weights) => pool.weighted(weights));
+  const placed = resolvePlacements(stage.doc, map.doc, src.chosen, (weights) => pool.weighted(weights));
   assert.equal(w.seed, 7);
   assert.deepEqual(w.units.all().map((u) => u.unitId), placed.placements.map((p) => p.unitId));
   assert.deepEqual(w.notices.map((n) => n.code), ["footprintIgnored", ...placed.notices.map((n) => n.code)]);

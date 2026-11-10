@@ -1,0 +1,11 @@
+ src/sim/driver-phase.ts  | 66 +++++++++++++++++++++++++++++++++++++++
+ src/sim/driver-tick.ts   | 32 +++++++++++++++++++
+ src/sim/index.ts         |  4 ++-
+ src/sim/run.ts           |  4 ++-
+ src/sim/types.ts         | 37 ++++++++++++++++++++--
+ src/sim/world.ts         |  2 +-
+ tests/sim/ai.ts          | 32 +++++++++++++++++++
+ tests/sim/match.test.ts  | 81 ++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/sim/replay.test.ts |  2 ++
+ tests/sim/world.test.ts  |  7 +++--
+ 10 files changed, 259 insertions(+), 8 deletions(-)
