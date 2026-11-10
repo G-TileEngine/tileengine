@@ -45,3 +45,6 @@ test("thresholds are the caller's: a wider tapMaxPx turns the drag into a tap; b
   assert.throws(() => run([p("down", 0, 8, 100), p("up", 0, 8, 50)]), RangeError);
   assert.throws(() => run([p("down", 0, 8, 0.5)]), RangeError);
 });
+test("a second down from the same pointer id with no up in between is ignored (QA 09c)", () => {
+  assert.deepEqual(run([p("down", 0, 8, 0), p("down", 2, 2, 50), p("up", 0, 8, 90)]), [{ type: "SelectUnit", unitId: "knight#1" }]);
+});

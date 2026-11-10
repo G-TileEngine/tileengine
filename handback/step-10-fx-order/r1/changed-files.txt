@@ -1,0 +1,14 @@
+M	.dependency-cruiser.cjs
+A	src/btf-adapters/src/fx-preset.ts
+A	src/btf-adapters/src/index.ts
+A	src/btf-adapters/src/lane-labels.ts
+A	src/fx/order/index.ts
+A	src/fx/order/options.ts
+A	src/fx/order/read.ts
+A	src/fx/order/timeline.ts
+A	src/fx/order/types.ts
+A	tests/btf-adapters/lane-labels.test.ts
+A	tests/fx/options.test.ts
+A	tests/fx/read.test.ts
+A	tests/fx/timeline.test.ts
+M	tests/runtime/input/gestures.test.ts
