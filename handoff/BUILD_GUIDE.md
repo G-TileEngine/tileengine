@@ -100,9 +100,9 @@ Allowed dev dependencies (exact versions; anything else needs a Change Notice): 
 - Never exceed ~400 changed code lines in one step (QA cap: 400–500 needs a reason; > 500 is rejected). If a step would, stop and propose a split.
 
 ## 8. How a step works (details in the step file and HAND-BACK.md)
-- **Repo:** https://github.com/G-TileEngine/tileengine (private). `main` changes only by merged PR; never push to `main`.
+- **Repo:** https://github.com/G-TileEngine/tileengine (visibility is the CEO's call). `main` changes only by merged PR; never push to `main`.
 - **Base commit:** `main`'s SHA after the previous step was accepted (written in each step file; step 00's base is `main` @ the commit Chief Of Staff pushes with the kit).
-- **Branch:** `step/<step-id>-r<N>` from the base (`r1` first; a rework after a REJECT is `r2`, `r3`…). Finish with a PR to `main`.
+- **Branch:** `step/<step-id>-r<N>` from the base (`r1` first; a rework after a REJECT is `r2`, `r3`…). **Delivery (CN-003):** you read the repo but do not push. Finish with `git bundle create <step-id>-r<N>.bundle <base>..step/<step-id>-r<N>`, check it with `git bundle verify`, and upload the bundle plus a copy of `HAND-BACK.md` to the CEO's Drive. Chief Of Staff pushes the branch and opens the PR to `main`.
 - **Hand-back:** `HANDBACK.md` and its files go **in the repo** at `handback/<step-id>/r<N>/` on that branch, as the branch's last commit.
 - Each step file has: Step id · Repo · Base commit · Branch · Hand-back location · Goal · Files to create or change · Interfaces to match (quoted exactly) · Tests that prove it is done · Do not touch · Acceptance. Hand back: the changed-file list, raw `npm test` and `npm run typecheck` output, the other green commands' output, a 5–10 line **Decisions & deviations** note, the head commit, and an optional next step.
 

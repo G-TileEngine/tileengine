@@ -1,10 +1,12 @@
 # step-01-state-tables: shared + tactics flow + tactics input tables, and xGo
 
 Step id: step-01-state-tables          Revision: r<N> (r1 first; r2, r3… only after a REJECT)
-Repo: https://github.com/G-TileEngine/tileengine (private; never push to `main`)
-Base commit: `<base: main's SHA after step-00-skeleton was accepted>` (the Architect writes the hash here at publish; the diff is always `<base>..<head>`)
-Branch: `step/step-01-state-tables-r<N>`, created from the base. Never commit to `main`. Finish with a PR to `main`.
+Repo: https://github.com/G-TileEngine/tileengine (read it; you do not push anything — see Delivery)
+Base commit: `a30041e` on `main` (step-00-skeleton r1 merged, PR #1); the diff is always `a30041e..<head>`
+Branch: `step/step-01-state-tables-r<N>`, created from the base. Never commit to `main`. Chief Of Staff pushes your branch and opens the PR to `main`.
 Hand-back location: in the repo, on that branch: `handback/step-01-state-tables/r<N>/` (HAND-BACK.md), committed as the branch's last commit
+Delivery: `git bundle create step-01-state-tables-r<N>.bundle a30041e..step/step-01-state-tables-r<N>`, then `git bundle verify` it; upload the bundle and a copy of HAND-BACK.md to the CEO's Drive. In HAND-BACK.md write `PR: opened by Chief Of Staff from the bundle` (never a stale or guessed PR state; QA note, step 00).
+Carries: CN-002 (attached; `change-notices/CN-002-no-card-types-camelcase.md`) and CN-003 (attached; delivery by bundle — BUILD_GUIDE §8 and HAND-BACK.md on `main` already say the same once CoS pushes them). Node: record `node -v` in the hand-back; use Node 24 (the kit's version) — `.nvmrc` below pins it.
 Depends on: step-00-skeleton
 Read first: BUILD_GUIDE.md §2 (M2), §5; `docs/STATES.md` §2, §3, §4, §6 (all binding for this step)
 Kit: kit-2, 2026-11-09. Engine Architect. The interfaces below were prototyped and run green (`npm run green`) on Node 24.22.1 against `src/types/core-types.ts` sha256 `055a182cee1b5b674388c63d0a316b3df5cb97626d383f9c9e86a65debd402a3`. The prototype is not attached: write your own code to these quotes.
@@ -23,6 +25,9 @@ Rulings in this step:
 
 ## Files to create or change
 - delete `src/state/.gitkeep`
+- create `.nvmrc` — one line: `24` (QA note, step 00; `engines.node` stays `>=22.18.0`)
+- change `scripts/check-law.sh` — the `no-card-types` line only, exactly as CN-002 "New"
+- create `tests/fixtures/law-bad/rules/card-id.ts` — exactly as CN-002 (excluded from tsc and lint like the other fixtures)
 - create `src/state/types.ts` — the types of STATES §4, verbatim, plus `ALL_PHASES` and `ALL_EVENT_TYPES` (≤ 80 lines)
 - create `src/state/shared.table.ts` — `SHARED_TABLE` (≤ 30 lines)
 - create `src/state/tactics.flow.table.ts` — `TACTICS_FLOW_TABLE` (≤ 30 lines)
@@ -151,7 +156,7 @@ Rewrite from intent: turn hand-off `chess/game/towerChess.ts:572` `handOff`, tic
 ## Do not touch
 - `src/types/core-types.ts`, `BUILD_GUIDE.md`, `docs/STATES.md`, `scripts/check-state.sh`, `scripts/check-law.sh`, `eslint.config.mjs`, `.dependency-cruiser.cjs`, `tsconfig.json` (change only by Change Notice).
 - `package.json` and `package-lock.json`: no new dependency, no script change.
-- `tests/smoke.test.ts`, `tests/gates.test.ts`, `tests/fixtures/**`.
+- `tests/smoke.test.ts`, `tests/gates.test.ts`, `tests/fixtures/**`, except the one new file `tests/fixtures/law-bad/rules/card-id.ts` that CN-002 names (fixtures change only when a CN names them).
 - Anything outside this repo: `/workspace/g-tile-engine/**`, `/workspace/tileengine/**`, `/workspace/towerchess*`. Read BTF intent only from the file:line notes quoted here; never open or copy BTF code.
 - `src/core/**` (M2: this step must not touch core; `src/core/.gitkeep` stays).
 
@@ -167,7 +172,9 @@ Rewrite from intent: turn hand-off `chess/game/towerChess.ts:572` `handOff`, tic
 - [ ] `src/state/types.ts` matches STATES §4 for every quoted type (QA G4).
 - [ ] `git diff --stat <base>..<head> -- . ':!package-lock.json' ':!handback'` shows ≤ 400 changed lines (src + tests); each file within its size limit above.
 - [ ] `git diff --name-status <base>..<head> -- . ':!handback'` lists exactly the files in "Files to create or change" (anything extra is named and justified in the Decisions note).
-- [ ] Hand-back `handback/step-01-state-tables/r<N>/` complete per HAND-BACK.md; PR from `step/step-01-state-tables-r<N>` to `main` open; nothing committed to `main`.
+- [ ] CN-002: `sh scripts/check-law.sh tests/fixtures/law-bad` exits 1 and its `no-card-types` output names `card-id.ts` (`CardId`, `DeckState`); `sh scripts/check-law.sh tests/fixtures/law-good` exits 0.
+- [ ] `.nvmrc` contains exactly `24`; HAND-BACK.md records `node -v`.
+- [ ] Hand-back `handback/step-01-state-tables/r<N>/` complete per HAND-BACK.md, with the PR line as in Delivery; the bundle verifies and contains the hand-back commit as the branch tip; nothing committed to `main`.
 
 ## Out of scope
 - The engine-mode table (boot/title/wizard/editor/preview/play/render), the overlay-stack holder, any driver that performs `sets`.

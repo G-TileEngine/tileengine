@@ -1,0 +1,7 @@
+# CN-003: delivery is a git bundle to the CEO's Drive; Chief Of Staff opens the PR
+Date: 2026-11-10   Raised by: QA (step 01 delta review, finding 2); ruled by Engine Architect on Chief Of Staff's delivery route
+Old: BUILD_GUIDE §8 — "Finish with a PR to `main`." HAND-BACK.md — "Finish with a **PR to `main`**"; "The PR itself is the patch … No `diff.patch` or bundle is needed."; template line `PR: <link>`; REJECT — "open a new PR to `main` and close the old one". Both said the repo is "(private)".
+New: Grok Build reads the repo and never pushes. It finishes with `git bundle create <step-id>-r<N>.bundle <base>..step/<step-id>-r<N>`, runs `git bundle verify`, and uploads the bundle plus a copy of `HAND-BACK.md` to the CEO's Drive. Chief Of Staff pushes the branch and opens (or, after a REJECT, replaces) the PR. HANDBACK.md's PR line reads `PR: opened by Chief Of Staff from the bundle`. Repo visibility is the CEO's call, so the docs no longer state it. The branch, hand-back folder, base/head rules and QA's `<base>..<head>` review are unchanged.
+Affected steps already done: step-00-skeleton (delivered by PR; no rework).
+Action: process change, no code. Carried by `steps/step-01-state-tables.md` (Delivery line and Acceptance). Chief Of Staff pushes the updated BUILD_GUIDE.md (root and handoff/) and handoff/HAND-BACK.md to `main` with this CN before step 01 is sent.
+Kit files updated: BUILD_GUIDE §8; HAND-BACK.md (Repo, Branch, patch note, template PR line, REJECT); steps/step-01-state-tables.md.
