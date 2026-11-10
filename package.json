@@ -1,0 +1,26 @@
+{
+  "name": "tileengine-engine",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.ts\"",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint --max-warnings 0 .",
+    "deps": "depcruise src --config .dependency-cruiser.cjs",
+    "check:state": "sh scripts/check-state.sh",
+    "check:law": "sh scripts/check-law.sh",
+    "green": "npm test && npm run typecheck && npm run lint && npm run deps && npm run check:state && npm run check:law"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "dependency-cruiser": "18.7.2",
+    "eslint": "10.14.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.2"
+  }
+}
