@@ -27,6 +27,7 @@ export type CurrentFormatVersions = {
   readonly "unit": 2;              // STABLE
   readonly "behaviour-setup": 3;   // STABLE (setup-format r12)
   readonly "deck": 1;              // MAY-MOVE: decks are PROPOSED pending the build (project-format r14 §6.8)
+  readonly "audio": 1;             // MAY-MOVE (audio-format r1, PROPOSED)
 };
 export type CoreDocKind = keyof CurrentFormatVersions;
 /** Version guard: a document is readable by the core only if its formatVersion equals the current one. */
@@ -267,12 +268,25 @@ export interface CoreEventMap {
                                                                                            //   durationMs mirrors Action.durationMs (null = measured in turns)
 }
 
+/** Runtime key set for CoreEventMap; the compiler holds it equal to the interface (audio-format §8).
+ *  Adding a core event without its key fails tsc; an extra key fails the excess-property check. */
+export const CORE_EVENT_KEYS = { landedOn: true, pushBlocked: true, enteredLane: true, actionLogged: true } as const satisfies
+  { readonly [K in keyof CoreEventMap]-?: true };   // MAY-MOVE
+
 /** Mode events (idle, TD, …): AUGMENTABLE. A mode package adds its own entries by declaration merging, e.g.
  *    declare module "@te/project/core-types" { interface ModeEventMap { waveStart: { readonly wave: number } } }
  *  Keys must not collide with CoreEventMap keys; prefer prefixed names (idle.*, td.*). Empty in core. MAY-MOVE. */
 export interface ModeEventMap {
   /** Reserved placeholder so the interface isn't empty. Optional `never`: it can never be set, and EventUnion drops it. */
   readonly "mode.none"?: never;
+}
+
+/** UI / host events (title screen, menus, buttons): AUGMENTABLE like ModeEventMap, prefixed "ui.*".
+ *  NOT part of AnyEvent: UI events never enter the command log or the sim (audio-format §8). MAY-MOVE. */
+export interface UiEventMap {
+  /** Reserved placeholder so the interface isn't empty. Optional `never`: it can never be set, and EventUnion drops it. */
+  readonly "ui.none"?: never;
+  readonly "ui.click": { readonly control: string };   // PROPOSED (EA confirmed name + payload; CEO to rule)
 }
 
 /** Turns a payload map into a discriminated union { type: K } & payload. Optional/never entries drop out. */
@@ -284,6 +298,12 @@ export type EventUnion<M> = {
 export type CoreEvent = EventUnion<CoreEventMap>;
 /** Every event the log and bus may carry: core events plus whatever modes have augmented. MAY-MOVE. */
 export type AnyEvent = CoreEvent | EventUnion<ModeEventMap>;
+
+/** UI / host events only (augmentable union). NOT in AnyEvent. MAY-MOVE. */
+export type UiEvent = EventUnion<UiEventMap>;
+/** Runtime key set for UiEventMap; optional/never entries drop out (audio-format §8). */
+export const UI_EVENT_KEYS = { "ui.click": true } as const satisfies
+  { readonly [K in keyof UiEventMap as UiEventMap[K] extends undefined ? never : K]-?: true };   // MAY-MOVE
 
 // The command-log header {seed, formatVersion, engineVersion, projectHash} is also a runtime shape, owned by the
 // Engine Architect's events/command-log step. It's referenced here only (project-format r13 §6.5), not defined.
