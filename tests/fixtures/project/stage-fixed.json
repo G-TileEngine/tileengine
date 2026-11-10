@@ -1,0 +1,72 @@
+{
+  "kind": "stage",
+  "formatVersion": 2,
+  "id": "stage-fixed",
+  "rev": 1,
+  "mapRef": "map-6x9",
+  "playerSpawns": [
+    {
+      "c": 0,
+      "r": 8,
+      "facing": "N"
+    },
+    {
+      "c": 1,
+      "r": 8
+    }
+  ],
+  "neutrals": [
+    {
+      "unitId": "crate",
+      "at": {
+        "c": 3,
+        "r": 4
+      }
+    },
+    {
+      "unitId": "merchant",
+      "at": {
+        "c": 4,
+        "r": 4
+      },
+      "facing": "W",
+      "side": "player"
+    }
+  ],
+  "seed": 24301,
+  "sides": {
+    "enemyPool": "wolves"
+  },
+  "enemyPool": {
+    "mode": "fixed",
+    "entries": [
+      {
+        "unitId": "wolf",
+        "at": {
+          "c": 2,
+          "r": 0
+        },
+        "facing": "S"
+      },
+      {
+        "unitId": "wolf",
+        "at": {
+          "c": 3,
+          "r": 0
+        }
+      }
+    ]
+  },
+  "loadout": {
+    "roster": [
+      "knight",
+      "archer",
+      "cleric"
+    ],
+    "size": 3,
+    "required": [
+      "knight"
+    ]
+  },
+  "rules": []
+}
