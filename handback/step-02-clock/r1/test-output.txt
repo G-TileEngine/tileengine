@@ -1,0 +1,45 @@
+
+> tileengine-engine@0.0.0 test
+> node --test "tests/**/*.test.ts"
+
+✔ same deltas give the same ticks (2.113847ms)
+✔ 1000 frames of 16 ms (2.192692ms)
+✔ a long stall is clamped (0.86654ms)
+✔ bad options fall back to 10 and 100 (0.215383ms)
+✔ integer ms only (0.740847ms)
+✔ game speed runs more steps, same step size (0.413726ms)
+✔ pause, step, resume (0.377031ms)
+✔ timers fire on sim time in due order (2.250931ms)
+✔ a throwing subscriber is isolated (0.593423ms)
+✔ unsubscribe during a callback is safe (1.093106ms)
+✔ render alpha is in [0, 1) (0.182403ms)
+✔ gates: check:state passes on src and on a clean fixture (42.927799ms)
+✔ gates: check:state fails on direct phase writes and a second transition function (20.379776ms)
+✔ gates: check:law passes on src and fails on a law-breaking core fixture (196.575508ms)
+✔ gates: eslint allows the frame loop only in src/runtime/host/raf-driver.ts (550.089074ms)
+✔ gates: eslint rejects wall time, Math.random, rule words and upward imports in src/core (21.093752ms)
+✔ a 30000 ms fuse fires once at 30000 sim ms (6.629381ms)
+✔ 60000 ms fuse at 60000; off never; bad values are invalidValue (4.960653ms)
+✔ a paused clock stops the fuse (1.726911ms)
+✔ game speed x2 halves the frames needed (0.801054ms)
+✔ smoke: engine root exports name and version (0.859382ms)
+✔ smoke: core-types.ts is the pinned DSK copy (0.617066ms)
+✔ ALL_PHASES and ALL_EVENT_TYPES are exhaustive (1.412873ms)
+✔ every phase is reachable (0.408478ms)
+✔ only play.result is terminal (1.176041ms)
+✔ the three tables merge with no duplicate key (0.803508ms)
+✔ a duplicate (from, event) throws (0.59619ms)
+✔ scripted battle reaches play.result (1.703744ms)
+✔ overlay rows push and pop (0.209587ms)
+✔ every row of every table is accepted (1.125077ms)
+✔ CHOOSE_ACTION with next resolving skips targeting (0.165601ms)
+✔ no row → xGo returns from (2.920559ms)
+✔ illegal next on a pick-list row → from (0.193152ms)
+ℹ tests 33
+ℹ suites 0
+ℹ pass 33
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1852.206282
