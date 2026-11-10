@@ -49,7 +49,8 @@ src/types/core-types.ts Data & Save Keeper's core types — verbatim copy, never
 src/core/               clock, grid, unit, targeting, events, log, rng       → may import: src/types
 src/state/              *.table.ts, types.ts, xgo.ts                          → may import: src/types
 src/project/read/       read-only project reader (current-version docs only)  → may import: src/types, src/core/notice.ts (Notice type only; CN-005)
-src/rules/              (later) turn drivers, stats by name                   → may import: core, state, types
+src/rules/              (later) turn drivers, stats by name                   → may import: core, state, fx, types
+src/fx/                 effect-order reader, timeline and options (engine sequencing data, no game rules) → may import: src/types, src/core (CN-007)
 src/runtime/input/      pure input intents + gesture mappers (plain pointer data, no DOM) → may import: src/types, src/core (CN-006)
 src/sim/                headless sim harness (tests and tools only)           → may import: core, state, project, rules, runtime/input, types; nothing imports sim
 src/btf-adapters/       thin src/ wrappers (+ vendor/ only for a separately ruled helper, with PROVENANCE.md) → imported only by runtime/editor (later)
