@@ -1,0 +1,4 @@
+A	src/core/targeting/index.ts
+A	src/core/targeting/pipes.ts
+A	src/core/targeting/types.ts
+A	tests/core/pipes.test.ts

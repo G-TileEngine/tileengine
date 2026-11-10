@@ -1,0 +1,5 @@
+ src/core/targeting/index.ts |   2 +
+ src/core/targeting/pipes.ts |  52 +++++++++++++++++
+ src/core/targeting/types.ts |  18 ++++++
+ tests/core/pipes.test.ts    | 137 ++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 209 insertions(+)
