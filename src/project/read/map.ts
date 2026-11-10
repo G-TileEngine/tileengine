@@ -1,0 +1,42 @@
+import type { CoreEdge, CoreMap, CoreMapObject } from "../../types/core-types.ts";
+import { CURRENT_FORMAT_VERSIONS, bad, checkVersion, isInt, isObj, isStr, type ReadResult } from "./guard.ts";
+
+function sideOf(v: unknown): CoreEdge["side"] | null {
+  return v === "n" || v === "e" || v === "s" || v === "w" ? v : null;
+}
+function cell(v: unknown): { c: number; r: number } | null {
+  return isObj(v) && isInt(v.c) && isInt(v.r) ? { c: v.c, r: v.r } : null;
+}
+function logicOf(v: unknown, n: number): CoreMap["logic"] | null {
+  if (!isObj(v) || !Array.isArray(v.terrain) || v.terrain.length !== n || !v.terrain.every((t) => isInt(t, 0)) || !isObj(v.palette) || !Array.isArray(v.edges)) return null;
+  const palette: Record<string, string> = {};
+  for (const key of Object.keys(v.palette)) { const val = v.palette[key]; if (!isStr(val)) return null; palette[key] = val; }
+  const edges: CoreEdge[] = [];
+  for (const e of v.edges) { const at = cell(e); const side = isObj(e) ? sideOf(e.side) : null; if (at === null || side === null) return null; edges.push({ ...at, side }); }
+  return { terrain: v.terrain.slice(), palette, edges };
+}
+function objectOf(v: unknown): CoreMapObject | null {
+  if (!isObj(v) || !isStr(v.id)) return null;
+  const at = cell(v.at);
+  if (at === null || (v.blocks !== undefined && typeof v.blocks !== "boolean")) return null;
+  const fp = v.footprint;
+  const footprint = isObj(fp) && isInt(fp.w, 1) && isInt(fp.h, 1) ? { w: fp.w, h: fp.h } : undefined;
+  if (fp !== undefined && footprint === undefined) return null;
+  return { id: v.id, at, ...(footprint === undefined ? {} : { footprint }), ...(typeof v.blocks === "boolean" ? { blocks: v.blocks } : {}) };
+}
+export function readMap(json: unknown): ReadResult<CoreMap> {
+  const ver = checkVersion(json, "map");
+  if (ver !== null) return ver;
+  if (!isObj(json) || !isStr(json.id)) return bad("id");
+  if (!isInt(json.rev, 0)) return bad("rev");
+  if (!isInt(json.cols, 1)) return bad("cols");
+  if (!isInt(json.rows, 1)) return bad("rows");
+  const logic = logicOf(json.logic, json.cols * json.rows);
+  if (logic === null) return bad("logic");
+  const doc: CoreMap = { kind: "map", formatVersion: CURRENT_FORMAT_VERSIONS.map, id: json.id, rev: json.rev, cols: json.cols, rows: json.rows, logic };
+  if (json.objects === undefined) return { ok: true, doc, notices: [] };
+  if (!Array.isArray(json.objects)) return bad("objects");
+  const objects: CoreMapObject[] = [];
+  for (const item of json.objects) { const obj = objectOf(item); if (obj === null) return bad("objects"); objects.push(obj); }
+  return { ok: true, doc: { ...doc, objects }, notices: [] };
+}

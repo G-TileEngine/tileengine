@@ -1,0 +1,56 @@
+{
+  "kind": "stage",
+  "formatVersion": 2,
+  "id": "stage-weighted",
+  "rev": 1,
+  "mapRef": "map-12x12",
+  "playerSpawns": [
+    {
+      "c": 0,
+      "r": 11
+    },
+    {
+      "c": 1,
+      "r": 11
+    }
+  ],
+  "neutrals": [],
+  "enemyPool": {
+    "mode": "weighted",
+    "picks": 3,
+    "allowRepeats": false,
+    "spawns": [
+      {
+        "c": 0,
+        "r": 0
+      },
+      {
+        "c": 1,
+        "r": 0
+      },
+      {
+        "c": 2,
+        "r": 0,
+        "facing": "S"
+      }
+    ],
+    "entries": [
+      {
+        "unitId": "wolf",
+        "weight": 3
+      },
+      {
+        "unitId": "bat",
+        "weight": 1
+      },
+      {
+        "unitId": "ogre",
+        "weight": 0
+      }
+    ]
+  },
+  "loadout": null,
+  "rules": [
+    "setup-a"
+  ]
+}
