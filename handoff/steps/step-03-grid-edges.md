@@ -1,9 +1,10 @@
 # step-03-grid-edges: {c,r} grid, tile types, edge walls and blocking objects
 
 Step id: step-03-grid-edges          Revision: r<N> (r1 first; r2, r3… only after a REJECT)
-Repo: https://github.com/G-TileEngine/tileengine (private; never push to `main`)
+Repo: https://github.com/G-TileEngine/tileengine (read it; you do not push anything — see Delivery)
 Base commit: `<base: main's SHA after step-02-clock was accepted>` (the Architect writes the hash here at publish; the diff is always `<base>..<head>`)
-Branch: `step/step-03-grid-edges-r<N>`, created from the base. Never commit to `main`. Finish with a PR to `main`.
+Branch: `step/step-03-grid-edges-r<N>`, created from the base. Never commit to `main`. Chief Of Staff pushes your branch and opens the PR to `main`.
+Delivery (CN-003): `git bundle create step-03-grid-edges-r<N>.bundle <base>..step/step-03-grid-edges-r<N>`, then `git bundle verify`; upload the bundle plus a copy of HAND-BACK.md to the CEO's Drive. HANDBACK.md's PR line: `PR: opened by Chief Of Staff from the bundle`.
 Hand-back location: in the repo, on that branch: `handback/step-03-grid-edges/r<N>/` (HAND-BACK.md), committed as the branch's last commit
 Depends on: step-00-skeleton (independent of 01–02 in code; ordered after them)
 Read first: BUILD_GUIDE.md §2 laws 2, 10, M8; §4 (types: one source)
@@ -144,7 +145,7 @@ Edge storage with an opposite canonical side: `chess/game/towerTerrain.ts:58` `E
 - [ ] Every non-fatal case in Behaviour 2–4 yields a notice with the exact code (tests above).
 - [ ] `git diff --stat <base>..<head> -- . ':!package-lock.json' ':!handback'` shows ≤ 400 changed lines (src + tests); each file within its size limit above.
 - [ ] `git diff --name-status <base>..<head> -- . ':!handback'` lists exactly the files in "Files to create or change" (anything extra is named and justified in the Decisions note).
-- [ ] Hand-back `handback/step-03-grid-edges/r<N>/` complete per HAND-BACK.md; PR from `step/step-03-grid-edges-r<N>` to `main` open; nothing committed to `main`.
+- [ ] Hand-back `handback/step-03-grid-edges/r<N>/` complete per HAND-BACK.md, with the PR line as in Delivery; the bundle verifies and its branch tip is the hand-back commit; nothing committed to `main`.
 
 ## Out of scope
 - Units and occupancy (step 04); move costs by terrain; line of sight and shots (`wall_blocks_los/shots` are rules knobs).

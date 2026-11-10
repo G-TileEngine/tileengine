@@ -1,9 +1,10 @@
 # step-06-pipes: UNIT and TILE: the only targeting pipes
 
 Step id: step-06-pipes          Revision: r<N> (r1 first; r2, r3… only after a REJECT)
-Repo: https://github.com/G-TileEngine/tileengine (private; never push to `main`)
+Repo: https://github.com/G-TileEngine/tileengine (read it; you do not push anything — see Delivery)
 Base commit: `<base: main's SHA after step-05-rng was accepted>` (the Architect writes the hash here at publish; the diff is always `<base>..<head>`)
-Branch: `step/step-06-pipes-r<N>`, created from the base. Never commit to `main`. Finish with a PR to `main`.
+Branch: `step/step-06-pipes-r<N>`, created from the base. Never commit to `main`. Chief Of Staff pushes your branch and opens the PR to `main`.
+Delivery (CN-003): `git bundle create step-06-pipes-r<N>.bundle <base>..step/step-06-pipes-r<N>`, then `git bundle verify`; upload the bundle plus a copy of HAND-BACK.md to the CEO's Drive. HANDBACK.md's PR line: `PR: opened by Chief Of Staff from the bundle`.
 Hand-back location: in the repo, on that branch: `handback/step-06-pipes/r<N>/` (HAND-BACK.md), committed as the branch's last commit
 Depends on: step-04-units-occupancy (also step-03 for `Grid`)
 Read first: BUILD_GUIDE.md §2 law 3, M9
@@ -144,7 +145,7 @@ Live lists: `chess/game/stage/target.ts:92` `refreshLive`; `:139-142` `unitCell`
 - [ ] `rg -n 'offset' src/core/targeting` prints nothing (pipes never read draw positions).
 - [ ] `git diff --stat <base>..<head> -- . ':!package-lock.json' ':!handback'` shows ≤ 400 changed lines (src + tests); each file within its size limit above.
 - [ ] `git diff --name-status <base>..<head> -- . ':!handback'` lists exactly the files in "Files to create or change" (anything extra is named and justified in the Decisions note).
-- [ ] Hand-back `handback/step-06-pipes/r<N>/` complete per HAND-BACK.md; PR from `step/step-06-pipes-r<N>` to `main` open; nothing committed to `main`.
+- [ ] Hand-back `handback/step-06-pipes/r<N>/` complete per HAND-BACK.md, with the PR line as in Delivery; the bundle verifies and its branch tip is the hand-back commit; nothing committed to `main`.
 
 ## Out of scope
 - Shapes, area patterns, legality filters, range checks: behaviours / rules layers.

@@ -1,9 +1,10 @@
 # step-05-rng: seeded randomness: mulberry32, named streams, save and restore
 
 Step id: step-05-rng          Revision: r<N> (r1 first; r2, r3… only after a REJECT)
-Repo: https://github.com/G-TileEngine/tileengine (private; never push to `main`)
+Repo: https://github.com/G-TileEngine/tileengine (read it; you do not push anything — see Delivery)
 Base commit: `<base: main's SHA after step-04-units-occupancy was accepted>` (the Architect writes the hash here at publish; the diff is always `<base>..<head>`)
-Branch: `step/step-05-rng-r<N>`, created from the base. Never commit to `main`. Finish with a PR to `main`.
+Branch: `step/step-05-rng-r<N>`, created from the base. Never commit to `main`. Chief Of Staff pushes your branch and opens the PR to `main`.
+Delivery (CN-003): `git bundle create step-05-rng-r<N>.bundle <base>..step/step-05-rng-r<N>`, then `git bundle verify`; upload the bundle plus a copy of HAND-BACK.md to the CEO's Drive. HANDBACK.md's PR line: `PR: opened by Chief Of Staff from the bundle`.
 Hand-back location: in the repo, on that branch: `handback/step-05-rng/r<N>/` (HAND-BACK.md), committed as the branch's last commit
 Depends on: step-00-skeleton (independent in code; ordered after 04)
 Read first: BUILD_GUIDE.md §2 law 5, law 10
@@ -145,7 +146,7 @@ Reference: `chess/game/towerTourney.ts:66-75` `mulberry32`. Not repeated: `:515`
 - [ ] The golden vectors in `tests/core/rng.test.ts` equal the ones in this file, digit for digit.
 - [ ] `git diff --stat <base>..<head> -- . ':!package-lock.json' ':!handback'` shows ≤ 400 changed lines (src + tests); each file within its size limit above.
 - [ ] `git diff --name-status <base>..<head> -- . ':!handback'` lists exactly the files in "Files to create or change" (anything extra is named and justified in the Decisions note).
-- [ ] Hand-back `handback/step-05-rng/r<N>/` complete per HAND-BACK.md; PR from `step/step-05-rng-r<N>` to `main` open; nothing committed to `main`.
+- [ ] Hand-back `handback/step-05-rng/r<N>/` complete per HAND-BACK.md, with the PR line as in Delivery; the bundle verifies and its branch tip is the hand-back commit; nothing committed to `main`.
 
 ## Out of scope
 - Choosing a fresh seed (host / platform at play start), crypto-strength randomness, distributions beyond the four calls.

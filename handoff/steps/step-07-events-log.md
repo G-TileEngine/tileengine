@@ -1,9 +1,10 @@
 # step-07-events-log: core events with a mode registry, M4 actions and the command log
 
 Step id: step-07-events-log          Revision: r<N> (r1 first; r2, r3… only after a REJECT)
-Repo: https://github.com/G-TileEngine/tileengine (private; never push to `main`)
+Repo: https://github.com/G-TileEngine/tileengine (read it; you do not push anything — see Delivery)
 Base commit: `<base: main's SHA after step-06-pipes was accepted>` (the Architect writes the hash here at publish; the diff is always `<base>..<head>`)
-Branch: `step/step-07-events-log-r<N>`, created from the base. Never commit to `main`. Finish with a PR to `main`.
+Branch: `step/step-07-events-log-r<N>`, created from the base. Never commit to `main`. Chief Of Staff pushes your branch and opens the PR to `main`.
+Delivery (CN-003): `git bundle create step-07-events-log-r<N>.bundle <base>..step/step-07-events-log-r<N>`, then `git bundle verify`; upload the bundle plus a copy of HAND-BACK.md to the CEO's Drive. HANDBACK.md's PR line: `PR: opened by Chief Of Staff from the bundle`.
 Hand-back location: in the repo, on that branch: `handback/step-07-events-log/r<N>/` (HAND-BACK.md), committed as the branch's last commit
 Depends on: step-02-clock, step-04-units-occupancy, step-05-rng, step-06-pipes
 Read first: BUILD_GUIDE.md §2 law 5, M4, M9; §4 (command-log header)
@@ -181,7 +182,7 @@ Run: `npm test`, or `node --test tests/core/bus.test.ts tests/core/log.test.ts t
 - [ ] `node --test tests/core/replay.test.ts` passes.
 - [ ] `git diff --stat <base>..<head> -- . ':!package-lock.json' ':!handback'` shows ≤ 400 changed lines (src + tests); each file within its size limit above.
 - [ ] `git diff --name-status <base>..<head> -- . ':!handback'` lists exactly the files in "Files to create or change" (anything extra is named and justified in the Decisions note).
-- [ ] Hand-back `handback/step-07-events-log/r<N>/` complete per HAND-BACK.md; PR from `step/step-07-events-log-r<N>` to `main` open; nothing committed to `main`.
+- [ ] Hand-back `handback/step-07-events-log/r<N>/` complete per HAND-BACK.md, with the PR line as in Delivery; the bundle verifies and its branch tip is the hand-back commit; nothing committed to `main`.
 
 ## BTF intent (read-only; a rewrite of the same idea)
 `src/engine/log.ts:3-9` `Command`, `:13-21` `writeCommand`, `:23-25` `readLog`; `chess/game/towerLog.ts:11-22` `noteLine`/`noteSq`. Not repeated: string `"col,rank"` coordinates, the `card` field, a counter called `seed`.

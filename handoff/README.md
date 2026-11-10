@@ -3,9 +3,9 @@
 Owner: Engine Architect. **Status: kit-2 — QA's kit-review findings B1, B2, M1–M4 addressed; steps 00–07 written. Ready for QA's re-review, then Chief Of Staff. Not sent to Grok Build yet.** Canonical location: `/workspace/tileengine/handoff/` (this folder). The older copy in `/workspace/tileengine/docs/grok-build-kit/` is superseded. The workflow background is in `/workspace/tileengine/docs/grok-build-handoff-plan.md` (DRAFT; the decisions below win where they differ).
 
 ## Where things go
-- **Repo:** https://github.com/G-TileEngine/tileengine (private). `main` holds only `README.md` today (owned by CoS; steps never edit it). Nobody pushes to `main`; it changes only by merged PR.
+- **Repo:** https://github.com/G-TileEngine/tileengine (visibility is the CEO's call). `README.md` on `main` is owned by CoS; steps never edit it. Nobody pushes to `main`; it changes only by merged PR.
 - **Publishing (CoS):** push one kit commit to `main` with `BUILD_GUIDE.md` (root), `docs/STATES.md`, `src/types/core-types.ts` (or attach them to step 00). That commit is step 00's base. The Architect then writes each step's base SHA into the step file before it is sent.
-- **Per step:** Grok Build works on branch `step/<step-id>-r<N>` from the base (`main`'s SHA after the previous accepted step), commits the hand-back in-repo at `handback/<step-id>/r<N>/` as the last commit, and opens a PR to `main`. Architect review → QA (G1–G10 on a clean clone of the branch) → RaiKynn accepts via CoS → the Architect merges and tags `accepted/<step-id>`.
+- **Per step:** Grok Build works on branch `step/<step-id>-r<N>` from the base (`main`'s SHA after the previous accepted step), commits the hand-back in-repo at `handback/<step-id>/r<N>/` as the last commit, and delivers a verified git bundle plus HAND-BACK.md to the CEO's Drive; Chief Of Staff pushes the branch and opens the PR to `main` (CN-003). Architect review → QA (G1–G10 on a clean clone of the branch) → RaiKynn accepts via CoS → the Architect merges and tags `accepted/<step-id>`.
 - **Change Notices:** `change-notices/CN-<NNN>-<slug>.md` here, attached to the step that carries them. Issued: `CN-001-sim-time-ms.md` (sim time is integer ms; carried by step 02).
 
 ## Files
@@ -40,7 +40,7 @@ Later (outlines in `/workspace/tileengine/docs/core-spine-slices.md`): step-08 p
 | Checklist item | Covered by |
 |---|---|
 | §0.1–0.5 hand-back inputs | HAND-BACK.md table rows 1–5 and the `HANDBACK.md` shape |
-| §1 clean checkout in `/workspace/qa-runs/<step>/`, fresh `npm ci` | Clone of branch `step/<step-id>-r<N>` from the private repo + head commit in `HANDBACK.md`; every step's acceptance starts with `npm ci && npm run green` |
+| §1 clean checkout in `/workspace/qa-runs/<step>/`, fresh `npm ci` | Clone of branch `step/<step-id>-r<N>` from the repo (pushed by CoS from the bundle) + head commit in `HANDBACK.md`; every step's acceptance starts with `npm ci && npm run green` |
 | G1 tests green, no skip/only/todo | BUILD_GUIDE §6 "green"; every step states the minimum pass count (step 00: `pass 7`) and greps for `.only/.skip/.todo` |
 | G2 typecheck clean, no loosening | BUILD_GUIDE §6 and §7; tsconfig `skipLibCheck: false`; tsconfig is in every step's Do-not-touch |
 | G3 xGo grep | `scripts/check-state.sh` (six patterns verbatim) via `npm run check:state`, in `npm run green`; every step's acceptance repeats it |

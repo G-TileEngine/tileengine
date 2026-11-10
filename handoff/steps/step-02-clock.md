@@ -1,9 +1,10 @@
 # step-02-clock: the one clock (integer sim ms) and the turn fuse
 
 Step id: step-02-clock          Revision: r<N> (r1 first; r2, r3… only after a REJECT)
-Repo: https://github.com/G-TileEngine/tileengine (private; never push to `main`)
+Repo: https://github.com/G-TileEngine/tileengine (read it; you do not push anything — see Delivery)
 Base commit: `<base: main's SHA after step-01-state-tables was accepted>` (the Architect writes the hash here at publish; the diff is always `<base>..<head>`)
-Branch: `step/step-02-clock-r<N>`, created from the base. Never commit to `main`. Finish with a PR to `main`.
+Branch: `step/step-02-clock-r<N>`, created from the base. Never commit to `main`. Chief Of Staff pushes your branch and opens the PR to `main`.
+Delivery (CN-003): `git bundle create step-02-clock-r<N>.bundle <base>..step/step-02-clock-r<N>`, then `git bundle verify`; upload the bundle plus a copy of HAND-BACK.md to the CEO's Drive. HANDBACK.md's PR line: `PR: opened by Chief Of Staff from the bundle`.
 Hand-back location: in the repo, on that branch: `handback/step-02-clock/r<N>/` (HAND-BACK.md), committed as the branch's last commit
 Depends on: step-00-skeleton, step-01-state-tables (the fuse emits the `FUSE_EXPIRE` event type)
 Read first: BUILD_GUIDE.md §2 law 1, M1; `handoff/change-notices/CN-001-sim-time-ms.md` (attached; binding)
@@ -146,7 +147,7 @@ Keep the rules of `src/engine/clock.ts`: one loop (`:1`), a delta clamp (`:15`, 
 - [ ] Decisions note names `stepMs` 10, `maxFrameMs` 100, the quarter-step game-speed rounding and the `(dueMs, id)` timer order.
 - [ ] `git diff --stat <base>..<head> -- . ':!package-lock.json' ':!handback'` shows ≤ 400 changed lines (src + tests); each file within its size limit above.
 - [ ] `git diff --name-status <base>..<head> -- . ':!handback'` lists exactly the files in "Files to create or change" (anything extra is named and justified in the Decisions note).
-- [ ] Hand-back `handback/step-02-clock/r<N>/` complete per HAND-BACK.md; PR from `step/step-02-clock-r<N>` to `main` open; nothing committed to `main`.
+- [ ] Hand-back `handback/step-02-clock/r<N>/` complete per HAND-BACK.md, with the PR line as in Delivery; the bundle verifies and its branch tip is the hand-back commit; nothing committed to `main`.
 
 ## Out of scope
 - The host frame driver `src/runtime/host/raf-driver.ts` (runtime, later); frame-rate caps; UI for game speed.

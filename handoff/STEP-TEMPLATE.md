@@ -6,9 +6,10 @@ Copy this for every step file `steps/<step-id>.md`. All headed sections are requ
 # <step-id>: <title>
 
 Step id: <step-id>          Revision: r<N> (r1 first)
-Repo: https://github.com/G-TileEngine/tileengine (private; never push to `main`)
+Repo: https://github.com/G-TileEngine/tileengine (read it; you do not push anything — see Delivery)
 Base commit: <base: main's SHA after <previous step-id> was accepted>   (step-00: main @ the commit Chief Of Staff pushes with the kit)
-Branch: step/<step-id>-r<N>, from the base; finish with a PR to main
+Branch: step/<step-id>-r<N>, from the base. Never commit to main. Chief Of Staff pushes your branch and opens the PR to main.
+Delivery (CN-003): git bundle create <step-id>-r<N>.bundle <base>..step/<step-id>-r<N>; git bundle verify; upload the bundle + a copy of HAND-BACK.md to the CEO's Drive. HANDBACK.md PR line: "PR: opened by Chief Of Staff from the bundle".
 Hand-back location: in the repo, on that branch: handback/<step-id>/r<N>/   (see HAND-BACK.md)
 Depends on: <step ids that must be accepted first>
 Read first: BUILD_GUIDE.md §<n>, docs/STATES.md §<n> (only what this step needs)
