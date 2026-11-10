@@ -1,0 +1,36 @@
+{
+  "kind": "map",
+  "formatVersion": 5,
+  "id": "grid-4x3",
+  "rev": 1,
+  "cols": 4,
+  "rows": 3,
+  "logic": {
+    "terrain": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      2,
+      0
+    ],
+    "palette": {
+      "0": "floor",
+      "1": "wall-block",
+      "2": "water"
+    },
+    "edges": [
+      {
+        "c": 0,
+        "r": 0,
+        "side": "e"
+      }
+    ]
+  }
+}

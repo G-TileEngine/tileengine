@@ -1,0 +1,59 @@
+
+> tileengine-engine@0.0.0 test
+> node --test "tests/**/*.test.ts"
+
+✔ same deltas give the same ticks (2.140071ms)
+✔ 1000 frames of 16 ms (2.775564ms)
+✔ a long stall is clamped (0.334576ms)
+✔ bad options fall back to 10 and 100 (0.19727ms)
+✔ integer ms only (0.789004ms)
+✔ game speed runs more steps, same step size (0.287688ms)
+✔ pause, step, resume (0.381836ms)
+✔ timers fire on sim time in due order (2.117086ms)
+✔ a throwing subscriber is isolated (0.449989ms)
+✔ unsubscribe during a callback is safe (0.984817ms)
+✔ render alpha is in [0, 1) (0.199463ms)
+✔ a wall blocks both ways (1.196484ms)
+✔ every stored form is the same wall, counted once (0.761154ms)
+✔ off-map edge is skipped with a notice (0.37176ms)
+✔ edge walls always stop forced movement (0.283045ms)
+✔ closed or non-enterable tiles stop forced movement as wall-block (0.460062ms)
+✔ any size builds (M8) (1.699006ms)
+✔ index and sqAt round-trip row-major (1.132858ms)
+✔ bad dimensions throw (0.488676ms)
+✔ unknown palette key or id runs as floor with a notice (0.539705ms)
+✔ terrain length mismatch and missing floor warn (0.250424ms)
+✔ closed tiles and blocking objects are not open (0.337115ms)
+✔ wrapEdges is ignored with a notice (0.195574ms)
+✔ non-1x1 footprint plays 1x1 (0.165293ms)
+✔ reachable respects walls, closed cells, maxSteps and isBlocked (0.637624ms)
+✔ gates: check:state passes on src and on a clean fixture (40.849248ms)
+✔ gates: check:state fails on direct phase writes and a second transition function (19.01965ms)
+✔ gates: check:law passes on src and fails on a law-breaking core fixture (188.637939ms)
+✔ gates: eslint allows the frame loop only in src/runtime/host/raf-driver.ts (519.340517ms)
+✔ gates: eslint rejects wall time, Math.random, rule words and upward imports in src/core (20.256615ms)
+✔ a 30000 ms fuse fires once at 30000 sim ms (6.040693ms)
+✔ 60000 ms fuse at 60000; off never; bad values are invalidValue (6.539345ms)
+✔ a paused clock stops the fuse (1.449322ms)
+✔ game speed x2 halves the frames needed (0.265387ms)
+✔ smoke: engine root exports name and version (0.805815ms)
+✔ smoke: core-types.ts is the pinned DSK copy (0.578491ms)
+✔ ALL_PHASES and ALL_EVENT_TYPES are exhaustive (1.406117ms)
+✔ every phase is reachable (0.430038ms)
+✔ only play.result is terminal (1.251339ms)
+✔ the three tables merge with no duplicate key (0.778981ms)
+✔ a duplicate (from, event) throws (0.535564ms)
+✔ scripted battle reaches play.result (1.655034ms)
+✔ overlay rows push and pop (0.189969ms)
+✔ every row of every table is accepted (1.059007ms)
+✔ CHOOSE_ACTION with next resolving skips targeting (0.159638ms)
+✔ no row → xGo returns from (3.444981ms)
+✔ illegal next on a pick-list row → from (0.225751ms)
+ℹ tests 47
+ℹ suites 0
+ℹ pass 47
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1980.976207
