@@ -8,7 +8,7 @@ import type { Rng, RngState } from "../core/rng/index.ts";
 import type { Notice } from "../core/notice.ts";
 import type { Event, Outcome, Phase } from "../state/index.ts";
 import type { FuseSetting } from "../rules/turns/fuse.ts";
-import type { Intent } from "../runtime/input/index.ts";
+import type { GestureOptions, Intent } from "../runtime/input/index.ts";
 
 /** Parsed JSON documents plus the host's choices. The sim never reads files, wall time or a random source. */
 export type SimInput = {
@@ -144,4 +144,11 @@ export type ChaosRecord = ChaosRun & {
   readonly snapshotHash: string;
 };
 export type ChaosResult = { readonly outcome: MatchResult["outcome"] | "failed"; readonly run: ChaosRun; readonly failure: ChaosRecord | null; readonly hashes: readonly string[]; readonly rejects: readonly number[] };
+/** Chaos generators (step 13): the input kinds, their weights (no defaults), the generator's JSON settings, and a shrink result. */
+export type ChaosKind = "legal" | "stall" | "offGrid" | "foreign" | "taken" | "cancel" | "confirm" | "box" | "gesture";
+export type ChaosMix = Readonly<Record<ChaosKind, number>>;
+/** `stream`: the generator's own `streamSeed(world.seed, stream)`; `burst`: most repeats in a spam batch; `gestures`: null = no gesture kind. */
+export type ChaosGen = { readonly stream: string; readonly mix: ChaosMix; readonly burst: number; readonly gestures: GestureOptions | null };
+export type ChaosGenOptions = Omit<ChaosOptions, "intents"> & { readonly gen: ChaosGen; readonly legal: IntentHook };
+export type ChaosShrink = { readonly record: ChaosRecord; readonly tries: number };
 
