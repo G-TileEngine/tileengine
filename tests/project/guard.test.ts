@@ -2,13 +2,14 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { CURRENT_FORMAT_VERSIONS, checkVersion, readManifest, readMap, readStage } from "../../src/project/read/index.ts";
+import { BTF_STAGE_LIMITS as L } from "../../src/btf-adapters/src/index.ts";
 
 const load = (name: string): Record<string, unknown> => JSON.parse(readFileSync(new URL(`../fixtures/project/${name}.json`, import.meta.url), "utf8")) as Record<string, unknown>;
 const project = { id: "p", rev: 1, catalogueRev: 1, stages: ["a"], rules: [], loadout: { roster: ["k"], size: 1, required: [] } };
 
 test("current versions are accepted: map 5, stage 2, tile-project 6", () => {
   const manifest = { kind: "tile-project", formatVersion: 6, project: { ...project, settings: { wrapEdges: false } } };
-  assert.equal(readMap(load("map-6x9")).ok && readStage(load("stage-fixed")).ok && readManifest(manifest).ok, true);
+  assert.equal(readMap(load("map-6x9")).ok && readStage(load("stage-fixed"), L).ok && readManifest(manifest).ok, true);
   assert.deepEqual([CURRENT_FORMAT_VERSIONS.map, CURRENT_FORMAT_VERSIONS.stage, CURRENT_FORMAT_VERSIONS["tile-project"]], [5, 2, 6]);
 });
 test("any other formatVersion needs migration and is never patched", () => {
@@ -20,7 +21,7 @@ test("any other formatVersion needs migration and is never patched", () => {
   }
   const stage = load("stage-fixed");
   stage.formatVersion = 1;
-  assert.deepEqual(readStage(stage), { ok: false, needsMigration: true, kind: "stage", found: 1 });
+  assert.deepEqual(readStage(stage, L), { ok: false, needsMigration: true, kind: "stage", found: 1 });
   assert.equal(stage.formatVersion, 1);
 });
 test("not an object, wrong kind or a non-integer formatVersion is a hard error", () => {

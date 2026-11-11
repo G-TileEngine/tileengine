@@ -3,10 +3,11 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createRng, streamSeed } from "../../src/core/rng/index.ts";
 import { readStage, resolvePlacements } from "../../src/project/read/index.ts";
+import { BTF_STAGE_LIMITS as L } from "../../src/btf-adapters/src/index.ts";
 import type { CoreStage } from "../../src/types/core-types.ts";
 
 const load = (name: string): CoreStage => {
-  const read = readStage(JSON.parse(readFileSync(new URL(`../fixtures/project/${name}.json`, import.meta.url), "utf8")));
+  const read = readStage(JSON.parse(readFileSync(new URL(`../fixtures/project/${name}.json`, import.meta.url), "utf8")), L);
   if (!read.ok) throw new Error(read.needsMigration ? "migrate" : read.error);
   return read.doc;
 };

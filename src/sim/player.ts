@@ -5,6 +5,11 @@ import { feedIntent, intentEvent } from "./intents.ts";
 import type { Player, PlayerOptions, PlayerReject, PlayerStep, SimWorld } from "./types.ts";
 
 const EDGES = mergeTables(TABLES);
+const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+/** The door's shape guard (step 16): a fed value is read only after its shape is known; anything else is `malformed`. */
+function malformed(intent: unknown, aim: unknown): boolean {
+  return !isObj(intent) || (aim !== undefined && aim !== null && !isObj(aim)) || (intent.type === "TargetCell" && !isObj(intent.at));
+}
 
 function rejectOf(world: SimWorld, opts: PlayerOptions, from: PlayerStep["from"], event: PlayerStep["event"], selected: string | null): PlayerReject | null {
   if (event === null) return "noEvent";
@@ -33,6 +38,11 @@ export function createPlayer(world: SimWorld, opts: PlayerOptions): Player {
     feed(intent, aim) {
       const from = world.phases.battle;
       if (from === undefined) throw new Error("player: battle phase missing");
+      if (malformed(intent, aim)) {
+        const step: PlayerStep = { intent: (intent ?? null) as PlayerStep["intent"], aim: (aim ?? null) as PlayerStep["aim"], tick: world.clock.tick(), from, event: null, action: null, reject: "malformed" };
+        steps.push(step);
+        return step;
+      }
       const event = intentEvent(from, intent, aim ?? null);
       const reject = rejectOf(world, opts, from, event, selected);
       let action: Action | null = null;

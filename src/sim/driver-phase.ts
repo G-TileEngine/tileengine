@@ -57,7 +57,8 @@ function turn(world: SimWorld, opts: MatchOptions, side: MatchOptions["sides"][n
       if (inputs.length === 0) { replayTicks(world, 1); continue; }
       for (const input of inputs) {
         if (expired || world.clock.now() >= opts.maxSimMs) break;
-        const step = seat.player.feed(input.intent, input.aim);
+        const shaped = (input !== null && typeof input === "object" ? input : {}) as { intent: never; aim?: never };
+        const step = seat.player.feed(shaped.intent, shaped.aim);
         if (step.reject === null && step.event !== null) events.push(step.event);
         if (step.action !== null) land(world, step.action, () => expired, mark);
         seat.onStep?.(step, world);

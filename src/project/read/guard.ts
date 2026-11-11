@@ -26,7 +26,7 @@ export const bad = (key: string): ReadFail => ({ ok: false, needsMigration: fals
 /** null = the version guard passes. */
 export function checkVersion(json: unknown, kind: CoreDocKind): ReadFail | null {
   if (!isObj(json)) return { ok: false, needsMigration: false, error: "not an object" };
-  if (json.kind !== kind) return { ok: false, needsMigration: false, error: `wrong kind ${String(json.kind)}` };
+  if (json.kind !== kind) return { ok: false, needsMigration: false, error: `wrong kind ${typeof json.kind === "object" && json.kind !== null ? "object" : String(json.kind)}` };
   if (!isInt(json.formatVersion)) return bad("formatVersion");
   if (json.formatVersion !== CURRENT_FORMAT_VERSIONS[kind]) return { ok: false, needsMigration: true, kind, found: json.formatVersion };
   return null;

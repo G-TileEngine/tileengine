@@ -55,10 +55,17 @@ function pool(v: unknown): CoreEnemyPool | null {
   for (const w of v.waves) { if (!isObj(w) || !isInt(w.turn) || !Array.isArray(w.entries)) return null; const entries: { unitId: string; count: number }[] = []; for (const e of w.entries) { if (!isObj(e) || !isStr(e.unitId) || !isInt(e.count, 0)) return null; entries.push({ unitId: e.unitId, count: e.count }); } waves.push({ turn: w.turn, entries }); }
   return { mode: "waves", spawns: spots, waves };
 }
+/** Caller caps on loop-driving counts (step 16), no defaults: weighted `picks`, and the units one wave adds (its counts summed). */
+export type StageLimits = { readonly picks: number; readonly waveUnits: number };
+function capped(pool: CoreEnemyPool, limits: StageLimits): boolean {
+  if (pool.mode === "weighted") return pool.picks > limits.picks || pool.entries.some((e) => !Number.isFinite(e.weight));
+  return pool.mode === "waves" && pool.waves.some((w) => w.entries.reduce((n, e) => n + e.count, 0) > limits.waveUnits);
+}
 export function stageSeed(stage: CoreStage): number | null {
   return typeof stage.seed === "number" ? stage.seed : null;
 }
-export function readStage(json: unknown): ReadResult<CoreStage> {
+export function readStage(json: unknown, limits: StageLimits): ReadResult<CoreStage> {
+  if (!Number.isInteger(limits.picks) || limits.picks < 0 || !Number.isInteger(limits.waveUnits) || limits.waveUnits < 0) throw new RangeError("readStage: limits must be integers >= 0");
   const ver = checkVersion(json, "stage");
   if (ver !== null) return ver;
   if (!isObj(json) || !isStr(json.id)) return bad("id");
@@ -70,7 +77,7 @@ export function readStage(json: unknown): ReadResult<CoreStage> {
   const seed = rawSeed === undefined ? undefined : rawSeed === null ? null : isInt(rawSeed) ? rawSeed : undefined;
   if (rawSeed !== undefined && seed === undefined) return bad("seed");
   const sides = json.sides === undefined ? undefined : sidesOf(json.sides); if (sides === null) return bad("sides");
-  const enemyPool = pool(json.enemyPool); if (enemyPool === null) return bad("enemyPool");
+  const enemyPool = pool(json.enemyPool); if (enemyPool === null || capped(enemyPool, limits)) return bad("enemyPool");
   const gear = json.loadout === null ? null : loadout(json.loadout);
   if (json.loadout !== null && gear === null) return bad("loadout");
   const rules = strs(json.rules); if (rules === null) return bad("rules");
