@@ -13,7 +13,7 @@ Holds: no renderer; no direct state writes (phases replaced whole with `xGo`; un
 
 **Standing rule (CEO, 11 Nov): online play is just another match driver.** The rules core never knows who is playing. Every move (human touch, bot, chaos player, later an online peer) arrives as a 09c intent through the one player driver: intents in, `submit` out. No rules, bot or offline code may need editing to add an online driver; a per-step snapshot hash must be possible from the driver's output (step A's `onStep`).
 
-**Later steps** (the CEO wants these eventually; not this first cut): coverage-guided exploration; option-matrix sweeps (**CEO Q9:** first cut runs BTF defaults only, no 10b/10c non-default options) (full `FxOptions`, including stored keys that do not yet change the match); soak tiers up to 24 h; adversarial search; shrinking beyond a simple form. HP / shield / deck / hand checks wait for a rules step (QA invariant 7). An event-bus history cap is not in this scope.
+**Later steps** (the CEO wants these eventually; not this first cut): coverage-guided exploration; option-matrix sweeps (**CEO Q9:** first cut runs BTF defaults only, no 10b/10c non-default options) (full `FxOptions`, including stored keys that do not yet change the match); soak tiers up to 24 h; adversarial search; shrinking beyond a simple form. HP / shield / deck / hand checks wait for a rules step (QA invariant 7). An event-bus history cap is not in this scope (it is step 17, memory guard).
 
 ## 2. Invariants
 
@@ -108,3 +108,15 @@ The usual cap is 400 changed lines per step. This is likely **three steps**: the
 - **Game-side** (this plan, steps A–C): plays the game badly on purpose and checks the engine promises (§2). Later it also checks system promises, for example: an achievement unlocks exactly once with the exact gold; a button fires its one action with no side effects; an asset pack loads every file every time against a fake store that can fail, time out or deliver half a file. Each new system ships its own chaos promises.
 - **Dev-side security and exploit hunter** (CEO: the most important dev-side part): tampered saves and imports, forged intents, out-of-range or malformed input, duplicate or replayed purchase and reward events, currency dupes, asset-pack sandbox escapes; later cheating online peers and fingerprint spoofing.
 - **Where it enters:** after steps A–C. Forged and replayed intents can be fuzzed through the player driver as soon as harness B exists. Its first own slice comes once the first save/import format and the first reward/currency events exist. The online-peer part waits for the online driver add-on.
+
+## 10. Online-play step: MUST items (CEO Q2, 2026-11-11, via Chief Of Staff)
+
+The CEO: online is a sensitive area and must be done right. For now (no online yet) the door only refuses garbled input (step 16). The future online-play step (online driver add-on plus its server template) MUST ship all of these, and QA holds it until each has a test:
+
+1. **Server authoritative.** The server (or the host, for a later P2P mode) runs the match on the one clock and validates every move itself through the same player driver (`createPlayer().feed`). A client's claimed result is never trusted.
+2. **Every refusal is logged** server-side: player, match, turn, the intent as received and the reject reason.
+3. **Flag only after repeated refusals.** A player is flagged for review only after repeated refusals over a set window (the threshold is a maker setting with a safe default). One refusal (lag, a stale tap, a version mismatch) never flags anyone.
+4. **No auto-ban from a single refusal**, ever. A flag is not a ban.
+5. **Appeal path.** A flagged or actioned player can appeal, and the review sees the logged refusals behind the flag.
+
+Not core: the logging, flag counters and appeals live in the online add-on and server template, never in `src/sim`, rules or the core (the door stays blind to who is playing, step 16).
