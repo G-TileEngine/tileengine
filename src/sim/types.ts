@@ -55,7 +55,8 @@ export type VictoryRule = (world: SimWorld, at: { readonly round: number; readon
 
 export type MatchOptions = {
   readonly sides: readonly SideId[];
-  readonly ai: AiHook;
+  /** @deprecated Step 14: the M6 action hook, kept only for unseated sides (the step-09b tests and the parity test) until a ruling retires it. Bots send intents through `seats`. Required unless every side is seated. */
+  readonly ai?: AiHook;
   readonly victory: VictoryRule;
   readonly fuse: FuseSetting;
   readonly maxRounds: number;

@@ -3,12 +3,15 @@ import { startFuse } from "../rules/turns/fuse.ts";
 import { xGo, type Event } from "../state/index.ts";
 import { submit } from "./actions.ts";
 import { replayTicks } from "./run.ts";
-import type { MatchOptions, MatchResult, SimWorld } from "./types.ts";
+import type { AiHook, MatchOptions, MatchResult, SimWorld } from "./types.ts";
+
+const noAi: AiHook = () => { throw new Error("runMatch: ai was asked with no hook"); };
 
 export function runMatch(world: SimWorld, opts: MatchOptions): MatchResult {
   if (!Number.isInteger(opts.maxRounds) || opts.maxRounds < 1) throw new RangeError("runMatch: maxRounds must be an integer >= 1");
   if (!Number.isInteger(opts.maxSimMs) || opts.maxSimMs < 0) throw new RangeError("runMatch: maxSimMs must be an integer >= 0");
   if (!seatsOk(opts)) throw new RangeError("runMatch: bad seats");
+  if (opts.ai === undefined && opts.sides.some((side) => !(opts.seats ?? []).some((seat) => seat.player.side === side))) throw new RangeError("runMatch: every side needs a seat or the ai");
   const events: Event[] = [];
   const mark = (e: Event): void => {
     events.push(e);
@@ -60,7 +63,7 @@ function turn(world: SimWorld, opts: MatchOptions, side: MatchOptions["sides"][n
         seat.onStep?.(step, world);
       }
     } else {
-      const actions = opts.ai(world, side, { kind: "side", units });
+      const actions = (opts.ai ?? noAi)(world, side, { kind: "side", units });
       if (actions.length === 0) { replayTicks(world, 1); continue; }
       for (const action of actions) {
         if (expired || world.clock.now() >= opts.maxSimMs) break;

@@ -1,4 +1,5 @@
-import type { AiHook, IntentHook } from "../../src/sim/index.ts";
+import type { SideId } from "../../src/types/core-types.ts";
+import { createPlayer, type AiHook, type IntentHook, type Seat, type SimWorld } from "../../src/sim/index.ts";
 
 export function asIntents(ai: AiHook): IntentHook {
   return (world, side, budget) => ai(world, side, budget).flatMap((action) => {
@@ -10,4 +11,8 @@ export function asIntents(ai: AiHook): IntentHook {
 export function counter(prefix: string): () => string {
   let n = 0;
   return () => `${prefix}${n += 1}`;
+}
+export function seatAll(world: SimWorld, sides: readonly SideId[], intents: IntentHook, moveMs: number | null): Seat[] {
+  const nextId = counter("m");
+  return sides.map((side) => ({ player: createPlayer(world, { side, moveMs, nextId }), intents }));
 }

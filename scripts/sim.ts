@@ -1,11 +1,14 @@
 import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
 import { createWorld, runMatch } from "../src/sim/index.ts";
-import { forward, reachFarRow, seedless } from "../tests/sim/ai.ts";
+import { bot, reachFarRow, seedless } from "../tests/sim/ai.ts";
 import { input } from "../tests/sim/input.ts";
+import { seatAll } from "../tests/sim/seats.ts";
 
 /** BTF preset turn timer. User-adjustable; not a sim default. */
 const btfPresetTurnFuseMs = 60000;
+/** Test value for the bot's move time, named like btfPresetTurnFuseMs. Not a sim default. */
+const botMoveMs = 200;
 
 export function report(n: number, fuse: number): string[] {
   if (!Number.isInteger(n) || n < 1) throw new RangeError("report: n must be an integer >= 1");
@@ -16,7 +19,7 @@ export function report(n: number, fuse: number): string[] {
     const histories = [];
     for (let seed = 1; seed <= n; seed += 1) {
       const world = createWorld(seedless(input(stage, seed)));
-      const result = runMatch(world, { sides: [...sides], ai: forward(seed), victory: reachFarRow, fuse, maxRounds: 40, maxSimMs: 600000 });
+      const result = runMatch(world, { sides: [...sides], victory: reachFarRow, fuse, maxRounds: 40, maxSimMs: 600000, seats: seatAll(world, sides, bot(seed), botMoveMs) });
       count[result.outcome] += 1;
       histories.push(world.bus.history());
     }
