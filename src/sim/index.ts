@@ -1,5 +1,6 @@
 export type { AiHook, Budget, ChaosCheck, ChaosFinding, ChaosGen, ChaosGenOptions, ChaosKind, ChaosMix, ChaosMove, ChaosOptions, ChaosRecord, ChaosResult, ChaosRun, ChaosSettings, ChaosShrink, ChaosTools, ChaosView, DocCaps, DocFinding, DocKind, DocMutation, DocReport, ExploitFailure, ExploitGen, ExploitKind, ExploitOptions, ExploitResult, ExploitRun, ExploitWire, IntentHook, IntentInput, MatchOptions, MatchResult, Player, PlayerOptions, PlayerReject, PlayerStep, Seat, SimInput, SimSnapshot, SimWorld, SnapshotKey, TickOptions, VictoryRule } from "./types.ts";
 export { createWorld } from "./world.ts";
+export { disposeWorld, isDisposed } from "./dispose.ts";
 export { submit } from "./actions.ts";
 export { advance, replay, replayTicks, restore, snapshot } from "./run.ts";
 export { runMatch } from "./driver-phase.ts";

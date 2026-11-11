@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { test } from "node:test";
 import type { Intent } from "../../src/runtime/input/index.ts";
-import { createPlayer, createWorld, runMatch, snapshot, type IntentHook, type IntentInput, type PlayerReject, type SimWorld } from "../../src/sim/index.ts";
+import { createPlayer, createWorld, disposeWorld, runMatch, snapshot, type IntentHook, type IntentInput, type PlayerReject, type SimWorld } from "../../src/sim/index.ts";
 import { bot, forward, reachFarRow, seedless } from "./ai.ts";
 import { input } from "./input.ts";
 import { counter, seatAll } from "./seats.ts";
@@ -73,7 +73,8 @@ test("every reject reason is reached and changes nothing, including a selected u
   over.patch = { alive: false }; feed({ type: "TargetCell", at: { c: 0, r: 7 } }, "noUnit"); over.patch = null;
   feed({ type: "Cancel" }, null); world.phases = { battle: "targeting" }; feed({ type: "Confirm" }, "noAction", { c: 0, r: 7 });
   feed({ type: "TargetCell", at: null } as unknown as Intent, "malformed");
-  const listed: Record<PlayerReject, true> = { noEvent: true, illegal: true, noUnit: true, notOwn: true, offGrid: true, noAction: true, malformed: true };
+  disposeWorld(world); feed({ type: "SelectUnit", unitId: "knight#1" }, "disposed");
+  const listed: Record<PlayerReject, true> = { noEvent: true, illegal: true, noUnit: true, notOwn: true, offGrid: true, noAction: true, malformed: true, disposed: true };
   assert.deepEqual([...reasons].sort(), Object.keys(listed).sort());
   assert.equal(world.log.lastSeq() === 0 && player.history().length === 11 && JSON.stringify(snapshot(real)) === kept, true);
   const only = createWorld(input("stage-fixed"));

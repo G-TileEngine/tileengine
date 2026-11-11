@@ -1,9 +1,11 @@
 import type { Event, Outcome } from "../state/index.ts";
 import { submit } from "./actions.ts";
 import { advance } from "./run.ts";
+import { isDisposed } from "./dispose.ts";
 import type { MatchResult, SimWorld, TickOptions } from "./types.ts";
 
 export function runTicks(world: SimWorld, opts: TickOptions): MatchResult {
+  if (isDisposed(world)) throw new Error("runTicks: world is disposed");
   const step = world.clock.stepMs;
   if (!Number.isInteger(opts.everyMs) || opts.everyMs <= 0 || opts.everyMs % step !== 0) {
     throw new RangeError("runTicks: everyMs must be a positive integer multiple of stepMs");

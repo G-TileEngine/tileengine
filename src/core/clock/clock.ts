@@ -18,6 +18,7 @@ export function createClock(opts?: ClockOptions): Clock {
   let tickN = 0;
   let paused = false;
   let nextId = 1;
+  let dead = false;
   const timers: LiveTimer[] = [];
   const tickSubs: ((t: TickInfo) => void)[] = [];
   const renderSubs: ((r: RenderInfo) => void)[] = [];
@@ -31,6 +32,7 @@ export function createClock(opts?: ClockOptions): Clock {
   }
 
   function listen<T>(list: T[], cb: T): Unsubscribe {
+    if (dead) return () => {};
     list.push(cb);
     return () => {
       const i = list.indexOf(cb);
@@ -102,10 +104,17 @@ export function createClock(opts?: ClockOptions): Clock {
       const id = nextId;
       nextId += 1;
       const dueMs = tickN * stepMs + (ms > stepMs ? ms : stepMs);
+      if (dead) return { id, dueMs, cancel() {} };
       const timer: LiveTimer = { id, dueMs, cb, dead: false };
       timers.push(timer);
       return { id, dueMs, cancel(): void { timer.dead = true; } };
     },
     onError(cb): Unsubscribe { return listen(errorSubs, cb); },
+    dispose() {
+      if (dead) return;
+      dead = true;
+      for (const t of timers) t.dead = true;
+      timers.length = tickSubs.length = renderSubs.length = errorSubs.length = 0;
+    },
   };
 }

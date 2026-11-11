@@ -2,7 +2,7 @@ import type { CoreTileType, CoreTerrainKnobs, SideId, Sq, UnitId } from "../type
 import type { Clock } from "../core/clock/index.ts";
 import type { Grid } from "../core/grid/index.ts";
 import type { Units, UnitState } from "../core/unit/index.ts";
-import type { EventBus } from "../core/events/index.ts";
+import type { BusLimits, EventBus } from "../core/events/index.ts";
 import type { Action, CommandLog } from "../core/log/index.ts";
 import type { Rng, RngState } from "../core/rng/index.ts";
 import type { Notice } from "../core/notice.ts";
@@ -21,6 +21,8 @@ export type SimInput = {
   readonly chosen: readonly UnitId[];
   /** The stage reader's caps (step 16), the host's choice; no defaults. */
   readonly stageLimits: StageLimits;
+  /** The bus's rolling history size (step 17); absent = core's `DEFAULT_BUS_LIMITS`. The command log is never capped. */
+  readonly busLimits?: BusLimits;
   readonly hostSeed: number;
   readonly engineVersion: string;
   readonly projectHash: string;
@@ -85,7 +87,7 @@ export type IntentInput = { readonly intent: Intent; readonly aim?: Sq | null };
 export type IntentHook = (world: SimWorld, side: SideId, budget: Budget) => readonly IntentInput[];
 /** Caller inputs, no defaults: the seated side, the move duration (null = instant) and the action id source. */
 export type PlayerOptions = { readonly side: SideId; readonly moveMs: number | null; readonly nextId: () => string };
-export type PlayerReject = "noEvent" | "illegal" | "noUnit" | "notOwn" | "offGrid" | "noAction" | "malformed";
+export type PlayerReject = "noEvent" | "illegal" | "noUnit" | "notOwn" | "offGrid" | "noAction" | "malformed" | "disposed";
 export type PlayerStep = {
   readonly intent: Intent;
   readonly aim: Sq | null;
