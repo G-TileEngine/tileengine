@@ -70,7 +70,7 @@ test("the simple shrink: ddmin over the moves keeps a candidate only on the same
   const failure = need(go([...CHAOS_CHECKS, low]).failure), live = { ...tools, checks: [...CHAOS_CHECKS, low] }, shrunk = shrinkChaos(src, failure, live);
   assert.equal(failure.moves.length === 116 && failure.firstDivergentSnapshotKey === "units" && shrunk.tries === 15 && shrunk.record.invariant === "planted:low" && shrunk.record.firstDivergentSnapshotKey === "units" && shrunk.record.stepIndex === 1, true);
   assert.deepEqual(shrunk.record.moves, pair); assert.deepEqual(replayChaos(src, round(shrunk.record), live).failure, shrunk.record); assert.deepEqual(shrinkChaos(src, round(failure), live), shrunk);
-  const both = [row("knight#1", "units"), row("archer#2", "occupancy")], found = need(go([...CHAOS_CHECKS, ...both]).failure), cut = shrinkChaos(src, found, { ...tools, checks: [...CHAOS_CHECKS, ...both] });
+  const both = [row("knight#1", "units"), row("archer#2", "units")], found = need(go([...CHAOS_CHECKS, ...both]).failure), cut = shrinkChaos(src, found, { ...tools, checks: [...CHAOS_CHECKS, ...both] });
   assert.equal(found.invariant === "planted:knight" && cut.record.invariant === "planted:knight" && cut.record.moves.length === 2, true); assert.deepEqual(cut.record.moves, pair);
   assert.throws(() => shrinkChaos(src, { ...failure, expected: "other" }, live), /chaos: record does not replay/);
   const now: ChaosCheck = { id: "planted:now", run: () => ({ key: "units", expected: 0, actual: 1 }) }, once = need(go([...CHAOS_CHECKS, now]).failure);
