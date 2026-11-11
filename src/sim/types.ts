@@ -153,3 +153,19 @@ export type ChaosGen = { readonly stream: string; readonly mix: ChaosMix; readon
 export type ChaosGenOptions = Omit<ChaosOptions, "intents"> & { readonly gen: ChaosGen; readonly legal: IntentHook };
 export type ChaosShrink = { readonly record: ChaosRecord; readonly tries: number };
 
+/** Exploit hunter (step 15): hostile wire text through the one door; tampered documents through the readers. Report-only. */
+export type ExploitKind = "legal" | "foreign" | "ghost" | "smuggle" | "cell" | "phase" | "replay" | "junk" | "shape";
+export type ExploitGen = { readonly stream: string; readonly mix: Readonly<Record<ExploitKind, number>> };
+export type ExploitOptions = Omit<ChaosOptions, "intents"> & { readonly gen: ExploitGen; readonly legal: IntentHook };
+export type ExploitWire = { readonly call: number; readonly side: SideId; readonly wire: readonly string[] };
+export type ExploitRun = { readonly seed: number; readonly gen: ExploitGen; readonly options: ChaosSettings; readonly wires: readonly ExploitWire[]; readonly engineSha: string; readonly node: string; readonly checks: readonly string[] };
+export type ExploitFailure = { readonly invariant: string; readonly detail: string };
+export type ExploitResult = { readonly outcome: ChaosResult["outcome"]; readonly run: ExploitRun; readonly steps: number; readonly rejects: number; readonly hashes: readonly string[]; readonly failure: ExploitFailure | null };
+export type DocKind = "manifest" | "map" | "stage";
+/** `value`: JSON text set at `path` (null = delete the key). */
+export type DocMutation = { readonly doc: DocKind; readonly path: readonly (string | number)[]; readonly value: string | null };
+/** Caller inputs, no defaults: loop-driving keys and their cap, the deep-value depth, the map size and roster for placements. */
+export type DocCaps = { readonly countKeys: readonly string[]; readonly maxCount: number; readonly depth: number; readonly map: { readonly cols: number; readonly rows: number }; readonly chosen: readonly string[] };
+export type DocFinding = DocMutation & ExploitFailure & { readonly seed: number };
+export type DocReport = { readonly tries: number; readonly accepted: number; readonly refused: number; readonly findings: readonly DocFinding[] };
+
