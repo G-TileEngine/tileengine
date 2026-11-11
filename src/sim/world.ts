@@ -16,7 +16,7 @@ function fail(doc: string, read: ReadResult<unknown>): Error {
 export function createWorld(input: SimInput): SimWorld {
   const manifest = readManifest(input.manifest);
   const map = readMap(input.map);
-  const stage = readStage(input.stage);
+  const stage = readStage(input.stage, input.stageLimits);
   if (!manifest.ok) throw fail("manifest", manifest);
   if (!map.ok) throw fail("map", map);
   if (!stage.ok) throw fail("stage", stage);

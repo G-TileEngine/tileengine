@@ -17,7 +17,7 @@ test("a world loads the step-08 fixtures and places every unit at tick 0", () =>
 test("the host seed is used when the stage has none; picks use the pool stream", () => {
   const src = input("stage-weighted");
   const w = createWorld(src);
-  const stage = readStage(src.stage);
+  const stage = readStage(src.stage, src.stageLimits);
   const map = readMap(src.map);
   if (!stage.ok || !map.ok) throw new Error("stage");
   const pool = createRng(streamSeed(7, "pool"));

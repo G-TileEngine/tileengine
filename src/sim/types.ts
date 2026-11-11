@@ -9,6 +9,7 @@ import type { Notice } from "../core/notice.ts";
 import type { Event, Outcome, Phase } from "../state/index.ts";
 import type { FuseSetting } from "../rules/turns/fuse.ts";
 import type { GestureOptions, Intent } from "../runtime/input/index.ts";
+import type { StageLimits } from "../project/read/index.ts";
 
 /** Parsed JSON documents plus the host's choices. The sim never reads files, wall time or a random source. */
 export type SimInput = {
@@ -18,6 +19,8 @@ export type SimInput = {
   readonly tiles: readonly CoreTileType[];
   readonly terrain?: Pick<CoreTerrainKnobs, "push_into_walls">;
   readonly chosen: readonly UnitId[];
+  /** The stage reader's caps (step 16), the host's choice; no defaults. */
+  readonly stageLimits: StageLimits;
   readonly hostSeed: number;
   readonly engineVersion: string;
   readonly projectHash: string;
@@ -82,7 +85,7 @@ export type IntentInput = { readonly intent: Intent; readonly aim?: Sq | null };
 export type IntentHook = (world: SimWorld, side: SideId, budget: Budget) => readonly IntentInput[];
 /** Caller inputs, no defaults: the seated side, the move duration (null = instant) and the action id source. */
 export type PlayerOptions = { readonly side: SideId; readonly moveMs: number | null; readonly nextId: () => string };
-export type PlayerReject = "noEvent" | "illegal" | "noUnit" | "notOwn" | "offGrid" | "noAction";
+export type PlayerReject = "noEvent" | "illegal" | "noUnit" | "notOwn" | "offGrid" | "noAction" | "malformed";
 export type PlayerStep = {
   readonly intent: Intent;
   readonly aim: Sq | null;
@@ -165,7 +168,7 @@ export type DocKind = "manifest" | "map" | "stage";
 /** `value`: JSON text set at `path` (null = delete the key). */
 export type DocMutation = { readonly doc: DocKind; readonly path: readonly (string | number)[]; readonly value: string | null };
 /** Caller inputs, no defaults: loop-driving keys and their cap, the deep-value depth, the map size and roster for placements. */
-export type DocCaps = { readonly countKeys: readonly string[]; readonly maxCount: number; readonly depth: number; readonly map: { readonly cols: number; readonly rows: number }; readonly chosen: readonly string[] };
+export type DocCaps = { readonly countKeys: readonly string[]; readonly maxCount: number; readonly depth: number; readonly map: { readonly cols: number; readonly rows: number }; readonly chosen: readonly string[]; readonly limits: StageLimits };
 export type DocFinding = DocMutation & ExploitFailure & { readonly seed: number };
 export type DocReport = { readonly tries: number; readonly accepted: number; readonly refused: number; readonly findings: readonly DocFinding[] };
 

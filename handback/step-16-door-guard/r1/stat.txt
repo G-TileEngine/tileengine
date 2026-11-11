@@ -1,0 +1,22 @@
+ src/btf-adapters/src/index.ts        |  1 +
+ src/btf-adapters/src/stage-limits.ts |  4 ++++
+ src/project/read/guard.ts            |  2 +-
+ src/project/read/index.ts            |  2 +-
+ src/project/read/map.ts              |  8 ++++---
+ src/project/read/stage.ts            | 11 ++++++++--
+ src/sim/driver-phase.ts              |  3 ++-
+ src/sim/exploit-docs.ts              |  2 +-
+ src/sim/player.ts                    | 10 +++++++++
+ src/sim/types.ts                     |  7 ++++--
+ src/sim/world.ts                     |  2 +-
+ tests/project/door-guard.test.ts     | 42 ++++++++++++++++++++++++++++++++++++
+ tests/project/guard.test.ts          |  5 +++--
+ tests/project/placements.test.ts     |  3 ++-
+ tests/project/stage.test.ts          |  9 ++++----
+ tests/sim/bot.test.ts                |  5 +++--
+ tests/sim/door-guard.test.ts         | 37 +++++++++++++++++++++++++++++++
+ tests/sim/exploit-docs.test.ts       | 32 ++++++++++++++++-----------
+ tests/sim/exploit.test.ts            | 29 +++++++++++++------------
+ tests/sim/input.ts                   |  3 ++-
+ tests/sim/world.test.ts              |  2 +-
+ 21 files changed, 169 insertions(+), 50 deletions(-)
