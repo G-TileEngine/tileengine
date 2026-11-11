@@ -1,0 +1,4 @@
+A	src/sim/chaos.ts
+M	src/sim/index.ts
+M	src/sim/types.ts
+A	tests/sim/chaos.test.ts

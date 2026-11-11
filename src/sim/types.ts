@@ -102,3 +102,46 @@ export type Seat = {
   /** Called after each input is fed and, for a move, landed: invariant checks and per-step snapshot hashes hang here. */
   readonly onStep?: (step: PlayerStep, world: SimWorld) => void;
 };
+/** Chaos harness (step 12): the seven snapshot keys, one recorded input, and a promise checked after every step. */
+export type SnapshotKey = keyof SimSnapshot;
+export type ChaosMove = { readonly call: number; readonly side: SideId; readonly tick: number; readonly intent: Intent; readonly aim: Sq | null };
+/** `prev` = after the last step; `before` / `fed` = just before / after the feed; `after` = after landing. */
+export type ChaosView = { readonly step: PlayerStep; readonly prev: SimSnapshot; readonly before: SimSnapshot; readonly fed: SimSnapshot; readonly after: SimSnapshot; readonly world: SimWorld };
+export type ChaosFinding = { readonly key: SnapshotKey; readonly expected: unknown; readonly actual: unknown };
+export type ChaosCheck = { readonly id: string; readonly run: (view: ChaosView) => ChaosFinding | null };
+/** Caller inputs, no defaults: the end rule, the promises, the hash (sha256 is the caller's), the build. */
+export type ChaosTools = { readonly victory: VictoryRule; readonly checks: readonly ChaosCheck[]; readonly hash: (text: string) => string; readonly engineSha: string; readonly node: string };
+export type ChaosSettings = {
+  readonly sides: readonly SideId[];
+  readonly fuse: FuseSetting;
+  readonly maxRounds: number;
+  readonly maxSimMs: number;
+  readonly moveMs: number | null;
+  readonly idPrefix: string;
+  /** The caller's JSON settings for the run (e.g. the BTF FxOptions preset), copied into the record as-is. */
+  readonly presets: Readonly<Record<string, unknown>>;
+};
+export type ChaosOptions = ChaosTools & ChaosSettings & { readonly ruleset: string | null; readonly intents: IntentHook };
+/** Plain JSON: enough to replay the run without the original process (outline §4). */
+export type ChaosRun = {
+  readonly seed: number;
+  readonly ruleset: string | null;
+  readonly options: ChaosSettings & { readonly checks: readonly string[] };
+  readonly moves: readonly ChaosMove[];
+  readonly engineSha: string;
+  readonly node: string;
+  readonly engineVersion: string;
+  readonly projectHash: string;
+};
+export type ChaosRecord = ChaosRun & {
+  readonly stepIndex: number;
+  readonly invariant: string;
+  readonly firstDivergentSnapshotKey: SnapshotKey;
+  readonly expected: unknown;
+  readonly actual: unknown;
+  readonly tick: number;
+  readonly clockMs: number;
+  readonly snapshotHash: string;
+};
+export type ChaosResult = { readonly outcome: MatchResult["outcome"] | "failed"; readonly run: ChaosRun; readonly failure: ChaosRecord | null; readonly hashes: readonly string[]; readonly rejects: readonly number[] };
+

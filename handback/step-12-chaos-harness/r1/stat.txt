@@ -1,0 +1,5 @@
+ src/sim/chaos.ts        | 124 ++++++++++++++++++++++++++++++++++++++++++++++++
+ src/sim/index.ts        |   3 +-
+ src/sim/types.ts        |  43 +++++++++++++++++
+ tests/sim/chaos.test.ts |  98 ++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 267 insertions(+), 1 deletion(-)
