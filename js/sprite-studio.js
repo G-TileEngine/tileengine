@@ -1,4 +1,6 @@
 /* Sprite Studio — round 63 clickable prototype (UX half of ux/pixel-editor-plan.md).
+   r64: opens in Basic/Advanced from profile.experience.spriteStudio (window.Experience), toolsShown filters the
+   Advanced More sheet (hide only, same data), guided 'Next step' chip, empty-library starter choice.
    r63: true Basic mode for non-artists (ready-made parts, outline+shade always on, colour by part, Tidy, fixed 5-tool rail);
    Advanced = the r62 editor. Both modes write the same data (P1).
    MOCK: in-memory only, no real recipe format. Internally every stroke is a "pixelRun" of palette
@@ -416,6 +418,29 @@
     if (id === "select") { say("Select is a mock: drag a box to pick up pixels (SE-03)"); toast("Select: drag a box to pick up pixels · mock"); return; }
     openSheet(st.sheet === id ? null : id);
   }
+  // r64: toolsShown (profile.experience) only hides tools in the More sheet; nothing is removed from the data.
+  const EXTRA_TIER = { mirror: "core", frames: "core", shade: "core", outline: "core", shapes: "standard", recolour: "standard", parts: "standard", select: "all", pose: "all" };
+  function shownExtra(id) {
+    if (st.unlocked.includes(id)) return true;
+    const t = (window.Experience && Experience.get().toolsShown) || "all";
+    const rank = { core: 0, standard: 1, all: 2 };
+    return rank[EXTRA_TIER[id] || "all"] <= rank[t];
+  }
+  // r64: guided "Next step" chip (guidance: guided). One step at a time; tap does the step.
+  function nextStep() {
+    if (!st.started || st.sheet || st.frameSel || st.chip) return null;
+    if (!window.Experience || Experience.get().guidance !== "guided") return null;
+    const coloured = RAMPS.some((r, i) => r.sw !== SWATCHES[PIECES[i].set][PIECES[i].def].name);
+    if (st.mode === "basic" && st.kind === "hero") {
+      if (!coloured) return { label: "Colour your hero", go: () => openSheet("bcolour") };
+      if (!st.tidyInfo) return { label: "Tap Tidy to clean up", go: () => tidy() };
+      if (!st.walk) return { label: "Make it walk", go: () => openSheet("walk") };
+      return { label: "Save your hero", go: () => openSheet("export") };
+    }
+    if (!st.hist.length) return { label: "Draw with one finger", go: () => say("One finger draws. Two fingers move and zoom.") };
+    if (st.kind === "hero" && !st.walk) return { label: "Make it walk", go: () => { if (!st.unlocked.includes("frames")) st.unlocked.push("frames"); openSheet("frames"); } };
+    return { label: "Save your sprite", go: () => openSheet("export") };
+  }
   function openSheet(id) { if (id === "more" && st.mode === "basic") id = null; st.sheet = id; renderAll(); const b = $("#ss-sheet-body"); if (b) b.scrollTop = 0; }
 
   function unlock(id) {
@@ -485,9 +510,10 @@
       case "more":
         return `<div class="ss-sheet-head"><p class="eyebrow">More tools · tap to add to your bar</p><button type="button" class="toggle" id="ss-open-preview">Preview</button></div>
         <p class="hint ss-tight" id="ss-unlock-msg" role="status">${st.lastUnlockMsg || "Nothing is locked for good. Tools appear when you need them."}</p>
-        <div class="ss-extra-grid">${EXTRA.map((t) => { const on = st.unlocked.includes(t.id);
+        <div class="ss-extra-grid">${EXTRA.filter((t) => shownExtra(t.id)).map((t) => { const on = st.unlocked.includes(t.id);
           return `<button type="button" class="ss-extra ${on ? "is-on" : "is-locked"}" data-extra="${t.id}" aria-label="${t.name}: ${t.hint}${on ? " (on your bar)" : ""}">
-            <span class="ss-extra-name"><span aria-hidden="true">${on ? "✓" : "🔒"}</span> ${t.name}</span><span class="ss-extra-hint">${on ? "On your bar" : t.hint}</span></button>`; }).join("")}</div>`;
+            <span class="ss-extra-name"><span aria-hidden="true">${on ? "✓" : "🔒"}</span> ${t.name}</span><span class="ss-extra-hint">${on ? "On your bar" : t.hint}</span></button>`; }).join("")}</div>
+        ${EXTRA.some((t) => !shownExtra(t.id)) ? `<p class="hint ss-tight">${EXTRA.filter((t) => !shownExtra(t.id)).length} more tools are tucked away. Show them in Settings › My setup.</p>` : ""}`;
       case "frames": {
         const facingRow = `<p class="eyebrow">Facing · same drawing, parts reorder</p>
           ${seg("Facing", [["down", "Down"], ["up", "Up"], ["side", "Side"], ["left", "Left"]], st.facing, "facing")}
@@ -824,7 +850,12 @@
     el.hidden = st.started;
     if (st.started) return;
     const heights = SIZES.filter((h) => h >= st.pickW);
-    el.innerHTML = `<h2 class="ss-start-title">What are you making?</h2>
+    const lib = window.Experience ? Experience.library() : { empty: false };
+    el.innerHTML = `${lib.empty ? `<div class="ss-empty-lib" role="group" aria-label="Your library is empty">
+        <p class="ss-empty-title">Your library is empty</p>
+        <p class="hint ss-tight">Start with something ready-made, or draw your own below.</p>
+        <div class="ss-empty-row"><button type="button" class="btn btn-ghost" id="ss-lib-make">Make some for me</button><button type="button" class="btn btn-ghost" id="ss-lib-pack">Starter Pack · free</button></div>
+      </div>` : ""}<h2 class="ss-start-title">What are you making?</h2>
       <div class="ss-kinds" role="group" aria-label="Sprite kind">${KINDS.map((k) => `<button type="button" class="choice ss-kind" data-kind="${k.id}" aria-pressed="${st.kind === k.id}"><span class="label">${k.name}</span><span class="sub">${st.mode === "basic" && k.basicSub ? k.basicSub : k.sub}</span></button>`).join("")}</div>
       <p class="ss-licence">Starter body: Made by TileEngine · free to use</p>
       ${st.mode === "basic" ? `<p class="hint ss-tight">Basic: ${st.pickW}×${st.pickH}, outline and shading done for you. Sizes are in Advanced.</p>` : `<p class="eyebrow">Width · ${PROJECT_TILE} suggested from your tiles</p>
@@ -836,6 +867,8 @@
     $$("[data-pw]", el).forEach((b) => (b.onclick = () => { st.pickW = +b.dataset.pw; if (st.pickH < st.pickW) st.pickH = st.pickW; renderStart(); }));
     $$("[data-ph]", el).forEach((b) => (b.onclick = () => { st.pickH = +b.dataset.ph; renderStart(); }));
     $("#ss-start-go").onclick = () => begin(st.kind, st.pickW, st.pickH);
+    $("#ss-lib-make") && ($("#ss-lib-make").onclick = () => Experience.openStarter("make", "sprite-studio"));
+    $("#ss-lib-pack") && ($("#ss-lib-pack").onclick = () => Experience.openStarter("pack", "sprite-studio"));
   }
   function begin(kind, w, h) {
     const k = KINDS.find((x) => x.id === kind);
@@ -873,6 +906,7 @@
     const h = $("#ss-help-btn"); if (h) h.setAttribute("aria-pressed", String(st.sheet === "help"));
   }
   function renderOverlays() {
+    const nx = $("#ss-next"); if (nx) { const n = nextStep(); nx.hidden = !n; if (n) { $("#ss-next-text").textContent = n.label; nx.onclick = () => { n.go(); }; nx.setAttribute("aria-label", "Next step: " + n.label); } }
     const rb = $("#ss-rules-badge"); if (rb) rb.hidden = !st.started || st.mode !== "basic" || !!st.frameSel;
     const fab = $("#ss-fab-undo"); if (fab) { fab.hidden = !st.started || !!st.sheet; fab.disabled = !st.hist.length; }
     const fc = $("#ss-facing-chip"); if (fc) { fc.hidden = !st.started || st.kind !== "hero" || !!st.frameSel; fc.textContent = "Facing: " + FACING_LABEL[st.facing]; }
@@ -900,6 +934,12 @@
   }
 
   function onShow() {
+    // r64: before a drawing starts, the user's setup decides Basic or Advanced (they can still flip it here).
+    if (!st.started && !st.userMode && window.Experience) {
+      const m = Experience.modeFor("spriteStudio");
+      if (m !== st.mode) { st.mode = m; const k = KINDS.find((x) => x.id === st.kind); if (m === "basic") { st.pickW = k.w; st.pickH = k.h; } }
+      if (m === "advanced" && Experience.get().startWith === "blank" && st.kind === "hero") st.kind = "blank";
+    }
     renderAll();
   }
 
@@ -915,7 +955,7 @@
     $("#ss-export-btn").onclick = () => openSheet(st.sheet === "export" ? null : "export");
     $("#ss-upgrade").onclick = () => openSheet("upgrade");
     $("#ss-sheet-close").onclick = () => openSheet(null);
-    $$("[data-ss-mode]").forEach((b) => (b.onclick = () => setMode(b.dataset.ssMode)));
+    $$("[data-ss-mode]").forEach((b) => (b.onclick = () => { st.userMode = true; setMode(b.dataset.ssMode); }));
     $("#ss-undo").onclick = undo; $("#ss-redo").onclick = redo; $("#ss-fab-undo").onclick = undo;
     $("#ss-facing-chip").onclick = () => { if (st.mode !== "basic" && !st.unlocked.includes("frames")) st.unlocked.push("frames"); openSheet("frames"); };
     $("#ss-frame-done").onclick = () => { st.frameSel = null; renderAll(); };
@@ -951,8 +991,26 @@
     for (let y = 14; y <= 23; y++) for (let x = 10; x < 16; x++) P(x, y, SLOT(2, 0));
     st.activePart = prevPart; st.mirror = prevMirror; renderAll();
   }
+  /* ---------- r64: thumbnails for the starter screens (same parts + render rules, nothing stored) ---------- */
+  function drawThumb(img, W, H, ramps, canvas) {
+    const sw = st.W, sh = st.H, sr = RAMPS, sm = st.mode; st.W = W; st.H = H; RAMPS = ramps; st.mode = "basic";
+    const out = bake(img, { outline: true, shade: true, dither: "none" });
+    st.W = sw; st.H = sh; RAMPS = sr; st.mode = sm;
+    canvas.width = W; canvas.height = H; const c = canvas.getContext("2d"); c.clearRect(0, 0, W, H);
+    out.forEach((col, i) => { if (col) { c.fillStyle = col; c.fillRect(i % W, Math.floor(i / W), 1, 1); } });
+  }
+  function heroThumb(preset, colours, canvas) {
+    const L = buildHero(preset, 32, 32), img = new Uint8Array(32 * 32);
+    ["body", "face"].forEach((k) => L[k].forEach((v, i) => { if (v) img[i] = v; }));
+    const ramps = PIECES.map((p, i) => { const s = SWATCHES[p.set].find((x) => x.name === (colours || {})[p.name]) || SWATCHES[p.set][p.def]; return { name: p.name, c: s.c.slice(), line: s.line, sw: s.name }; });
+    drawThumb(img, 32, 32, ramps, canvas);
+  }
+  function rampThumb(img, W, H, swatchList, canvas) { // swatchList: [{set, name}] -> ramp i
+    drawThumb(img, W, H, swatchList.map((x) => { const s = SWATCHES[x.set].find((y) => y.name === x.name) || SWATCHES[x.set][0]; return { name: s.name, c: s.c.slice(), line: s.line, sw: s.name }; }), canvas);
+  }
   window.SpriteStudio = {
-    onShow,
+    onShow, heroThumb, rampThumb,
+    parts: { PRESETS, PIECES, SWATCHES },
     _cap: {
       setMode, pickPreset, recolourPiece, tidy, buildHero,
       tidyCheck() { return ["body", "back"].map((k) => { const r = tidyLayer(st.parts[k], st.mirror); return r.stray + r.gaps + r.even; }).reduce((p, q) => p + q, 0); },
@@ -962,7 +1020,7 @@
       tidyDiff(preset) { const L = buildHero(preset, 32, 32), out = []; ["body", "back"].forEach((k) => { const r = tidyLayer(L[k], true); r.a.forEach((v, i) => { if (v !== L[k][i]) out.push(`${k}:${i % 32},${Math.floor(i / 32)} ${L[k][i]}->${v}`); }); }); return out; },
       rampsUsed: () => RAMPS.map((r) => r.sw),
       bakedColours() { const c = new Set(bake(displayImg()).filter(Boolean)); return c.size; },
-      reset() { st.mode = "basic"; st.preset = Object.assign({}, DEFAULT_PRESET); st.piece = P_SHIRT; st.prevDir = "right"; st.started = false; st.kind = "hero"; st.pickW = 32; st.pickH = 32; st.unlocked = []; st.mirror = false; st.outline = false; st.shade = false; st.dither = "none"; st.advanced = false; st.upgraded = false; st.facing = "down"; st.sheet = null; st.lastUnlockMsg = ""; st.walkStyle = "four"; resetData(); renderAll(); },
+      reset() { st.userMode = false; st.mode = "basic"; st.preset = Object.assign({}, DEFAULT_PRESET); st.piece = P_SHIRT; st.prevDir = "right"; st.started = false; st.kind = "hero"; st.pickW = 32; st.pickH = 32; st.unlocked = []; st.mirror = false; st.outline = false; st.shade = false; st.dither = "none"; st.advanced = false; st.upgraded = false; st.facing = "down"; st.sheet = null; st.lastUnlockMsg = ""; st.walkStyle = "four"; resetData(); renderAll(); },
       begin, unlock, openSheet, demoHero, setFacing, makeWalk, selectFrame, tapTool,
       touchUpFrame(dir, i) { // per-frame touch-up via the same write path as a pencil stroke
         st.frameSel = { dir, i }; pushHist();

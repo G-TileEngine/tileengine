@@ -383,6 +383,7 @@
           </div>
         </div>
 
+        <button type="button" class="next-chip stage-next" id="stage-next" hidden><span class="next-k">Next</span> <span id="stage-next-text">Place your hero</span> <span aria-hidden="true">›</span></button>
         <button type="button" class="btn btn-ghost stage-fab-undo" id="btn-stage-undo" aria-label="Undo last paint stroke" disabled>Undo</button>
 
         <aside id="vote-prompt" class="vote-prompt" hidden role="region" aria-label="Asset vote prompt">
@@ -486,13 +487,13 @@
               <p class="eyebrow" style="margin:0 0 8px">More</p>
               <div class="sheet-row wrap" role="group" aria-label="More tools">
                 <button type="button" class="tool" data-nav="stage-enemy-pool" aria-label="Enemy pool">Enemies</button>
-                <button type="button" class="tool" data-nav="loadout" aria-label="Loadout">Loadout</button>
-                <button type="button" class="tool" data-nav="stage-loadout" aria-label="Stage loadout">Stage loadout</button>
+                <button type="button" class="tool" data-tier="standard" data-nav="loadout" aria-label="Loadout">Loadout</button>
+                <button type="button" class="tool" data-tier="standard" data-nav="stage-loadout" aria-label="Stage loadout">Stage loadout</button>
                 <button type="button" class="tool" data-nav="stage-map" aria-label="Pick map">Map</button>
                 <button type="button" class="tool" data-nav="preview" aria-label="Preview">Preview</button>
-                <button type="button" class="tool" data-nav="render" aria-label="Render">Render</button>
+                <button type="button" class="tool" data-tier="standard" data-nav="render" aria-label="Render">Render</button>
                 <button type="button" class="tool" id="btn-open-sound" aria-label="Sound panel">Sound</button>
-                <button type="button" class="tool" data-nav="game-settings" aria-label="Game settings menu">Game settings</button>
+                <button type="button" class="tool" data-tier="standard" data-nav="game-settings" aria-label="Game settings menu">Game settings</button>
                 <button type="button" class="tool" data-nav="sprite-studio" id="btn-open-sprite-studio" aria-label="Sprite Studio">Sprite Studio</button>
               </div>
               <div class="readonly-music" id="stage-music-readonly" style="margin-top:10px">
@@ -574,10 +575,10 @@
           <button type="button" class="rail-btn" id="rail-paint" data-rail="paint" aria-pressed="false" aria-label="Paint">
             <span class="rail-ico" aria-hidden="true">🖌</span><span class="rail-lbl">Paint</span>
           </button>
-          <button type="button" class="rail-btn" id="btn-walls" data-rail="walls" aria-pressed="false" aria-label="Walls tool">
+          <button type="button" class="rail-btn" id="btn-walls" data-tier="standard" data-rail="walls" aria-pressed="false" aria-label="Walls tool">
             <span class="rail-ico" aria-hidden="true">▦</span><span class="rail-lbl">Walls</span>
           </button>
-          <button type="button" class="rail-btn" id="btn-objects" data-rail="objects" aria-pressed="false" aria-label="Objects tool">
+          <button type="button" class="rail-btn" id="btn-objects" data-tier="standard" data-rail="objects" aria-pressed="false" aria-label="Objects tool">
             <span class="rail-ico" aria-hidden="true">▣</span><span class="rail-lbl">Objects</span>
           </button>
           <button type="button" class="rail-btn" id="rail-units" data-rail="units" aria-pressed="false" aria-label="Units">
@@ -641,6 +642,7 @@
             <button type="button" class="toggle" id="ss-chip-pixels" aria-pressed="true">Keep as pixels</button>
             <button type="button" class="toggle" id="ss-chip-shape" aria-pressed="false">Make shape</button>
           </div>
+          <button type="button" class="next-chip ss-next" id="ss-next" hidden><span class="next-k">Next</span> <span id="ss-next-text">Colour your hero</span> <span aria-hidden="true">›</span></button>
           <div class="ss-start" id="ss-start" hidden></div>
         </div>
         <div class="stage-sheet ss-sheet" id="ss-sheet" hidden>
@@ -1451,6 +1453,11 @@
             <p class="hint" style="margin:6px 0 0">Avatar placeholder · Studio only (not a player profile)</p>
           </div>
         </div>
+        <button type="button" class="setup-entry" id="btn-open-my-setup" data-nav="my-setup">
+          <span class="setup-entry-t">My setup</span>
+          <span class="setup-entry-s" id="setup-entry-sub">Basic everywhere · core tools · step by step</span>
+          <span class="setup-entry-go" aria-hidden="true">›</span>
+        </button>
         <p class="eyebrow">Appearance</p>
         <div class="appearance-row" role="group" aria-label="Appearance">
           <button type="button" class="toggle" data-appearance="light" aria-pressed="false">Light</button>
@@ -1488,6 +1495,65 @@
       <div class="bottombar">
         <button type="button" class="btn btn-ghost" data-nav="home" aria-label="Back">Back</button>
         <button type="button" class="btn btn-primary" data-nav="home" aria-label="Done">Done</button>
+      </div>
+    </section>
+
+    <!-- r64 WELCOME QUIZ (first launch, full screen) -->
+    <section id="screen-welcome" class="screen wq" aria-label="Welcome">
+      <div class="wq-top">
+        <button type="button" class="btn btn-ghost wq-back" id="wq-back" aria-label="Back">‹ Back</button>
+        <div class="dots wq-dots" id="wq-dots" aria-hidden="true"></div>
+        <span class="wq-count" id="wq-count">1 of 5</span>
+      </div>
+      <div class="wq-body" id="wq-body"></div>
+      <div class="wq-foot" id="wq-foot"></div>
+    </section>
+
+    <!-- r64 GET STARTED (after the quiz, and from an empty Sprite Studio library) -->
+    <section id="screen-get-started" class="screen" aria-label="Get started">
+      <div class="topbar"><div class="topbar-row"><h1 tabindex="-1">Get started</h1></div></div>
+      <div class="body gs-body">
+        <p class="hint gs-lead">Start with some ready-made pieces. You can change everything later.</p>
+        <button type="button" class="gs-card" id="gs-make">
+          <span class="gs-art" id="gs-make-art" aria-hidden="true"></span>
+          <span class="gs-t">Make some for me</span>
+          <span class="gs-s" id="gs-make-sub">A hero, enemies and tiles that fit your answers. Shuffle until you like them.</span>
+        </button>
+        <button type="button" class="gs-card" id="gs-pack">
+          <span class="gs-art" id="gs-pack-art" aria-hidden="true"></span>
+          <span class="gs-t">Get the free Starter Pack</span>
+          <span class="gs-s">Heroes, enemies, tiles, effects, UI and sounds. 0 gold.</span>
+        </button>
+      </div>
+      <div class="bottombar gs-bar">
+        <button type="button" class="btn btn-ghost" id="gs-later">Not now</button>
+      </div>
+    </section>
+
+    <section id="screen-starter-make" class="screen" aria-label="Make some for me">
+      <div class="topbar"><div class="topbar-row"><button type="button" class="btn btn-ghost" id="sm-back" aria-label="Back">‹ Back</button><h1 tabindex="-1">Made for you</h1><span class="topbar-spacer" aria-hidden="true"></span></div></div>
+      <div class="body" id="sm-body"></div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" id="sm-shuffle">Shuffle</button>
+        <button type="button" class="btn btn-primary" id="sm-keep">Keep these</button>
+      </div>
+    </section>
+
+    <section id="screen-starter-pack" class="screen" aria-label="Free Starter Pack">
+      <div class="topbar"><div class="topbar-row"><button type="button" class="btn btn-ghost" id="sp-back" aria-label="Back">‹ Back</button><h1 tabindex="-1">Hub</h1><span class="topbar-spacer" aria-hidden="true"></span></div></div>
+      <div class="body" id="sp-body"></div>
+      <div class="bottombar sp-bar">
+        <button type="button" class="btn btn-primary" id="sp-add">Add to my library</button>
+      </div>
+    </section>
+
+    <!-- r64 SETTINGS > MY SETUP -->
+    <section id="screen-my-setup" class="screen" aria-label="My setup">
+      <div class="topbar"><p class="eyebrow">Settings</p><div class="topbar-row"><h1 tabindex="-1">My setup</h1></div></div>
+      <div class="body" id="ms-body"></div>
+      <div class="bottombar ms-bar">
+        <button type="button" class="btn btn-ghost" id="ms-retake">Retake the quiz</button>
+        <button type="button" class="btn btn-primary" id="ms-done">Done</button>
       </div>
     </section>
 
@@ -1731,5 +1797,6 @@
   <script src="js/app.js"></script>
   <script src="js/ux-features.js"></script>
   <script src="js/sprite-studio.js"></script>
+  <script src="js/welcome.js"></script>
 </body>
 </html>

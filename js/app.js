@@ -684,6 +684,7 @@
       });
     }
     if (id === "sprite-studio" && window.SpriteStudio) window.SpriteStudio.onShow();
+    if (window.Experience) window.Experience.onShow(id); // r64: tiers, Next-step chip, quiz/setup screens
     if (id === "unit-list") renderUnitList();
     if (id === "unit-editor") renderUnitEditor();
     if (id === "refix") { renderRefix(); }
@@ -3319,6 +3320,9 @@
         const side = unit.id === 2 ? "rival" : "player";
         const tint = resolveTeamColour(side);
         tok.style.background = tint;
+        // r64: AA letter on any team tint (light tints got white text before)
+        { const m = /^#?([0-9a-f]{6})$/i.exec(String(tint || "").trim()); if (m) { const n = parseInt(m[1], 16), f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+          const L = 0.2126 * f(n >> 16) + 0.7152 * f((n >> 8) & 255) + 0.0722 * f(n & 255); tok.style.color = L > 0.179 ? "#12141a" : "#ffffff"; } }
         tok.dataset.team = side;
         cell.appendChild(tok);
         if (unit.id === state.selectedUnitId) cell.classList.add("selected");
@@ -5131,7 +5135,10 @@
       "stage-loadout",
       "loadout",
       "sprite-studio",
+      "welcome", "my-setup", "get-started", "starter-make", "starter-pack",
     ];
+    // r64: first launch (no profile.experience yet) opens the welcome quiz wherever you land.
+    if (window.Experience && Experience.needsQuiz()) { Experience.startQuiz(known.includes(id) && id !== "welcome" ? id : "home"); return; }
     show(known.includes(id) ? id : "home");
   }
 
