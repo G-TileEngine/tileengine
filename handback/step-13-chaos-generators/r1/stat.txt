@@ -1,0 +1,6 @@
+ src/sim/chaos-gen.ts        | 65 ++++++++++++++++++++++++++++++
+ src/sim/index.ts            |  4 +-
+ src/sim/shrink.ts           | 41 +++++++++++++++++++
+ src/sim/types.ts            |  9 ++++-
+ tests/sim/chaos-gen.test.ts | 97 +++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 214 insertions(+), 2 deletions(-)

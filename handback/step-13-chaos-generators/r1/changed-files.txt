@@ -1,0 +1,5 @@
+A	src/sim/chaos-gen.ts
+M	src/sim/index.ts
+A	src/sim/shrink.ts
+M	src/sim/types.ts
+A	tests/sim/chaos-gen.test.ts
