@@ -609,13 +609,17 @@
       </div>
     </section>
 
-    <!-- SPRITE STUDIO (round 62 prototype; js/sprite-studio.js) -->
+    <!-- SPRITE STUDIO (round 63 prototype: Basic + Advanced; js/sprite-studio.js) -->
     <section id="screen-sprite-studio" class="screen" aria-label="Sprite Studio">
       <div class="stage-top ss-top" role="banner">
         <div class="stage-top-main">
           <button type="button" class="btn btn-ghost stage-icon-btn" id="ss-back" aria-label="Back to the stage editor">‹</button>
           <h1 class="stage-title" id="ss-title" tabindex="-1">New sprite</h1>
           <div class="stage-top-actions">
+            <div class="ss-mode" role="group" aria-label="Editor mode">
+              <button type="button" class="ss-mode-btn" data-ss-mode="basic" id="ss-mode-basic" aria-pressed="true">Basic</button>
+              <button type="button" class="ss-mode-btn" data-ss-mode="advanced" id="ss-mode-adv" aria-pressed="false">Advanced</button>
+            </div>
             <button type="button" class="ss-upgrade-badge" id="ss-upgrade" aria-label="Upgrade look" hidden>Upgrade look</button>
             <button type="button" class="btn btn-ghost stage-icon-btn" id="ss-help-btn" aria-label="Gestures help">?</button>
             <button type="button" class="btn btn-primary stage-play-btn" id="ss-export-btn" aria-label="Save and export">Save</button>
@@ -626,6 +630,7 @@
         <div class="ss-viewport" id="ss-viewport" aria-label="Pixel canvas">
           <canvas id="ss-canvas" class="ss-canvas" role="img" aria-label="Sprite canvas"></canvas>
           <button type="button" class="ss-fab ss-fab-undo" id="ss-fab-undo" aria-label="Undo">Undo</button>
+          <p class="ss-rules-badge" id="ss-rules-badge" hidden><span aria-hidden="true">✓</span> Outline + shading on</p>
           <button type="button" class="ss-fab ss-facing-chip" id="ss-facing-chip" aria-label="Facing">Facing: Down</button>
           <div class="ss-frame-banner" id="ss-frame-banner" hidden role="status">
             <span id="ss-frame-banner-text">Touching up one frame</span>
