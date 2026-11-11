@@ -1,0 +1,17 @@
+M	src/core/clock/clock.ts
+M	src/core/clock/types.ts
+M	src/core/events/bus.ts
+M	src/core/events/index.ts
+M	src/core/events/types.ts
+M	src/sim/actions.ts
+A	src/sim/dispose.ts
+M	src/sim/driver-phase.ts
+M	src/sim/driver-tick.ts
+M	src/sim/index.ts
+M	src/sim/player.ts
+M	src/sim/types.ts
+M	src/sim/world.ts
+A	tests/core/dispose.test.ts
+M	tests/sim/bot.test.ts
+A	tests/sim/dispose.test.ts
+A	tests/sim/gc.test.ts

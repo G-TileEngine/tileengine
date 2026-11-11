@@ -1,0 +1,18 @@
+ src/core/clock/clock.ts    |  9 ++++++++
+ src/core/clock/types.ts    |  2 ++
+ src/core/events/bus.ts     | 24 +++++++++++++++----
+ src/core/events/index.ts   |  2 +-
+ src/core/events/types.ts   |  5 ++++
+ src/sim/actions.ts         |  2 ++
+ src/sim/dispose.ts         | 16 +++++++++++++
+ src/sim/driver-phase.ts    |  2 ++
+ src/sim/driver-tick.ts     |  2 ++
+ src/sim/index.ts           |  1 +
+ src/sim/player.ts          |  2 ++
+ src/sim/types.ts           |  6 +++--
+ src/sim/world.ts           |  2 +-
+ tests/core/dispose.test.ts | 54 +++++++++++++++++++++++++++++++++++++++++++
+ tests/sim/bot.test.ts      |  5 ++--
+ tests/sim/dispose.test.ts  | 44 +++++++++++++++++++++++++++++++++++
+ tests/sim/gc.test.ts       | 57 ++++++++++++++++++++++++++++++++++++++++++++++
+ 17 files changed, 225 insertions(+), 10 deletions(-)
