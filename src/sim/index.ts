@@ -1,4 +1,4 @@
-export type { AiHook, Budget, ChaosCheck, ChaosFinding, ChaosGen, ChaosGenOptions, ChaosKind, ChaosMix, ChaosMove, ChaosOptions, ChaosRecord, ChaosResult, ChaosRun, ChaosSettings, ChaosShrink, ChaosTools, ChaosView, IntentHook, IntentInput, MatchOptions, MatchResult, Player, PlayerOptions, PlayerReject, PlayerStep, Seat, SimInput, SimSnapshot, SimWorld, SnapshotKey, TickOptions, VictoryRule } from "./types.ts";
+export type { AiHook, Budget, ChaosCheck, ChaosFinding, ChaosGen, ChaosGenOptions, ChaosKind, ChaosMix, ChaosMove, ChaosOptions, ChaosRecord, ChaosResult, ChaosRun, ChaosSettings, ChaosShrink, ChaosTools, ChaosView, DocCaps, DocFinding, DocKind, DocMutation, DocReport, ExploitFailure, ExploitGen, ExploitKind, ExploitOptions, ExploitResult, ExploitRun, ExploitWire, IntentHook, IntentInput, MatchOptions, MatchResult, Player, PlayerOptions, PlayerReject, PlayerStep, Seat, SimInput, SimSnapshot, SimWorld, SnapshotKey, TickOptions, VictoryRule } from "./types.ts";
 export { createWorld } from "./world.ts";
 export { submit } from "./actions.ts";
 export { advance, replay, replayTicks, restore, snapshot } from "./run.ts";
@@ -9,3 +9,5 @@ export { createPlayer } from "./player.ts";
 export { CHAOS_CHECKS, replayChaos, runChaos } from "./chaos.ts";
 export { CHAOS_KINDS, chaosIntents, gestureRecipes, runChaosGen } from "./chaos-gen.ts";
 export { shrinkChaos } from "./shrink.ts";
+export { EXPLOIT_KINDS, acceptedCheck, exploitWire, plainDeep, protoNames, replayExploit, runExploit } from "./exploit.ts";
+export { checkDoc, huntDocs, tamperDoc } from "./exploit-docs.ts";
