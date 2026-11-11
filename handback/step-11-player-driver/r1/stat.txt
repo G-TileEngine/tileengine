@@ -1,0 +1,7 @@
+ src/sim/driver-phase.ts  |  47 ++++++++++++++-----
+ src/sim/index.ts         |   3 +-
+ src/sim/player.ts        |  53 +++++++++++++++++++++
+ src/sim/types.ts         |  31 +++++++++++-
+ tests/sim/player.test.ts | 120 +++++++++++++++++++++++++++++++++++++++++++++++
+ tests/sim/seats.ts       |  13 +++++
+ 6 files changed, 254 insertions(+), 13 deletions(-)

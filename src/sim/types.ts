@@ -1,4 +1,4 @@
-import type { CoreTileType, CoreTerrainKnobs, SideId, UnitId } from "../types/core-types.ts";
+import type { CoreTileType, CoreTerrainKnobs, SideId, Sq, UnitId } from "../types/core-types.ts";
 import type { Clock } from "../core/clock/index.ts";
 import type { Grid } from "../core/grid/index.ts";
 import type { Units, UnitState } from "../core/unit/index.ts";
@@ -8,6 +8,7 @@ import type { Rng, RngState } from "../core/rng/index.ts";
 import type { Notice } from "../core/notice.ts";
 import type { Event, Outcome, Phase } from "../state/index.ts";
 import type { FuseSetting } from "../rules/turns/fuse.ts";
+import type { Intent } from "../runtime/input/index.ts";
 
 /** Parsed JSON documents plus the host's choices. The sim never reads files, wall time or a random source. */
 export type SimInput = {
@@ -59,6 +60,8 @@ export type MatchOptions = {
   readonly fuse: FuseSetting;
   readonly maxRounds: number;
   readonly maxSimMs: number;
+  /** Sides played through the player driver (intents in, submit out); `ai` is not asked for a seated side. */
+  readonly seats?: readonly Seat[];
 };
 /** Tick driver: the AI is asked every `everyMs` (a whole number of steps; e.g. 100) for its idle units. */
 export type TickOptions = {
@@ -72,4 +75,30 @@ export type MatchResult = {
   readonly outcome: Outcome | "timeout";
   readonly rounds: number;
   readonly events: readonly Event[];
+};
+/** The one door: every move arrives as an intent (touch, bot, chaos player, a later online peer). */
+export type IntentInput = { readonly intent: Intent; readonly aim?: Sq | null };
+export type IntentHook = (world: SimWorld, side: SideId, budget: Budget) => readonly IntentInput[];
+/** Caller inputs, no defaults: the seated side, the move duration (null = instant) and the action id source. */
+export type PlayerOptions = { readonly side: SideId; readonly moveMs: number | null; readonly nextId: () => string };
+export type PlayerReject = "noEvent" | "illegal" | "noUnit" | "notOwn" | "offGrid" | "noAction";
+export type PlayerStep = {
+  readonly intent: Intent;
+  readonly aim: Sq | null;
+  readonly tick: number;
+  readonly from: Phase;
+  readonly event: Event | null;
+  readonly action: Action | null;
+  readonly reject: PlayerReject | null;
+};
+export type Player = {
+  readonly side: SideId;
+  feed(intent: Intent, aim?: Sq | null): PlayerStep;
+  history(): readonly PlayerStep[];
+};
+export type Seat = {
+  readonly player: Player;
+  readonly intents: IntentHook;
+  /** Called after each input is fed and, for a move, landed: invariant checks and per-step snapshot hashes hang here. */
+  readonly onStep?: (step: PlayerStep, world: SimWorld) => void;
 };
