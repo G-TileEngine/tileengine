@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <title>TileEngine — UI shell</title>
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <div class="app" role="application" aria-label="TileEngine editor prototype">
+<div id="wizard-peek" class="wizard-peek" hidden role="dialog" aria-modal="true" aria-label="Preview peek">
+    <button type="button" class="peek-close btn btn-ghost" id="btn-peek-close" aria-label="Close preview">Close</button>
+    <div class="peek-body" id="wizard-peek-body"></div>
+    <p class="hint peek-hint">Swipe down or tap Close</p>
+  </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <button type="button" id="ach-toast" class="ach-toast" hidden aria-live="polite">
+      <span class="ach-ico" aria-hidden="true">★</span>
+      <span class="ach-copy"><b id="ach-toast-title">Achievement</b><small id="ach-toast-sub">Unlocked</small></span>
+      <span class="ach-coin" id="ach-toast-coin" hidden>+0</span>
+    </button>
+    <div id="size-warn" class="size-warn" hidden role="status"></div>
+    <div id="play-anyway-banner" class="summary-banner" hidden role="status">
+      <span id="play-anyway-text">Warnings on this project.</span>
+      <button type="button" class="btn btn-ghost" id="btn-play-anyway" style="margin-left:8px">Play anyway</button>
+    </div>
+
+    <!-- HOME -->
+    <section id="screen-home" class="screen" aria-label="Home">
+      <div class="topbar">
+        <p class="eyebrow">TileEngine</p>
+        <div class="topbar-row"><h1 tabindex="-1">New project</h1></div>
+      </div>
+      <div class="body">
+        <div class="home-hero">
+          <h2>Make a grid game</h2>
+          <p>Buttons and sliders only. No code. Built for RaiKynn, players, and indie makers — all stages authored in the engine.</p>
+        </div>
+        <div class="stack">
+          <button type="button" class="btn btn-primary" id="btn-standalone" data-autofocus aria-label="Start standalone New Project wizard">Standalone engine</button>
+<button type="button" class="btn btn-ghost" data-nav="stage" aria-label="Skip to stage editor">Open blank stage</button>
+          <button type="button" class="btn btn-ghost" data-nav="profile" aria-label="Open studio profile">Studio profile</button>
+          <button type="button" class="btn btn-ghost" data-nav="hub-library" aria-label="Made games library">Made games</button>
+          <button type="button" class="btn btn-ghost" data-nav="hub-chart" aria-label="Monthly thumbs-up chart">Thumbs-up chart</button>
+          <button type="button" class="btn btn-ghost" data-nav="hub-shop" aria-label="Hub assets shop">Asset shop</button>
+          <button type="button" class="btn btn-ghost" data-nav="project-settings" aria-label="Open project settings">Project settings</button>
+          <button type="button" class="btn btn-ghost" id="btn-export-project" aria-label="Export project JSON">Export project</button>
+        </div>
+        <details class="advanced" style="margin-top:16px">
+          <summary>About</summary>
+          <div class="inner">
+            <p class="hint" style="margin:0">Catalogue snapshot <code>data/behaviours.json</code>. Sync with <code>scripts/sync-catalogue.sh</code> when <code>catalogue_rev</code> goes up.</p>
+            <p class="hint" id="catalogue-rev" style="margin:8px 0 0">catalogue_rev: —</p>
+          </div>
+        </details>
+        <p class="hint" style="margin-top:16px">Prototype shell — taps navigate screens; setups use the Data &amp; Save format.</p>
+      </div>
+    </section>
+
+    <!-- WIZARD PLATFORM -->
+    <section id="screen-wizard-platform" class="screen" aria-label="Wizard platform">
+      <div class="topbar">
+        <p class="eyebrow">New Project</p>
+        <div class="topbar-row"><h1 tabindex="-1">Platform</h1></div>
+        <div class="dots" aria-label="Wizard progress"></div>
+        <div class="wizard-dots" aria-hidden="true"></div>
+        <button type="button" class="wizard-preview-strip" data-peek-for="screen-wizard-platform" aria-label="Platform preview — tap to expand">
+          <div class="wiz-prev-inner" id="wiz-prev-wizard-platform"></div>
+        </button>
+      </div>
+      <div class="body">
+        <p class="question" tabindex="-1">Where will people play this?</p>
+        <div class="card-grid cols-3" role="group" aria-label="Platform">
+          <button type="button" class="choice" data-group="platform" data-value="mobile" aria-pressed="true"><span class="label">Mobile</span><span class="sub">Phone-first</span></button>
+          <button type="button" class="choice" data-group="platform" data-value="pc" aria-pressed="false"><span class="label">PC</span><span class="sub">Mouse &amp; keys</span></button>
+          <button type="button" class="choice" data-group="platform" data-value="both" aria-pressed="false"><span class="label">Both</span><span class="sub">Touch-safe</span></button>
+        </div>
+        <div class="preview body-preview-fallback" hidden aria-hidden="true">Device preview</div>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="home" aria-label="Back to home">Back</button>
+        <button type="button" class="btn btn-primary" data-nav="wizard-next" data-from="wizard-platform" aria-label="Next step">Next</button>
+      </div>
+    </section>
+
+    <!-- WIZARD COMBAT -->
+    <section id="screen-wizard-combat" class="screen" aria-label="Wizard combat mode">
+      <div class="topbar">
+        <p class="eyebrow">New Project</p>
+        <div class="topbar-row"><h1 tabindex="-1">Combat</h1></div>
+        <div class="dots" aria-label="Wizard progress"></div>
+        <div class="wizard-dots" aria-hidden="true"></div>
+        <button type="button" class="wizard-preview-strip" data-peek-for="screen-wizard-combat" aria-label="Combat preview — tap to expand">
+          <div class="wiz-prev-inner" id="wiz-prev-wizard-combat"></div>
+        </button>
+      </div>
+      <div class="body">
+        <p class="question" tabindex="-1">How does a fight work?</p>
+        <div class="card-grid" role="group" aria-label="Combat mode">
+          <button type="button" class="choice live" data-group="combat" data-value="grid-tactics" aria-pressed="true">
+            <span class="label">Grid tactics</span>
+            <span class="sub">Turn-based grid. Tap a piece, then a tile or foe.</span>
+            <span class="badge">Live</span>
+          </button>
+          <button type="button" class="choice soon" data-group="combat" data-value="turn-rpg" aria-pressed="false" disabled aria-disabled="true">
+            <span class="label">Turn RPG</span>
+            <span class="sub">Menu-based turns.</span>
+            <span class="badge">Coming soon</span>
+          </button>
+          <button type="button" class="choice soon" data-group="combat" data-value="rts" aria-pressed="false" disabled aria-disabled="true">
+            <span class="label">RTS</span>
+            <span class="sub">Real-time legions.</span>
+            <span class="badge">Coming soon</span>
+          </button>
+        </div>
+        <details class="advanced">
+          <summary>Advanced</summary>
+          <div class="inner">
+            <div class="field">
+              <label>Actions each turn <span class="val">2</span></label>
+              <input class="slider" type="range" min="1" max="4" value="2" aria-label="Actions each turn" />
+            </div>
+          </div>
+        </details>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="wizard-back" data-from="wizard-combat" aria-label="Back">Back</button>
+        <button type="button" class="btn btn-primary" data-nav="wizard-next" data-from="wizard-combat" aria-label="Next step">Next</button>
+      </div>
+    </section>
+
+    <!-- WIZARD: Ability pick (Grid tactics only) -->
+    <section id="screen-wizard-ability-pick" class="screen" aria-label="Wizard ability pick">
+      <div class="topbar">
+        <p class="eyebrow">New project · 3 of 6</p>
+        <div class="topbar-row"><h1 tabindex="-1">Abilities</h1></div>
+        <div class="wizard-dots" aria-hidden="true"></div>
+        <button type="button" class="wizard-preview-strip" data-peek-for="screen-wizard-ability-pick" aria-label="Ability preview — tap to expand">
+          <div class="wiz-prev-inner" id="wiz-prev-wizard-ability-pick"></div>
+        </button>
+      </div>
+      <div class="body">
+        <p class="question" tabindex="-1">How do players pick abilities?</p>
+        <p class="hint">Abilities behave the same either way — only the presentation changes. Change this later in Project settings.</p>
+        <div class="stack">
+          <button type="button" class="choice" data-group="ability-pick" data-value="all-menu" aria-pressed="true">
+            <span class="choice-title">All menu</span>
+            <span class="choice-sub">Unit action menu for every ability group (Fire Emblem / Final Fantasy). <strong>Default</strong>.</span>
+          </button>
+          <button type="button" class="choice" data-group="ability-pick" data-value="all-cards" aria-pressed="false">
+            <span class="choice-title">All cards</span>
+            <span class="choice-sub">Card hand for every ability group (Before The Fall style).</span>
+          </button>
+          <button type="button" class="choice" data-group="ability-pick" data-value="custom" aria-pressed="false">
+            <span class="choice-title">Custom per group</span>
+            <span class="choice-sub">Mix menu and cards — set Basic vs Spells below.</span>
+          </button>
+        </div>
+
+        <div id="ability-custom-panel" class="ability-extra" hidden>
+          <p class="eyebrow">Custom per group</p>
+          <div class="field">
+            <label>Basic actions (move, attack, wait)</label>
+            <div class="toggle-row" role="group" aria-label="Basic style">
+              <button type="button" class="toggle" data-group="basic-style" data-value="unit-action-menu" aria-pressed="true">Unit menu</button>
+              <button type="button" class="toggle" data-group="basic-style" data-value="card-hand" aria-pressed="false">Card hand</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Spells and abilities</label>
+            <div class="toggle-row" role="group" aria-label="Spells style">
+              <button type="button" class="toggle" data-group="spells-style" data-value="unit-action-menu" aria-pressed="true">Unit menu</button>
+              <button type="button" class="toggle" data-group="spells-style" data-value="card-hand" aria-pressed="false">Card hand</button>
+            </div>
+          </div>
+        </div>
+        <div id="ability-hand-panel" class="ability-extra" hidden>
+          <p class="eyebrow">Card hand</p>
+          <div class="field">
+            <label>Where does the hand show?</label>
+            <div class="stack" style="gap:8px">
+              <button type="button" class="choice" data-group="hand-placement" data-value="hand-docked" aria-pressed="true">
+                <span class="choice-title">Always visible</span>
+                <span class="choice-sub">Hand stays on the stage.</span>
+              </button>
+              <button type="button" class="choice" data-group="hand-placement" data-value="hand-in-menu" aria-pressed="false">
+                <span class="choice-title">Cards entry in the unit menu</span>
+                <span class="choice-sub">Tap a unit → Cards opens the hand.</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="wizard-back" data-from="wizard-ability-pick" aria-label="Back">Back</button>
+        <button type="button" class="btn btn-primary" data-nav="wizard-next" data-from="wizard-ability-pick" aria-label="Next step">Next</button>
+      </div>
+    </section>
+
+
+    <!-- WIZARD CAMERA -->
+    <section id="screen-wizard-camera" class="screen" aria-label="Wizard camera">
+      <div class="topbar">
+        <p class="eyebrow">New Project</p>
+        <div class="topbar-row"><h1 tabindex="-1">Camera</h1></div>
+        <div class="dots" aria-label="Wizard progress"></div>
+        <div id="locked-chip" class="chip locked" hidden>Platform · Combat locked</div>
+        <div class="wizard-dots" aria-hidden="true"></div>
+        <button type="button" class="wizard-preview-strip" data-peek-for="screen-wizard-camera" aria-label="Camera preview — tap to expand">
+          <div class="wiz-prev-inner" id="wiz-prev-wizard-camera"></div>
+        </button>
+      </div>
+      <div class="body">
+        <p class="question" tabindex="-1">How should the board look?</p>
+        <div class="field">
+          <label>View</label>
+          <div class="toggle-row" role="group" aria-label="Camera view">
+            <button type="button" class="toggle" data-group="camera-view" data-value="top-down" aria-pressed="true">Top-down</button>
+            <button type="button" class="toggle soon" data-group="camera-view" data-value="angled" disabled aria-disabled="true">Angled · Soon</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Zoom <span class="val" id="zoom-val">1×</span></label>
+          <input id="zoom" class="slider" type="range" min="1" max="6" step="1" value="1" aria-label="Zoom step" />
+          <p class="hint">Whole-number steps only — keeps art sharp.</p>
+        </div>
+        <div class="field">
+          <label>When the screen isn't a whole fit</label>
+          <div class="stack" style="gap:8px">
+            <button type="button" class="choice" data-group="screen-fit" data-value="letterbox" aria-pressed="true">
+              <span class="choice-title">Letterbox</span>
+              <span class="choice-sub">Keep the whole board; empty bars fill the rest. <strong>Default</strong>.</span>
+            </button>
+            <button type="button" class="choice" data-group="screen-fit" data-value="crop" aria-pressed="false">
+              <span class="choice-title">Crop</span>
+              <span class="choice-sub">Fill the screen; edges of the board may be cut off.</span>
+            </button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Follow</label>
+          <div class="toggle-row" role="group" aria-label="Camera follow">
+            <button type="button" class="toggle" data-group="camera-mode" data-value="fixed" aria-pressed="true">Fixed</button>
+            <button type="button" class="toggle" data-group="camera-mode" data-value="follow" aria-pressed="false">Follow piece</button>
+          </div>
+        </div>
+        <details class="advanced">
+          <summary>Advanced</summary>
+          <div class="inner hint">Edge pan stays here for makers who need it. Art is never stretched.</div>
+        </details>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="wizard-back" data-from="wizard-camera" aria-label="Back">Back</button>
+        <button type="button" class="btn btn-primary" data-nav="wizard-next" data-from="wizard-camera" aria-label="Next step">Next</button>
+      </div>
+    </section>
+
+    <!-- WIZARD TILES -->
+    <section id="screen-wizard-tiles" class="screen" aria-label="Wizard tiles">
+      <div class="topbar">
+        <p class="eyebrow">New Project</p>
+        <div class="topbar-row"><h1 tabindex="-1">Tiles</h1></div>
+        <div class="dots" aria-label="Wizard progress"></div>
+        <div class="wizard-dots" aria-hidden="true"></div>
+        <button type="button" class="wizard-preview-strip" data-peek-for="screen-wizard-tiles" aria-label="Tiles preview — tap to expand">
+          <div class="wiz-prev-inner" id="wiz-prev-wizard-tiles"></div>
+        </button>
+      </div>
+      <div class="body">
+        <p class="question" tabindex="-1">Tile size &amp; art</p>
+        <div class="field">
+          <label>Size <span class="val" id="tile-size-val">64 px</span></label>
+          <input id="tile-size" class="slider" type="range" min="32" max="128" step="8" value="64" aria-label="Tile size in pixels" />
+          <p class="hint" id="tile-size-suggest-hint">Suggested for Mobile: 64 px</p>
+          <button type="button" class="btn btn-ghost" id="btn-tile-size-reset" hidden style="margin-top:8px;width:100%">Reset to suggested</button>
+        </div>
+        <div class="field">
+          <label>Tileset</label>
+          <div class="toggle-row" role="group" aria-label="Tileset">
+            <button type="button" class="toggle" data-group="tileset" data-value="stone" aria-pressed="true">Stone</button>
+            <button type="button" class="toggle" data-group="tileset" data-value="lane" aria-pressed="false">Lane</button>
+            <button type="button" class="toggle" data-group="tileset" data-value="blank" aria-pressed="false">Blank</button>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary" style="width:100%;margin-bottom:12px" data-nav="sprite-upload" aria-label="Upload sprites">Upload sprites…</button>
+        <div id="tile-preview" class="preview" hidden>stone · 64px tiles</div>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="wizard-back" data-from="wizard-tiles" aria-label="Back">Back</button>
+        <button type="button" class="btn btn-primary" data-nav="wizard-next" data-from="wizard-tiles" aria-label="Next step">Next</button>
+      </div>
+    </section>
+
+    <!-- WIZARD MAP -->
+    <section id="screen-wizard-map" class="screen" aria-label="Wizard map defaults">
+      <div class="topbar">
+        <p class="eyebrow">New Project</p>
+        <div class="topbar-row"><h1 tabindex="-1">Map</h1></div>
+        <div class="dots" aria-label="Wizard progress"></div>
+        <div class="wizard-dots" aria-hidden="true"></div>
+        <button type="button" class="wizard-preview-strip" data-peek-for="screen-wizard-map" aria-label="Map preview — tap to expand">
+          <div class="wiz-prev-inner" id="wiz-prev-wizard-map"></div>
+        </button>
+      </div>
+      <div class="body">
+        <p class="question" tabindex="-1">Starting map</p>
+        <div class="field">
+          <label>Width <span class="val" id="map-w-val">6</span></label>
+          <input id="map-w" class="slider" type="range" min="4" max="12" value="6" aria-label="Map width in tiles" />
+        </div>
+        <div class="field">
+          <label>Height <span class="val" id="map-h-val">9</span></label>
+          <input id="map-h" class="slider" type="range" min="4" max="12" value="9" aria-label="Map height in tiles" />
+        </div>
+        <div class="field">
+          <label>Terrain</label>
+          <div class="toggle-row" role="group" aria-label="Starting terrain">
+            <button type="button" class="toggle" data-group="terrain" data-value="empty" aria-pressed="false">Empty</button>
+            <button type="button" class="toggle" data-group="terrain" data-value="checker" aria-pressed="false">Checker</button>
+            <button type="button" class="toggle" data-group="terrain" data-value="stone" aria-pressed="true">Stone</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Fog of war</label>
+          <div class="toggle-row" role="group" aria-label="Fog of war">
+            <button type="button" class="toggle" data-group="fog" data-value="off" aria-pressed="true">Off</button>
+            <button type="button" class="toggle soon" data-group="fog" data-value="on" disabled aria-disabled="true">On · Soon</button>
+          </div>
+        </div>
+        <div id="map-preview" class="preview" aria-label="Map size preview" hidden></div>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="wizard-back" data-from="wizard-map" aria-label="Back">Back</button>
+        <button type="button" class="btn btn-primary" id="btn-create" data-nav="wizard-next" data-from="wizard-map" aria-label="Create project">Create project</button>
+      </div>
+    </section>
+
+    <!-- STAGE -->
+    <section id="screen-stage" class="screen" aria-label="Stage editor">
+      <div class="stage-top" role="banner">
+        <div class="stage-top-main">
+          <h1 class="stage-title" id="stage-title" tabindex="-1">Stage</h1>
+          <div class="stage-top-actions">
+            <button type="button" class="btn btn-ghost stage-icon-btn" id="btn-stage-overflow" aria-label="More menus" aria-haspopup="menu" aria-expanded="false">⋯</button>
+            <button type="button" class="btn btn-primary stage-play-btn" id="btn-stage-play" aria-label="Play test">Play</button>
+          </div>
+        </div>
+        <div id="stage-overflow-menu" class="stage-menu" hidden role="menu" aria-label="Stage menu">
+          <button type="button" class="stage-menu-item" role="menuitem" data-nav="project-settings">Settings</button>
+          <button type="button" class="stage-menu-item" role="menuitem" data-nav="profile">Profile</button>
+          <button type="button" class="stage-menu-item" role="menuitem" data-nav="home">Home</button>
+          <button type="button" class="stage-menu-item" role="menuitem" data-nav="stage-select">Stages</button>
+        </div>
+      </div>
+
+      <div class="stage-wrap stage-wrap-lean">
+        <!-- Floating status chip (replaces full-width banner on stage) -->
+        <div id="stage-status-chip" class="stage-status-chip" hidden role="status">
+          <span id="stage-status-text">Can't play yet</span>
+          <button type="button" class="btn btn-ghost chip-action" id="btn-stage-status-action" aria-label="Fix">Fix</button>
+          <button type="button" class="chip-dismiss" id="btn-stage-status-dismiss" aria-label="Dismiss warning">×</button>
+        </div>
+
+        <p id="place-banner" class="place-banner" hidden>Tap an empty tile to place a unit</p>
+
+        <div class="stage-scroll" id="stage-scroll">
+          <div class="stage-camera" id="stage-camera">
+            <div id="stage-grid" class="grid" role="grid" aria-label="Blank white stage grid"></div>
+          </div>
+
+          <button type="button" class="minimap-chip" id="btn-minimap-chip" aria-label="Open minimap" aria-pressed="false" hidden>Map</button>
+          <div class="minimap" id="stage-minimap" hidden>
+            <canvas id="minimap-canvas" width="96" height="96" aria-label="Minimap — tap to jump"></canvas>
+            <div class="mm-rect" id="minimap-rect" aria-hidden="true"></div>
+            <div class="mm-btns" role="group" aria-label="Minimap jumps">
+              <button type="button" class="btn btn-ghost" id="btn-mm-whole" aria-label="Whole map">Whole map</button>
+              <button type="button" class="btn btn-ghost" id="btn-mm-units" aria-label="Jump to units">Jump to units</button>
+              <button type="button" class="btn btn-ghost" id="btn-mm-close" aria-label="Close minimap">Close</button>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-ghost stage-fab-undo" id="btn-stage-undo" aria-label="Undo last paint stroke" disabled>Undo</button>
+
+        <aside id="vote-prompt" class="vote-prompt" hidden role="region" aria-label="Asset vote prompt">
+          <button type="button" class="vote-prompt-dismiss" id="btn-vote-prompt-dismiss" aria-label="Later">×</button>
+          <div class="vote-prompt-row">
+            <div class="vote-prompt-thumb" id="vote-prompt-thumb" aria-hidden="true">🔊</div>
+            <div class="vote-prompt-meta">
+              <p class="vote-prompt-q" id="vote-prompt-title">Enjoying this asset?</p>
+              <p class="hint" id="vote-prompt-creator" style="margin:2px 0 0"></p>
+            </div>
+          </div>
+          <div class="vote-prompt-actions">
+            <button type="button" class="btn btn-primary" id="btn-vote-prompt-now" style="min-height:48px;flex:1">Vote now</button>
+            <button type="button" class="btn btn-ghost" id="btn-vote-prompt-later" style="min-height:48px;flex:1">Later</button>
+            <button type="button" class="btn btn-ghost" id="btn-vote-prompt-never" style="min-height:48px;flex:1">Don't ask again</button>
+          </div>
+        </aside>
+        <div id="vote-thanks" class="vote-thanks" hidden role="status">Thanks, vote counted</div>
+
+        <!-- Contextual bottom sheet -->
+        <div id="stage-sheet" class="stage-sheet" hidden data-mode="">
+          <div class="stage-sheet-bar">
+            <button type="button" class="sheet-undo-btn" id="btn-sheet-undo" aria-label="Undo last paint stroke" disabled>Undo</button>
+            <button type="button" class="stage-sheet-handle" id="btn-sheet-collapse" aria-label="Collapse tool options">
+              <span class="handle-bar" aria-hidden="true"></span>
+            </button>
+            <span class="sheet-collapse-spacer" aria-hidden="true"></span>
+          </div>
+          <div class="stage-sheet-body" id="stage-sheet-body">
+            <!-- Paint / Fill -->
+            <div class="sheet-panel" id="sheet-paint" hidden>
+              <p class="eyebrow" style="margin:0 0 8px">Paint</p>
+              <div class="sheet-row" role="group" aria-label="Paint mode">
+                <button type="button" class="tool" id="btn-paint" aria-pressed="false" aria-label="Paint tiles">Paint</button>
+                <button type="button" class="tool" id="btn-fill" aria-pressed="false" aria-label="Fill tiles">Fill</button>
+                <button type="button" class="tool" data-nav="stage-map" aria-label="Tile legend">Legend</button>
+              </div>
+              <div id="paint-prefs" class="walls-prefs sheet-inline" hidden>
+                <p class="eyebrow" style="margin:0 0 6px">Paint tile</p>
+                <div class="walls-prefs-row" id="paint-prefs-row" role="group" aria-label="Tile type">
+                  <button type="button" class="toggle" data-paint-type="floor" aria-pressed="true">Floor</button>
+                  <button type="button" class="toggle" data-paint-type="water" aria-pressed="false">Water</button>
+                  <button type="button" class="toggle" data-paint-type="wall_block" aria-pressed="false">Block</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Walls -->
+            <div class="sheet-panel" id="sheet-walls" hidden>
+              <p class="eyebrow" style="margin:0 0 8px">Walls</p>
+              <div id="walls-prefs" class="walls-prefs sheet-inline" hidden>
+                <p class="eyebrow" style="margin:0 0 6px">Wall rules (terrain)</p>
+                <div class="walls-prefs-row" id="walls-prefs-row"></div>
+              </div>
+            </div>
+
+            <!-- Objects -->
+            <div class="sheet-panel" id="sheet-objects" hidden>
+              <p class="eyebrow" style="margin:0 0 8px">Objects</p>
+              <div id="objects-prefs" class="walls-prefs sheet-inline" hidden>
+                <p class="eyebrow" style="margin:0 0 6px">Map objects</p>
+                <p class="hint" id="objects-stage-hint">No per-stage objects — use another map.</p>
+                <div class="walls-prefs-row" id="objects-prefs-row"></div>
+              </div>
+            </div>
+
+            <!-- Units -->
+            <div class="sheet-panel" id="sheet-units" hidden>
+              <p class="eyebrow" style="margin:0 0 8px">Units</p>
+              <div class="sheet-row" role="group" aria-label="Unit tools">
+                <button type="button" class="tool" data-nav="place-unit" aria-label="Place unit">Place unit</button>
+                <button type="button" class="tool" data-nav="unit-list" aria-label="Unit list">Unit list</button>
+              </div>
+            </div>
+
+            <!-- Unit selected -->
+            <div class="sheet-panel" id="sheet-unit" hidden>
+              <p class="eyebrow" style="margin:0 0 8px" id="sheet-unit-title">Unit</p>
+              <div class="sheet-row" role="group" aria-label="Unit edit">
+                <button type="button" class="tool" data-nav="sprite-upload" aria-label="Upload sprite">Sprite</button>
+                <button type="button" class="tool" data-nav="unit-editor" aria-label="Unit stats">Stats</button>
+                <button type="button" class="tool" data-nav="pick-behaviour" aria-label="Assign behaviour">Behaviour</button>
+                <button type="button" class="tool" id="btn-unit-sounds" aria-label="Unit sounds">Sounds</button>
+              </div>
+            </div>
+
+            <!-- Move / zoom -->
+            <div class="sheet-panel" id="sheet-move" hidden>
+              <p class="eyebrow" style="margin:0 0 8px">Move &amp; zoom</p>
+              <div class="sheet-row" role="group" aria-label="Zoom">
+                <button type="button" class="tool" id="btn-zoom-out" aria-label="Zoom out">−</button>
+                <span class="zoom-val" id="stage-zoom-val" aria-live="polite">1×</span>
+                <button type="button" class="tool" id="btn-zoom-in" aria-label="Zoom in">+</button>
+                <button type="button" class="toggle" id="btn-frac-zoom" aria-pressed="false" disabled aria-label="Fractional zoom">½ steps</button>
+              </div>
+              <p class="hint" id="frac-zoom-hint" style="margin:8px 0 0">½ steps need Advanced render (Settings)</p>
+            </div>
+
+            <!-- More -->
+            <div class="sheet-panel stage-tools" id="sheet-more" hidden>
+              <p class="eyebrow" style="margin:0 0 8px">More</p>
+              <div class="sheet-row wrap" role="group" aria-label="More tools">
+                <button type="button" class="tool" data-nav="stage-enemy-pool" aria-label="Enemy pool">Enemies</button>
+                <button type="button" class="tool" data-nav="loadout" aria-label="Loadout">Loadout</button>
+                <button type="button" class="tool" data-nav="stage-loadout" aria-label="Stage loadout">Stage loadout</button>
+                <button type="button" class="tool" data-nav="stage-map" aria-label="Pick map">Map</button>
+                <button type="button" class="tool" data-nav="preview" aria-label="Preview">Preview</button>
+                <button type="button" class="tool" data-nav="render" aria-label="Render">Render</button>
+                <button type="button" class="tool" id="btn-open-sound" aria-label="Sound panel">Sound</button>
+                <button type="button" class="tool" data-nav="game-settings" aria-label="Game settings menu">Game settings</button>
+                <button type="button" class="tool" data-nav="sprite-studio" id="btn-open-sprite-studio" aria-label="Sprite Studio">Sprite Studio</button>
+              </div>
+              <div class="readonly-music" id="stage-music-readonly" style="margin-top:10px">
+                <span class="hint" style="margin:0">Stage music:</span>
+                <strong id="stage-music-name">—</strong>
+                <button type="button" class="btn btn-ghost" id="btn-change-stage-music" style="min-height:48px">Change in Sound</button>
+              </div>
+            </div>
+
+            <!-- Sound panel -->
+            <div class="sheet-panel" id="sheet-sound" hidden>
+              <p class="eyebrow" style="margin:0 0 8px">Sound</p>
+              <button type="button" class="sound-unlock-chip" id="btn-sound-unlock" aria-label="Tap to enable sound">🔊 Tap to enable sound</button>
+              <p class="sound-silent-hint" id="sound-silent-hint" hidden>Phone silent switch may be on — not the app volume.</p>
+              <div class="sound-tabs" role="tablist" aria-label="Sound source">
+                <button type="button" class="toggle" data-sound-tab="library" aria-pressed="true">Library</button>
+                <button type="button" class="toggle" data-sound-tab="made" aria-pressed="false">Made here</button>
+              </div>
+              <div class="sound-filters" role="group" aria-label="Kind filter">
+                <button type="button" class="toggle" data-sound-filter="sfx" aria-pressed="true">SFX</button>
+                <button type="button" class="toggle" data-sound-filter="music" aria-pressed="false">Music</button>
+              </div>
+              <div id="sound-list" class="sound-list" aria-label="Sounds"></div>
+
+              <div id="own-sound-picker" class="own-sound-picker" hidden>
+                <p class="sound-subhead" id="own-sound-picker-title">Own sound</p>
+                <p class="hint" id="own-sound-picker-hint">Pick a sound for this action. Default uses the shared sound.</p>
+                <div class="sheet-row wrap" role="group" aria-label="Own sound source">
+                  <button type="button" class="btn btn-primary" style="min-height:48px;flex:1" data-own-source="make">Make a sound</button>
+                  <button type="button" class="btn btn-ghost" style="min-height:48px;flex:1" data-own-source="upload">Upload file</button>
+                  <button type="button" class="btn btn-ghost" style="min-height:48px;flex:1" data-own-source="builtin">Built-in</button>
+                </div>
+                <button type="button" class="btn btn-ghost" id="btn-own-sound-shared" style="min-height:48px;width:100%;margin-top:8px">Use shared sound</button>
+              </div>
+
+              <p class="sound-subhead">Upload a file</p>
+              <div class="sound-upload-zone" id="sound-upload-zone">
+                <label class="file-btn sound-upload-btn" aria-label="Choose audio file">
+                  Choose audio file
+                  <input id="sound-file" type="file" accept=".wav,.ogg,.mp3,.m4a,audio/wav,audio/ogg,audio/mpeg,audio/mp4" />
+                </label>
+                <p class="hint" style="margin:8px 0 0">wav · ogg · mp3 · m4a. SFX over 3 s or 300 KB — consider mono (warn only). Music over about 3 min gets a Streamed flag.</p>
+                <p class="hint" id="sound-upload-status" hidden></p>
+                <button type="button" class="btn btn-primary" id="btn-sound-upload-save" style="min-height:48px;width:100%;margin-top:8px" hidden disabled>Save upload to Made here</button>
+              </div>
+
+              <p class="sound-subhead">Ability sounds</p>
+              <p class="hint" style="margin:0 0 6px">Own sound is off by default — uses shared Cast / Hit. Turn on to pick Make / Upload / Built-in.</p>
+              <div id="sound-ability-list"></div>
+
+              <p class="sound-subhead">Make a sound</p>
+              <div class="sound-presets" id="sound-presets" role="group" aria-label="Presets"></div>
+              <div id="sound-sliders"></div>
+              <details class="advanced" id="sound-advanced">
+                <summary>Advanced</summary>
+                <div class="inner" id="sound-advanced-body"></div>
+              </details>
+              <div class="sheet-row wrap" style="margin-top:8px">
+                <button type="button" class="btn btn-ghost" id="btn-sound-rand" style="min-height:48px">Randomise</button>
+                <button type="button" class="btn btn-ghost" id="btn-sound-rand-little" style="min-height:48px">Randomise a little</button>
+                <button type="button" class="btn btn-primary" id="btn-sound-save" style="min-height:48px">Save as project sound</button>
+              </div>
+              <p class="hint" id="sound-gen-seed">Seed 1 · generator sfxr@1</p>
+              <p class="sound-subhead">Assign to events</p>
+              <div id="sound-events"></div>
+              <p class="sound-subhead">Unit overrides</p>
+              <div id="sound-unit-overrides"></div>
+              <div class="sheet-row wrap" style="margin-top:10px">
+                <button type="button" class="btn btn-primary" id="btn-sound-try" style="min-height:48px">Try it</button>
+                <button type="button" class="toggle" id="btn-sound-music-mute" aria-pressed="false">Mute stage music</button>
+              </div>
+              <p class="hint" style="margin-top:8px">Try it plays cast → hurt → death on the selected unit. Does not enter Play.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom tool rail -->
+        <nav class="stage-rail" role="toolbar" aria-label="Stage tools">
+          <button type="button" class="rail-btn" id="rail-paint" data-rail="paint" aria-pressed="false" aria-label="Paint">
+            <span class="rail-ico" aria-hidden="true">🖌</span><span class="rail-lbl">Paint</span>
+          </button>
+          <button type="button" class="rail-btn" id="btn-walls" data-rail="walls" aria-pressed="false" aria-label="Walls tool">
+            <span class="rail-ico" aria-hidden="true">▦</span><span class="rail-lbl">Walls</span>
+          </button>
+          <button type="button" class="rail-btn" id="btn-objects" data-rail="objects" aria-pressed="false" aria-label="Objects tool">
+            <span class="rail-ico" aria-hidden="true">▣</span><span class="rail-lbl">Objects</span>
+          </button>
+          <button type="button" class="rail-btn" id="rail-units" data-rail="units" aria-pressed="false" aria-label="Units">
+            <span class="rail-ico" aria-hidden="true">●</span><span class="rail-lbl">Units</span>
+          </button>
+          <button type="button" class="rail-btn" id="btn-move" data-rail="move" aria-pressed="false" aria-label="Move tool — pan with one finger">
+            <span class="rail-ico" aria-hidden="true">✥</span><span class="rail-lbl">Move</span>
+          </button>
+          <button type="button" class="rail-btn" id="rail-more" data-rail="more" aria-pressed="false" aria-label="More tools">
+            <span class="rail-ico" aria-hidden="true">⋯</span><span class="rail-lbl">More</span>
+          </button>
+        </nav>
+
+        <div id="popup-backdrop" class="popup-backdrop" hidden aria-hidden="true"></div>
+        <div id="unit-ability-popup" class="unit-ability-popup" hidden role="menu" aria-label="Unit abilities">
+          <p class="popup-title" id="unit-ability-title">Unit</p>
+          <button type="button" class="popup-row" role="menuitem">Attack</button>
+          <button type="button" class="popup-row" role="menuitem">Spells</button>
+          <button type="button" class="popup-row" role="menuitem">Items</button>
+          <button type="button" class="popup-row" id="popup-row-cards" role="menuitem" hidden>Cards</button>
+        </div>
+        <div id="card-hand" class="card-hand" hidden aria-label="Card hand">
+          <button type="button" class="hand-card" aria-label="Strike">Strike</button>
+          <button type="button" class="hand-card" aria-label="Guard">Guard</button>
+          <button type="button" class="hand-card" aria-label="Heal">Heal</button>
+          <button type="button" class="hand-card" aria-label="Push">Push</button>
+          <button type="button" class="hand-card" aria-label="Trap">Trap</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SPRITE STUDIO (round 62 prototype; js/sprite-studio.js) -->
+    <section id="screen-sprite-studio" class="screen" aria-label="Sprite Studio">
+      <div class="stage-top ss-top" role="banner">
+        <div class="stage-top-main">
+          <button type="button" class="btn btn-ghost stage-icon-btn" id="ss-back" aria-label="Back to the stage editor">‹</button>
+          <h1 class="stage-title" id="ss-title" tabindex="-1">New sprite</h1>
+          <div class="stage-top-actions">
+            <button type="button" class="ss-upgrade-badge" id="ss-upgrade" aria-label="Upgrade look" hidden>Upgrade look</button>
+            <button type="button" class="btn btn-ghost stage-icon-btn" id="ss-help-btn" aria-label="Gestures help">?</button>
+            <button type="button" class="btn btn-primary stage-play-btn" id="ss-export-btn" aria-label="Save and export">Save</button>
+          </div>
+        </div>
+      </div>
+      <div class="ss-main" id="ss-main">
+        <div class="ss-viewport" id="ss-viewport" aria-label="Pixel canvas">
+          <canvas id="ss-canvas" class="ss-canvas" role="img" aria-label="Sprite canvas"></canvas>
+          <button type="button" class="ss-fab ss-fab-undo" id="ss-fab-undo" aria-label="Undo">Undo</button>
+          <button type="button" class="ss-fab ss-facing-chip" id="ss-facing-chip" aria-label="Facing">Facing: Down</button>
+          <div class="ss-frame-banner" id="ss-frame-banner" hidden role="status">
+            <span id="ss-frame-banner-text">Touching up one frame</span>
+            <button type="button" class="toggle" id="ss-frame-done">Done</button>
+          </div>
+          <div class="ss-chips" id="ss-chips" hidden role="group" aria-label="Closed stroke">
+            <span class="ss-chips-lbl" id="ss-chips-lbl">Closed shape drawn</span>
+            <button type="button" class="toggle" id="ss-chip-pixels" aria-pressed="true">Keep as pixels</button>
+            <button type="button" class="toggle" id="ss-chip-shape" aria-pressed="false">Make shape</button>
+          </div>
+          <div class="ss-start" id="ss-start" hidden></div>
+        </div>
+        <div class="stage-sheet ss-sheet" id="ss-sheet" hidden>
+          <div class="stage-sheet-bar">
+            <button type="button" class="sheet-undo-btn" id="ss-undo" aria-label="Undo">Undo</button>
+            <button type="button" class="stage-sheet-handle" id="ss-sheet-close" aria-label="Close tool options"><span class="handle-bar" aria-hidden="true"></span></button>
+            <button type="button" class="sheet-undo-btn" id="ss-redo" aria-label="Redo">Redo</button>
+          </div>
+          <div class="stage-sheet-body" id="ss-sheet-body"></div>
+        </div>
+        <nav class="stage-rail ss-rail" id="ss-rail" role="toolbar" aria-label="Drawing tools"></nav>
+      </div>
+      <p class="ss-live" id="ss-live" aria-live="polite"></p>
+    </section>
+
+    <!-- PLACE UNIT (same stage, place mode) -->
+    <section id="screen-place-unit" class="screen" aria-label="Place unit">
+      <div class="topbar">
+        <p class="eyebrow">Stage</p>
+        <div class="topbar-row"><h1 tabindex="-1">Place unit</h1></div>
+      </div>
+      <div class="stage-wrap">
+        <p class="place-banner">Tap an empty white tile</p>
+        <div class="stage-scroll"><div id="stage-grid-place" class="grid" role="grid" aria-label="Stage grid for placing units"></div></div>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="stage" aria-label="Cancel place unit">Cancel</button>
+        <button type="button" class="btn btn-primary" data-nav="stage" aria-label="Done placing">Done</button>
+      </div>
+    </section>
+
+    <!-- PICK BEHAVIOUR -->
+    <section id="screen-pick-behaviour" class="screen" aria-label="Pick a behaviour">
+      <div class="topbar">
+        <p class="eyebrow">Behaviour</p>
+        <div class="topbar-row"><h1 tabindex="-1">Pick a behaviour</h1></div>
+      </div>
+      <div class="body">
+        <p class="hint">For <strong id="pick-unit-name">Unit</strong>. Day-one starters first. No code — tap a row.</p>
+        <label class="search-wrap" for="behaviour-search">
+          <span class="sr-only">Search behaviours</span>
+          <input id="behaviour-search" type="search" placeholder="Search behaviours" autocomplete="off" aria-label="Search behaviours" />
+        </label>
+        <div id="behaviour-pick-list" class="beh-list" role="list"></div>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="unit-editor" aria-label="Back to unit editor">Back</button>
+        <button type="button" class="btn btn-primary" data-nav="use-preset" aria-label="Use a preset instead">Use preset</button>
+      </div>
+    </section>
+
+    <!-- ASSIGN BEHAVIOUR (knobs) -->
+    <section id="screen-assign-behaviour" class="screen" aria-label="Configure behaviour">
+      <div class="topbar">
+        <p class="eyebrow">Behaviour</p>
+        <div class="topbar-row"><h1 tabindex="-1" id="assign-title">Settings</h1></div>
+      </div>
+      <div class="body">
+        <p class="hint" id="assign-summary"></p>
+        <div id="banned-banner" class="banned-banner" hidden role="status"></div>
+        <div id="knob-root" class="knob-root"></div>
+      </div>
+      <div class="bottombar three">
+        <button type="button" class="btn btn-ghost" data-nav="pick-behaviour" aria-label="Back to behaviour list">Back</button>
+        <button type="button" class="btn btn-ghost" data-nav="pick-behaviour" aria-label="Cancel">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btn-save-behaviour" aria-label="Save behaviour settings">Save</button>
+      </div>
+    </section>
+
+    <!-- UNIT EDITOR -->
+    <section id="screen-unit-editor" class="screen" aria-label="Unit editor">
+      <div class="topbar">
+        <p class="eyebrow">Unit</p>
+        <div class="topbar-row"><h1 tabindex="-1">Unit editor</h1></div>
+      </div>
+      <div class="body">
+        <p class="question" tabindex="-1" id="editor-unit-name">Unit</p>
+        <div class="field">
+          <label>Health <span class="val" id="stat-hp-val">9</span></label>
+          <input id="stat-hp" class="slider" type="range" min="1" max="20" value="9" aria-label="Health" />
+          <p class="hint" id="stat-hp-inherit"></p>
+        </div>
+        <div class="field">
+          <label>Attack <span class="val" id="stat-atk-val">1</span></label>
+          <input id="stat-atk" class="slider" type="range" min="0" max="10" value="1" aria-label="Attack" />
+          <p class="hint" id="stat-atk-inherit"></p>
+        </div>
+        <p class="eyebrow" style="margin:18px 0 8px">Team colour</p>
+        <div class="field" id="unit-team-override-field">
+          <label>Team colour</label>
+          <div class="toggle-row" role="group" aria-label="Team colour">
+            <button type="button" class="toggle" id="btn-team-inherit" aria-pressed="true">Inherit</button>
+            <button type="button" class="toggle" id="btn-team-custom" aria-pressed="false">Custom</button>
+          </div>
+          <p class="hint">null team_colour = inherit the side palette (rev 9 / L30).</p>
+        </div>
+        <div class="field" id="unit-team-colour-field" hidden>
+          <label>Custom colour</label>
+          <div class="colour-custom">
+            <input type="color" id="unit-team-colour" value="#badcff" aria-label="Team colour" />
+            <input type="text" id="unit-team-colour-text" value="#badcff" aria-label="Team colour hex" />
+          </div>
+        </div>
+        <div class="field" id="unit-clip-cues-field">
+          <label>Hit flash and attack lunge</label>
+          <div class="toggle-row" role="group" aria-label="Clip cues">
+            <button type="button" class="toggle" id="btn-clip-cues-on" aria-pressed="true">On</button>
+            <button type="button" class="toggle" id="btn-clip-cues-off" aria-pressed="false">Off</button>
+          </div>
+          <p class="hint">unit-roster.clip_cues — for units without clips.</p>
+        </div>
+        <p class="eyebrow" style="margin:18px 0 8px">Behaviour setups</p>
+        <div id="editor-setups" class="list" aria-live="polite"></div>
+        <button type="button" class="btn btn-primary" style="width:100%;margin-top:8px" data-nav="pick-behaviour" aria-label="Add behaviour">Add behaviour</button>
+        <button type="button" class="btn btn-ghost" style="width:100%;margin-top:8px" data-nav="use-preset" aria-label="Use a preset">Use a preset</button>
+
+        <p class="eyebrow" style="margin:18px 0 8px">Abilities</p>
+        <p class="hint">Own sound lets this ability use a different Cast / Hit than the shared project sounds.</p>
+        <div id="unit-ability-sound-list" class="stack"></div>
+
+        <p class="eyebrow" style="margin:18px 0 8px">Plates</p>
+        <button type="button" class="beh-row" id="btn-plate-style" aria-label="Edit plate style">
+          <span class="name">Plate style</span>
+          <span class="sub">Health &amp; attack plates, buff/debuff colours (from catalogue)</span>
+        </button>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="unit-list" aria-label="Back">Back</button>
+        <button type="button" class="btn btn-primary" data-nav="stage" aria-label="Done">Done</button>
+      </div>
+    </section>
+
+    <!-- Keep sliders hash as alias to unit editor via JS -->
+    <section id="screen-sliders" class="screen" aria-label="Unit stats (alias)" hidden></section>
+
+    <!-- SPRITE UPLOAD -->
+    <section id="screen-sprite-upload" class="screen" aria-label="Sprite upload">
+      <div class="topbar">
+        <p class="eyebrow">Art</p>
+        <div class="topbar-row"><h1 tabindex="-1">Sprite upload</h1></div>
+      </div>
+      <div class="body">
+        <p class="question" tabindex="-1">Add a sprite</p>
+        <p class="hint">Phone: Choose from camera roll. PC: pick a file. Auto-slice merges exact repeats only. Original is kept and never exported.</p>
+        <div class="upload-zone">
+          <img id="sprite-preview" alt="Uploaded sprite preview" hidden />
+          <span id="sprite-name">No sprite yet</span>
+          <label class="file-btn" aria-label="Choose from camera roll or files">
+            Choose from camera roll
+            <input id="sprite-file" type="file" accept="image/*" />
+          </label>
+        </div>
+        <div id="sprite-slice-panel" class="slice-panel" hidden>
+          <div class="field">
+            <label>Tile size <span class="val" id="slice-tile-val">32 px</span></label>
+            <div class="toggle-row" role="group" aria-label="Tile size for slice">
+              <button type="button" class="toggle" data-slice-tile="16" aria-pressed="false">16</button>
+              <button type="button" class="toggle" data-slice-tile="24" aria-pressed="false">24</button>
+              <button type="button" class="toggle" data-slice-tile="32" aria-pressed="true">32</button>
+              <button type="button" class="toggle" data-slice-tile="48" aria-pressed="false">48</button>
+              <button type="button" class="toggle" data-slice-tile="64" aria-pressed="false">64</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Grid <span class="val" id="slice-grid-val">—</span></label>
+            <div class="two-col">
+              <div>
+                <p class="hint" style="margin:0 0 6px">Columns</p>
+                <div class="stepper">
+                  <button type="button" class="btn btn-ghost" id="slice-cols-dec" aria-label="Fewer columns">−</button>
+                  <span class="num" id="slice-cols-num">1</span>
+                  <button type="button" class="btn btn-ghost" id="slice-cols-inc" aria-label="More columns">+</button>
+                </div>
+              </div>
+              <div>
+                <p class="hint" style="margin:0 0 6px">Rows</p>
+                <div class="stepper">
+                  <button type="button" class="btn btn-ghost" id="slice-rows-dec" aria-label="Fewer rows">−</button>
+                  <span class="num" id="slice-rows-num">1</span>
+                  <button type="button" class="btn btn-ghost" id="slice-rows-inc" aria-label="More rows">+</button>
+                </div>
+              </div>
+            </div>
+            <p class="hint" style="margin:10px 0 0">Steppers change tile size so the sheet still splits into whole cells. We never stretch.</p>
+          </div>
+          <div id="slice-checks"></div>
+          <div id="slice-stats" class="stat-big" hidden></div>
+          <div class="art-box">
+            <div class="cap"><span>New tile sheet</span><span id="slice-ts-cap"></span></div>
+            <div class="stage checker" id="slice-ts-stage"></div>
+          </div>
+          <div class="art-box">
+            <div class="cap"><span>Your image with slice lines</span><span id="slice-src-cap"></span></div>
+            <div class="stage checker" id="slice-src-stage"></div>
+          </div>
+          <div id="slice-fix-row" class="fix-row" hidden role="group" aria-label="Fix sprite"></div>
+          <div id="slice-fixlog"></div>
+          <div class="field" id="slice-clips-field" hidden>
+            <label>Animation names <span class="val" id="slice-clips-val">rows</span></label>
+            <div class="clip-presets" role="group" aria-label="Name presets">
+              <button type="button" class="toggle" data-clip-preset="walk" aria-label="Walk preset">Walk</button>
+              <button type="button" class="toggle" data-clip-preset="idle" aria-label="Idle preset">Idle</button>
+              <button type="button" class="toggle" data-clip-preset="attack" aria-label="Attack preset">Attack</button>
+            </div>
+            <div class="clip-grid" id="slice-clips"></div>
+            <p class="hint" style="margin:8px 0 0">Walk fills down / left / right / up. Idle and Attack set matching names. Rename any row freely.</p>
+          </div>
+          <p class="orig-line" id="slice-orig-line" hidden>Original kept (not exported). Re-fix any time from the art list.</p>
+          <button type="button" class="btn btn-primary" style="width:100%;margin-top:8px" id="btn-slice-accept" disabled aria-label="Add sliced tileset">Add sliced set</button>
+        </div>
+        <div id="art-asset-list" class="art-asset-list" hidden>
+          <p class="eyebrow" style="margin:16px 0 8px">Art in this project</p>
+          <div id="art-asset-rows"></div>
+        </div>
+        <p class="eyebrow" style="margin:16px 0 8px">Team colour</p>
+        <p class="hint">Team colour: used for the unit's shape when it has no sprite.</p>
+        <div id="sprite-team-colour-slot"></div>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" id="btn-sprite-back" aria-label="Back">Back</button>
+        <button type="button" class="btn btn-primary" id="btn-sprite-done" aria-label="Done with sprite">Done</button>
+      </div>
+    </section>
+
+
+    <!-- RE-FIX -->
+    <section id="screen-refix" class="screen" aria-label="Re-fix an asset">
+      <div class="topbar">
+        <p class="eyebrow">Art in this project</p>
+        <div class="topbar-row"><h1 tabindex="-1">Re-fix</h1></div>
+      </div>
+      <div class="body" id="rf-body"></div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="sprite-upload" aria-label="Back">Back</button>
+        <button type="button" class="btn btn-primary" id="rf-apply" disabled aria-label="Apply re-fix">Apply re-fix</button>
+      </div>
+    </section>
+    <!-- BEHAVIOUR SUMMARY -->
+    <section id="screen-behaviour-summary" class="screen" aria-label="Behaviour summary">
+      <div class="topbar">
+        <p class="eyebrow">Behaviour</p>
+        <div class="topbar-row"><h1 tabindex="-1" id="summary-title">Summary</h1></div>
+      </div>
+      <div class="body">
+        <div id="defaults-banner" class="summary-banner" hidden role="status"></div>
+        <p class="hint" id="summary-sub"></p>
+        <div class="icon-bar" role="toolbar" aria-label="Summary actions">
+          <button type="button" class="btn btn-ghost" id="btn-undo" aria-label="Undo last change">Undo</button>
+          <button type="button" class="btn btn-ghost" id="btn-redo" aria-label="Redo">Redo</button>
+          <button type="button" class="btn btn-ghost" id="btn-dup" aria-label="Duplicate setup">Duplicate</button>
+          <button type="button" class="btn btn-ghost" id="btn-save-preset" aria-label="Save as preset">Save preset</button>
+        </div>
+        <div id="summary-flag-banner" class="summary-banner" hidden role="status"></div>
+        <div id="summary-rows" class="list"></div>
+        <button type="button" class="btn btn-primary" style="width:100%;margin-top:8px" id="btn-review-flagged" hidden aria-label="Review flagged answers">Review</button>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="unit-editor" aria-label="Back to unit editor">Back</button>
+        <button type="button" class="btn btn-primary" data-nav="unit-editor" aria-label="Done">Done</button>
+      </div>
+    </section>
+
+    <!-- SINGLE QUESTION EDIT -->
+    <section id="screen-behaviour-question" class="screen" aria-label="Edit one answer">
+      <div class="topbar">
+        <p class="eyebrow">Edit answer</p>
+        <div class="topbar-row"><h1 tabindex="-1" id="question-title">Question</h1></div>
+      </div>
+      <div class="body">
+        <div id="question-flag" class="summary-banner" hidden>Needs a new answer</div>
+        <div id="question-root" class="knob-root"></div>
+        <button type="button" class="btn btn-ghost" style="width:100%;margin-bottom:8px" id="btn-reset-knob" aria-label="Reset this answer to default">Reset to default</button>
+        <button type="button" class="btn btn-ghost" style="width:100%" id="btn-keep-answer" hidden aria-label="Keep current value">Keep current value</button>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" id="btn-question-back" aria-label="Back to summary">Back</button>
+        <button type="button" class="btn btn-primary" id="btn-question-save" aria-label="Save this answer">Save</button>
+      </div>
+    </section>
+
+    <!-- DUPLICATE SETUP -->
+    <section id="screen-duplicate-setup" class="screen" aria-label="Duplicate setup">
+      <div class="topbar">
+        <p class="eyebrow">Duplicate</p>
+        <div class="topbar-row"><h1 tabindex="-1">Copy this setup</h1></div>
+      </div>
+      <div class="body">
+        <p class="hint" id="dup-sub">Choose where the copy goes.</p>
+        <div class="stack">
+          <button type="button" class="btn btn-primary" id="btn-dup-same" aria-label="Copy onto the same unit">Same unit (make a copy)</button>
+        </div>
+        <p class="eyebrow" style="margin:16px 0 8px">Or another unit</p>
+        <div id="dup-unit-list" class="list"></div>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="behaviour-summary" aria-label="Cancel">Cancel</button>
+        <button type="button" class="btn btn-primary" data-nav="behaviour-summary" aria-label="Done">Done</button>
+      </div>
+    </section>
+
+    <!-- SAVE PRESET -->
+    <section id="screen-save-preset" class="screen" aria-label="Save preset">
+      <div class="topbar">
+        <p class="eyebrow">Preset</p>
+        <div class="topbar-row"><h1 tabindex="-1">Save as preset</h1></div>
+      </div>
+      <div class="body">
+        <p class="hint">Name this setup so you can reuse it on other units.</p>
+        <label class="sr-only" for="preset-name">Preset name</label>
+        <input id="preset-name" class="inline-field" type="text" maxlength="48" placeholder="e.g. Warrior basic steps" aria-label="Preset name" />
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="behaviour-summary" aria-label="Cancel">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btn-confirm-preset" aria-label="Save preset">Save</button>
+      </div>
+    </section>
+
+    <!-- USE PRESET -->
+    <section id="screen-use-preset" class="screen" aria-label="Use a preset">
+      <div class="topbar">
+        <p class="eyebrow">Preset</p>
+        <div class="topbar-row"><h1 tabindex="-1">Use a preset</h1></div>
+      </div>
+      <div class="body">
+        <p class="hint" id="use-preset-sub">Apply a saved preset to this unit.</p>
+        <div id="preset-pick-list" class="preset-list" role="list"></div>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="unit-editor" aria-label="Back">Back</button>
+        <button type="button" class="btn btn-primary" data-nav="pick-behaviour" aria-label="Pick behaviour instead">Pick behaviour</button>
+      </div>
+    </section>
+
+    <!-- UPDATE FROM PRESET DIFF -->
+    <section id="screen-update-preset" class="screen" aria-label="Update from preset">
+      <div class="topbar">
+        <p class="eyebrow">Preset</p>
+        <div class="topbar-row"><h1 tabindex="-1">Update from preset</h1></div>
+      </div>
+      <div class="body">
+        <p class="hint" id="update-preset-sub">Tick the answers to bring in. One Apply = one undo step.</p>
+        <div id="preset-diff-list" class="list"></div>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="behaviour-summary" aria-label="Cancel">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btn-apply-preset-diff" aria-label="Apply selected">Apply</button>
+      </div>
+    </section>
+
+    <!-- UNIT LIST -->
+    <section id="screen-unit-list" class="screen" aria-label="Unit list">
+      <div class="topbar">
+        <p class="eyebrow">Roster</p>
+        <div class="topbar-row"><h1 tabindex="-1">Unit list</h1></div>
+      </div>
+      <div class="body">
+        <div id="unit-list-root" class="list" aria-live="polite"></div>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="stage" aria-label="Back to stage">Back</button>
+        <button type="button" class="btn btn-primary" data-nav="place-unit" aria-label="Place another unit">Place unit</button>
+      </div>
+    </section>
+
+    
+    <!-- PREVIEW -->
+    <section id="screen-preview" class="screen" aria-label="Preview">
+      <div class="topbar">
+        <p class="eyebrow">Preview</p>
+        <div class="topbar-row"><h1 tabindex="-1">Preview</h1></div>
+      </div>
+      <div class="body">
+        <p class="hint">Placeholder preview — no game runtime yet. Assets would load here.</p>
+        <div class="field">
+          <label>Dev overlay</label>
+          <div class="toggle-row" role="group" aria-label="Dev overlay">
+            <button type="button" class="toggle" id="btn-dev-on" aria-pressed="false">On</button>
+            <button type="button" class="toggle" id="btn-dev-off" aria-pressed="true">Off</button>
+          </div>
+        </div>
+        <div id="dev-panel" hidden>
+          <div class="field">
+            <label>Notes</label>
+            <textarea id="preview-notes" class="inline-field" style="min-height:96px;padding:12px;width:100%" placeholder="Bug notes for this stage…" aria-label="Preview notes"></textarea>
+          </div>
+          <div class="field">
+            <label>Stage</label>
+            <div class="toggle-row" role="group" aria-label="Stage selector">
+              <button type="button" class="toggle" data-stage="1" aria-pressed="true">Stage 1</button>
+              <button type="button" class="toggle" data-stage="2" aria-pressed="false">Stage 2</button>
+              <button type="button" class="toggle" data-stage="3" aria-pressed="false">Stage 3</button>
+            </div>
+          </div>
+          <p class="eyebrow">Godmode (preview only)</p>
+          <div class="field">
+            <label>My HP <span class="val" id="god-hp-val">20</span></label>
+            <input id="god-hp" class="slider" type="range" min="1" max="99" value="20" aria-label="My HP" />
+            <button type="button" class="btn btn-primary" id="btn-god-save" style="width:100%;margin-top:10px">Save…</button>
+          </div>
+          <div class="field">
+            <label>Unit damage <span class="val" id="god-dmg-val">1</span></label>
+            <input id="god-dmg" class="slider" type="range" min="0" max="20" value="1" aria-label="Unit damage" />
+          </div>
+          <div class="field">
+            <label>Mana <span class="val" id="god-mana-val">14</span></label>
+            <input id="god-mana" class="slider" type="range" min="0" max="30" value="14" aria-label="Mana" />
+          </div>
+        </div>
+        <div class="preview" aria-hidden="true">Preview stage canvas</div>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="stage" aria-label="Back">Back</button>
+        <button type="button" class="btn btn-primary" data-nav="stage" aria-label="Close preview">Close</button>
+      </div>
+    </section>
+
+    <!-- RENDER -->
+    <section id="screen-render" class="screen" aria-label="Render options">
+      <div class="topbar">
+        <p class="eyebrow">Render</p>
+        <div class="topbar-row"><h1 tabindex="-1">Render</h1></div>
+      </div>
+      <div class="body">
+        <p class="question" tabindex="-1">Where should this ship?</p>
+        <p class="hint" id="build-size-line">Download size: —</p>
+        <div id="build-size-warn" class="summary-banner" hidden role="status"></div>
+        <div id="build-size-targets" class="hint"></div>
+        <div class="meter-card" id="decoded-meter-card" aria-label="Memory use estimate">
+          <p class="meter-headline" id="decoded-meter-val">Memory use (estimate): —</p>
+          <p class="hint meter-sub" id="build-size-decoded">Biggest stage — · whole project —</p>
+          <div class="meter-row">
+            <div class="meter-track" aria-hidden="true">
+              <div class="meter-fill" id="decoded-meter-fill"></div>
+              <span class="meter-mark warn" id="decoded-meter-mark-warn" title="Warn"></span>
+              <span class="meter-mark strong" id="decoded-meter-mark-strong" title="Strong warn"></span>
+            </div>
+            <div class="meter-mark-labels" aria-hidden="true">
+              <span class="meter-mark-label warn" id="decoded-meter-label-warn">Warn</span>
+              <span class="meter-mark-label strong" id="decoded-meter-label-strong">Strong</span>
+            </div>
+          </div>
+          <div id="decoded-meter-warn" class="summary-banner" hidden role="status"></div>
+          <details class="meter-how" id="decoded-meter-how">
+            <summary>How is this worked out?</summary>
+            <p class="hint" id="decoded-meter-how-body">—</p>
+          </details>
+        </div>
+        <div class="field" id="credits-field" style="margin-top:16px">
+          <label>Credits file</label>
+          <div class="toggle-row" role="group" aria-label="Credits file">
+            <button type="button" class="toggle" id="btn-credits-on" aria-pressed="true">On (recommended)</button>
+            <button type="button" class="toggle" id="btn-credits-off" aria-pressed="false">Off</button>
+          </div>
+          <p class="hint">Lists the art used in this build.</p>
+          <textarea id="credits-text" class="inline-field" style="min-height:110px;padding:12px;width:100%;margin-top:8px" aria-label="Credits text" placeholder="Credits"></textarea>
+        </div>
+        <p class="eyebrow" style="margin:16px 0 8px">Target</p>
+        <div class="toggle-row" role="group" aria-label="Render target" id="render-target-row">
+          <button type="button" class="toggle" id="btn-render-browser" data-render-target="browser" aria-pressed="true">PC (itch.io)</button>
+          <button type="button" class="toggle" id="btn-render-android" data-render-target="android" aria-pressed="false">Android</button>
+          <button type="button" class="toggle" id="btn-render-ios" data-render-target="ios" aria-pressed="false">iPhone</button>
+        </div>
+        <p class="hint">Ships the game only — no editor.</p>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="stage" aria-label="Back">Back</button>
+        <button type="button" class="btn btn-primary" id="btn-render-go" aria-label="Build game">Build game</button>
+      </div>
+    </section>
+
+    <section id="screen-render-soon" class="screen" aria-label="Render coming soon">
+      <div class="topbar">
+        <p class="eyebrow">Render</p>
+        <div class="topbar-row"><h1 tabindex="-1">Coming soon</h1></div>
+      </div>
+      <div class="body">
+        <p class="question" tabindex="-1" id="render-soon-title">Render coming soon</p>
+        <p class="hint" id="render-soon-sub">Placeholder — no export pipeline yet.</p>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="render" aria-label="Back">Back</button>
+        <button type="button" class="btn btn-primary" data-nav="stage" aria-label="Done">OK</button>
+      </div>
+    </section>
+
+    
+    
+    <!-- STAGE SELECT -->
+    <section id="screen-stage-select" class="screen" aria-label="Stage select">
+      <div class="topbar">
+        <p class="eyebrow">Levels</p>
+        <div class="topbar-row"><h1 tabindex="-1">Stages</h1></div>
+      </div>
+      <div class="body">
+        <p class="hint">Add, rename, reorder or duplicate stages. Tap a stage to edit its grid.</p>
+        <div id="stage-select-list" class="list" role="list"></div>
+        <button type="button" class="btn btn-primary" style="width:100%;margin-top:12px" id="btn-add-stage" aria-label="Add stage">Add stage</button>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="home" aria-label="Home">Home</button>
+        <button type="button" class="btn btn-primary" data-nav="stage" aria-label="Open selected stage">Open</button>
+      </div>
+    </section>
+
+    <!-- STAGE ENEMY POOL -->
+    <section id="screen-stage-enemy-pool" class="screen" aria-label="Enemy pool">
+      <div class="topbar">
+        <p class="eyebrow">Stage</p>
+        <div class="topbar-row"><h1 tabindex="-1" id="enemy-pool-title">Enemy pool</h1></div>
+      </div>
+      <div class="body">
+        <p class="hint">Which enemies can appear on this stage, and how they are chosen.</p>
+        <div class="field">
+          <label>Selection mode</label>
+          <div class="toggle-row" role="group" aria-label="Enemy pool mode">
+            <button type="button" class="toggle" data-group="enemy-mode" data-value="fixed" aria-pressed="true">Fixed</button>
+            <button type="button" class="toggle" data-group="enemy-mode" data-value="weighted" aria-pressed="false">Weighted</button>
+            <button type="button" class="toggle" data-group="enemy-mode" data-value="waves" aria-pressed="false">Waves</button>
+          </div>
+          <p class="hint" id="enemy-mode-hint">Fixed: place exact enemies on tiles.</p>
+        </div>
+        <div id="enemy-pool-list" class="list" role="list"></div>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="stage" aria-label="Back to stage">Back</button>
+        <button type="button" class="btn btn-primary" data-nav="stage" aria-label="Done">Done</button>
+      </div>
+    </section>
+
+    <!-- LOADOUT -->
+    <section id="screen-loadout" class="screen" aria-label="Loadout">
+      <div class="topbar">
+        <p class="eyebrow">Before combat</p>
+        <div class="topbar-row"><h1 tabindex="-1">Loadout</h1></div>
+      </div>
+      <div class="body">
+        <p class="question" tabindex="-1">Who do you bring?</p>
+        <p class="hint" id="loadout-slots">0 / 4 slots filled. Tap a unit to select or deselect.</p>
+        <div id="loadout-list" class="list" role="list"></div>
+      </div>
+      <div class="bottombar three">
+        <button type="button" class="btn btn-ghost" data-nav="stage" aria-label="Back">Back</button>
+        <button type="button" class="btn btn-ghost" id="btn-loadout-preview" aria-label="Preview with this loadout">Preview</button>
+        <button type="button" class="btn btn-primary" id="btn-loadout-play" aria-label="Play with this loadout">Play</button>
+      </div>
+    </section>
+
+
+    <!-- STAGE MAP PICKER -->
+    <section id="screen-stage-map" class="screen" aria-label="Stage map">
+      <div class="topbar">
+        <p class="eyebrow">Stage</p>
+        <div class="topbar-row"><h1 tabindex="-1">Map</h1></div>
+      </div>
+      <div class="body">
+        <p class="question" tabindex="-1">Which map does this stage use?</p>
+        <p class="hint">One map can serve several stages. Terrain only — placements live on the stage.</p>
+        <div id="stage-map-list" class="list" role="list"></div>
+        <p class="eyebrow" style="margin-top:16px">Tile legend</p>
+        <p class="hint">From terrain.tile_types (catalogue). Logic ids for the map legend.</p>
+        <div id="tile-legend-list" class="list" role="list"></div>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="stage" aria-label="Back">Back</button>
+        <button type="button" class="btn btn-primary" data-nav="stage" aria-label="Done">Done</button>
+      </div>
+    </section>
+
+    <!-- STAGE LOADOUT OVERRIDE -->
+    <section id="screen-stage-loadout" class="screen" aria-label="Stage loadout">
+      <div class="topbar">
+        <p class="eyebrow">Stage</p>
+        <div class="topbar-row"><h1 tabindex="-1">Stage loadout</h1></div>
+      </div>
+      <div class="body">
+        <p class="question" tabindex="-1">Loadout for this stage</p>
+        <div class="stack" style="gap:8px;margin-bottom:12px">
+          <button type="button" class="choice" data-group="stage-loadout-mode" data-value="project" aria-pressed="true">
+            <span class="choice-title">Use project loadout</span>
+            <span class="choice-sub">Inherit roster, size and required units. <strong>Default</strong>.</span>
+          </button>
+          <button type="button" class="choice" data-group="stage-loadout-mode" data-value="custom" aria-pressed="false">
+            <span class="choice-title">Custom for this stage</span>
+            <span class="choice-sub">Replace the project loadout whole for this stage only.</span>
+          </button>
+        </div>
+        <div id="stage-loadout-custom" hidden>
+          <p class="hint" id="stage-loadout-slots">Custom roster</p>
+          <div id="stage-loadout-list" class="list" role="list"></div>
+        </div>
+        <p class="eyebrow" style="margin-top:18px">Ability presentation</p>
+        <div class="stack" style="gap:8px">
+          <button type="button" class="choice" data-group="stage-pres-mode" data-value="project" aria-pressed="true">
+            <span class="choice-title">Same as project</span>
+            <span class="choice-sub">Inherit project ability-presentation. <strong>Default</strong>.</span>
+          </button>
+          <button type="button" class="choice" data-group="stage-pres-mode" data-value="custom" aria-pressed="false">
+            <span class="choice-title">Custom for this stage</span>
+            <span class="choice-sub">Writes overrides.setups["ability-presentation"].</span>
+          </button>
+        </div>
+        <div id="stage-pres-custom" class="ability-extra" hidden>
+          <div class="toggle-row" role="group" aria-label="Stage ability shortcut">
+            <button type="button" class="toggle" data-group="stage-pres-shortcut" data-value="all-menu" aria-pressed="true">All menu</button>
+            <button type="button" class="toggle" data-group="stage-pres-shortcut" data-value="all-cards" aria-pressed="false">All cards</button>
+            <button type="button" class="toggle" data-group="stage-pres-shortcut" data-value="custom" aria-pressed="false">Custom</button>
+          </div>
+        </div>
+
+        <p class="eyebrow" style="margin-top:18px">Difficulty on this stage</p>
+        <p class="hint">Each slider inherits the project value until you change it. Reset clears the override.</p>
+        <div class="field">
+          <label>HP × <span class="val" id="stage-diff-hp-val">1.0</span></label>
+          <input id="stage-diff-hp" class="slider" type="range" min="0.5" max="3" step="0.1" value="1" aria-label="Stage HP multiplier" />
+          <button type="button" class="btn btn-ghost" id="btn-stage-diff-hp-reset" style="margin-top:6px">Reset to inherit</button>
+        </div>
+        <div class="field">
+          <label>Damage × <span class="val" id="stage-diff-dmg-val">1.0</span></label>
+          <input id="stage-diff-dmg" class="slider" type="range" min="0.5" max="3" step="0.1" value="1" aria-label="Stage damage multiplier" />
+          <button type="button" class="btn btn-ghost" id="btn-stage-diff-dmg-reset" style="margin-top:6px">Reset to inherit</button>
+        </div>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="stage" aria-label="Back">Back</button>
+        <button type="button" class="btn btn-primary" data-nav="stage" aria-label="Done">Done</button>
+      </div>
+    </section>
+
+    <!-- PROJECT SETTINGS -->
+    <section id="screen-project-settings" class="screen" aria-label="Project settings">
+      <div class="topbar">
+        <p class="eyebrow">Project</p>
+        <div class="topbar-row"><h1 tabindex="-1">Project settings</h1></div>
+      </div>
+      <div class="body">
+        <p class="question" tabindex="-1">How do players pick abilities?</p>
+        <p class="hint">Same abilities either way — only the presentation changes.</p>
+        <div class="stack">
+          <button type="button" class="choice" data-group="ability-pick" data-value="all-menu" aria-pressed="true">
+            <span class="choice-title">All menu</span>
+            <span class="choice-sub">Unit action menu everywhere. <strong>Default</strong>.</span>
+          </button>
+          <button type="button" class="choice" data-group="ability-pick" data-value="all-cards" aria-pressed="false">
+            <span class="choice-title">All cards</span>
+            <span class="choice-sub">Card hand everywhere.</span>
+          </button>
+          <button type="button" class="choice" data-group="ability-pick" data-value="custom" aria-pressed="false">
+            <span class="choice-title">Custom per group</span>
+            <span class="choice-sub">Mix menu and cards per ability group.</span>
+          </button>
+        </div>
+
+        <div id="ability-custom-panel-settings" class="ability-extra" hidden>
+          <p class="eyebrow">Custom per group</p>
+          <div class="field">
+            <label>Basic actions (move, attack, wait)</label>
+            <div class="toggle-row" role="group" aria-label="Basic style">
+              <button type="button" class="toggle" data-group="basic-style" data-value="unit-action-menu" aria-pressed="true">Unit menu</button>
+              <button type="button" class="toggle" data-group="basic-style" data-value="card-hand" aria-pressed="false">Card hand</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Spells and abilities</label>
+            <div class="toggle-row" role="group" aria-label="Spells style">
+              <button type="button" class="toggle" data-group="spells-style" data-value="unit-action-menu" aria-pressed="true">Unit menu</button>
+              <button type="button" class="toggle" data-group="spells-style" data-value="card-hand" aria-pressed="false">Card hand</button>
+            </div>
+          </div>
+        </div>
+        <div id="ability-hand-panel-settings" class="ability-extra" hidden>
+          <p class="eyebrow">Card hand</p>
+          <div class="field">
+            <label>Where does the hand show?</label>
+            <div class="stack" style="gap:8px">
+              <button type="button" class="choice" data-group="hand-placement" data-value="hand-docked" aria-pressed="true">
+                <span class="choice-title">Always visible</span>
+                <span class="choice-sub">Hand stays on the stage.</span>
+              </button>
+              <button type="button" class="choice" data-group="hand-placement" data-value="hand-in-menu" aria-pressed="false">
+                <span class="choice-title">Cards entry in the unit menu</span>
+                <span class="choice-sub">Tap a unit → Cards opens the hand.</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <p class="eyebrow" style="margin-top:18px">Platform</p>
+        <div class="card-grid cols-3" role="group" aria-label="Platform">
+          <button type="button" class="choice" data-group="platform" data-value="mobile" aria-pressed="true"><span class="label">Mobile</span><span class="sub">Phone-first</span></button>
+          <button type="button" class="choice" data-group="platform" data-value="pc" aria-pressed="false"><span class="label">PC</span><span class="sub">Mouse &amp; keys</span></button>
+          <button type="button" class="choice" data-group="platform" data-value="both" aria-pressed="false"><span class="label">Both</span><span class="sub">Touch-safe</span></button>
+        </div>
+        <div class="field" style="margin-top:12px">
+          <label>Tile size <span class="val" id="settings-tile-size-val">64 px</span></label>
+          <input id="settings-tile-size" class="slider" type="range" min="32" max="128" step="8" value="64" aria-label="Project tile size" />
+          <p class="hint" id="settings-tile-size-hint">Suggested for Mobile: 64 px</p>
+          <button type="button" class="btn btn-ghost" id="btn-settings-tile-size-reset" hidden style="margin-top:8px;width:100%">Reset to suggested</button>
+        </div>
+
+        <p class="eyebrow" style="margin-top:18px">Screen fit</p>
+        <div class="stack" style="gap:8px">
+          <button type="button" class="choice" data-group="screen-fit" data-value="letterbox" aria-pressed="true">
+            <span class="choice-title">Letterbox</span>
+            <span class="choice-sub">Keep the whole board; bars fill the rest. Never stretches art.</span>
+          </button>
+          <button type="button" class="choice" data-group="screen-fit" data-value="crop" aria-pressed="false">
+            <span class="choice-title">Crop</span>
+            <span class="choice-sub">Fill the screen; board edges may be cut off.</span>
+          </button>
+        </div>
+        <div class="field" style="margin-top:12px">
+          <label>Zoom <span class="val" id="settings-zoom-val">1×</span></label>
+          <input id="settings-zoom" class="slider" type="range" min="1" max="6" step="1" value="1" aria-label="Zoom step" />
+        </div>
+
+        <p class="eyebrow" style="margin-top:18px">Difficulty</p>
+        <p class="hint">Multipliers for enemies by default. Stages can override each slider.</p>
+        <div class="field">
+          <label>Enemy HP × <span class="val" id="diff-hp-val">1.0</span></label>
+          <input id="diff-hp" class="slider" type="range" min="0.5" max="3" step="0.1" value="1" aria-label="Difficulty HP multiplier" />
+        </div>
+        <div class="field">
+          <label>Enemy damage × <span class="val" id="diff-dmg-val">1.0</span></label>
+          <input id="diff-dmg" class="slider" type="range" min="0.5" max="3" step="0.1" value="1" aria-label="Difficulty damage multiplier" />
+        </div>
+        <div class="field">
+          <label>Applies to</label>
+          <div class="toggle-row" role="group" aria-label="Difficulty applies to">
+            <button type="button" class="toggle" data-group="diff-applies" data-value="enemies" aria-pressed="true">Enemies</button>
+            <button type="button" class="toggle" data-group="diff-applies" data-value="all" aria-pressed="false">All</button>
+            <button type="button" class="toggle" data-group="diff-applies" data-value="player" aria-pressed="false">Player</button>
+          </div>
+        </div>
+
+        <div class="field" style="margin-top:12px">
+          <label>Camera ease <span class="val" id="ease-ms-val">120 ms</span></label>
+          <input id="ease-ms" class="slider" type="range" min="0" max="600" step="10" value="120" aria-label="Camera ease milliseconds" />
+          <p class="hint">0 = instant snap.</p>
+        </div>
+
+        <p class="eyebrow" style="margin-top:18px">In-game settings</p>
+        <p class="hint">Games ship with Before The Fall's settings menu as the default template.</p>
+        <button type="button" class="btn btn-ghost" data-nav="game-settings" style="width:100%;min-height:48px">Game settings menu</button>
+        <div class="readonly-music" style="margin-top:12px">
+          <span class="hint" style="margin:0">Stage music:</span>
+          <strong id="settings-stage-music-name">—</strong>
+          <button type="button" class="btn btn-ghost" id="btn-settings-change-music" style="min-height:48px">Change in Sound</button>
+        </div>
+
+        <details class="advanced" id="advanced-render-fold" style="margin-top:16px">
+          <summary>Advanced render</summary>
+          <div class="inner">
+            <p class="hint" style="color:#b45309"><strong>May blur or stretch your art.</strong> Leave this off unless you know you need it. Art must never look worse than the upload.</p>
+            <div class="field">
+              <label>Advanced render</label>
+              <div class="toggle-row" role="group" aria-label="Advanced render">
+                <button type="button" class="toggle" data-group="advanced-render" data-value="off" aria-pressed="true">Off</button>
+                <button type="button" class="toggle" data-group="advanced-render" data-value="on" aria-pressed="false">On</button>
+              </div>
+            </div>
+            <div id="advanced-render-controls">
+              <div class="field" id="pixel-perfect-field">
+                <label>Pixel-perfect drawing</label>
+                <div class="toggle-row" role="group" aria-label="Pixel perfect">
+                  <button type="button" class="toggle" data-group="pixel-perfect" data-value="on" aria-pressed="true">On</button>
+                  <button type="button" class="toggle" data-group="pixel-perfect" data-value="off" aria-pressed="false">Off</button>
+                </div>
+                <p class="hint" id="pixel-perfect-hint">On while Advanced render is off (locked).</p>
+              </div>
+              <div class="field" id="bg-fit-field">
+                <label>Background fit</label>
+                <div class="toggle-row" role="group" aria-label="Background fit">
+                  <button type="button" class="toggle" data-group="bg-fit" data-value="none" aria-pressed="true">None</button>
+                  <button type="button" class="toggle" data-group="bg-fit" data-value="tile" aria-pressed="false">Tile</button>
+                  <button type="button" class="toggle soon-locked" data-group="bg-fit" data-value="cover" aria-pressed="false">Cover</button>
+                  <button type="button" class="toggle soon-locked" data-group="bg-fit" data-value="stretch" aria-pressed="false">Stretch</button>
+                </div>
+                <p class="hint" id="bg-fit-hint">Cover / Stretch need Advanced render.</p>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="stage" aria-label="Back to stage">Back</button>
+        <button type="button" class="btn btn-primary" data-nav="stage" aria-label="Done">Done</button>
+      </div>
+    </section>
+
+
+    <!-- PROFILE -->
+    <section id="screen-profile" class="screen" aria-label="Studio profile">
+      <div class="topbar">
+        <p class="eyebrow">Studio</p>
+        <div class="topbar-row"><h1 tabindex="-1">Studio profile</h1></div>
+      </div>
+      <div class="body">
+        <p class="proposed-banner">Proposed: not final</p>
+        <div class="profile-hero">
+          <div class="profile-avatar" id="profile-avatar" aria-hidden="true">M</div>
+          <div style="flex:1;min-width:0">
+            <label class="sr-only" for="profile-name">Display name</label>
+            <input id="profile-name" type="text" maxlength="40" aria-label="Display name" style="min-height:48px;width:100%;border:2px solid var(--line);border-radius:12px;padding:0 12px;background:var(--surface);color:var(--ink);font-weight:700" />
+            <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">
+              <span class="coin-chip" id="profile-coins" aria-label="Gold coins">🪙 <b id="profile-coin-count">0</b></span>
+              <button type="button" class="btn btn-ghost" id="btn-how-earn" style="min-height:48px">How to earn</button>
+            </div>
+            <p class="hint" style="margin:6px 0 0">Avatar placeholder · Studio only (not a player profile)</p>
+          </div>
+        </div>
+        <p class="eyebrow">Appearance</p>
+        <div class="appearance-row" role="group" aria-label="Appearance">
+          <button type="button" class="toggle" data-appearance="light" aria-pressed="false">Light</button>
+          <button type="button" class="toggle" data-appearance="dark" aria-pressed="false">Dark</button>
+          <button type="button" class="toggle" data-appearance="system" aria-pressed="true">Follow device</button>
+        </div>
+        <p class="hint" style="margin-top:8px">Applies across the whole editor. Default Follow device.</p>
+        <p class="eyebrow" style="margin-top:16px">Avatar</p>
+        <div class="appearance-row" id="profile-avatars" role="group" aria-label="Avatar"></div>
+        <p class="hint">12 built-in CC0 picks. Initials when none selected. Upload comes later.</p>
+        <p class="eyebrow" style="margin-top:16px">Editor preview volume</p>
+        <div class="field">
+          <label>Preview volume <span class="val" id="preview-volume-val">100%</span></label>
+          <input id="preview-volume" class="slider" type="range" min="0" max="100" step="1" value="100" aria-label="Editor preview volume" />
+          <p class="hint">Editor-only. Never exported. Does not change in-game BGM/SFX defaults.</p>
+        </div>
+        <div class="profile-stats" id="profile-stats"></div>
+        <p class="eyebrow">Achievements</p>
+        <div class="ach-list" id="ach-list"></div>
+        <details class="advanced" style="margin-top:18px">
+          <summary>Advanced</summary>
+          <div class="inner">
+            <div class="danger-zone">
+              <p class="eyebrow" style="margin:0 0 6px;color:var(--danger)">Reset achievements</p>
+              <p class="hint" style="margin:0 0 8px">Local by default. Starts a new studio profile on this device and keeps a backup. Unlocked never relocks in place.</p>
+              <button type="button" class="btn btn-ghost" id="btn-reset-achievements" style="min-height:48px;width:100%;border-color:var(--danger);color:var(--danger)">Reset achievements (local)…</button>
+              <label class="hint" style="display:flex;gap:8px;align-items:center;margin-top:10px;min-height:48px">
+                <input type="checkbox" id="reset-wipe-synced" style="width:24px;height:24px" />
+                Also wipe synced copy (danger)
+              </label>
+            </div>
+          </div>
+        </details>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="home" aria-label="Back">Back</button>
+        <button type="button" class="btn btn-primary" data-nav="home" aria-label="Done">Done</button>
+      </div>
+    </section>
+
+    <!-- GAME SETTINGS MENU (BTF template) -->
+    <section id="screen-game-settings" class="screen" aria-label="Game settings menu">
+      <div class="topbar">
+        <p class="eyebrow">Project</p>
+        <div class="topbar-row"><h1 tabindex="-1">Game settings menu</h1></div>
+      </div>
+      <div class="body">
+        <p class="proposed-banner">Proposed: not final</p>
+        <p class="question" tabindex="-1">What players see in-game</p>
+        <p class="hint">Before The Fall template. Core rows are Required (always shown). Extras are available but off by default. Keybinds optional (PC).</p>
+        <div id="game-settings-list"></div>
+        <p class="eyebrow" style="margin-top:16px">Phone preview</p>
+        <div class="gs-preview-phone" aria-label="In-game settings preview">
+          <div class="gs-preview-card" id="gs-preview-card"></div>
+        </div>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="project-settings" aria-label="Back">Back</button>
+        <button type="button" class="btn btn-primary" data-nav="project-settings" aria-label="Done">Done</button>
+      </div>
+    </section>
+
+
+    <!-- HUB: How to earn -->
+    <section id="screen-how-earn" class="screen" aria-label="How to earn coins">
+      <div class="topbar"><p class="eyebrow">Studio</p><div class="topbar-row"><h1 tabindex="-1">How to earn</h1></div></div>
+      <div class="body">
+        <p class="proposed-banner">Proposed: not final</p>
+        <p class="question">Gold coins come from making and sharing</p>
+        <ul class="hint" style="line-height:1.5;padding-left:18px">
+          <li>First stage made</li>
+          <li>First finished game</li>
+          <li>Publishing a game</li>
+          <li>Getting featured</li>
+          <li>First Top 100 (frozen chart)</li>
+          <li>Game of the Month</li>
+        </ul>
+        <p class="hint"><strong>Earn-only.</strong> Coin amounts shown in unlocks are <strong>placeholders</strong> until the CEO sets them. No purchase button. No coins for visiting or installing other apps or store pages. No coins for votes or link clicks. Balance is derived from the server coin ledger.</p>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="profile" aria-label="Back">Back</button>
+        <button type="button" class="btn btn-primary" data-nav="profile" aria-label="Done">Done</button>
+      </div>
+    </section>
+
+    <!-- HUB SHOP -->
+    <section id="screen-hub-shop" class="screen" aria-label="Hub assets shop">
+      <div class="topbar"><p class="eyebrow">Studio hub</p><div class="topbar-row"><h1 tabindex="-1">Asset shop</h1></div></div>
+      <div class="body">
+        <p class="proposed-banner">Proposed: not final</p>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px;flex-wrap:wrap">
+          <span class="coin-chip">🪙 <b id="shop-coin-count">0</b></span>
+          <button type="button" class="btn btn-ghost" data-nav="how-earn" style="min-height:48px">How to earn</button>
+        </div>
+        <div id="shop-recommended" class="recommend-card" hidden></div>
+        <div class="shop-tabs" role="tablist" aria-label="Shop sections">
+          <button type="button" class="toggle" data-shop-tab="packs" aria-pressed="true">Packs</button>
+          <button type="button" class="toggle" data-shop-tab="codegen" aria-pressed="false">Made with code</button>
+          <button type="button" class="toggle" data-shop-tab="community" aria-pressed="false">From the community</button>
+        </div>
+        <div id="hub-shop-list" class="stack"></div>
+        <button type="button" class="btn btn-ghost" id="btn-shop-submit" style="min-height:48px;width:100%;margin-top:12px">Submit yours</button>
+        <p class="hint">Submit yours is proposed — reviewed before listing. Earn-only coins.</p>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="home" aria-label="Back">Back</button>
+        <button type="button" class="btn btn-primary" data-nav="home" aria-label="Done">Done</button>
+      </div>
+    </section>
+
+    <!-- MADE GAMES LIBRARY -->
+    <section id="screen-hub-library" class="screen" aria-label="Made games library">
+      <div class="topbar"><p class="eyebrow">Studio hub</p><div class="topbar-row"><h1 tabindex="-1">Made games</h1></div></div>
+      <div class="body">
+        <p class="proposed-banner">Proposed: not final</p>
+        <div id="hub-recommended" class="recommend-card" hidden></div>
+        <div id="hub-library-grid" class="hub-grid"></div>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="home" aria-label="Back">Back</button>
+        <button type="button" class="btn btn-primary" data-nav="home" aria-label="Done">Done</button>
+      </div>
+    </section>
+
+    <!-- OUTBOUND CONFIRM -->
+    <section id="screen-outbound" class="screen" aria-label="Open external link">
+      <div class="topbar"><p class="eyebrow">Leaving TileEngine</p><div class="topbar-row"><h1 tabindex="-1">Open link?</h1></div></div>
+      <div class="body outbound-sheet">
+        <p class="proposed-banner">Proposed: not final</p>
+        <p class="question" id="outbound-title">Game</p>
+        <p class="hint">This opens an outside page. Destination:</p>
+        <p class="domain" id="outbound-domain">example.com</p>
+        <p class="hint" id="outbound-url" style="word-break:break-all"></p>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" id="btn-outbound-cancel" aria-label="Cancel">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btn-outbound-open" aria-label="Open link">Open</button>
+      </div>
+    </section>
+
+    <!-- THUMBS-UP CHART -->
+    <section id="screen-hub-chart" class="screen" aria-label="Monthly thumbs-up chart">
+      <div class="topbar"><p class="eyebrow">Studio hub</p><div class="topbar-row"><h1 tabindex="-1">Thumbs-up chart</h1></div></div>
+      <div class="body">
+        <p class="proposed-banner">Proposed: not final</p>
+        <div class="shop-tabs" role="tablist" aria-label="Chart section">
+          <button type="button" class="toggle" data-chart-section="games" aria-pressed="true">Games</button>
+          <button type="button" class="toggle" data-chart-section="assets" aria-pressed="false">Shop assets</button>
+        </div>
+        <div class="gotm-banner" id="gotm-banner">
+          <p style="margin:0;font-size:0.72rem;opacity:.9" id="gotm-label">GAME OF THE MONTH · frozen snapshot</p>
+          <p style="margin:4px 0 0;font-weight:800;font-size:1.1rem" id="gotm-title">—</p>
+        </div>
+        <div id="chart-leading" class="gotm-banner chart-leading" hidden>
+          <div class="chart-leading-row">
+            <div style="flex:1;min-width:0">
+              <p style="margin:0;font-size:0.72rem;opacity:.9">LEADING THIS MONTH</p>
+              <p style="margin:4px 0 0;font-weight:800;font-size:1.05rem" id="chart-leading-title">—</p>
+            </div>
+            <button type="button" class="chart-vote chart-vote-on-banner" id="chart-leading-vote" aria-label="Thumbs up">
+              <span aria-hidden="true">👍</span><span class="vote-count" id="chart-leading-votes">0</span>
+            </button>
+          </div>
+        </div>
+        <div id="chart-runners" class="chart-runners" aria-roledescription="carousel" aria-label="Top 10 runners-up">
+          <div class="chart-runners-slide" id="chart-runners-slide"></div>
+          <div class="chart-runners-controls">
+            <button type="button" class="chart-nav" id="btn-chart-prev" aria-label="Previous runner-up">‹</button>
+            <div class="chart-runners-dots" id="chart-runners-dots" aria-hidden="true"></div>
+            <span class="chart-runners-count" id="chart-runners-count" aria-live="polite">0/0</span>
+            <button type="button" class="chart-nav" id="btn-chart-next" aria-label="Next runner-up">›</button>
+            <button type="button" class="chart-pause" id="btn-chart-pause" aria-pressed="false">Pause</button>
+          </div>
+        </div>
+        <div id="chart-update-status" class="chart-daily-status" aria-live="polite">Updated daily · next update in 21h</div>
+        <div id="chart-vote-status" class="chart-daily-status" aria-live="polite">Vote ready · 12 of 12 left today</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <button type="button" class="toggle" data-chart-month="live" aria-pressed="true">This month</button>
+          <button type="button" class="toggle" data-chart-month="2026-10" aria-pressed="false">Oct 2026</button>
+          <button type="button" class="btn btn-ghost" id="btn-chart-info" style="min-height:48px">Info</button>
+        </div>
+        <div id="hub-chart-list"></div>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="home" aria-label="Back">Back</button>
+        <button type="button" class="btn btn-primary" data-nav="home" aria-label="Done">Done</button>
+      </div>
+    </section>
+
+    <!-- CHART INFO -->
+    <section id="screen-chart-info" class="screen" aria-label="Chart info">
+      <div class="topbar"><p class="eyebrow">Chart</p><div class="topbar-row"><h1 tabindex="-1">About votes</h1></div></div>
+      <div class="body">
+        <p class="proposed-banner">Proposed: not final</p>
+        <p class="hint">You can send 1 thumbs-up every 60 minutes, up to 12 per day (resets 00:00 UTC). One thumbs-up per game or shop asset per month; you can take it back in the same month. You can't vote for your own. Charts refresh every 24 hours. Flagged votes do not count until approved. <strong>No coins for votes or link clicks.</strong></p>
+        <div id="chart-daily-status" class="chart-daily-status" aria-live="polite"></div>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="hub-chart" aria-label="Back">Back</button>
+        <button type="button" class="btn btn-primary" data-nav="hub-chart" aria-label="Done">Done</button>
+      </div>
+    </section>
+
+    <!-- RESET CONFIRM -->
+    <section id="screen-reset-confirm" class="screen" aria-label="Reset achievements confirm">
+      <div class="topbar"><p class="eyebrow">Danger</p><div class="topbar-row"><h1 tabindex="-1">Reset achievements?</h1></div></div>
+      <div class="body">
+        <p class="proposed-banner">Proposed: not final</p>
+        <p class="question" id="reset-confirm-copy">Start a new local studio profile? Your current one is kept as a backup on this device. Gold coins are never reset.</p>
+        <p class="hint" id="reset-coins-note">Gold coins stay with your account — the coin ledger is never wiped by a reset.</p>
+        <p class="hint" id="reset-synced-note" hidden style="color:var(--danger)">Also wipe synced copy is checked. This cannot be undone on the account.</p>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="profile" aria-label="Cancel">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btn-reset-confirm" style="background:var(--danger)" aria-label="Confirm reset">Reset</button>
+      </div>
+    </section>
+
+    <!-- PLAY (toast only; hash lands then returns) -->
+    <section id="screen-play" class="screen" aria-label="Play test">
+      <div class="topbar">
+        <p class="eyebrow">Play</p>
+        <div class="topbar-row"><h1 tabindex="-1">Play test</h1></div>
+      </div>
+      <div class="body">
+        <p class="question" tabindex="-1">Play test coming soon</p>
+        <p class="hint">This shell does not run a fight. Use the toast from Stage → Play.</p>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="stage" aria-label="Back to stage">Back</button>
+        <button type="button" class="btn btn-primary" data-nav="stage" aria-label="Return to stage">OK</button>
+      </div>
+    </section>
+  </div>
+  <!-- Godmode save sheet -->
+  <div id="godmode-save-sheet" class="sheet" hidden role="dialog" aria-modal="true" aria-label="Save godmode tweaks">
+    <div class="sheet-card">
+      <p class="eyebrow">Godmode save</p>
+      <p class="question">What to save?</p>
+      <div class="stack" style="gap:8px;margin-bottom:12px">
+        <button type="button" class="choice" data-group="god-what" data-value="unit-stat" aria-pressed="true">
+          <span class="choice-title">This unit's stat</span>
+          <span class="choice-sub">HP / attack for the selected unit.</span>
+        </button>
+        <button type="button" class="choice" data-group="god-what" data-value="army" aria-pressed="false">
+          <span class="choice-title">Army default</span>
+          <span class="choice-sub">unit-roster knob (all units that inherit).</span>
+        </button>
+        <button type="button" class="choice" data-group="god-what" data-value="setup" aria-pressed="false">
+          <span class="choice-title">Setup knob</span>
+          <span class="choice-sub">A behaviour answer on this setup.</span>
+        </button>
+      </div>
+      <p class="question">Where?</p>
+      <div class="stack" style="gap:8px;margin-bottom:12px">
+        <button type="button" class="choice" data-group="god-where" data-value="this-stage" aria-pressed="true">
+          <span class="choice-title">This stage</span>
+          <span class="choice-sub">Writes a stage override.</span>
+        </button>
+        <button type="button" class="choice" data-group="god-where" data-value="all-stages" aria-pressed="false">
+          <span class="choice-title">All stages</span>
+          <span class="choice-sub">Writes the unit or project setup.</span>
+        </button>
+      </div>
+      <div class="bottombar" style="position:static">
+        <button type="button" class="btn btn-ghost" id="btn-god-cancel">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btn-god-confirm">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/setup-store.js"></script>
+  <script src="js/project-store.js"></script>
+  <script src="js/profile-store.js"></script>
+  <script src="js/sound-panel.js"></script>
+  <script src="js/sprite-slice.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/ux-features.js"></script>
+  <script src="js/sprite-studio.js"></script>
+</body>
+</html>
