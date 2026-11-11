@@ -1,6 +1,6 @@
 # Grok Build kit (kit-2, 2026-11-09)
 
-Owner: Engine Architect. **Status: 10b merged at `d9ca13b`; main is now `1565a0f` (docs-only fast-forward, 2026-11-10). Next: step-10c written, QA OK to send; chaos-player planning 11 Nov.** Canonical location: `/workspace/tileengine/handoff/` (this folder). The older copy in `/workspace/tileengine/docs/grok-build-kit/` is superseded. The workflow background is in `/workspace/tileengine/docs/grok-build-handoff-plan.md` (DRAFT; the decisions below win where they differ).
+Owner: Engine Architect. **Status: 10c merged at `e9d4820` (PR #15, 2026-11-11). Next: step-11-player-driver written (chaos-player step A; awaiting QA); chaos plan in `docs/chaos-player-outline.md`.** Canonical location: `/workspace/tileengine/handoff/` (this folder). The older copy in `/workspace/tileengine/docs/grok-build-kit/` is superseded. The workflow background is in `/workspace/tileengine/docs/grok-build-handoff-plan.md` (DRAFT; the decisions below win where they differ).
 
 ## Where things go
 - **Repo:** https://github.com/G-TileEngine/tileengine (visibility is the CEO's call). `README.md` on `main` is owned by CoS; steps never edit it. Nobody pushes to `main`; it changes only by merged PR.
@@ -38,10 +38,11 @@ Owner: Engine Architect. **Status: 10b merged at `d9ca13b`; main is now `1565a0f
 | `steps/step-10-fx-order.md` | Effect order rebuilt from the design docs (no BTF copy): `src/fx/order` reader with a notice per clamp/fill-in, timeline on the one clock (hit at `connect`), the ten effect-order project options and read limits as caller inputs, the BTF preset as data in `src/btf-adapters/src/fx-preset.ts` (none in `src/fx`); lane-label adapter; QA 09c second-down test; carries CN-007. §A rules 3, 8–18 → step 10b | 02, 09c | 250 |
 | `steps/step-10b-fx-timeline.md` | The rest of the effect timeline as cue data (`planEffect`: spawn once, second motion, bounce in tap order ≤ 8, free-fire pierce, chain, yank, hit kinds; §A rules 3, 8, 10, 13–18) with `pierce_hit_timing` / `chain_order` / `reel_knock` acting on cues; holy-sword landing tile (`pickLanding`, 8 around by default, 4 sides as an option, CEO 2026-11-10); pierce flight a fixed 0.40 s split over the tiles (`per_tile` option) and an impact per body (`once_at_contact` option), CEO 2026-11-10, BTF flight in `src/btf-adapters`; fourteen new options (landing neighbours, landing across a seam, pierce flight and impact burst, CEO-ruled; ten PROPOSED silent-spot defaults). No CN. §A 9, 11, 12 → step 10c | 10 | 315 |
 | `steps/step-10c-fx-look.md` | Drawing-side look ramps, release and seeded copies for the FX painter (`planLook`, `lookAt`, `copyAt`; §A rules 9, 11, 12); tunables as `FxLookTune` / `BTF_FX_LOOK` in `src/btf-adapters`; no new `FxOptions` keys; no CN | 10b | 229 |
+| `steps/step-11-player-driver.md` | Chaos-player step A: the player driver `createPlayer` (09c intents in, one `submit` out; reported rejects, CEO Q3), seats in `runMatch` (touch, bot, chaos, later online peer), `onStep` after every input; test AI as intents gives the 50-seed histories byte for byte; no CN | 09b, 09c | 175 |
 
-Later (outlines in `/workspace/tileengine/docs/core-spine-slices.md`): the FX painter rewrite, and chaos-player planning (11 Nov).
+Later (outlines in `/workspace/tileengine/docs/core-spine-slices.md`): the FX painter rewrite; chaos-player steps B (harness) and C (generators) per `docs/chaos-player-outline.md`.
 
-**Verification:** step 00 was rebuilt from its file alone in a clean `/tmp` folder and is green (`pass 7`). Every interface quoted in steps 01–08 was prototyped on top of it and the prototype is green (all six gates); the golden RNG vectors, the clock worked example, the push/hook logs and the step-08 reader (108/0) come from that prototype. Step 09 was prototyped on top of `main` `193900d` (117/0); step 09b on top of `main` `92e4e96` (123/0); step 09c on top of `main` `7944f79` (132/0, `npm run sim` checked); step 10 on top of `main` `a499d98` (144/0; CN-007 depcruise line proven with planted imports); step 10b on top of `main` `2052df8` (157/0, `npm run sim` unchanged); step 10c on top of `main` `1565a0f` (161/0, `npm run sim` unchanged).
+**Verification:** step 00 was rebuilt from its file alone in a clean `/tmp` folder and is green (`pass 7`). Every interface quoted in steps 01–08 was prototyped on top of it and the prototype is green (all six gates); the golden RNG vectors, the clock worked example, the push/hook logs and the step-08 reader (108/0) come from that prototype. Step 09 was prototyped on top of `main` `193900d` (117/0); step 09b on top of `main` `92e4e96` (123/0); step 09c on top of `main` `7944f79` (132/0, `npm run sim` checked); step 10 on top of `main` `a499d98` (144/0; CN-007 depcruise line proven with planted imports); step 10b on top of `main` `2052df8` (157/0, `npm run sim` unchanged); step 10c on top of `main` `1565a0f` (161/0, `npm run sim` unchanged); step 11 on top of `main` `e9d4820` (166/0, `npm run sim` unchanged, 258 of 294 lines).
 
 ## QA checklist coverage (`docs/qa/handback-checklist.md`)
 | Checklist item | Covered by |
@@ -61,7 +62,7 @@ Later (outlines in `/workspace/tileengine/docs/core-spine-slices.md`): the FX pa
 | §2 outcomes, rework, 3 rejects | HAND-BACK "Outcomes and rework" (`step/<step-id>-r<N+1>` branch, new PR, same base) |
 | §2 Change Notice | CHANGE-NOTICE-TEMPLATE.md + `change-notices/`; CN-001 issued |
 | §5.1 guide contents | BUILD_GUIDE §1–§9 |
-| §5.2 six sections, 150–400 lines | STEP-TEMPLATE; steps 00–10c are 150–400 lines each (table above) |
+| §5.2 six sections, 150–400 lines | STEP-TEMPLATE; steps 00–11 are 150–400 lines each (table above) |
 | §5.3 one version of each signature | STATES §4 = the only `Phase`/`Event`/`xGo` quote; sim time = integer ms in GUIDE, STATES, ARCH §2.3 and step 02 (CN-001); one rAF path string |
 | §5.4 step 0 = Grok Build's example + `check:state` | `steps/step-00-skeleton.md`; re-pinned core-types sha; green from a clean copy |
 | §5.5 where hand-backs go and base commit | HAND-BACK "Where" + every step header (repo, base, branch, in-repo hand-back) |

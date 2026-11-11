@@ -1,6 +1,6 @@
 # TileEngine — core spine slice plan
 
-Owner: Engine Architect. Status: **PLAN, updated 2026-11-10 (Europe/London, UTC+0).** Steps 00–10b are merged as of `d9ca13b`.
+Owner: Engine Architect. Status: **PLAN, updated 2026-11-11 (Europe/London, UTC+0).** Steps 00–10c are merged as of `e9d4820`; step 11 (player driver) is written.
 
 > **Update 2026-11-10:** steps 00–10b are written under `handoff/steps/` and are merged as of `d9ca13b`; the outlines below are superseded for those steps. Mode order is grid tactics → idle RPG → tower defence (menu RPG and RTS parked). Sim time is integer ms (CN-001). Repo: https://github.com/G-TileEngine/tileengine (public), PR per step, hand-back in-repo at `handback/<step-id>/r<N>/`. Grok Build writes the code; the Engine Architect designs and signs off each slice; QA & Build Guard runs the gates; RaiKynn accepts.
 
@@ -95,7 +95,8 @@ Additional conflicts found while building the kit (not BTF docs, but they bind t
 | step-09c-input-sim-script | Input layer `src/runtime/input` (intents incl. `BoxSelect`, touch-first gesture mapper, M7), intents → events, the `sim` script (CN-006) | 01, 09, 09b | ~235 |
 | step-10-fx-order | `src/fx/order` reader + timeline (§A rules 1, 2, 4–7), the ten effect-order project options (BTF preset as data in `src/btf-adapters`), lane-label adapter, QA 09c second-down test; CN-007 (full step file written) | 02, 09c | ~350 |
 | step-10b-fx-timeline | §A rules 3, 8, 10, 13–18 as cue data (`planEffect`: spawn, second motion, bounce, pierce, chain, yank, hit kinds); `pierce_hit_timing`, `chain_order`, `reel_knock` acting on cues; holy-sword landing tile (`pickLanding`, 8-way default, 4-way option); fourteen new options (CEO-ruled: two landing keys, `pierce_flight`, `impact_burst`; ten PROPOSED silent spots); no CN (full step file written) | 10 | ~350 |
-| step-10c-fx-look (full step file written: `handoff/steps/step-10c-fx-look.md`) | §A rules 9 (look ramps), 11 (release), 12 (copies, seeded spread) for the FX painter, tunables as inputs (`planLook`, `lookAt`, `copyAt`, `BTF_FX_LOOK`); no CN | 10b | 229 |
+| step-10c-fx-look (merged, `e9d4820`) | §A rules 9 (look ramps), 11 (release), 12 (copies, seeded spread) for the FX painter, tunables as inputs (`planLook`, `lookAt`, `copyAt`, `BTF_FX_LOOK`); no CN | 10b | 229 |
+| step-11-player-driver (full step file written: `handoff/steps/step-11-player-driver.md`) | Chaos-player step A (`docs/chaos-player-outline.md`): `createPlayer` turns 09c intents into one `submit` with reported rejects; seats in `runMatch`; `onStep` after every input; no CN | 09b, 09c | ~250 |
 
 Order rationale: gates first so every later step is policed; state tables early because they're pure and pin the vocabulary every driver uses; clock before anything time-based; grid → units → pipes is the spatial stack; RNG before the log so the header carries a real seed; the reader after the spatial types so it builds real grids; the harness proves the whole spine headless; the BTF adapter last because it waits on a CEO ruling and isn't on the critical path.
 
