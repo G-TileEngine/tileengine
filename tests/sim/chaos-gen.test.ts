@@ -5,9 +5,8 @@ import { BTF_FX_PRESET } from "../../src/btf-adapters/src/index.ts";
 import { createGestureMapper, type Intent } from "../../src/runtime/input/index.ts";
 import { CHAOS_CHECKS, CHAOS_KINDS, chaosIntents, createWorld, gestureRecipes, replayChaos, runChaos, runChaosGen, shrinkChaos, type ChaosCheck, type ChaosGen, type ChaosKind, type ChaosMix, type ChaosRecord, type ChaosView } from "../../src/sim/index.ts";
 import type { Sq } from "../../src/types/core-types.ts";
-import { forward, reachFarRow, seedless } from "./ai.ts";
+import { bot, reachFarRow, seedless } from "./ai.ts";
 import { input } from "./input.ts";
-import { asIntents } from "./seats.ts";
 const hash = (text: string): string => createHash("sha256").update(text).digest("hex");
 const round = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 const need = (value: ChaosRecord | null): ChaosRecord => { if (value === null) throw new Error("missing"); return value; };
@@ -20,7 +19,7 @@ const idle = (): readonly [] => [];
 const only = (kind: ChaosKind): ChaosGen => ({ stream: "chaos", mix: Object.fromEntries(CHAOS_KINDS.map((k) => [k, k === kind ? 1 : 0])) as ChaosMix, burst: 3, gestures: G });
 const pair = [{ call: 0, side: "player", tick: 0, intent: { type: "SelectUnit", unitId: "knight#1" }, aim: null }, { call: 0, side: "player", tick: 0, intent: { type: "TargetCell", at: { c: 0, r: 5 } }, aim: null }];
 test("the generator is a seeded IntentHook on its own named stream; runChaosGen records its settings; the run replays identically", () => {
-  const src = seedless(input("stage-fixed", 3)), legal = () => asIntents(forward(3)), result = runChaosGen(src, { ...opts, gen, legal: legal() }), run = result.run;
+  const src = seedless(input("stage-fixed", 3)), legal = () => bot(3), result = runChaosGen(src, { ...opts, gen, legal: legal() }), run = result.run;
   assert.deepEqual(runChaosGen(src, { ...opts, gen, legal: legal() }), result);
   assert.equal(result.outcome === "timeout" && result.failure === null && run.moves.length === 198 && result.rejects.length === 88, true);
   assert.deepEqual(run.moves[0], { call: 0, side: "player", tick: 0, intent: { type: "SelectUnit", unitId: "merchant#6#" }, aim: null });
@@ -45,7 +44,7 @@ test("each kind makes its documented batch; every reject is reported and passes 
   const tag = (v: ChaosView): string => { const step = v.step, head = `${step.intent.type}${step.aim !== null ? "@" : ""}`; if (step.reject !== null) return `${head}:${step.reject}`; if (step.action === null) return `${head}:ok`; const id = step.action.actor, was = v.before.units.find((u) => u.id === id), now = v.after.units.find((u) => u.id === id); return `${head}:${was !== undefined && now !== undefined && (was.at.c !== now.at.c || was.at.r !== now.at.r) ? "move" : "stay"}`; };
   const want: Record<ChaosKind, string> = { legal: "SelectUnit:ok TargetCell:move", stall: "", offGrid: "SelectUnit:ok TargetCell:offGrid", foreign: "SelectUnit:noUnit SelectUnit:notOwn TargetCell:noEvent", taken: "SelectUnit:ok TargetCell:stay", cancel: "Cancel:illegal Cancel:ok SelectUnit:ok", confirm: "Confirm:noEvent Confirm@:noEvent SelectUnit:ok", box: "BoxSelect:noEvent", gesture: "BoxSelect:noEvent SelectUnit:ok TargetCell:move TargetCell:noEvent" };
   for (const kind of CHAOS_KINDS) {
-    const views: ChaosView[] = [], result = runChaosGen(src, { ...opts, fuse: 1000, maxRounds: 12, checks: [...CHAOS_CHECKS, { id: "spy", run: (v) => { views.push(v); return null; } }], gen: only(kind), legal: asIntents(forward(3)) });
+    const views: ChaosView[] = [], result = runChaosGen(src, { ...opts, fuse: 1000, maxRounds: 12, checks: [...CHAOS_CHECKS, { id: "spy", run: (v) => { views.push(v); return null; } }], gen: only(kind), legal: bot(3) });
     assert.equal(result.failure, null); assert.equal([...new Set(views.map(tag))].sort().join(" "), want[kind]);
     if (kind === "stall") assert.equal(result.outcome === "timeout" && result.run.moves.length === 0, true);
     if (kind === "cancel" || kind === "confirm") { const type = kind === "cancel" ? "Cancel" : "Confirm", seen = new Map<number, number>(); for (const m of result.run.moves) if (m.intent.type === type) seen.set(m.call, (seen.get(m.call) ?? 0) + 1); assert.deepEqual([...new Set(seen.values())].sort(), [1, 2, 3]); }
@@ -66,7 +65,7 @@ test("the simple shrink: ddmin over the moves keeps a candidate only on the same
   const src = seedless(input("stage-fixed", 1));
   const low: ChaosCheck = { id: "planted:low", run: (v) => { const knight = v.after.units.find((u) => u.id === "knight#1"); if (knight !== undefined && knight.at.r < 6) return { key: "units", expected: "knight#1", actual: knight.at }; const archer = v.after.units.find((u) => u.id === "archer#2"); return archer !== undefined && archer.at.r < 6 ? { key: "occupancy", expected: "archer#2", actual: archer.at } : null; } };
   const row = (id: string, key: "units" | "occupancy"): ChaosCheck => ({ id: `planted:${id === "knight#1" ? "knight" : "archer"}`, run: (v) => { const u = v.after.units.find((x) => x.id === id); return u !== undefined && u.at.r < 6 ? { key, expected: id, actual: u.at } : null; } });
-  const go = (checks: readonly ChaosCheck[]) => runChaosGen(src, { ...opts, fuse: 1000, checks, gen, legal: asIntents(forward(1)) });
+  const go = (checks: readonly ChaosCheck[]) => runChaosGen(src, { ...opts, fuse: 1000, checks, gen, legal: bot(1) });
   const failure = need(go([...CHAOS_CHECKS, low]).failure), live = { ...tools, checks: [...CHAOS_CHECKS, low] }, shrunk = shrinkChaos(src, failure, live);
   assert.equal(failure.moves.length === 116 && failure.firstDivergentSnapshotKey === "units" && shrunk.tries === 15 && shrunk.record.invariant === "planted:low" && shrunk.record.firstDivergentSnapshotKey === "units" && shrunk.record.stepIndex === 1, true);
   assert.deepEqual(shrunk.record.moves, pair); assert.deepEqual(replayChaos(src, round(shrunk.record), live).failure, shrunk.record); assert.deepEqual(shrinkChaos(src, round(failure), live), shrunk);
@@ -88,7 +87,7 @@ test("chaos generator smoke, report-only (CEO Q6/Q7): both official boards, seed
       if (zero !== undefined && zero !== "legal") mix[zero] = 0;
       if (seed % 2 === 0) mix.gesture = 0;
       const src = seedless(input(stage, seed)), live = { ...tools, node: process.version };
-      const result = runChaosGen(src, { ...opts, ...live, sides: [...sides], gen: { stream: "chaos", mix, burst: 3, gestures: seed % 2 === 0 ? null : G }, legal: asIntents(forward(seed)) });
+      const result = runChaosGen(src, { ...opts, ...live, sides: [...sides], gen: { stream: "chaos", mix, burst: 3, gestures: seed % 2 === 0 ? null : G }, legal: bot(seed) });
       assert.equal(result.hashes.length, result.run.moves.length); steps += result.run.moves.length; rejects += result.rejects.length;
       if (result.failure !== null) { failed += 1; const shrunk = shrinkChaos(src, round(result.failure), live); before += result.failure.moves.length; after += shrunk.record.moves.length; t.diagnostic(JSON.stringify({ failure: result.failure, shrunk })); assert.deepEqual(replayChaos(src, round(result.run), live).failure, result.failure); assert.deepEqual(replayChaos(src, round(shrunk.record), live).failure, shrunk.record); }
     }

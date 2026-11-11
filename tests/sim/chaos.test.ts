@@ -4,9 +4,8 @@ import { test } from "node:test";
 import { BTF_FX_PRESET } from "../../src/btf-adapters/src/index.ts";
 import { CHAOS_CHECKS, replayChaos, runChaos, type ChaosCheck, type ChaosOptions, type ChaosView, type SimSnapshot } from "../../src/sim/index.ts";
 import type { Intent } from "../../src/runtime/input/index.ts";
-import { forward, reachFarRow, seedless } from "./ai.ts";
+import { bot, reachFarRow, seedless } from "./ai.ts";
 import { input } from "./input.ts";
-import { asIntents } from "./seats.ts";
 const hash = (text: string): string => createHash("sha256").update(text).digest("hex");
 const tools = { victory: reachFarRow, checks: CHAOS_CHECKS, hash, engineSha: "1ff51d984744c254321d4014afc045ce77a761a2", node: "v24.22.1" };
 const opts = { ...tools, ruleset: "reachFarRow", sides: ["player", "wolves"] as const, fuse: 60000, maxRounds: 40, maxSimMs: 600000, moveMs: 200, idPrefix: "m", presets: { fxOptions: BTF_FX_PRESET } };
@@ -16,7 +15,7 @@ const planted = (): ChaosOptions["intents"] => { let once = false; return (_w, s
 test("a clean run goes only through the player driver, checks every step and replays identically from its JSON", () => {
   const src = seedless(input("stage-fixed", 3));
   const go = (intents: ChaosOptions["intents"]) => runChaos(src, { ...opts, intents });
-  const result = go(asIntents(forward(3)));
+  const result = go(bot(3));
   const run = result.run;
   assert.equal(result.outcome === "win" && result.failure === null && run.moves.length === 76 && result.hashes.length === 76 && result.rejects.length === 0 && run.seed === 3, true);
   assert.deepEqual(Object.keys(run), ["seed", "ruleset", "options", "moves", "engineSha", "node", "engineVersion", "projectHash"]);
@@ -29,7 +28,7 @@ test("a clean run goes only through the player driver, checks every step and rep
   assert.throws(() => replayChaos({ ...src, projectHash: "other" }, run, tools), /chaos: project differs from the record/);
   assert.throws(() => runChaos(src, { ...opts, engineSha: "", intents: () => [] }), RangeError); assert.throws(() => runChaos(src, { ...opts, node: "", intents: () => [] }), RangeError);
   assert.throws(() => replayChaos(src, run, { ...tools, engineSha: "" }), RangeError); assert.throws(() => replayChaos(src, run, { ...tools, node: "" }), RangeError);
-  const ai = asIntents(forward(3));
+  const ai = bot(3);
   let first = true;
   const stalled = go((w, s, b) => { if (first) { first = false; return []; } return ai(w, s, b); });
   assert.equal(stalled.run.moves[0]?.call, 1); assert.deepEqual(replayChaos(src, round(stalled.run), tools), stalled);
@@ -88,7 +87,7 @@ test("chaos smoke, report-only (CEO Q6/Q7): both official boards, seeds 1-50, BT
     for (let seed = 1; seed <= 50; seed += 1) {
       const src = seedless(input(stage, seed));
       const live = { ...tools, node: process.version };
-      const result = runChaos(src, { ...opts, ...live, sides: [...sides], intents: asIntents(forward(seed)) });
+      const result = runChaos(src, { ...opts, ...live, sides: [...sides], intents: bot(seed) });
       assert.equal(result.hashes.length, result.run.moves.length);
       steps += result.run.moves.length; rejects += result.rejects.length;
       if (result.failure !== null) { failed += 1; t.diagnostic(JSON.stringify(result.failure)); assert.deepEqual(replayChaos(src, round(result.run), live).failure, result.failure); }

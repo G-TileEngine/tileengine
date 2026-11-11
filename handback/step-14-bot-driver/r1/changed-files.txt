@@ -1,0 +1,8 @@
+M	scripts/sim.ts
+M	src/sim/driver-phase.ts
+M	src/sim/types.ts
+M	tests/sim/ai.ts
+A	tests/sim/bot.test.ts
+M	tests/sim/chaos-gen.test.ts
+M	tests/sim/chaos.test.ts
+M	tests/sim/seats.ts

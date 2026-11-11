@@ -1,19 +1,33 @@
 import { createRng, streamSeed } from "../../src/core/rng/index.ts";
-import type { AiHook, SimInput, VictoryRule } from "../../src/sim/index.ts";
+import type { AiHook, IntentHook, SimInput, SimWorld, VictoryRule } from "../../src/sim/index.ts";
 import { move } from "./input.ts";
 
-export function forward(seed: number, durationMs = 200): AiHook {
+function picker(seed: number) {
   const rng = createRng(streamSeed(seed, "ai"));
-  let n = 0;
-  return (world, side, budget) => budget.units.flatMap((id) => {
+  return (world: SimWorld, side: Parameters<AiHook>[1], id: string) => {
     const u = world.units.get(id);
-    if (u === undefined) return [];
+    if (u === undefined) return undefined;
     const s1 = rng.next() < 0.5 ? -1 : 1, dr = side === "player" ? -1 : 1;
     const ahead = { c: u.at.c, r: u.at.r + dr }, a = { c: u.at.c + s1, r: u.at.r }, b = { c: u.at.c - s1, r: u.at.r };
     const order = rng.next() < 1 / 3 ? [a, b, ahead] : [ahead, a, b];
-    const at = order.find((sq) => world.grid.inBounds(sq) && world.grid.isOpen(sq) && world.units.occupantsAt(sq).length === 0);
+    return order.find((sq) => world.grid.inBounds(sq) && world.grid.isOpen(sq) && world.units.occupantsAt(sq).length === 0);
+  };
+}
+export function forward(seed: number, durationMs = 200): AiHook {
+  const pick = picker(seed);
+  let n = 0;
+  return (world, side, budget) => budget.units.flatMap((id) => {
+    const at = pick(world, side, id);
     if (at === undefined) return [];
     return [move(`m${n += 1}`, id, at.c, at.r, durationMs)];
+  });
+}
+export function bot(seed: number): IntentHook {
+  const pick = picker(seed);
+  return (world, side, budget) => budget.units.flatMap((id) => {
+    const at = pick(world, side, id);
+    if (at === undefined) return [];
+    return [{ intent: { type: "SelectUnit", unitId: id } }, { intent: { type: "TargetCell", at: { c: at.c, r: at.r } } }];
   });
 }
 export const reachFarRow: VictoryRule = (world) => {
