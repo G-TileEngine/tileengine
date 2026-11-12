@@ -24,6 +24,15 @@ function cutStored(rec: Record<string, unknown>, lim: ReturnType<typeof checkLim
 }
 const capNotes = (list: Notice[], cap: number): Notice[] => (list.length <= cap ? list : [...list.slice(0, cap), { code: "noticesCapped", message: `and ${list.length - cap} more` }]);
 
+function measure(v: unknown, d: number, b: { n: number; cap: number }): "bytes" | "plain" | null {
+  if ((b.n += 1) > b.cap || d > 10000) return b.n > b.cap ? "bytes" : "plain";
+  if (typeof v === "string") { b.n += v.length; return b.n > b.cap ? "bytes" : null; }
+  if (v === null || typeof v !== "object") return typeof v === "bigint" ? "plain" : null;
+  if (Array.isArray(v)) { for (const item of v) { const hit = measure(item, d + 1, b); if (hit !== null) return hit; } return null; }
+  for (const k of Object.keys(v)) { if ((b.n += k.length) > b.cap) return "bytes"; if (DROP.has(k)) continue; const hit = measure((v as Record<string, unknown>)[k], d + 1, b); if (hit !== null) return hit; }
+  return null;
+}
+
 function copy(v: unknown, ns: Notice[], d: number, b: { n: number; cap: number }): unknown {
   if ((b.n += 1) > b.cap || d > 10000) return b.n > b.cap ? BYTES : FAIL;
   if (v === null || typeof v === "boolean") return v;
@@ -45,6 +54,7 @@ export function readSpriteRecipe(json: unknown, limits: SpriteRecipeLimits): Rec
   const lim = checkLimits(limits);
   try {
     if (json === null || typeof json !== "object") return fail("not an object");
+    const weighed = measure(json, 0, { n: 0, cap: lim.bytes }); if (weighed !== null) return fail(weighed === "bytes" ? "over cap bytes" : "not plain JSON");
     const dropped: Notice[] = [], stored = copy(json, dropped, 0, { n: 0, cap: lim.bytes }); if (stored === BYTES) return fail("over cap bytes");
     if (stored === FAIL) return fail("not plain JSON");
     if (stored === null || typeof stored !== "object" || Array.isArray(stored)) return fail("not an object");
