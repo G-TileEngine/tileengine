@@ -34,6 +34,9 @@
   const SLOT = (r, t) => r * 3 + t + 1; // t: 0 shadow, 1 base, 2 light
   const slotColour = (s) => (s ? RAMPS[Math.floor((s - 1) / 3)].c[(s - 1) % 3] : null);
   const slotRamp = (s) => Math.floor((s - 1) / 3);
+  // r66: a sprite kept from the picture converter brings its own parts (one colour set each); hero presets don't apply.
+  const pieces = () => st.importPieces || PIECES;
+  const pieceSwatches = (i) => st.importPieces ? [{ name: "Original", c: st.importPieces[i].orig.c, line: st.importPieces[i].orig.line }].concat(st.importPieces[i].pixels ? [] : SWATCHES[st.importPieces[i].set] || []) : SWATCHES[PIECES[i].set];
 
   const KINDS = [
     { id: "hero", name: "Hero", sub: "Starter body to draw over", basicSub: "Ready-made body: pick parts", w: 32, h: 32, tpl: "hero" },
@@ -111,7 +114,7 @@
   function resetData() {
     st.parts = {}; PARTS.forEach((p) => (st.parts[p.id] = blank()));
     st.hist = []; st.redo = []; st.walk = null; st.touch = {}; st.frameSel = null; st.chip = null;
-    RAMPS = defaultRamps(); st.tidyInfo = null; st.edited = false;
+    RAMPS = defaultRamps(); st.tidyInfo = null; st.edited = false; st.importPieces = null; st.keepShade = false; st.importInfo = null;
   }
   function snapshot() {
     const parts = {}; Object.keys(st.parts).forEach((k) => (parts[k] = st.parts[k].slice()));
@@ -145,6 +148,8 @@
   /* ---------- compose ---------- */
   function composeFacing(facing) {
     const W = st.W, H = st.H, out = new Uint8Array(W * H);
+    if (st.parts["imp_" + facing]) return st.parts["imp_" + facing].slice(); // r66: a picture converted for this direction
+    if (facing === "left" && st.parts.imp_side) return mirrorImg(st.parts.imp_side);
     for (const pid of FACING_ORDER[facing]) {
       const a = st.parts[pid];
       for (let i = 0; i < a.length; i++) if (a[i]) out[i] = a[i];
@@ -188,7 +193,7 @@
   function bake(img, opts = {}) {
     const W = st.W, H = st.H, out = new Array(W * H).fill(null);
     const basic = st.mode === "basic";
-    const outline = opts.outline ?? (basic || st.outline), shade = opts.shade ?? (basic || st.shade), dither = opts.dither ?? (basic ? "none" : st.dither);
+    const outline = opts.outline ?? (basic || st.outline), shade = opts.shade ?? ((basic && !st.keepShade) || st.shade), dither = opts.dither ?? (basic ? "none" : st.dither);
     const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= H ? 0 : img[y * W + x]);
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       const s = img[y * W + x];
@@ -261,6 +266,8 @@
       st.touch[d][i][y * W + x] = slot; // per-frame touch-up: only this frame changes
       return;
     }
+    if (st.parts["imp_" + st.facing]) { st.parts["imp_" + st.facing][y * W + x] = slot; return; } // r66 per-direction picture
+    if (st.facing === "left" && st.parts.imp_side) { st.parts.imp_side[y * W + W - 1 - x] = slot; return; }
     const px = st.facing === "left" ? W - 1 - x : x;
     st.parts[st.activePart][y * W + px] = slot;
   }
@@ -279,8 +286,9 @@
   function fillAt(x, y, slot) {
     if (st.frameSel) { say("Fill works on the main drawing. Use Pencil to touch up a frame."); return false; }
     const W = st.W, H = st.H;
-    const a = st.parts[st.activePart];
-    const pxs = (xx) => (st.facing === "left" ? W - 1 - xx : xx);
+    const imp = st.parts["imp_" + st.facing] ? "imp_" + st.facing : st.facing === "left" && st.parts.imp_side ? "imp_side" : null;
+    const a = st.parts[imp || st.activePart];
+    const pxs = (xx) => (st.facing === "left" && imp !== "imp_left" ? W - 1 - xx : xx);
     const seeds = [[pxs(x), y]]; if (st.mirror) seeds.push([pxs(W - 1 - x), y]);
     for (const [sx, sy] of seeds) {
       const from = a[sy * W + sx]; if (from === slot) continue;
@@ -402,7 +410,7 @@
     if (st.mode === "basic") {
       if (id === "pencil") {
         if ((st.tool === "pencil" || st.tool === "eraser") && !st.sheet) { openSheet("pencil"); return; }
-        if (st.tool !== "eraser") st.tool = "pencil"; st.slot = SLOT(st.piece, 1); openSheet(null); say(`Pencil · drawing ${PIECES[st.piece].name.toLowerCase()}`); return;
+        if (st.tool !== "eraser") st.tool = "pencil"; st.slot = SLOT(st.piece, 1); openSheet(null); say(`Pencil · drawing ${pieces()[st.piece].name.toLowerCase()}`); return;
       }
       if (id === "tidy") { tidy(); return; }
       if (["presets", "bcolour", "walk"].includes(id)) { openSheet(st.sheet === id ? null : id); return; }
@@ -430,7 +438,7 @@
   function nextStep() {
     if (!st.started || st.sheet || st.frameSel || st.chip) return null;
     if (!window.Experience || Experience.get().guidance !== "guided") return null;
-    const coloured = RAMPS.some((r, i) => r.sw !== SWATCHES[PIECES[i].set][PIECES[i].def].name);
+    const coloured = st.importPieces ? RAMPS.some((r) => r.sw !== "Original") : RAMPS.some((r, i) => r.sw !== SWATCHES[PIECES[i].set][PIECES[i].def].name);
     if (st.mode === "basic" && st.kind === "hero") {
       if (!coloured) return { label: "Colour your hero", go: () => openSheet("bcolour") };
       if (!st.tidyInfo) return { label: "Tap Tidy to clean up", go: () => tidy() };
@@ -467,6 +475,8 @@
         <div class="ss-ramps">${RAMPS.map((r, ri) => `<div class="ss-ramp"><span class="ss-ramp-name">${r.name}</span>${[2, 1, 0].map((t) => `<button type="button" class="ss-slot" data-slot="${SLOT(ri, t)}" aria-pressed="${st.slot === SLOT(ri, t)}" aria-label="${r.name} ${["shadow", "base", "light"][t]}" style="background:${r.c[t]}"></button>`).join("")}</div>`).join("")}</div>`;
       }
       case "presets": {
+        if (st.importPieces) return `<p class="eyebrow">Parts · from your picture</p><p class="hint ss-tight">This sprite came from a picture, so its parts are its colour areas: ${st.importPieces.filter((p) => !p.pixels).map((p) => p.name).join(", ")}. Recolour them in Colour, touch up with Pencil.</p>
+          <button type="button" class="btn btn-ghost ss-wide" id="ss-reimport">Import another picture</button>`;
         if (st.kind !== "hero") return `<p class="eyebrow">Ready-made parts</p><p class="hint">Ready-made parts are for heroes in this mock. Use Pencil to draw, then Tidy.</p>`;
         return `<p class="eyebrow">Ready-made parts · tap to swap</p>
           <div class="ss-presets">${PRESET_GROUPS.map(([g, label]) => `<div class="ss-prow" role="group" aria-label="${label}"><span class="ss-prow-lbl">${label}</span><div class="ss-popts" style="--n:${PRESETS[g].length}">${PRESETS[g].map((p) =>
@@ -474,11 +484,12 @@
           <p class="hint ss-tight">Then pick colours, or draw over it with Pencil.</p>`;
       }
       case "bcolour": {
-        const pc = PIECES[st.piece], sws = SWATCHES[pc.set];
+        const PC = pieces(); if (!PC[st.piece] || PC[st.piece].pixels) st.piece = 0;
+        const pc = PC[st.piece], sws = pieceSwatches(st.piece);
         return `<p class="eyebrow">Colour by part · tap a part, then a colour</p>
-          <div class="ss-pchips" role="group" aria-label="Part">${PIECES.map((p, i) => `<button type="button" class="ss-pchip" data-piece="${i}" aria-pressed="${st.piece === i}"><span class="ss-dot" style="background:${RAMPS[i].c[1]}" aria-hidden="true"></span>${p.name}</button>`).join("")}</div>
+          <div class="ss-pchips" role="group" aria-label="Part">${PC.map((p, i) => p.pixels ? "" : `<button type="button" class="ss-pchip" data-piece="${i}" aria-pressed="${st.piece === i}"><span class="ss-dot" style="background:${RAMPS[i].c[1]}" aria-hidden="true"></span>${p.name}</button>`).join("")}</div>
           <div class="ss-swatches" role="group" aria-label="${pc.name} colours">${sws.map((w) => `<button type="button" class="ss-sw" data-sw="${w.name}" aria-pressed="${RAMPS[st.piece].sw === w.name}" aria-label="${pc.name}: ${w.name}" style="background:linear-gradient(${w.c[2]} 0 34%, ${w.c[1]} 34% 67%, ${w.c[0]} 67%)"></button>`).join("")}</div>
-          <p class="hint ss-tight">The whole part changes, in every frame.</p>`;
+          <p class="hint ss-tight">The whole part changes, in every frame.${st.importPieces ? " Original puts back the picture's colours." : ""}</p>`;
       }
       case "tidy": {
         const t = st.tidyInfo || { n: 0 };
@@ -500,7 +511,7 @@
           ${seg("Preview direction", [["down", "Down"], ["up", "Up"], ["left", "Left"], ["right", "Right"]], st.prevDir, "pdir")}`;
       }
       case "pencil":
-        if (st.mode === "basic") return `<p class="eyebrow">Pencil · drawing ${PIECES[st.piece].name.toLowerCase()}</p>
+        if (st.mode === "basic") return `<p class="eyebrow">Pencil · drawing ${pieces()[st.piece].name.toLowerCase()}</p>
           ${seg("Pencil or eraser", [["pencil", "Draw"], ["eraser", "Erase"]], st.tool, "btool")}
           ${seg("Pencil size", [[1, "1 pixel"], [2, "2 pixels"]], st.pencilSize, "pen")}
           <button type="button" class="toggle ss-wide-toggle" id="ss-both" aria-pressed="${st.mirror}">${st.mirror ? "✓ " : ""}Both sides (draw once, mirror the other side)</button>
@@ -626,13 +637,14 @@
     $$("[data-preset]", b).forEach((x) => (x.onclick = () => { const [g, v] = x.dataset.preset.split(":"); pickPreset(g, v); }));
     $$("[data-pthumb]", b).forEach((cv) => { const [g, v] = cv.dataset.pthumb.split(":"); const L = buildHero(Object.assign({}, st.preset, { [g]: v }), st.W, st.H);
       const img = new Uint8Array(st.W * st.H); ["body", "face"].forEach((k) => L[k].forEach((v2, i) => { if (v2) img[i] = v2; })); drawSmall(cv, img); });
-    $$("[data-piece]", b).forEach((x) => (x.onclick = () => { st.piece = +x.dataset.piece; st.slot = SLOT(st.piece, 1); say(`${PIECES[st.piece].name} picked`); renderAll(); }));
+    $$("[data-piece]", b).forEach((x) => (x.onclick = () => { st.piece = +x.dataset.piece; st.slot = SLOT(st.piece, 1); say(`${pieces()[st.piece].name} picked`); renderAll(); }));
     $$("[data-sw]", b).forEach((x) => (x.onclick = () => recolourPiece(st.piece, x.dataset.sw)));
     $$("[data-btool]", b).forEach((x) => (x.onclick = () => { st.tool = x.dataset.btool; st.slot = SLOT(st.piece, 1); renderAll(); }));
     $("#ss-both") && ($("#ss-both").onclick = () => { st.mirror = !st.mirror; say(st.mirror ? "Both sides on" : "Both sides off"); renderAll(); });
     $("#ss-tidy-undo") && ($("#ss-tidy-undo").onclick = () => { undo(); st.tidyInfo = null; openSheet(null); });
     if (id === "tidy" && st.tidyInfo) { drawSmall($("#ss-tidy-before"), st.tidyInfo.before); drawSmall($("#ss-tidy-after"), st.tidyInfo.after); }
     $("#ss-walk-hero") && drawSmall($("#ss-walk-hero"), composeFacing("down"));
+    $("#ss-reimport") && ($("#ss-reimport").onclick = () => window.ImagineConvert && ImagineConvert.open({ pick: true }));
     $("#ss-make-walk-basic") && ($("#ss-make-walk-basic").onclick = () => { st.walkStyle = "four"; makeWalk(); });
     $("#ss-touchup") && ($("#ss-touchup").onclick = () => openSheet("frames"));
     $$("[data-pdir]", b).forEach((x) => (x.onclick = () => { st.prevDir = x.dataset.pdir; renderAll(); }));
@@ -752,15 +764,18 @@
     renderAll();
   }
   function recolourPiece(piece, swName) {
-    const sw = SWATCHES[PIECES[piece].set].find((s) => s.name === swName); if (!sw) return;
-    pushHist(); RAMPS[piece] = { name: PIECES[piece].name, c: sw.c.slice(), line: sw.line, sw: sw.name };
+    const sw = pieceSwatches(piece).find((s) => s.name === swName); if (!sw) return;
+    const nm = pieces()[piece].name;
+    pushHist(); RAMPS[piece] = { name: nm, c: sw.c.slice(), line: st.importPieces && st.importInfo && st.importInfo.oneLine ? RAMPS[piece].line : sw.line, sw: sw.name };
+    // r67: a converted picture can have hidden "twin" parts (same colours, another outline colour); they recolour with their part
+    if (st.importPieces) st.importPieces.forEach((p, i) => { if (p.twinOf === piece) RAMPS[i] = { name: RAMPS[i].name, c: sw.name === "Original" ? p.orig.c.slice() : sw.c.slice(), line: RAMPS[i].line, sw: sw.name }; });
     st.piece = piece; st.slot = SLOT(piece, 1);
-    say(`${PIECES[piece].name} is now ${sw.name.toLowerCase()}`); renderAll();
+    say(`${nm} is now ${sw.name.toLowerCase()}`); renderAll();
   }
 
   /* ---------- r63 Tidy: strays out, 1px gaps filled, left/right evened (only when Both sides is on) ---------- */
   function tidyLayer(a, evenSides) {
-    const W = st.W, H = st.H, isW = (s) => s && slotRamp(s) === P_WEAPON;
+    const W = st.W, H = st.H, isW = (s) => s && !st.importPieces && slotRamp(s) === P_WEAPON;
     const at = (b, x, y) => (x < 0 || y < 0 || x >= W || y >= H ? 0 : b[y * W + x]);
     let stray = 0, gaps = 0, even = 0;
     let b = a.slice();
@@ -801,7 +816,7 @@
   function tidy() {
     const before = composeFacing(st.facing);
     const snap = snapshot(); let stray = 0, gaps = 0, even = 0;
-    ["body", "back"].forEach((k) => { for (let pass = 0; pass < 4; pass++) { const r = tidyLayer(st.parts[k], st.mirror); st.parts[k] = r.a; stray += r.stray; gaps += r.gaps; even += r.even; if (!(r.stray + r.gaps + r.even)) break; } });
+    Object.keys(st.parts).filter((k) => k === "body" || k === "back" || k.startsWith("imp_")).forEach((k) => { for (let pass = 0; pass < 4; pass++) { const r = tidyLayer(st.parts[k], st.mirror); st.parts[k] = r.a; stray += r.stray; gaps += r.gaps; even += r.even; if (!(r.stray + r.gaps + r.even)) break; } });
     const n = stray + gaps + even;
     if (n) { st.hist.push(snap); if (st.hist.length > 60) st.hist.shift(); st.redo = []; }
     st.tidyInfo = { before, after: composeFacing(st.facing), stray, gaps, even, n, mirror: st.mirror };
@@ -855,7 +870,8 @@
         <p class="ss-empty-title">Your library is empty</p>
         <p class="hint ss-tight">Start with something ready-made, or draw your own below.</p>
         <div class="ss-empty-row"><button type="button" class="btn btn-ghost" id="ss-lib-make">Make some for me</button><button type="button" class="btn btn-ghost" id="ss-lib-pack">Starter Pack · free</button></div>
-      </div>` : ""}<h2 class="ss-start-title">What are you making?</h2>
+      </div>` : ""}<div class="ss-import-row"><button type="button" class="btn btn-ghost ss-import-btn" id="ss-import-pic"><span aria-hidden="true">🖼</span> Import picture</button><span class="ss-import-sub">Turn Grok Imagine art into pixel art</span></div>
+      <h2 class="ss-start-title">What are you making?</h2>
       <div class="ss-kinds" role="group" aria-label="Sprite kind">${KINDS.map((k) => `<button type="button" class="choice ss-kind" data-kind="${k.id}" aria-pressed="${st.kind === k.id}"><span class="label">${k.name}</span><span class="sub">${st.mode === "basic" && k.basicSub ? k.basicSub : k.sub}</span></button>`).join("")}</div>
       <p class="ss-licence">Starter body: Made by TileEngine · free to use</p>
       ${st.mode === "basic" ? `<p class="hint ss-tight">Basic: ${st.pickW}×${st.pickH}, outline and shading done for you. Sizes are in Advanced.</p>` : `<p class="eyebrow">Width · ${PROJECT_TILE} suggested from your tiles</p>
@@ -867,6 +883,7 @@
     $$("[data-pw]", el).forEach((b) => (b.onclick = () => { st.pickW = +b.dataset.pw; if (st.pickH < st.pickW) st.pickH = st.pickW; renderStart(); }));
     $$("[data-ph]", el).forEach((b) => (b.onclick = () => { st.pickH = +b.dataset.ph; renderStart(); }));
     $("#ss-start-go").onclick = () => begin(st.kind, st.pickW, st.pickH);
+    $("#ss-import-pic") && ($("#ss-import-pic").onclick = () => window.ImagineConvert && ImagineConvert.open({ pick: true }));
     $("#ss-lib-make") && ($("#ss-lib-make").onclick = () => Experience.openStarter("make", "sprite-studio"));
     $("#ss-lib-pack") && ($("#ss-lib-pack").onclick = () => Experience.openStarter("pack", "sprite-studio"));
   }
@@ -887,7 +904,7 @@
     if (st.mode === m) return;
     st.mode = m;
     if (m === "advanced") { // keep the look: Basic's always-on rules become real toggles, already on
-      st.outline = true; st.shade = true; ["outline", "shade"].forEach((id) => { if (!st.unlocked.includes(id)) st.unlocked.push(id); });
+      st.outline = true; st.shade = !st.keepShade; ["outline", "shade"].forEach((id) => { if (!st.unlocked.includes(id)) st.unlocked.push(id); });
       if (st.sheet && ["presets", "bcolour", "tidy", "walk"].includes(st.sheet)) st.sheet = st.sheet === "bcolour" ? "colour" : st.sheet === "walk" ? "frames" : null;
       toast("Advanced: every tool, same drawing. Outline and Shade are on your bar.");
     } else {
@@ -1008,8 +1025,30 @@
   function rampThumb(img, W, H, swatchList, canvas) { // swatchList: [{set, name}] -> ramp i
     drawThumb(img, W, H, swatchList.map((x) => { const s = SWATCHES[x.set].find((y) => y.name === x.name) || SWATCHES[x.set][0]; return { name: s.name, c: s.c.slice(), line: s.line, sw: s.name }; }), canvas);
   }
+  /* ---------- r66: picture converter hand-off (js/imagine-convert.js) ---------- */
+  // Same live outline + shade rules as the canvas, for any slot image + ramps (nothing stored).
+  function renderRecipe(img, W, H, ramps, opts = {}) {
+    const sw = st.W, sh = st.H, sr = RAMPS, sm = st.mode; st.W = W; st.H = H; RAMPS = ramps; st.mode = "advanced";
+    try { return bake(img, { outline: !!opts.outline, shade: !!opts.shade, dither: "none" }); } finally { st.W = sw; st.H = sh; RAMPS = sr; st.mode = sm; }
+  }
+  // Keep: the converted picture becomes the sprite being edited. Each part = one colour set, so it recolours like a Basic hero.
+  function importConverted(p) {
+    st.kind = "hero"; st.W = p.W; st.H = p.H; st.tpl = null; st.started = true; st.zoom = 1; st.panX = st.panY = 0; st.tool = "pencil"; st.sheet = null; st.facing = "down";
+    resetData();
+    RAMPS = p.ramps.map((r) => ({ name: r.name, c: r.c.slice(), line: r.line, sw: r.sw }));
+    st.importPieces = p.ramps.map((r) => ({ name: r.name, set: r.set, pixels: !!r.pixels, orig: r.orig, twinOf: r.twinOf }));
+    st.keepShade = !!p.keepShade; st.importInfo = { original: p.original, dirs: Object.keys(p.dirs), oneLine: !!p.oneLine }; // r67: one near-black outline stays on recolour
+    const map = { down: null, up: "imp_up", right: "imp_side", left: "imp_left" };
+    Object.keys(p.dirs).forEach((d) => { if (d === p.master) st.parts.body = Uint8Array.from(p.dirs[d]); else if (map[d]) st.parts[map[d]] = Uint8Array.from(p.dirs[d]); });
+    if (p.master !== "down") { st.parts.body = Uint8Array.from(p.dirs[p.master]); }
+    st.mirror = false; st.preset = Object.assign({}, DEFAULT_PRESET); st.piece = Math.max(0, st.importPieces.findIndex((x) => !x.pixels)); st.slot = SLOT(st.piece, 1);
+    if (st.mode === "advanced") { st.outline = p.outline !== false; st.shade = !st.keepShade; ["outline", "shade"].forEach((id) => { if (!st.unlocked.includes(id)) st.unlocked.push(id); }); }
+    st.edited = false; renderAll(); say("Picture kept as your sprite. Recolour parts in Colour.");
+  }
   window.SpriteStudio = {
-    onShow, heroThumb, rampThumb,
+    onShow, heroThumb, rampThumb, renderRecipe, importConverted,
+    getMode: () => st.mode,
+    setModeUser(m) { st.userMode = true; setMode(m); },
     parts: { PRESETS, PIECES, SWATCHES },
     _cap: {
       setMode, pickPreset, recolourPiece, tidy, buildHero,
@@ -1020,6 +1059,7 @@
       tidyDiff(preset) { const L = buildHero(preset, 32, 32), out = []; ["body", "back"].forEach((k) => { const r = tidyLayer(L[k], true); r.a.forEach((v, i) => { if (v !== L[k][i]) out.push(`${k}:${i % 32},${Math.floor(i / 32)} ${L[k][i]}->${v}`); }); }); return out; },
       rampsUsed: () => RAMPS.map((r) => r.sw),
       bakedColours() { const c = new Set(bake(displayImg()).filter(Boolean)); return c.size; },
+      bakedHex: () => bake(displayImg()), importTwins: () => (st.importPieces || []).map((p, i) => [i, p.twinOf]).filter(([, t]) => t !== undefined && t !== null),
       reset() { st.userMode = false; st.mode = "basic"; st.preset = Object.assign({}, DEFAULT_PRESET); st.piece = P_SHIRT; st.prevDir = "right"; st.started = false; st.kind = "hero"; st.pickW = 32; st.pickH = 32; st.unlocked = []; st.mirror = false; st.outline = false; st.shade = false; st.dither = "none"; st.advanced = false; st.upgraded = false; st.facing = "down"; st.sheet = null; st.lastUnlockMsg = ""; st.walkStyle = "four"; resetData(); renderAll(); },
       begin, unlock, openSheet, demoHero, setFacing, makeWalk, selectFrame, tapTool,
       touchUpFrame(dir, i) { // per-frame touch-up via the same write path as a pencil stroke
