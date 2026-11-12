@@ -76,10 +76,14 @@ test("every reject reason is reached and changes nothing, including a selected u
   feed({ type: "TargetCell", at: null } as unknown as DoorIntent, "malformed");
   feed({ type: "ChooseAbility", unitId: "archer#2", index: 0 }, "noOffer"); feed({ type: "ChooseAbility", unitId: "wolf#3", index: 0 }, "notOwn"); feed({ type: "ChooseAbility", unitId: "ghost#9", index: 0 }, "noUnit");
   feed({ type: "ChooseAbility", unitId: "knight#1", index: 2 }, "badPick"); feed({ type: "ChooseAbility", unitId: "knight#1", index: 0.5 }, "badPick");
+  feed({ type: "ChooseAbility", unitId: "knight#1", index: -1 }, "badPick"); feed({ type: "ChooseAbility", unitId: "knight#1", index: "1" } as never, "badPick");
+  assert.equal(JSON.stringify(snapshot(real)), kept);
+  const got = player.feed({ type: "ChooseAbility", unitId: "knight#1", index: 1 });
+  assert.equal(got.reject === null && got.action?.effects[0] === "ward" && world.levels?.state().bars[0]?.abilities[0] === "ward", true);
   disposeWorld(world); feed({ type: "SelectUnit", unitId: "knight#1" }, "disposed");
   const listed: Record<PlayerReject, true> = { noEvent: true, illegal: true, noUnit: true, notOwn: true, offGrid: true, noAction: true, malformed: true, disposed: true, noOffer: true, badPick: true };
   assert.deepEqual([...reasons].sort(), Object.keys(listed).sort());
-  assert.equal(world.log.lastSeq() === 0 && player.history().length === 16 && JSON.stringify(snapshot(real)) === kept, true);
+  assert.equal(world.log.lastSeq() === 1 && player.history().length === 19, true);
   const only = createWorld(input("stage-fixed"));
   assert.throws(() => runMatch(only, { ...base, sides: ["player", "wolves"], seats: seatAll(only, ["player"], () => [], 200) }), /runMatch: every side needs a seat or the ai/);
   const none = createWorld(input("stage-fixed"));
