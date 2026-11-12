@@ -15,6 +15,9 @@ export type EventRegistry<M extends EventMap<M>> = { readonly mode: string; read
 
 export type BusRecord<M extends EventMap<M> = NoModeEvents> = { readonly seq: number; readonly tick: number; readonly event: BusEvent<M> };
 
+/** Rolling bus history size (step 17): the newest `history` records are kept; 0 keeps none. The match log is never capped. */
+export type BusLimits = { readonly history: number };
+
 export interface EventBus<M extends EventMap<M> = NoModeEvents> {
   emit(event: BusEvent<M>): void;
   on<K extends BusEvent<M>["type"]>(type: K, fn: (event: Extract<BusEvent<M>, { readonly type: K }>, rec: BusRecord<M>) => void): () => void;
@@ -22,4 +25,6 @@ export interface EventBus<M extends EventMap<M> = NoModeEvents> {
   onError(fn: (err: unknown) => void): () => void;
   isRegistered(type: string): boolean;
   history(): readonly BusRecord<M>[];
+  /** Step 17: drops every listener and the history; later emits record and call nothing, later subscriptions store nothing. Safe to call twice. */
+  dispose(): void;
 }

@@ -2,12 +2,14 @@ import type { Action } from "../core/log/index.ts";
 import { startFuse } from "../rules/turns/fuse.ts";
 import { xGo, type Event } from "../state/index.ts";
 import { submit } from "./actions.ts";
+import { isDisposed } from "./dispose.ts";
 import { replayTicks } from "./run.ts";
 import type { AiHook, MatchOptions, MatchResult, SimWorld } from "./types.ts";
 
 const noAi: AiHook = () => { throw new Error("runMatch: ai was asked with no hook"); };
 
 export function runMatch(world: SimWorld, opts: MatchOptions): MatchResult {
+  if (isDisposed(world)) throw new Error("runMatch: world is disposed");
   if (!Number.isInteger(opts.maxRounds) || opts.maxRounds < 1) throw new RangeError("runMatch: maxRounds must be an integer >= 1");
   if (!Number.isInteger(opts.maxSimMs) || opts.maxSimMs < 0) throw new RangeError("runMatch: maxSimMs must be an integer >= 0");
   if (!seatsOk(opts)) throw new RangeError("runMatch: bad seats");

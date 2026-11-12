@@ -1,6 +1,7 @@
 import type { Action } from "../core/log/index.ts";
 import { TABLES, mergeTables } from "../state/index.ts";
 import { submit } from "./actions.ts";
+import { isDisposed } from "./dispose.ts";
 import { feedIntent, intentEvent } from "./intents.ts";
 import type { Player, PlayerOptions, PlayerReject, PlayerStep, SimWorld } from "./types.ts";
 
@@ -38,6 +39,7 @@ export function createPlayer(world: SimWorld, opts: PlayerOptions): Player {
     feed(intent, aim) {
       const from = world.phases.battle;
       if (from === undefined) throw new Error("player: battle phase missing");
+      if (isDisposed(world)) return { intent: (intent ?? null) as PlayerStep["intent"], aim: (aim ?? null) as PlayerStep["aim"], tick: world.clock.tick(), from, event: null, action: null, reject: "disposed" };
       if (malformed(intent, aim)) {
         const step: PlayerStep = { intent: (intent ?? null) as PlayerStep["intent"], aim: (aim ?? null) as PlayerStep["aim"], tick: world.clock.tick(), from, event: null, action: null, reject: "malformed" };
         steps.push(step);

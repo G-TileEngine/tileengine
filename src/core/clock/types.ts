@@ -24,4 +24,6 @@ export interface Clock {
   onRender(cb: (r: RenderInfo) => void): Unsubscribe;
   after(ms: number, cb: () => void): SimTimer;
   onError(cb: (err: unknown) => void): Unsubscribe;
+  /** Step 17: cancels and drops every timer and subscriber; later `after` / `on…` store nothing. Time still counts. Safe to call twice. */
+  dispose(): void;
 }

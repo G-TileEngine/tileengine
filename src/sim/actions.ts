@@ -1,5 +1,6 @@
 import type { Action } from "../core/log/index.ts";
 import type { SimWorld } from "./types.ts";
+import { isDisposed } from "./dispose.ts";
 
 function apply(world: SimWorld, action: Action): void {
   const target = action.target;
@@ -12,6 +13,7 @@ function apply(world: SimWorld, action: Action): void {
   world.notices.push({ code: "actionUnsupported", message: "action unsupported" });
 }
 export function submit(world: SimWorld, action: Action): void {
+  if (isDisposed(world)) return;
   world.log.append(world.clock.tick(), action);
   if (action.durationMs === null) apply(world, action);
   else world.clock.after(action.durationMs, () => apply(world, action));

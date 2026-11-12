@@ -23,7 +23,7 @@ export function createWorld(input: SimInput): SimWorld {
   if (stage.doc.mapRef !== map.doc.id) throw new Error(`mapRef ${stage.doc.mapRef}`);
   const seed = stageSeed(stage.doc) ?? input.hostSeed;
   const clock = createClock();
-  const bus = createBus(clock);
+  const bus = createBus(clock, undefined, input.busLimits);
   const settings = manifest.doc.project.settings;
   const grid = createGrid(map.doc, input.tiles, { wrapEdges: settings.wrapEdges });
   const units = createUnits(grid, {
