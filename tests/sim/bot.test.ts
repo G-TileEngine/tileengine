@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { test } from "node:test";
-import type { Intent } from "../../src/runtime/input/index.ts";
-import { createPlayer, createWorld, disposeWorld, runMatch, snapshot, type IntentHook, type IntentInput, type PlayerReject, type SimWorld } from "../../src/sim/index.ts";
+import { BTF_LEVEL_RULES } from "../../src/btf-adapters/src/index.ts";
+import { createPlayer, createWorld, disposeWorld, runMatch, snapshot, type DoorIntent, type IntentHook, type IntentInput, type PlayerReject, type SimWorld } from "../../src/sim/index.ts";
 import { bot, forward, reachFarRow, seedless } from "./ai.ts";
 import { input } from "./input.ts";
 import { counter, seatAll } from "./seats.ts";
@@ -53,14 +53,15 @@ test("the bot answers only with SelectUnit / TargetCell pairs for the units in i
   assert.deepEqual(bad.seats.flatMap((seat) => seat.player.history()).flatMap((step) => step.reject === null ? [] : [[step.intent.type, step.reject]]), [["SelectUnit", "notOwn"], ["Confirm", "noEvent"]]);
 });
 test("every reject reason is reached and changes nothing, including a selected unit that turns foreign or dies before the tap; a side with no seat and no ai throws", () => {
-  const real = createWorld(input("stage-fixed"));
+  const real = createWorld({ ...input("stage-fixed"), levels: { rules: { ...BTF_LEVEL_RULES, bar: "unit" }, pools: { knight: ["guard", "ward"] } } });
   real.phases = { battle: "idle" };
+  real.levels?.gain("knight#1", "knight", 17);
   const kept = JSON.stringify(snapshot(real)), over: { patch: { alive: false } | { side: "wolves" } | null } = { patch: null }, units = real.units;
   const world: SimWorld = { ...real, units: { ...units, get: (id) => { const u = units.get(id); return u === undefined || over.patch === null || id !== "knight#1" ? u : { ...u, ...over.patch }; } } };
   const player = createPlayer(world, { side: "player", moveMs: 200, nextId: counter("m") });
-  const finger = (): string => JSON.stringify([snapshot(world).units, snapshot(world).occupancy, world.log.lastSeq(), world.phases]);
+  const finger = (): string => JSON.stringify([snapshot(world).units, snapshot(world).occupancy, world.log.lastSeq(), world.phases, snapshot(world).levels]);
   const reasons = new Set<PlayerReject>();
-  const feed = (intent: Intent, reject: PlayerReject | null, aim?: { c: number; r: number }): void => {
+  const feed = (intent: DoorIntent, reject: PlayerReject | null, aim?: { c: number; r: number }): void => {
     const before = finger(), step = player.feed(intent, aim);
     if (reject === null) { assert.equal(step.reject, null); return; }
     reasons.add(reject);
@@ -72,11 +73,13 @@ test("every reject reason is reached and changes nothing, including a selected u
   over.patch = { side: "wolves" }; feed({ type: "TargetCell", at: { c: 0, r: 7 } }, "notOwn");
   over.patch = { alive: false }; feed({ type: "TargetCell", at: { c: 0, r: 7 } }, "noUnit"); over.patch = null;
   feed({ type: "Cancel" }, null); world.phases = { battle: "targeting" }; feed({ type: "Confirm" }, "noAction", { c: 0, r: 7 });
-  feed({ type: "TargetCell", at: null } as unknown as Intent, "malformed");
+  feed({ type: "TargetCell", at: null } as unknown as DoorIntent, "malformed");
+  feed({ type: "ChooseAbility", unitId: "archer#2", index: 0 }, "noOffer"); feed({ type: "ChooseAbility", unitId: "wolf#3", index: 0 }, "notOwn"); feed({ type: "ChooseAbility", unitId: "ghost#9", index: 0 }, "noUnit");
+  feed({ type: "ChooseAbility", unitId: "knight#1", index: 2 }, "badPick"); feed({ type: "ChooseAbility", unitId: "knight#1", index: 0.5 }, "badPick");
   disposeWorld(world); feed({ type: "SelectUnit", unitId: "knight#1" }, "disposed");
-  const listed: Record<PlayerReject, true> = { noEvent: true, illegal: true, noUnit: true, notOwn: true, offGrid: true, noAction: true, malformed: true, disposed: true };
+  const listed: Record<PlayerReject, true> = { noEvent: true, illegal: true, noUnit: true, notOwn: true, offGrid: true, noAction: true, malformed: true, disposed: true, noOffer: true, badPick: true };
   assert.deepEqual([...reasons].sort(), Object.keys(listed).sort());
-  assert.equal(world.log.lastSeq() === 0 && player.history().length === 11 && JSON.stringify(snapshot(real)) === kept, true);
+  assert.equal(world.log.lastSeq() === 0 && player.history().length === 16 && JSON.stringify(snapshot(real)) === kept, true);
   const only = createWorld(input("stage-fixed"));
   assert.throws(() => runMatch(only, { ...base, sides: ["player", "wolves"], seats: seatAll(only, ["player"], () => [], 200) }), /runMatch: every side needs a seat or the ai/);
   const none = createWorld(input("stage-fixed"));

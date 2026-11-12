@@ -1,0 +1,18 @@
+ src/btf-adapters/src/index.ts  |   1 +
+ src/btf-adapters/src/levels.ts |   5 ++
+ src/rules/levels/index.ts      |   2 +
+ src/rules/levels/levels.ts     |  68 +++++++++++++++++++++++++++
+ src/rules/levels/types.ts      |  25 ++++++++++
+ src/sim/actions.ts             |   5 ++
+ src/sim/chaos.ts               |   2 +-
+ src/sim/driver-phase.ts        |   2 +-
+ src/sim/index.ts               |   2 +-
+ src/sim/player.ts              |  12 +++++
+ src/sim/run.ts                 |   1 +
+ src/sim/types.ts               |  20 +++++---
+ src/sim/world.ts               |   6 ++-
+ tests/rules/levels.test.ts     |  75 +++++++++++++++++++++++++++++
+ tests/sim/bot.test.ts          |  19 ++++----
+ tests/sim/gc.test.ts           |   2 +-
+ tests/sim/levels.test.ts       | 104 +++++++++++++++++++++++++++++++++++++++++
+ 17 files changed, 331 insertions(+), 20 deletions(-)

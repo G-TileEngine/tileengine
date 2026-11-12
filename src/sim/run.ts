@@ -30,6 +30,7 @@ export function snapshot(world: SimWorld): SimSnapshot {
     occupancy,
     phases: { ...world.phases },
     logSeq: log.lastSeq(),
+    ...(world.levels === null ? {} : { levels: world.levels.state() }),
   };
 }
 export function replay(input: SimInput, log: CommandLog, untilTick: number): SimWorld {

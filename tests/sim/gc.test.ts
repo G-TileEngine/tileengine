@@ -17,7 +17,7 @@ function arm(drop: boolean): { clock: Clock; bus: EventBus; ref: WeakRef<SimWorl
   const world = createWorld(input("stage-fixed"));
   const clock = world.clock, bus = world.bus, ref = new WeakRef(world);
   const pin = (): number => world.seed;
-  clock.onTick(pin); bus.onAny(pin);
+  clock.onTick(pin); clock.onRender(pin); bus.onAny(pin);
   submit(world, { id: "m1", kind: "move", actor: "knight#1", target: { pipe: "tile", at: { c: 0, r: 7 } }, durationMs: 200, turns: null, effects: [] });
   if (drop) disposeWorld(world);
   clock.onRender(pin); bus.on("landedOn", pin);
