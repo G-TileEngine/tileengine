@@ -1,0 +1,11 @@
+ src/rules/levels/levels.ts       |  16 ++++--
+ src/sim/actions.ts               |   9 +++-
+ src/sim/chaos.ts                 |   7 ++-
+ src/sim/exploit.ts               |  28 ++++++++---
+ src/sim/types.ts                 |   4 +-
+ tests/rules/levels.test.ts       |  13 +++++
+ tests/sim/bot.test.ts            |   6 ++-
+ tests/sim/exploit-levels.test.ts | 106 +++++++++++++++++++++++++++++++++++++++
+ tests/sim/exploit.test.ts        |   5 +-
+ tests/sim/levels.test.ts         |  33 +++++++++++-
+ 10 files changed, 207 insertions(+), 20 deletions(-)
