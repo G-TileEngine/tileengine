@@ -1,4 +1,5 @@
 import { createRng, streamSeed } from "../core/rng/index.ts";
+import { NOT_PLAIN, plainCopy } from "../core/plain.ts";
 import type { Sq } from "../types/core-types.ts";
 import { createGestureMapper, type GestureOptions, type PointerSample } from "../runtime/input/index.ts";
 import { runChaos } from "./chaos.ts";
@@ -26,9 +27,12 @@ function requireGen(gen: ChaosGen): void {
   if (gen.gestures !== null) createGestureMapper(gen.gestures, { cols: 1, rows: 1, unitAt: () => undefined });
 }
 
-export function chaosIntents(gen: ChaosGen, legal: IntentHook): IntentHook {
+export function chaosIntents(live: ChaosGen, legal: IntentHook): IntentHook {
+  const kept = plainCopy(live, 2);
   let state: { readonly world: SimWorld; readonly rng: ReturnType<typeof createRng> } | null = null;
   return (world, side, budget) => {
+    if (kept === NOT_PLAIN) throw new RangeError("chaos-gen: gen must be plain data");
+    const gen = kept as ChaosGen;
     requireGen(gen);
     if (state === null) state = { world, rng: createRng(streamSeed(world.seed, gen.stream)) };
     else if (state.world !== world) throw new Error("chaos-gen: one generator per run");

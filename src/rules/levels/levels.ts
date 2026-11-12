@@ -1,4 +1,5 @@
 import type { BusEvent, EventRegistry, NoModeEvents } from "../../core/events/index.ts";
+import { NOT_PLAIN, isRecord, plainCopy } from "../../core/plain.ts";
 import type { Rng } from "../../core/rng/index.ts";
 import type { AbilityPools, LevelRules, LevelSetup, Levels } from "./types.ts";
 
@@ -11,14 +12,14 @@ function bad(rules: LevelRules, pools: AbilityPools): boolean {
 }
 type Live = { id: string; pool: string; xp: number; level: number; banked: number; offer: string[] | null; abilities: string[] };
 function taken(setup: LevelSetup): { rules: LevelRules; pools: AbilityPools } {
-  if (typeof setup !== "object" || setup === null) throw new RangeError("createLevels: bad rules or pools");
-  const rulesIn = setup.rules, poolsIn = setup.pools;
-  if (typeof rulesIn !== "object" || rulesIn === null || typeof poolsIn !== "object" || poolsIn === null || Array.isArray(poolsIn)) throw new RangeError("createLevels: bad rules or pools");
+  const copy = plainCopy(setup, 3);
+  if (copy === NOT_PLAIN || !isRecord(copy) || !isRecord(copy.rules) || !isRecord(copy.pools)) throw new RangeError("createLevels: bad rules or pools");
+  const rulesIn = copy.rules, poolsIn = copy.pools;
   const bar = rulesIn.bar, thresholds = rulesIn.thresholds, offerLevels = rulesIn.offerLevels, offerSize = rulesIn.offerSize, xpIn = rulesIn.xp;
-  if (!Array.isArray(thresholds) || !Array.isArray(offerLevels) || typeof xpIn !== "object" || xpIn === null) throw new RangeError("createLevels: bad rules or pools");
+  if (!Array.isArray(thresholds) || !Array.isArray(offerLevels) || !isRecord(xpIn)) throw new RangeError("createLevels: bad rules or pools");
   const pools: Record<string, readonly string[]> = {}, move = xpIn.move;
-  for (const key of Object.keys(poolsIn)) { const pool = poolsIn[key]; if (!Array.isArray(pool)) throw new RangeError("createLevels: bad rules or pools"); pools[key] = Object.freeze(pool.slice()); }
-  return { rules: Object.freeze({ bar, thresholds: Object.freeze(thresholds.slice()), offerLevels: Object.freeze(offerLevels.slice()), offerSize, xp: Object.freeze({ move }) }), pools: Object.freeze(pools) };
+  for (const key of Object.keys(poolsIn)) { const pool = poolsIn[key]; if (!Array.isArray(pool)) throw new RangeError("createLevels: bad rules or pools"); pools[key] = pool as readonly string[]; }
+  return { rules: Object.freeze({ bar, thresholds, offerLevels, offerSize, xp: Object.freeze({ move }) }) as LevelRules, pools: Object.freeze(pools) };
 }
 
 export function createLevels(setup: LevelSetup, rng: Rng, emit: (event: BusEvent<NoModeEvents>) => void): Levels {

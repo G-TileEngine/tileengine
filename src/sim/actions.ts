@@ -1,15 +1,13 @@
-import type { Action } from "../core/log/index.ts";
+import { readAction, type Action } from "../core/log/index.ts";
+import { NOT_PLAIN, isRecord, plainCopy } from "../core/plain.ts";
 import type { SimWorld } from "./types.ts";
 import { isDisposed } from "./dispose.ts";
 
-function idsOf(effects: readonly string[]): readonly string[] | null {
-  return Array.isArray(effects) && effects.every((id) => typeof id === "string") ? effects.slice() : null;
-}
 function apply(world: SimWorld, action: Action): void {
   const target = action.target;
   if (action.kind === "wait") return;
   if (action.kind === "unlock" && target === null) {
-    const ids = idsOf(action.effects), id = ids !== null && ids.length === 1 ? ids[0] : undefined;
+    const id = action.effects.length === 1 ? action.effects[0] : undefined;
     if (id === undefined || id === "" || world.levels?.choose(action.actor, id) !== true) world.notices.push({ code: "unlockFailed", message: "unlock failed" });
     return;
   }
@@ -23,8 +21,9 @@ function apply(world: SimWorld, action: Action): void {
 }
 export function submit(world: SimWorld, action: Action): void {
   if (isDisposed(world)) return;
-  if (action.kind === "unlock" && idsOf(action.effects) === null) { world.notices.push({ code: "unlockFailed", message: "unlock failed" }); return; }
-  world.log.append(world.clock.tick(), action);
-  if (action.durationMs === null) apply(world, action);
-  else world.clock.after(action.durationMs, () => apply(world, action));
+  const copy = plainCopy(action, 3), own = copy === NOT_PLAIN ? null : readAction(copy);
+  if (own === null) { world.notices.push(isRecord(copy) && copy.kind === "unlock" ? { code: "unlockFailed", message: "unlock failed" } : { code: "actionRefused", message: "action refused" }); return; }
+  world.log.append(world.clock.tick(), own);
+  if (own.durationMs === null) apply(world, own);
+  else world.clock.after(own.durationMs, () => apply(world, own));
 }

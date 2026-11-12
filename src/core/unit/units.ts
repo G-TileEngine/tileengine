@@ -1,6 +1,7 @@
 import type { ResolvedPlacement, Sq } from "../../types/core-types.ts";
 import type { Grid } from "../grid/types.ts";
 import type { Notice } from "../notice.ts";
+import { cellOf } from "../plain.ts";
 import type { OccupancyRule, PlaceResult, PushBlocker, UnitState, Units, UnitsOptions } from "./types.ts";
 
 export const STRICT1: OccupancyRule = { id: "strict1", canHold: (_unit, occupants) => occupants.length === 0 };
@@ -47,7 +48,9 @@ export function createUnits(grid: Grid, opts?: UnitsOptions): Units {
     const u = byId.get(id);
     if (!u) return { ok: false, reason: "unknownUnit" };
     if (!u.alive) return { ok: false, reason: "notAlive" };
-    if (!grid.inBounds(to)) return { ok: false, reason: "outOfBounds" };
+    const cell = cellOf(to);
+    if (cell === null || !grid.inBounds(cell)) return { ok: false, reason: "outOfBounds" };
+    to = cell;
     if (u.at.c === to.c && u.at.r === to.r) return { ok: true, at: u.at };
     if (!grid.isOpen(to)) return { ok: false, reason: "closed" };
     if (!STRICT1.canHold(u, living(to))) return { ok: false, reason: "occupied" };

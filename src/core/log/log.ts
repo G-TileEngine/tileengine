@@ -1,10 +1,11 @@
 import type { Sq } from "../../types/core-types.ts";
 import type { Aim } from "../targeting/types.ts";
+import { NOT_PLAIN, plainCopy } from "../plain.ts";
 import { LOG_FORMAT_VERSION, type Action, type CommandLog, type LogEntry, type LogHeader, type ParseResult } from "./types.ts";
 
 const EDGES = new Set(["N", "E", "S", "W"]);
 const rec = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
-const sq = (v: unknown): v is Sq => rec(v) && typeof v.c === "number" && typeof v.r === "number";
+const sq = (v: unknown): v is Sq => rec(v) && Number.isInteger(v.c) && Number.isInteger(v.r);
 
 function aimOf(v: unknown): v is Aim {
   if (!rec(v)) return false;
@@ -16,7 +17,8 @@ function actionOf(v: unknown): v is Action {
   const dur = v.durationMs === null || (typeof v.durationMs === "number" && Number.isInteger(v.durationMs) && v.durationMs >= 0);
   const via = v.via === undefined || (rec(v.via) && typeof v.via.presentation === "string" && (v.via.ref === undefined || typeof v.via.ref === "string"));
   const fx = Array.isArray(v.effects) && v.effects.every((e) => typeof e === "string");
-  return (v.target === null || aimOf(v.target)) && dur && (typeof v.turns === "number" || v.turns === null) && fx && via;
+  const turns = v.turns === null || (typeof v.turns === "number" && Number.isFinite(v.turns));
+  return (v.target === null || aimOf(v.target)) && dur && turns && fx && via;
 }
 function packAim(a: Aim): Aim {
   if (a.pipe === "unit") {
@@ -32,6 +34,10 @@ function packAction(a: Action): Action {
   const via = a.via.ref === undefined ? { presentation: a.via.presentation } : { presentation: a.via.presentation, ref: a.via.ref };
   return { ...base, via };
 }
+export function readAction(v: unknown): Action | null {
+  const copy = plainCopy(v, 3);
+  return copy !== NOT_PLAIN && actionOf(copy) ? copy : null;
+}
 
 export function createLog(header: LogHeader, onAppend?: (entry: LogEntry) => void): CommandLog {
   const list: LogEntry[] = [];
@@ -41,7 +47,9 @@ export function createLog(header: LogHeader, onAppend?: (entry: LogEntry) => voi
     append(tick, action) {
       const last = list.at(-1);
       if (!Number.isInteger(tick) || tick < 0 || (last !== undefined && tick < last.tick)) throw new RangeError("tick");
-      const entry: LogEntry = { seq: list.length + 1, tick, action: packAction(action) };
+      const own = readAction(action);
+      if (own === null) throw new RangeError("append: not an action");
+      const entry: LogEntry = { seq: list.length + 1, tick, action: packAction(own) };
       list.push(entry);
       onAppend?.(entry);
     },
@@ -52,6 +60,7 @@ export function createLog(header: LogHeader, onAppend?: (entry: LogEntry) => voi
 }
 
 export function parseLog(json: string): ParseResult {
+  if (typeof json !== "string") return { ok: false, error: "not JSON" };
   let value: unknown;
   try { value = JSON.parse(json); } catch { return { ok: false, error: "not JSON" }; }
   if (!rec(value) || !rec(value.header) || !Array.isArray(value.entries)) return { ok: false, error: "missing header or entries" };
@@ -62,9 +71,9 @@ export function parseLog(json: string): ParseResult {
   let prev = -1;
   for (let i = 0; i < value.entries.length; i += 1) {
     const e = value.entries[i];
-    if (!rec(e) || e.seq !== i + 1 || typeof e.tick !== "number" || !Number.isInteger(e.tick) || e.tick < 0 || e.tick < prev || !actionOf(e.action)) return { ok: false, error: "bad entry" };
+    if (!rec(e) || e.seq !== i + 1 || typeof e.tick !== "number" || !Number.isInteger(e.tick) || e.tick < 0 || e.tick < prev || readAction(e.action) === null) return { ok: false, error: "bad entry" };
     prev = e.tick;
-    log.append(e.tick, e.action);
+    log.append(e.tick, e.action as Action);
   }
   return { ok: true, log };
 }

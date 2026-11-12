@@ -3,6 +3,7 @@ import { createBus, logEvents, unitEvents } from "../core/events/index.ts";
 import { createGrid } from "../core/grid/index.ts";
 import { LOG_FORMAT_VERSION, createLog } from "../core/log/index.ts";
 import type { Notice } from "../core/notice.ts";
+import { NOT_PLAIN, isRecord, plainCopy } from "../core/plain.ts";
 import { createRng, streamSeed } from "../core/rng/index.ts";
 import { createUnits } from "../core/unit/index.ts";
 import { readManifest, readMap, readStage, resolvePlacements, stageSeed, type ReadResult } from "../project/read/index.ts";
@@ -15,6 +16,9 @@ function fail(doc: string, read: ReadResult<unknown>): Error {
   return new Error(`${doc}: ${detail}`);
 }
 export function createWorld(input: SimInput): SimWorld {
+  const src = plainCopy(input, Number.POSITIVE_INFINITY);
+  if (src === NOT_PLAIN || !isRecord(src)) throw new Error("createWorld: input is not plain data");
+  input = src as SimInput;
   const manifest = readManifest(input.manifest);
   const map = readMap(input.map);
   const stage = readStage(input.stage, input.stageLimits);

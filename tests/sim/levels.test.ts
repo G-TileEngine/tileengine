@@ -112,7 +112,7 @@ test("a malformed unlock never throws (step 19) and is not logged", () => {
   bad(undefined, true); for (const effects of [undefined, null, "guard", {}, [7], [first, null]]) bad(effects);
   const timed = { id: "t", kind: "unlock" as const, actor: "knight#1", target: null, durationMs: 100, turns: null, effects: [first] };
   submit(world, timed); assert.equal(world.log.lastSeq(), 1); timed.effects = null as never; const n = world.notices.length;
-  assert.doesNotThrow(() => advance(world, 200)); assert.equal(world.notices.length === n + 1 && world.notices.at(-1)?.code === "unlockFailed" && JSON.stringify(world.levels?.state()) === before, true);
+  assert.doesNotThrow(() => advance(world, 200)); assert.equal(world.notices.length === n && world.log.lastSeq() === 1 && world.levels?.state().bars[0]?.abilities[0] === first, true);
 });
 test("the empty id never unlocks (step 19) even when choose would accept it", () => {
   const pools = { knight: ["guard", "charge"] }, world = createWorld({ ...input("stage-fixed"), levels: { rules: UNIT, pools } });
