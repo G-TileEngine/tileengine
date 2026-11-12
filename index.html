@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="css/imagine-convert.css" />
   <link rel="stylesheet" href="css/body-map.css" />
   <link rel="stylesheet" href="css/qol-r69.css" />
+  <link rel="stylesheet" href="css/social-r70.css" />
 </head>
 <body>
   <div class="app" role="application" aria-label="TileEngine editor prototype">
@@ -35,7 +36,7 @@
     <section id="screen-home" class="screen" aria-label="Home">
       <div class="topbar">
         <p class="eyebrow">TileEngine</p>
-        <div class="topbar-row"><h1 tabindex="-1">New project</h1></div>
+        <div class="topbar-row"><h1 tabindex="-1">New project</h1><span data-sh-bell-slot></span></div>
       </div>
       <div class="body">
         <div class="home-hero">
@@ -1481,6 +1482,15 @@
           <span><span class="t">Achievements</span><span class="s" id="ach-entry-sub">0 of 22</span></span>
           <span class="go" aria-hidden="true">›</span>
         </button>
+        <!-- r70 social hub -->
+        <button type="button" class="ach-entry sh-entry-row" id="btn-profile-public" aria-label="Your public page">
+          <span><span class="t">Your public page</span><span class="s">What other creators see</span></span>
+          <span class="go" aria-hidden="true">›</span>
+        </button>
+        <button type="button" class="ach-entry sh-entry-row" id="btn-profile-social" aria-label="Social settings">
+          <span><span class="t">Social</span><span class="s" id="sh-social-sub">Follower count hidden · Direct requests off</span></span>
+          <span class="go" aria-hidden="true">›</span>
+        </button>
         <details class="advanced" style="margin-top:18px">
           <summary>Advanced</summary>
           <div class="inner">
@@ -1715,7 +1725,7 @@
 
     <!-- HUB SHOP -->
     <section id="screen-hub-shop" class="screen" aria-label="Hub assets shop">
-      <div class="topbar"><p class="eyebrow">Studio hub</p><div class="topbar-row"><h1 tabindex="-1">Asset shop</h1></div></div>
+      <div class="topbar sh-topbar"><p class="eyebrow">Studio hub</p><div class="topbar-row"><button type="button" class="btn btn-ghost" data-nav="home" aria-label="Back">Back</button><h1 tabindex="-1">Asset shop</h1><span data-sh-bell-slot></span></div></div>
       <div class="body">
         <p class="proposed-banner">Proposed: not final</p>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px;flex-wrap:wrap">
@@ -1732,24 +1742,18 @@
         <button type="button" class="btn btn-ghost" id="btn-shop-submit" style="min-height:48px;width:100%;margin-top:12px">Submit yours</button>
         <p class="hint">Submit yours is proposed — reviewed before listing. Earn-only coins.</p>
       </div>
-      <div class="bottombar">
-        <button type="button" class="btn btn-ghost" data-nav="home" aria-label="Back">Back</button>
-        <button type="button" class="btn btn-primary" data-nav="home" aria-label="Done">Done</button>
-      </div>
+      <div data-sh-rail-slot="hub-shop"></div>
     </section>
 
     <!-- MADE GAMES LIBRARY -->
     <section id="screen-hub-library" class="screen" aria-label="Made games library">
-      <div class="topbar"><p class="eyebrow">Studio hub</p><div class="topbar-row"><h1 tabindex="-1">Made games</h1></div></div>
+      <div class="topbar sh-topbar"><p class="eyebrow">Studio hub</p><div class="topbar-row"><button type="button" class="btn btn-ghost" data-nav="home" aria-label="Back">Back</button><h1 tabindex="-1">Made games</h1><span data-sh-bell-slot></span></div></div>
       <div class="body">
         <p class="proposed-banner">Proposed: not final</p>
         <div id="hub-recommended" class="recommend-card" hidden></div>
         <div id="hub-library-grid" class="hub-grid"></div>
       </div>
-      <div class="bottombar">
-        <button type="button" class="btn btn-ghost" data-nav="home" aria-label="Back">Back</button>
-        <button type="button" class="btn btn-primary" data-nav="home" aria-label="Done">Done</button>
-      </div>
+      <div data-sh-rail-slot="hub-library"></div>
     </section>
 
     <!-- OUTBOUND CONFIRM -->
@@ -1770,7 +1774,7 @@
 
     <!-- THUMBS-UP CHART -->
     <section id="screen-hub-chart" class="screen" aria-label="Monthly thumbs-up chart">
-      <div class="topbar"><p class="eyebrow">Studio hub</p><div class="topbar-row"><h1 tabindex="-1">Thumbs-up chart</h1></div></div>
+      <div class="topbar sh-topbar"><p class="eyebrow">Studio hub</p><div class="topbar-row"><h1 tabindex="-1">Thumbs-up chart</h1><span data-sh-bell-slot></span></div></div>
       <div class="body">
         <p class="proposed-banner">Proposed: not final</p>
         <div class="shop-tabs" role="tablist" aria-label="Chart section">
@@ -1847,6 +1851,44 @@
     </section>
 
     <!-- PLAY (toast only; hash lands then returns) -->
+
+    <!-- r70 SOCIAL HUB (local only; data via js/social-store.js) -->
+    <section id="screen-creators" class="screen" aria-label="Creators">
+      <div class="topbar sh-topbar"><p class="eyebrow">Studio hub</p><div class="topbar-row"><button type="button" class="btn btn-ghost" data-nav="home" aria-label="Back">Back</button><h1 tabindex="-1">Creators</h1><span data-sh-bell-slot></span></div></div>
+      <div class="body" id="sh-creators-body"></div>
+      <div data-sh-rail-slot="creators"></div>
+    </section>
+
+    <section id="screen-creator" class="screen" aria-label="Creator page">
+      <div class="topbar sh-topbar"><p class="eyebrow" id="sh-creator-eyebrow">Creator</p><div class="topbar-row"><button type="button" class="btn btn-ghost" data-sh-back aria-label="Back">Back</button><h1 tabindex="-1" id="sh-creator-title">Creator</h1><span data-sh-bell-slot></span></div></div>
+      <div class="body" id="sh-creator-body" style="padding-bottom:28px"></div>
+    </section>
+
+    <section id="screen-inbox" class="screen" aria-label="Notifications">
+      <div class="topbar sh-topbar"><p class="eyebrow">Studio hub</p><div class="topbar-row"><button type="button" class="btn btn-ghost" data-sh-back aria-label="Back">Back</button><h1 tabindex="-1">Notifications</h1></div></div>
+      <div class="body" id="sh-inbox-body" style="padding-bottom:28px"></div>
+    </section>
+
+    <section id="screen-requests" class="screen" aria-label="Requests">
+      <div class="topbar sh-topbar"><p class="eyebrow">Studio hub</p><div class="topbar-row"><button type="button" class="btn btn-ghost" data-nav="home" aria-label="Back">Back</button><h1 tabindex="-1">Requests</h1><span data-sh-bell-slot></span></div></div>
+      <div class="body" id="sh-requests-body"></div>
+      <div data-sh-rail-slot="requests"></div>
+    </section>
+
+    <section id="screen-request-post" class="screen" aria-label="Post a request">
+      <div class="topbar sh-topbar"><p class="eyebrow">Requests</p><div class="topbar-row"><button type="button" class="btn btn-ghost" data-sh-back aria-label="Back">Back</button><h1 tabindex="-1">Post a request</h1></div></div>
+      <div class="body" id="sh-post-body"></div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" id="sh-post-cancel">Cancel</button>
+        <button type="button" class="btn btn-primary" id="sh-post-submit" disabled>Post request</button>
+      </div>
+    </section>
+
+    <section id="screen-request-detail" class="screen" aria-label="Request">
+      <div class="topbar sh-topbar"><p class="eyebrow">Requests</p><div class="topbar-row"><button type="button" class="btn btn-ghost" data-sh-back aria-label="Back">Back</button><h1 tabindex="-1">Request</h1><span data-sh-bell-slot></span></div></div>
+      <div class="body" id="sh-detail-body" style="padding-bottom:28px"></div>
+    </section>
+
     <section id="screen-play" class="screen" aria-label="Play test">
       <div class="topbar">
         <p class="eyebrow">Play</p>
@@ -1914,5 +1956,7 @@
   <script src="js/welcome.js"></script>
   <script src="js/stage-live.js"></script>
   <script src="js/qol-r69.js"></script>
+  <script src="js/social-store.js"></script>
+  <script src="js/social-hub.js"></script>
 </body>
 </html>

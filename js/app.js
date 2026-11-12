@@ -687,6 +687,7 @@
     if (id === "sprite-studio" && window.SpriteStudio) window.SpriteStudio.onShow();
     if (window.Experience) window.Experience.onShow(id); // r64: tiers, Next-step chip, quiz/setup screens
     if (window.TileEngineQoL && TileEngineQoL.onShow) TileEngineQoL.onShow(id);
+    if (window.TileEngineSocial && TileEngineSocial.onShow) TileEngineSocial.onShow(id); // r70 social hub
     if (id === "unit-list") renderUnitList();
     if (id === "unit-editor") renderUnitEditor();
     if (id === "refix") { renderRefix(); }
@@ -5225,6 +5226,7 @@
       "loadout",
       "sprite-studio",
       "welcome", "my-setup", "get-started", "starter-make", "starter-pack",
+      "hub-shop", "hub-library", "creators", "creator", "inbox", "requests", "request-post", "request-detail", // r70
     ];
     // r64: first launch (no profile.experience yet) opens the welcome quiz wherever you land.
     if (window.Experience && Experience.needsQuiz()) { Experience.startQuiz(known.includes(id) && id !== "welcome" ? id : "home"); return; }
