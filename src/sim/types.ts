@@ -10,6 +10,7 @@ import type { Event, Outcome, Phase } from "../state/index.ts";
 import type { FuseSetting } from "../rules/turns/fuse.ts";
 import type { GestureOptions, Intent } from "../runtime/input/index.ts";
 import type { StageLimits } from "../project/read/index.ts";
+import type { LevelSetup, Levels, LevelsState } from "../rules/levels/index.ts";
 
 /** Parsed JSON documents plus the host's choices. The sim never reads files, wall time or a random source. */
 export type SimInput = {
@@ -23,6 +24,8 @@ export type SimInput = {
   readonly stageLimits: StageLimits;
   /** The bus's rolling history size (step 17); absent = core's `DEFAULT_BUS_LIMITS`. The command log is never capped. */
   readonly busLimits?: BusLimits;
+  /** Levelling with a pick of abilities (step 18): absent = off (no XP, no offers, no draws, snapshots as before). */
+  readonly levels?: LevelSetup;
   readonly hostSeed: number;
   readonly engineVersion: string;
   readonly projectHash: string;
@@ -37,6 +40,7 @@ export type SimWorld = {
   readonly log: CommandLog;
   readonly rng: Rng;
   readonly notices: Notice[];
+  readonly levels: Levels | null;
   /** Driver state, replaced whole (never written per key): `{ battle }` from step 09b. Not in the log. */
   phases: Readonly<Record<string, Phase>>;
 };
@@ -50,6 +54,7 @@ export type SimSnapshot = {
   readonly occupancy: readonly (readonly [number, readonly string[]])[];
   readonly phases: Readonly<Record<string, Phase>>;
   readonly logSeq: number;
+  readonly levels?: LevelsState;
 };
 
 /** M6: the AI is a hook with no phase parameter; it returns the same actions a player would submit. */
@@ -82,14 +87,17 @@ export type MatchResult = {
   readonly rounds: number;
   readonly events: readonly Event[];
 };
+/** Step 18: the level pick, fed through the same door; `index` points into the bar's pending offer. `unitId` names the bar under
+ *  `bar: "unit"`; under "side" the bar is the seat's own side and `unitId` is not read. */
+export type ChooseAbility = { readonly type: "ChooseAbility"; readonly index: number; readonly unitId?: string }; export type DoorIntent = Intent | ChooseAbility;
 /** The one door: every move arrives as an intent (touch, bot, chaos player, a later online peer). */
-export type IntentInput = { readonly intent: Intent; readonly aim?: Sq | null };
+export type IntentInput = { readonly intent: DoorIntent; readonly aim?: Sq | null };
 export type IntentHook = (world: SimWorld, side: SideId, budget: Budget) => readonly IntentInput[];
 /** Caller inputs, no defaults: the seated side, the move duration (null = instant) and the action id source. */
 export type PlayerOptions = { readonly side: SideId; readonly moveMs: number | null; readonly nextId: () => string };
-export type PlayerReject = "noEvent" | "illegal" | "noUnit" | "notOwn" | "offGrid" | "noAction" | "malformed" | "disposed";
+export type PlayerReject = "noEvent" | "illegal" | "noUnit" | "notOwn" | "offGrid" | "noAction" | "malformed" | "disposed" | "noOffer" | "badPick";
 export type PlayerStep = {
-  readonly intent: Intent;
+  readonly intent: DoorIntent;
   readonly aim: Sq | null;
   readonly tick: number;
   readonly from: Phase;
@@ -99,7 +107,7 @@ export type PlayerStep = {
 };
 export type Player = {
   readonly side: SideId;
-  feed(intent: Intent, aim?: Sq | null): PlayerStep;
+  feed(intent: DoorIntent, aim?: Sq | null): PlayerStep;
   history(): readonly PlayerStep[];
 };
 export type Seat = {
@@ -108,9 +116,9 @@ export type Seat = {
   /** Called after each input is fed and, for a move, landed: invariant checks and per-step snapshot hashes hang here. */
   readonly onStep?: (step: PlayerStep, world: SimWorld) => void;
 };
-/** Chaos harness (step 12): the seven snapshot keys, one recorded input, and a promise checked after every step. */
+/** Chaos harness (step 12): the eight snapshot keys, one recorded input, and a promise checked after every step. */
 export type SnapshotKey = keyof SimSnapshot;
-export type ChaosMove = { readonly call: number; readonly side: SideId; readonly tick: number; readonly intent: Intent; readonly aim: Sq | null };
+export type ChaosMove = { readonly call: number; readonly side: SideId; readonly tick: number; readonly intent: DoorIntent; readonly aim: Sq | null };
 /** `prev` = after the last step; `before` / `fed` = just before / after the feed; `after` = after landing. */
 export type ChaosView = { readonly step: PlayerStep; readonly prev: SimSnapshot; readonly before: SimSnapshot; readonly fed: SimSnapshot; readonly after: SimSnapshot; readonly world: SimWorld };
 export type ChaosFinding = { readonly key: SnapshotKey; readonly expected: unknown; readonly actual: unknown };

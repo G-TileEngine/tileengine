@@ -45,6 +45,18 @@ export function createPlayer(world: SimWorld, opts: PlayerOptions): Player {
         steps.push(step);
         return step;
       }
+      if (intent.type === "ChooseAbility") {
+        const levels = world.levels, sideBar = levels !== null && levels.rules.bar === "side", unit = sideBar ? undefined : world.units.get(intent.unitId ?? "");
+        const missing = !sideBar && (unit === undefined || !unit.alive), foreign = !sideBar && unit !== undefined && unit.alive && unit.side !== opts.side;
+        const barId = sideBar ? opts.side : unit?.id, pending = !missing && !foreign && levels !== null && barId !== undefined ? levels.offer(barId) : null;
+        const ability = pending !== null && Number.isInteger(intent.index) && intent.index >= 0 && intent.index < pending.length ? pending[intent.index] : undefined;
+        const reject = missing ? "noUnit" as const : foreign ? "notOwn" as const : pending === null ? "noOffer" as const : ability === undefined ? "badPick" as const : null;
+        const action: Action | null = reject === null && ability !== undefined && barId !== undefined ? { id: opts.nextId(), kind: "unlock", actor: barId, target: null, durationMs: null, turns: null, effects: [ability] } : null;
+        if (action !== null) submit(world, action);
+        const picked: PlayerStep = { intent, aim: null, tick: world.clock.tick(), from, event: null, action, reject };
+        steps.push(picked);
+        return picked;
+      }
       const event = intentEvent(from, intent, aim ?? null);
       const reject = rejectOf(world, opts, from, event, selected);
       let action: Action | null = null;

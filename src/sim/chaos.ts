@@ -6,7 +6,7 @@ import { runMatch } from "./driver-phase.ts";
 import { createWorld } from "./world.ts";
 
 const STOP = new Error("chaos: stop");
-const KEYS = ["tick", "clockMs", "rngState", "units", "occupancy", "phases", "logSeq"] as const;
+const KEYS = ["tick", "clockMs", "rngState", "units", "occupancy", "phases", "logSeq", "levels"] as const;
 const same = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 const requireBuild = (engineSha: string, node: string): void => { if (engineSha === "" || node === "") throw new RangeError("chaos: engineSha and node are required"); };
