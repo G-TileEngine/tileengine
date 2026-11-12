@@ -32,5 +32,10 @@ if [ -d "$ROOT/core" ]; then
   out=$(rg -n -g '*.ts' -e 'from\s+["\x27][^"\x27]*/(state|rules|project|runtime|btf-adapters)/' "$ROOT/core")
   if [ -n "$out" ]; then echo "check:law FAIL [core-imports-nothing-above]:"; echo "$out"; fail=1; fi
 fi
+# Paint layer (CN-008): integer maths only (no **, pow, trig, exp, log, hypot), no wall time or locale, no game-rule words.
+if [ -d "$ROOT/paint" ]; then
+  out=$(rg -n -g '*.ts' -e '[\w)\]]\s*\*\*' -e '\bMath\.(pow|sin|cos|tan|asin|acos|atan|atan2|sinh|cosh|tanh|asinh|acosh|atanh|exp|expm1|log|log2|log10|log1p|hypot)\b' -e '\b(Date|Intl|performance)\b' -e '\b(hp|maxhp|mana|cost|damage)\b' "$ROOT/paint")
+  if [ -n "$out" ]; then echo "check:law FAIL [paint-integer-only]:"; echo "$out"; fail=1; fi
+fi
 [ "$fail" -eq 0 ] && echo "check:law OK ($ROOT)"
 exit "$fail"

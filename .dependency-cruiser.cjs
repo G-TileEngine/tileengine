@@ -10,6 +10,8 @@ module.exports = {
     { name: "adapters-only-from-runtime-editor", severity: "error", from: { path: "^src/(?!runtime|editor|btf-adapters)" }, to: { path: "^src/btf-adapters" } },
     { name: "input-imports-only-types-core", severity: "error", from: { path: "^src/runtime/input" }, to: { path: "^src/(?!runtime/input|types|core)" } },
     { name: "fx-imports-only-types-core", severity: "error", from: { path: "^src/fx" }, to: { path: "^src/(?!fx|types|core)" } },
+    { name: "paint-imports-only-types-notice", severity: "error", from: { path: "^src/paint" }, to: { path: "^src/(?!paint|types|core/notice\\.ts$)" } },
+    { name: "only-runtime-editor-import-paint", severity: "error", from: { path: "^src/(?!paint|runtime|editor|btf-adapters)" }, to: { path: "^src/paint" } },
     { name: "nothing-imports-sim", severity: "error", from: { path: "^src/(?!sim)" }, to: { path: "^src/sim" } },
     { name: "no-btf-folder", severity: "error", from: {}, to: { path: "(g-tile-engine|towerchess)" } },
     { name: "no-tests-in-src", severity: "error", from: { path: "^src" }, to: { path: "^tests" } },
