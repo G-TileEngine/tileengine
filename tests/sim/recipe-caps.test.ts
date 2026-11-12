@@ -24,7 +24,7 @@ test("recipe caps (step 23)", () => {
   assert.equal(LIM.totalRuns === 32768 && LIM.totalPoints === 32768 && LIM.totalTweaks === 32768 && LIM.bytes === 2097152 && LIM.notices === 256, true);
   const lit = copy(SAMPLE) as { light: number; raster: number }; lit.light = 1.5; lit.raster = 2; assert.deepEqual(notes(lit, { ...LIM, notices: 1 }), ["floatParam light", "and 1 more"]);
   let calls = 0; const boom = copy(SAMPLE) as { toJSON?: () => unknown }; boom.toJSON = () => { calls += 1; throw new Error("json"); }; assert.equal(notes(boom)[0] === undefined && calls === 0, true);
-  for (const [key, n] of [["side", 4096], ["parts", 1048576], ["historyBytes", 16777216], ["totalRuns", 1048576], ["bytes", 16777216], ["notices", 2147483647]] as const) { assert.equal(err(SAMPLE, { ...LIM, [key]: n }), ""); assert.throws(() => readSpriteRecipe(SAMPLE, { ...LIM, [key]: n + 1 }), { name: "RangeError", message: "readSpriteRecipe: limits must be integers >= 0" }); }
+  for (const [key, n] of [["side", 4096], ["parts", 1048576], ["historyBytes", 1048576], ["totalRuns", 1048576], ["bytes", 16777216], ["notices", 2147483647]] as const) { assert.equal(err(SAMPLE, { ...LIM, [key]: n }), ""); assert.throws(() => readSpriteRecipe(SAMPLE, { ...LIM, [key]: n + 1 }), { name: "RangeError", message: "readSpriteRecipe: limits must be integers >= 0" }); }
   let n = 0; const counted = new Proxy(LIM, { get(t, k, r) { n += 1; return Reflect.get(t, k, r); } }); assert.equal(err(SAMPLE, counted) === "" && n === 15, true);
 });
 test("SE-01 carries (step 23)", () => {

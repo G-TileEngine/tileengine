@@ -2,7 +2,10 @@ export type { AiHook, Budget, ChaosCheck, ChaosFinding, ChaosGen, ChaosGenOption
 export { createWorld } from "./world.ts";
 export { disposeWorld, isDisposed } from "./dispose.ts";
 export { submit } from "./actions.ts";
-export { advance, replay, replayTicks, restore, snapshot } from "./run.ts";
+export { advance, loadSave, replay, replayTicks, restore, saveMatch, snapshot } from "./run.ts";
+export type { LoadOptions, SaveLoad, SaveRefusal } from "./run.ts";
+export { SAVE_FORMAT, SAVE_MIGRATIONS, migrateSave } from "./migrations/save/index.ts";
+export type { SaveChains, SaveStep } from "./migrations/save/index.ts";
 export { runMatch } from "./driver-phase.ts";
 export { runTicks } from "./driver-tick.ts";
 export { feedIntent, intentEvent } from "./intents.ts";

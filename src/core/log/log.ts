@@ -53,7 +53,7 @@ export function createLog(header: LogHeader, onAppend?: (entry: LogEntry) => voi
   header = copied as LogHeader;
   if (!Number.isInteger(header.seed) || header.seed < 0 || header.seed > SEED_MAX || typeof header.engineVersion !== "string" || typeof header.projectHash !== "string" || header.engineVersion.length > limits.text || header.projectHash.length > limits.text) throw new RangeError("createLog: seed must be a uint32 and header text short");
   const list: LogEntry[] = [];
-  const head: LogHeader = { seed: header.seed, formatVersion: header.formatVersion, engineVersion: header.engineVersion, projectHash: header.projectHash };
+  const head: LogHeader = Object.freeze({ seed: header.seed, formatVersion: header.formatVersion, engineVersion: header.engineVersion, projectHash: header.projectHash });
   return {
     header: head,
     append(tick, action) {
@@ -62,7 +62,8 @@ export function createLog(header: LogHeader, onAppend?: (entry: LogEntry) => voi
       if (list.length >= limits.entries) throw new RangeError("append: log full");
       const own = readAction(action, limits);
       if (own === null) throw new RangeError("append: not an action");
-      const entry: LogEntry = { seq: list.length + 1, tick, action: packAction(own) };
+      const entry = plainCopy({ seq: list.length + 1, tick, action: packAction(own) }, 4) as LogEntry | typeof NOT_PLAIN;
+      if (entry === NOT_PLAIN) throw new RangeError("append: not an action");
       list.push(entry);
       onAppend?.(entry);
     },
