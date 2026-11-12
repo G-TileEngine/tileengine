@@ -47,7 +47,7 @@ test("clock dispose (step 17): a dispose inside tick 1 stops that tick, and time
   clock.advance(10);
   assert.equal(clock.tick() === 1 && seen.length === 0, true);
   clock.dispose();
-  assert.throws(() => clock.after(-1, () => seen.push("bad")), RangeError);
+  assert.equal(clock.after(-1, () => seen.push("bad")).id, 0);
   const drop = clock.onTick(() => seen.push("later")); drop(); clock.after(0, () => seen.push("later"));
   clock.advance(100); clock.step();
   assert.equal(clock.tick() === 12 && clock.now() === 120 && seen.length === 0, true);

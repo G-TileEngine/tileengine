@@ -100,7 +100,10 @@ export function createClock(opts?: ClockOptions): Clock {
     onTick(cb): Unsubscribe { return listen(tickSubs, cb); },
     onRender(cb): Unsubscribe { return listen(renderSubs, cb); },
     after(ms: number, cb: () => void): SimTimer {
-      if (!Number.isInteger(ms) || ms < 0) throw new RangeError("after: ms must be an integer >= 0");
+      if (!Number.isInteger(ms) || ms < 0 || typeof cb !== "function") {
+        report(new RangeError("after: ms must be an integer >= 0 and cb a function"));
+        return { id: 0, dueMs: -1, cancel() {} };
+      }
       const id = nextId;
       nextId += 1;
       const dueMs = tickN * stepMs + (ms > stepMs ? ms : stepMs);

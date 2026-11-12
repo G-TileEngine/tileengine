@@ -1,5 +1,6 @@
 import type { Sq } from "../../types/core-types.ts";
-import type { GestureBoard, GestureMapper, GestureOptions, Intent } from "./types.ts";
+import { isRecord, plainCopy } from "../../core/plain.ts";
+import type { GestureBoard, GestureMapper, GestureOptions, Intent, PointerSample } from "./types.ts";
 
 export function createGestureMapper(opts: GestureOptions, board: GestureBoard): GestureMapper {
   if (!(opts.cellPx > 0)) throw new RangeError("createGestureMapper: cellPx must be > 0");
@@ -18,6 +19,9 @@ export function createGestureMapper(opts: GestureOptions, board: GestureBoard): 
     return id === undefined ? { type: "TargetCell", at: { c: sq.c, r: sq.r } } : { type: "SelectUnit", unitId: id };
   };
   return (sample) => {
+    const copy = plainCopy(sample, 1);
+    if (!isRecord(copy) || typeof copy.x !== "number" || typeof copy.y !== "number" || !Number.isFinite(copy.x) || !Number.isFinite(copy.y)) return [];
+    sample = copy as PointerSample;
     if (!Number.isInteger(sample.ms) || sample.ms < 0 || (prev !== null && sample.ms < prev)) {
       throw new RangeError("createGestureMapper: ms must be an integer >= 0 and must not go back");
     }

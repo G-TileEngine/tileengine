@@ -1,0 +1,17 @@
+ src/core/clock/clock.ts          |   5 +-
+ src/core/log/index.ts            |   2 +-
+ src/core/log/log.ts              |  19 +++--
+ src/core/plain.ts                |  43 +++++++++++
+ src/core/unit/units.ts           |   5 +-
+ src/rules/levels/levels.ts       |  13 ++--
+ src/runtime/input/gestures.ts    |   6 +-
+ src/sim/actions.ts               |  19 +++--
+ src/sim/chaos-gen.ts             |   6 +-
+ src/sim/run.ts                   |  16 +++-
+ src/sim/world.ts                 |   4 +
+ tests/core/clock.test.ts         |   2 +-
+ tests/core/dispose.test.ts       |   2 +-
+ tests/sim/every-door.test.ts     | 153 +++++++++++++++++++++++++++++++++++++++
+ tests/sim/exploit-levels.test.ts |   7 +-
+ tests/sim/levels.test.ts         |   2 +-
+ 16 files changed, 268 insertions(+), 36 deletions(-)
