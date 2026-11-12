@@ -1,0 +1,16 @@
+M	src/btf-adapters/src/sprite-recipe-limits.ts
+M	src/btf-adapters/src/stage-limits.ts
+M	src/core/log/log.ts
+M	src/paint/recipe/index.ts
+M	src/paint/recipe/limits.ts
+M	src/project/read/guard.ts
+M	src/project/read/manifest.ts
+M	src/project/read/map.ts
+M	src/project/read/stage.ts
+M	src/sim/index.ts
+A	src/sim/migrations/save/index.ts
+M	src/sim/run.ts
+M	src/types/core-types.ts
+M	tests/sim/recipe-caps.test.ts
+A	tests/sim/trusted-saves.test.ts
+M	tests/smoke.test.ts

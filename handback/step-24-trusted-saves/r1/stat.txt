@@ -1,0 +1,17 @@
+ src/btf-adapters/src/sprite-recipe-limits.ts |  4 +-
+ src/btf-adapters/src/stage-limits.ts         |  6 +-
+ src/core/log/log.ts                          |  5 +-
+ src/paint/recipe/index.ts                    |  2 +-
+ src/paint/recipe/limits.ts                   |  2 +-
+ src/project/read/guard.ts                    |  3 +
+ src/project/read/manifest.ts                 |  5 +-
+ src/project/read/map.ts                      |  5 +-
+ src/project/read/stage.ts                    |  5 +-
+ src/sim/index.ts                             |  5 +-
+ src/sim/migrations/save/index.ts             | 14 +++++
+ src/sim/run.ts                               | 54 +++++++++++++++-
+ src/types/core-types.ts                      |  5 ++
+ tests/sim/recipe-caps.test.ts                |  2 +-
+ tests/sim/trusted-saves.test.ts              | 93 ++++++++++++++++++++++++++++
+ tests/smoke.test.ts                          |  2 +-
+ 16 files changed, 194 insertions(+), 18 deletions(-)
