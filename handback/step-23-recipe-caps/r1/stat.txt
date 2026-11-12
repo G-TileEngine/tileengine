@@ -1,0 +1,18 @@
+ src/btf-adapters/src/sprite-recipe-limits.ts |  2 +-
+ src/btf-adapters/src/stage-limits.ts         |  2 +-
+ src/core/log/log.ts                          |  2 +-
+ src/paint/recipe/fields.ts                   |  2 +-
+ src/paint/recipe/limits.ts                   | 21 +++++---
+ src/paint/recipe/read.ts                     | 39 ++++++++++-----
+ src/project/read/limits.ts                   |  8 ++--
+ src/project/read/manifest.ts                 |  5 +-
+ src/project/read/map.ts                      |  2 +-
+ src/project/read/stage.ts                    |  7 ++-
+ src/sim/driver-phase.ts                      | 14 +++---
+ src/sim/driver-tick.ts                       |  4 +-
+ src/sim/world.ts                             |  2 +-
+ tests/paint/recipe-read.test.ts              | 10 ++--
+ tests/project/door-guard.test.ts             |  2 +-
+ tests/sim/doc-limits.test.ts                 |  2 +-
+ tests/sim/recipe-caps.test.ts                | 71 ++++++++++++++++++++++++++++
+ 17 files changed, 147 insertions(+), 48 deletions(-)
