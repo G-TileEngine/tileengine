@@ -3,6 +3,9 @@ import { isRecord, plainCopy } from "../../core/plain.ts";
 import type { GestureBoard, GestureMapper, GestureOptions, Intent, PointerSample } from "./types.ts";
 
 export function createGestureMapper(opts: GestureOptions, board: GestureBoard): GestureMapper {
+  const shot = plainCopy(opts, 1);
+  if (isRecord(shot)) opts = shot as GestureOptions;
+  board = { cols: board.cols, rows: board.rows, unitAt: board.unitAt };
   if (!(opts.cellPx > 0)) throw new RangeError("createGestureMapper: cellPx must be > 0");
   if (!(opts.tapMaxPx >= 0)) throw new RangeError("createGestureMapper: tapMaxPx must be >= 0");
   if (!Number.isInteger(opts.holdMs) || opts.holdMs <= 0) throw new RangeError("createGestureMapper: holdMs must be an integer > 0");

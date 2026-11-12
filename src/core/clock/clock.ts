@@ -1,4 +1,5 @@
 import type { Clock, ClockOptions, RenderInfo, SimTimer, TickInfo, Unsubscribe } from "./types.ts";
+import { isRecord, plainCopy } from "../plain.ts";
 
 const DEFAULT_STEP_MS = 10;
 const DEFAULT_MAX_FRAME_MS = 100;
@@ -10,6 +11,8 @@ function intAtLeast1(value: number | undefined, fallback: number): number {
 }
 
 export function createClock(opts?: ClockOptions): Clock {
+  const raw = plainCopy(opts, 1);
+  opts = isRecord(raw) ? raw as ClockOptions : undefined;
   const stepMs = intAtLeast1(opts?.stepMs, DEFAULT_STEP_MS);
   const maxFrameMs = intAtLeast1(opts?.maxFrameMs, DEFAULT_MAX_FRAME_MS);
   const stepQ = stepMs * 4;

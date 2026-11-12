@@ -15,7 +15,7 @@ export type EventRegistry<M extends EventMap<M>> = { readonly mode: string; read
 
 export type BusRecord<M extends EventMap<M> = NoModeEvents> = { readonly seq: number; readonly tick: number; readonly event: BusEvent<M> };
 
-/** Rolling bus history size (step 17): the newest `history` records are kept; 0 keeps none. The match log is never capped. */
+/** Rolling bus history size (step 17): the newest `history` records are kept; 0 keeps none. The match log is capped by MatchLimits (step 21). */
 export type BusLimits = { readonly history: number };
 
 export interface EventBus<M extends EventMap<M> = NoModeEvents> {

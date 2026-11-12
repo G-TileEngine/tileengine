@@ -3,6 +3,7 @@ import type { Clock } from "../core/clock/index.ts";
 import type { Grid } from "../core/grid/index.ts";
 import type { Units, UnitState } from "../core/unit/index.ts";
 import type { BusLimits, EventBus } from "../core/events/index.ts";
+import type { MatchLimits } from "../core/limits.ts";
 import type { Action, CommandLog } from "../core/log/index.ts";
 import type { Rng, RngState } from "../core/rng/index.ts";
 import type { Notice } from "../core/notice.ts";
@@ -22,8 +23,10 @@ export type SimInput = {
   readonly chosen: readonly UnitId[];
   /** The stage reader's caps (step 16), the host's choice; no defaults. */
   readonly stageLimits: StageLimits;
-  /** The bus's rolling history size (step 17); absent = core's `DEFAULT_BUS_LIMITS`. The command log is never capped. */
+  /** The bus's rolling history size (step 17); absent = core's `DEFAULT_BUS_LIMITS`. */
   readonly busLimits?: BusLimits;
+  /** Match caps (step 21). Absent = `DEFAULT_MATCH_LIMITS`. */
+  readonly limits?: MatchLimits;
   /** Levelling with a pick of abilities (step 18): absent = off (no XP, no offers, no draws, snapshots as before). */
   readonly levels?: LevelSetup;
   readonly hostSeed: number;
@@ -40,6 +43,7 @@ export type SimWorld = {
   readonly log: CommandLog;
   readonly rng: Rng;
   readonly notices: Notice[];
+  readonly limits: MatchLimits;
   readonly levels: Levels | null;
   /** Driver state, replaced whole (never written per key): `{ battle }` from step 09b. Not in the log. */
   phases: Readonly<Record<string, Phase>>;

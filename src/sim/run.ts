@@ -1,4 +1,5 @@
 import { createClock } from "../core/clock/index.ts";
+import { PLAIN_DEPTH } from "../core/limits.ts";
 import type { CommandLog } from "../core/log/index.ts";
 import { NOT_PLAIN, isRecord, plainCopy } from "../core/plain.ts";
 import type { SimInput, SimSnapshot, SimWorld } from "./types.ts";
@@ -36,10 +37,11 @@ export function snapshot(world: SimWorld): SimSnapshot {
   };
 }
 export function replay(input: SimInput, log: CommandLog, untilTick: number): SimWorld {
-  const src = plainCopy(input, Number.POSITIVE_INFINITY);
+  const src = plainCopy(input, PLAIN_DEPTH);
   if (src === NOT_PLAIN || !isRecord(src)) throw new Error("replay: input is not plain data");
   const world = createWorld({ ...(src as SimInput), hostSeed: log.header.seed });
   if (world.seed !== log.header.seed) throw new Error(`replay: world seed ${world.seed} is not the log seed ${log.header.seed}`);
+  if (!Number.isInteger(untilTick) || untilTick < 0 || untilTick > world.limits.ticks || log.lastSeq() > world.limits.entries) throw new Error("replay: tick or log over the limits");
   let at = 0;
   for (const entry of log.entries()) {
     if (entry.tick > untilTick) break;

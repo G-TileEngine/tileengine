@@ -1,0 +1,15 @@
+M	src/btf-adapters/src/index.ts
+A	src/btf-adapters/src/match-limits.ts
+M	src/core/clock/clock.ts
+M	src/core/events/types.ts
+A	src/core/limits.ts
+M	src/core/log/log.ts
+M	src/core/plain.ts
+M	src/core/unit/units.ts
+M	src/rules/levels/levels.ts
+M	src/runtime/input/gestures.ts
+M	src/sim/actions.ts
+M	src/sim/run.ts
+M	src/sim/types.ts
+M	src/sim/world.ts
+A	tests/sim/hard-limits.test.ts
