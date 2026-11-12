@@ -1,5 +1,5 @@
 import type { CoreLoadout, CoreProjectManifest, OccupancyPolicy } from "../../types/core-types.ts";
-import { CURRENT_FORMAT_VERSIONS, bad, checkVersion, isInt, isObj, isStr, strs, type ReadResult } from "./guard.ts";
+import { CURRENT_FORMAT_VERSIONS, bad, checkVersion, guarded, isInt, isObj, isStr, strs, type ReadResult } from "./guard.ts";
 import { docLimits, fitted, overCap, tooMany, type DocLimits } from "./limits.ts";
 
 function loadout(v: unknown): CoreLoadout | null {
@@ -16,6 +16,9 @@ function occupancy(v: unknown): OccupancyPolicy | null | undefined {
 export function readManifest(json: unknown, limits?: Partial<DocLimits>): ReadResult<CoreProjectManifest> {
   const lim = docLimits(limits === undefined ? {} : limits);
   if (lim === null) throw new RangeError("readManifest: limits must be whole numbers from 1 to their ceilings");
+  return guarded(() => readManifestDoc(json, lim));
+}
+function readManifestDoc(json: unknown, lim: DocLimits): ReadResult<CoreProjectManifest> {
   const ver = checkVersion(json, "tile-project");
   if (ver !== null) return ver;
   if (!isObj(json) || !isObj(json.project)) return bad("project");

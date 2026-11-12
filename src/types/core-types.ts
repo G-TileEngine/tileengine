@@ -308,6 +308,11 @@ export const UI_EVENT_KEYS = { "ui.click": true } as const satisfies
 // The command-log header {seed, formatVersion, engineVersion, projectHash} is also a runtime shape, owned by the
 // Engine Architect's events/command-log step. It's referenced here only (project-format r13 §6.5), not defined.
 
+/** The project-format §6.9 save `header`, one home for every save kind (CN-009). MAY-MOVE. */
+export type SaveHeader = { readonly projectHash: string; readonly engineVersion: string; readonly projectId: string; readonly savedAt: string };
+/** `match-save` v1 (project-format §6.9.1, CN-009): the log is the truth, the snapshot a check value. MAY-MOVE. */
+export type MatchSave = { readonly kind: "match-save"; readonly formatVersion: 1; readonly header: SaveHeader; readonly log: string; readonly snapshot: unknown };
+
 // ---------------------------------------------------------------- GAPs
 // None. GAPs 1–6 resolved in project-format r13 (facing, seed, ResolvedPlacement, sides, wrapEdges ignored in v1,
 // footprint 1×1 only); GAP 7 closed in place (r13, 22:0x: water/lava/wall-block CONFIRMED).

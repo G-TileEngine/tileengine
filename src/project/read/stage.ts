@@ -1,5 +1,5 @@
 import type { CoreEnemyPool, CoreLoadout, CoreStage, Facing, SpawnSq } from "../../types/core-types.ts";
-import { CURRENT_FORMAT_VERSIONS, bad, checkVersion, isInt, isObj, isStr, strs, type ReadFail, type ReadResult } from "./guard.ts";
+import { CURRENT_FORMAT_VERSIONS, bad, checkVersion, guarded, isInt, isObj, isStr, strs, type ReadFail, type ReadResult } from "./guard.ts";
 import { UINT32_MAX, docLimits, fitted, overCap, tooMany, type DocLimits } from "./limits.ts";
 
 function face(v: unknown): { readonly ok: true; readonly facing?: Facing | null } | { readonly ok: false } {
@@ -82,6 +82,9 @@ export function stageSeed(stage: CoreStage): number | null {
 }
 export function readStage(json: unknown, limits: StageLimits): ReadResult<CoreStage> {
   const lim = take(limits);
+  return guarded(() => readStageDoc(json, lim));
+}
+function readStageDoc(json: unknown, lim: ReturnType<typeof take>): ReadResult<CoreStage> {
   const ver = checkVersion(json, "stage");
   if (ver !== null) return ver;
   if (!isObj(json) || !isStr(json.id)) return bad("id");

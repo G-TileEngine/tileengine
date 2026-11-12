@@ -22,6 +22,9 @@ export function strs(v: unknown): string[] | null {
   return out;
 }
 export const bad = (key: string): ReadFail => ({ ok: false, needsMigration: false, error: `bad field ${key}` });
+export function guarded<T>(read: () => ReadResult<T>): ReadResult<T> {
+  try { return read(); } catch { return { ok: false, needsMigration: false, error: "unreadable document" }; }
+}
 
 /** null = the version guard passes. */
 export function checkVersion(json: unknown, kind: CoreDocKind): ReadFail | null {

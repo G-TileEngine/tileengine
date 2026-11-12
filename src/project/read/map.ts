@@ -1,5 +1,5 @@
 import type { CoreEdge, CoreMap, CoreMapObject } from "../../types/core-types.ts";
-import { CURRENT_FORMAT_VERSIONS, bad, checkVersion, isInt, isObj, isStr, type ReadResult } from "./guard.ts";
+import { CURRENT_FORMAT_VERSIONS, bad, checkVersion, guarded, isInt, isObj, isStr, type ReadResult } from "./guard.ts";
 import { docLimits, fitted, overCap, tooMany, type DocLimits } from "./limits.ts";
 
 function sideOf(v: unknown): CoreEdge["side"] | null {
@@ -28,6 +28,9 @@ function objectOf(v: unknown, max: number): CoreMapObject | null {
 export function readMap(json: unknown, limits?: Partial<DocLimits>): ReadResult<CoreMap> {
   const lim = docLimits(limits === undefined ? {} : limits);
   if (lim === null) throw new RangeError("readMap: limits must be whole numbers from 1 to their ceilings");
+  return guarded(() => readMapDoc(json, lim));
+}
+function readMapDoc(json: unknown, lim: DocLimits): ReadResult<CoreMap> {
   const ver = checkVersion(json, "map");
   if (ver !== null) return ver;
   if (!isObj(json) || !isStr(json.id)) return bad("id");
