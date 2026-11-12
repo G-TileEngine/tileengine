@@ -1796,7 +1796,7 @@
     root.innerHTML = state.units
       .map(
         (u) =>
-          `<button type="button" class="beh-row" data-dup-unit="${u.id}" aria-label="Copy onto ${escapeHtml(u.name)}">
+          `<button type="button" class="beh-row" data-dup-unit="${escapeHtml(u.id)}" aria-label="Copy onto ${escapeHtml(u.name)}">
             <span class="name">${escapeHtml(u.name)}</span>
             <span class="sub">${(u.setups || []).length} behaviour${(u.setups || []).length === 1 ? "" : "s"}</span>
           </button>`
@@ -1988,7 +1988,7 @@
     if (!root) return;
     root.innerHTML = state.units
       .map(
-        (u) => `<button type="button" class="beh-row" data-sel-unit="${u.id}" aria-label="${escapeHtml(u.name)}">
+        (u) => `<button type="button" class="beh-row" data-sel-unit="${escapeHtml(u.id)}" aria-label="${escapeHtml(u.name)}">
           <span class="name">${escapeHtml(u.name)}</span>
           <span class="sub">(${u.x},${u.y}) · HP ${u.hp} · ${(u.setups || []).length} behaviours</span>
         </button>`
@@ -4864,7 +4864,7 @@
     root.innerHTML = units
       .map((u) => {
         const on = selected.has(u.id);
-        return `<button type="button" class="loadout-card" data-loadout="${u.id}" aria-pressed="${on}" aria-label="${escapeHtml(u.name)}">
+        return `<button type="button" class="loadout-card" data-loadout="${escapeHtml(u.id)}" aria-pressed="${on}" aria-label="${escapeHtml(u.name)}">
           <span class="slot-mark" aria-hidden="true"></span>
           <span>
             <strong>${escapeHtml(u.name)}</strong>

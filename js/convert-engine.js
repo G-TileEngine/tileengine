@@ -42,13 +42,6 @@ const PALETTES = {
 // PICO-8 "one step darker" table (the common fade / pal() shading convention): index → darker index
 const PICO_DARKER = [0, 0, 1, 1, 2, 1, 5, 6, 2, 4, 9, 3, 13, 5, 8, 4];
 
-/* ---------- live r66 front end (key, crop, placement) ---------- */
-function liftR66(source) {
-  const a = source.indexOf("/* ===== colour helpers"), b = source.indexOf("  function downscale(");
-  const body = source.slice(a, b) + "\nreturn { detectBackground, keyBackground, subjectBox, placement, pinkInside, toHsl };";
-  return new Function("IC_DEFAULTS", "COVERAGE", "document", body)({ tolerance: 40 }, 0.4, null);
-}
-
 /* ---------- small utils ---------- */
 function rng(seed) { let s = seed >>> 0 || 1; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 const mean3 = (list) => { const m = [0, 0, 0]; for (const p of list) { m[0] += p[0]; m[1] += p[1]; m[2] += p[2]; } const n = list.length || 1; return [m[0] / n, m[1] / n, m[2] / n]; };
@@ -188,7 +181,7 @@ function downscale(P, N, method, opts = {}) {
     if (edge && feat[c] < 0) feat[c] = 0; }
   return { N, solid, lab, feat, cov, pl };
 }
-let require_placement = null; // set by init(): the live r66 placement()
+let require_placement = null; // set by initWith(): the live r66 placement()
 
 const skinLabV1 = (p) => p[0] > 0.6 && p[0] < 0.93 && p[1] > 0.012 && p[1] < 0.1 && p[2] > 0.02 && p[2] < 0.13 && p[2] > p[1] * 0.6; // 66b rule (cel/hd2d/vector/PICO-8/snes baseline)
 // skin: light, warm, moderate chroma, hue 30–72° in OKLab (gold trim sits at ~85° and must not count as skin)
@@ -745,8 +738,8 @@ function capColours(spr, max = 16) {
 }
 function countColours(spr) { return new Set(spr.px.filter(Boolean).map((c) => c.join())).size; }
 let R66fns = null;
-const API = { init(r66src) { const R = liftR66(r66src); R66fns = R; require_placement = (P, N) => R.placement(P.box, N, null); return R; },
-  // r67 browser: the live converter hands over its own r66 functions (no source parsing)
+const API = {
+  // the converter hands over its own r66 functions (no source parsing, no eval)
   initWith(R) { R66fns = R; require_placement = (P, N) => R.placement(P.box, N, null); return API; },
   prepare, prepareMasked, renderPipeline, renderLook, hybridLook, analyse, downscale, COMBO_A: COMBO_A_OPTS,
   rawCells: (P, N, m, o) => { const c = downscale(P, N, m, o || {}); return { N, px: Array.from({ length: N * N }, (_, i) => (c.solid[i] ? toRgb([c.lab[i * 3], c.lab[i * 3 + 1], c.lab[i * 3 + 2]]) : null)) }; },
