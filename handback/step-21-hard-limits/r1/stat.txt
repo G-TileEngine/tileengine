@@ -1,0 +1,16 @@
+ src/btf-adapters/src/index.ts        |   1 +
+ src/btf-adapters/src/match-limits.ts |   4 ++
+ src/core/clock/clock.ts              |   3 +
+ src/core/events/types.ts             |   2 +-
+ src/core/limits.ts                   |  14 +++++
+ src/core/log/log.ts                  |  26 ++++++---
+ src/core/plain.ts                    |   3 +-
+ src/core/unit/units.ts               |   2 +-
+ src/rules/levels/levels.ts           |   4 +-
+ src/runtime/input/gestures.ts        |   3 +
+ src/sim/actions.ts                   |  15 +++--
+ src/sim/run.ts                       |   4 +-
+ src/sim/types.ts                     |   6 +-
+ src/sim/world.ts                     |  21 ++++++-
+ tests/sim/hard-limits.test.ts        | 107 +++++++++++++++++++++++++++++++++++
+ 15 files changed, 190 insertions(+), 25 deletions(-)
