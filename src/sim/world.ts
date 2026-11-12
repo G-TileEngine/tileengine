@@ -29,7 +29,7 @@ export function createWorld(input: SimInput): SimWorld {
   const src = plainCopy(input, PLAIN_DEPTH);
   if (src === NOT_PLAIN || !isRecord(src)) throw new Error("createWorld: input is not plain data");
   input = src as SimInput;
-  const limits = input.limits ?? DEFAULT_MATCH_LIMITS;
+  const limits = input.limits === undefined ? DEFAULT_MATCH_LIMITS : input.limits;
   if (!withinCeilings(limits)) throw new RangeError("createWorld: limits must be whole numbers from 1 to their ceilings");
   const manifest = readManifest(input.manifest, input.stageLimits);
   const map = readMap(input.map, input.stageLimits);

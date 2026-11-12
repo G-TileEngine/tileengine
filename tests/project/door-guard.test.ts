@@ -23,7 +23,7 @@ test("B3: picks and a wave's summed counts are capped by the caller; at the cap 
   assert.equal(stage(weighted(4)) === "" && stage(weighted(5)) === "bad field enemyPool" && stage(weighted(1e9)) === "bad field enemyPool", true);
   assert.equal(stage(wave([2, 3])) === "" && stage(wave([3, 3])) === "bad field enemyPool" && stage(wave([1e9])) === "bad field enemyPool" && stage(wave([5], 1)) === "", true);
   for (const limits of [{ picks: -1, waveUnits: 0 }, { picks: 1.5, waveUnits: 1 }, { picks: 1, waveUnits: Number.NaN }]) assert.throws(() => readStage(load("stage-fixed"), limits), (err: unknown) => err instanceof RangeError && err.message === "readStage: limits must be integers >= 0");
-  assert.deepEqual(BTF_STAGE_LIMITS, { picks: 144, waveUnits: 144, side: 64, objects: 1024, edges: 16384, footprint: 8, spots: 144, waves: 256, turn0: 144, text: 128, notices: 256 });
+  assert.deepEqual(BTF_STAGE_LIMITS, { picks: 144, waveUnits: 144, side: 64, objects: 1024, edges: 16384, footprint: 8, spots: 144, waves: 256, turn0: 144, text: 128, notices: 256, stages: 1024 });
   assert.equal(readStage(load("stage-fixed"), BTF_STAGE_LIMITS).ok && readStage(load("stage-weighted"), BTF_STAGE_LIMITS).ok, true);
 });
 test("B4: a weighted weight must be finite; 0, negative and 2.5 still read", () => {

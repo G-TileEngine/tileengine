@@ -79,7 +79,7 @@ const sideMirror = v.sideMirror === null || v.sideMirror === "side" ? v.sideMirr
 if (!isObj(v)) return (bad(ns, key), {}); const out: Record<string, readonly string[] | string> = {};
 for (const k of Object.keys(v)) { const ik = key + "." + k; if (!ID.test(k)) { bad(ns, ik); continue; } out[k] = Array.isArray(v[k]) ? ramp(v[k], ik, ns) : ref(v[k], ik, ns); } return out; }
 function dim(v: unknown, key: string, ns: Ns, side: number): number { if (typeof v !== "number" || !Number.isFinite(v)) return (bad(ns, key), Math.min(32, side)); let n = v;
-if (!Number.isInteger(v)) { ns.push({ code: "floatParam", message: "floatParam " + key }); n = Math.floor(v); } if (n < 1) { bad(ns, key); n = 32; } if (n > side) return (over(ns, key), side); return n; }
+if (!Number.isInteger(v)) { ns.push({ code: "floatParam", message: "floatParam " + key }); n = Math.floor(v); } if (n < 1) return (bad(ns, key), Math.min(32, side)); if (n > side) return (over(ns, key), side); return n; }
 const list = <T>(v: unknown, key: string, ns: Ns, cap: number | null, one: (item: unknown, key: string) => T): T[] => { const a = take(v, key, ns, cap, 0); return a === null ? [] : a.map((item, i) => one(item, key + "[" + String(i) + "]"));
 }; export function readDoc(src: Rec, fv: number, lim: SpriteRecipeLimits, ns: Ns): SpriteRecipe { const ids = new Set<string>();
 const doc: SpriteRecipe = { kind: "sprite-recipe", formatVersion: fv, id: str(src.id, "id", ns, "", ULID),

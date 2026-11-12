@@ -1,6 +1,6 @@
 import type { CoreLoadout, CoreProjectManifest, OccupancyPolicy } from "../../types/core-types.ts";
 import { CURRENT_FORMAT_VERSIONS, bad, checkVersion, isInt, isObj, isStr, strs, type ReadResult } from "./guard.ts";
-import { docLimits, fitted, type DocLimits } from "./limits.ts";
+import { docLimits, fitted, overCap, tooMany, type DocLimits } from "./limits.ts";
 
 function loadout(v: unknown): CoreLoadout | null {
   if (!isObj(v)) return null;
@@ -14,12 +14,13 @@ function occupancy(v: unknown): OccupancyPolicy | null | undefined {
   return null;
 }
 export function readManifest(json: unknown, limits?: Partial<DocLimits>): ReadResult<CoreProjectManifest> {
-  const lim = docLimits(limits ?? {});
+  const lim = docLimits(limits === undefined ? {} : limits);
   if (lim === null) throw new RangeError("readManifest: limits must be whole numbers from 1 to their ceilings");
   const ver = checkVersion(json, "tile-project");
   if (ver !== null) return ver;
   if (!isObj(json) || !isObj(json.project)) return bad("project");
   const p = json.project;
+  if (tooMany(p.stages, lim.stages)) return overCap("stages");
   const got = loadout(p.loadout); const stages = strs(p.stages); const rules = strs(p.rules);
   const settings = p.settings; const occ = isObj(settings) ? occupancy(settings.occupancy) : null;
   if (!isStr(p.id) || !isInt(p.rev, 0) || !isInt(p.catalogueRev, 0) || !isObj(settings) || typeof settings.wrapEdges !== "boolean" || occ === null || stages === null || rules === null || got === null) return bad("project");

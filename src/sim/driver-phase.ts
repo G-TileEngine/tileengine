@@ -25,7 +25,7 @@ export function runMatch(world: SimWorld, opts: MatchOptions): MatchResult {
   mark({ type: "DEPLOY_DONE" });
   let outcome: MatchResult["outcome"] | null = null;
   let rounds = 0;
-  while (outcome === null && rounds < opts.maxRounds && world.clock.now() < opts.maxSimMs) {
+  while (outcome === null && rounds < opts.maxRounds && world.clock.now() < opts.maxSimMs && world.clock.tick() < world.limits.ticks) {
     rounds += 1;
     mark({ type: "ROUND_BEGIN" });
     for (const [i, side] of opts.sides.entries()) {
@@ -33,7 +33,7 @@ export function runMatch(world: SimWorld, opts: MatchOptions): MatchResult {
       const got = opts.victory(world, { round: rounds, side });
       if (got !== null) { outcome = got; mark({ type: "CHECK_END", outcome: got }); break; }
       mark({ type: "CHECK_NONE", next: i + 1 < opts.sides.length ? "sideStart" : "roundEnd" });
-      if (world.clock.now() >= opts.maxSimMs) break;
+      if (world.clock.now() >= opts.maxSimMs || world.clock.tick() >= world.limits.ticks) break;
     }
     if (outcome === null && world.phases.battle === "roundEnd") mark({ type: "ROUND_END" });
   }
@@ -52,13 +52,13 @@ function turn(world: SimWorld, opts: MatchOptions, side: MatchOptions["sides"][n
   let expired = false;
   const fuse = startFuse(world.clock, opts.fuse, () => { expired = true; });
   const seat = opts.seats?.find((s) => s.player.side === side);
-  while (!expired && world.clock.now() < opts.maxSimMs) {
+  while (!expired && world.clock.now() < opts.maxSimMs && world.clock.tick() < world.limits.ticks) {
     const units = world.units.all().filter((u) => u.alive && u.side === side).map((u) => u.id);
     if (seat !== undefined) {
       const inputs = seat.intents(world, side, { kind: "side", units });
       if (inputs.length === 0) { replayTicks(world, 1); continue; }
       for (const input of inputs) {
-        if (expired || world.clock.now() >= opts.maxSimMs) break;
+        if (expired || world.clock.now() >= opts.maxSimMs || world.clock.tick() >= world.limits.ticks) break;
         const shaped = (input !== null && typeof input === "object" ? input : {}) as { intent: never; aim?: never };
         const step = seat.player.feed(shaped.intent, shaped.aim);
         if (step.reject === null && step.event !== null) events.push(step.event);
@@ -69,7 +69,7 @@ function turn(world: SimWorld, opts: MatchOptions, side: MatchOptions["sides"][n
       const actions = (opts.ai ?? noAi)(world, side, { kind: "side", units });
       if (actions.length === 0) { replayTicks(world, 1); continue; }
       for (const action of actions) {
-        if (expired || world.clock.now() >= opts.maxSimMs) break;
+        if (expired || world.clock.now() >= opts.maxSimMs || world.clock.tick() >= world.limits.ticks) break;
         stepAction(world, action, () => expired, mark);
       }
     }
@@ -80,8 +80,8 @@ function turn(world: SimWorld, opts: MatchOptions, side: MatchOptions["sides"][n
   mark({ type: "SIDE_END" });
 }
 function land(world: SimWorld, action: Action, expired: () => boolean, mark: (e: Event) => void): void {
-  const ms = action.durationMs === null ? 0 : Math.max(action.durationMs, world.clock.stepMs);
-  replayTicks(world, Math.ceil(ms / world.clock.stepMs));
+  const step = world.clock.stepMs, ms = action.durationMs === null ? 0 : Math.max(action.durationMs, step);
+  replayTicks(world, Math.min(Math.ceil(ms / step), Math.max(0, world.limits.ticks - world.clock.tick())));
   mark({ type: "MOVE_DONE" });
   if (!expired()) { mark({ type: "WAIT" }); mark({ type: "UNIT_DONE", next: "idle" }); }
 }

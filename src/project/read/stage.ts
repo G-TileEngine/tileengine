@@ -72,7 +72,10 @@ function countOf(json: Record<string, unknown>, lim: DocLimits): ReadFail | null
   if (tooMany(json.playerSpawns, lim.spots)) return overCap("playerSpawns");
   const pool = json.enemyPool; if (!isObj(pool)) return null; const list = pool.mode === "fixed" ? pool.entries : pool.spawns;
   if ((pool.mode === "fixed" || pool.mode === "weighted" || pool.mode === "waves") && tooMany(list, lim.spots)) return overCap("enemyPool");
-  return pool.mode === "waves" && tooMany(pool.waves, lim.waves) ? overCap("enemyPool") : null;
+  if (pool.mode === "weighted" && tooMany(pool.entries, lim.spots)) return overCap("enemyPool");
+  if (pool.mode !== "waves") return null;
+  if (tooMany(pool.waves, lim.waves) || (Array.isArray(pool.waves) && pool.waves.some((w) => isObj(w) && tooMany(w.entries, lim.spots)))) return overCap("enemyPool");
+  return null;
 }
 export function stageSeed(stage: CoreStage): number | null {
   return typeof stage.seed === "number" ? stage.seed : null;
@@ -88,7 +91,7 @@ export function readStage(json: unknown, limits: StageLimits): ReadResult<CoreSt
   const playerSpawns = spawns(json.playerSpawns); if (playerSpawns === null) return bad("playerSpawns");
   const neutral = neutrals(json.neutrals); if (neutral === null) return bad("neutrals");
   const rawSeed = json.seed;
-  const seed = rawSeed === undefined ? undefined : rawSeed === null ? null : typeof rawSeed === "number" && Number.isInteger(rawSeed) && rawSeed >= 0 && rawSeed <= UINT32_MAX ? rawSeed : undefined;
+  const seed = rawSeed === undefined ? undefined : rawSeed === null ? null : typeof rawSeed === "number" && Number.isInteger(rawSeed) && rawSeed >= 0 && rawSeed <= UINT32_MAX ? (rawSeed === 0 ? 0 : rawSeed) : undefined;
   if (rawSeed !== undefined && seed === undefined) return bad("seed");
   const sides = json.sides === undefined ? undefined : sidesOf(json.sides); if (sides === null) return bad("sides");
   const enemyPool = pool(json.enemyPool); if (enemyPool === null || capped(enemyPool, lim.picks, lim.waveUnits, lim.doc.turn0)) return bad("enemyPool");
