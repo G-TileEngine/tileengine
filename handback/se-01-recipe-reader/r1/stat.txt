@@ -1,0 +1,13 @@
+ .dependency-cruiser.cjs                      |   2 +
+ scripts/check-law.sh                         |   5 ++
+ src/btf-adapters/src/index.ts                |   1 +
+ src/btf-adapters/src/sprite-recipe-limits.ts |   4 ++
+ src/paint/recipe/fields.ts                   | 103 +++++++++++++++++++++++++++
+ src/paint/recipe/index.ts                    |   3 +
+ src/paint/recipe/limits.ts                   |  10 +++
+ src/paint/recipe/read.ts                     |  47 ++++++++++++
+ src/paint/recipe/types.ts                    |  31 ++++++++
+ tests/paint/recipe-fields.test.ts            |  18 +++++
+ tests/paint/recipe-read.test.ts              |  68 ++++++++++++++++++
+ tests/paint/sample.ts                        |  42 +++++++++++
+ 12 files changed, 334 insertions(+)
