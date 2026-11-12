@@ -7,13 +7,23 @@ export const LEVEL_EVENTS: EventRegistry<NoModeEvents> = { mode: "levels", types
 const ints = (xs: readonly number[], min: number): boolean => xs.every((n) => Number.isInteger(n) && n >= min);
 function bad(rules: LevelRules, pools: AbilityPools): boolean {
   const top = rules.thresholds.length;
-  return (rules.bar !== "side" && rules.bar !== "unit") || top < 1 || !ints(rules.thresholds, 1) || !rules.offerLevels.every((n) => Number.isInteger(n) && n >= 1 && n <= top) || !Number.isInteger(rules.offerSize) || rules.offerSize < 1 || !Number.isInteger(rules.xp.move) || rules.xp.move < 0 || Object.values(pools).some((pool) => !Array.isArray(pool) || pool.some((a) => typeof a !== "string"));
+  return (rules.bar !== "side" && rules.bar !== "unit") || top < 1 || !ints(rules.thresholds, 1) || !rules.offerLevels.every((n) => Number.isInteger(n) && n >= 1 && n <= top) || !Number.isInteger(rules.offerSize) || rules.offerSize < 1 || !Number.isInteger(rules.xp.move) || rules.xp.move < 0 || Object.values(pools).some((pool) => !Array.isArray(pool) || pool.some((a) => typeof a !== "string" || a === ""));
 }
 type Live = { id: string; pool: string; xp: number; level: number; banked: number; offer: string[] | null; abilities: string[] };
+function taken(setup: LevelSetup): { rules: LevelRules; pools: AbilityPools } {
+  if (typeof setup !== "object" || setup === null) throw new RangeError("createLevels: bad rules or pools");
+  const rulesIn = setup.rules, poolsIn = setup.pools;
+  if (typeof rulesIn !== "object" || rulesIn === null || typeof poolsIn !== "object" || poolsIn === null || Array.isArray(poolsIn)) throw new RangeError("createLevels: bad rules or pools");
+  const bar = rulesIn.bar, thresholds = rulesIn.thresholds, offerLevels = rulesIn.offerLevels, offerSize = rulesIn.offerSize, xpIn = rulesIn.xp;
+  if (!Array.isArray(thresholds) || !Array.isArray(offerLevels) || typeof xpIn !== "object" || xpIn === null) throw new RangeError("createLevels: bad rules or pools");
+  const pools: Record<string, readonly string[]> = {}, move = xpIn.move;
+  for (const key of Object.keys(poolsIn)) { const pool = poolsIn[key]; if (!Array.isArray(pool)) throw new RangeError("createLevels: bad rules or pools"); pools[key] = Object.freeze(pool.slice()); }
+  return { rules: Object.freeze({ bar, thresholds: Object.freeze(thresholds.slice()), offerLevels: Object.freeze(offerLevels.slice()), offerSize, xp: Object.freeze({ move }) }), pools: Object.freeze(pools) };
+}
 
 export function createLevels(setup: LevelSetup, rng: Rng, emit: (event: BusEvent<NoModeEvents>) => void): Levels {
-  if (bad(setup.rules, setup.pools)) throw new RangeError("createLevels: bad rules or pools");
-  const { rules, pools } = setup, bars = new Map<string, Live>();
+  const { rules, pools } = taken(setup); if (bad(rules, pools)) throw new RangeError("createLevels: bad rules or pools");
+  const bars = new Map<string, Live>();
   const poolOf = (key: string): readonly string[] => (Object.hasOwn(pools, key) ? pools[key] : undefined) ?? [];
   const draw = (have: readonly string[], key: string): string[] => {
     const cands: string[] = [];

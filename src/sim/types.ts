@@ -166,8 +166,8 @@ export type ChaosGen = { readonly stream: string; readonly mix: ChaosMix; readon
 export type ChaosGenOptions = Omit<ChaosOptions, "intents"> & { readonly gen: ChaosGen; readonly legal: IntentHook };
 export type ChaosShrink = { readonly record: ChaosRecord; readonly tries: number };
 
-/** Exploit hunter (step 15): hostile wire text through the one door; tampered documents through the readers. Report-only. */
-export type ExploitKind = "legal" | "foreign" | "ghost" | "smuggle" | "cell" | "phase" | "replay" | "junk" | "shape";
+/** Hostile wires through the one door (step 15), plus `pick` last (step 19). Report-only. */
+export type ExploitKind = "legal" | "foreign" | "ghost" | "smuggle" | "cell" | "phase" | "replay" | "junk" | "shape" | "pick";
 export type ExploitGen = { readonly stream: string; readonly mix: Readonly<Record<ExploitKind, number>> };
 export type ExploitOptions = Omit<ChaosOptions, "intents"> & { readonly gen: ExploitGen; readonly legal: IntentHook };
 export type ExploitWire = { readonly call: number; readonly side: SideId; readonly wire: readonly string[] };

@@ -1,0 +1,10 @@
+M	src/rules/levels/levels.ts
+M	src/sim/actions.ts
+M	src/sim/chaos.ts
+M	src/sim/exploit.ts
+M	src/sim/types.ts
+M	tests/rules/levels.test.ts
+M	tests/sim/bot.test.ts
+A	tests/sim/exploit-levels.test.ts
+M	tests/sim/exploit.test.ts
+M	tests/sim/levels.test.ts

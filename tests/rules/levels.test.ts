@@ -70,6 +70,19 @@ test("createLevels refuses bad rules (step 18): never clamped", () => {
   const boom = (rules: LevelRules, pools: Record<string, readonly string[]> = {}): void => { assert.throws(() => createLevels({ rules, pools }, createRng(1), () => {}), (e: unknown) => e instanceof RangeError && (e as RangeError).message === text); };
   boom({ ...base, bar: "team" as "unit" }); boom({ ...base, thresholds: [] }); boom({ ...base, thresholds: [17, 0] }); boom({ ...base, thresholds: [1.5] });
   boom({ ...base, offerLevels: [10] }); boom({ ...base, offerLevels: [0] }); boom({ ...base, offerSize: 0 }); boom({ ...base, xp: { move: -1 } });
+  boom(base, { knight: ["guard", ""] }); boom(base, { knight: [""] });
   assert.throws(() => createLevels({ rules: base, pools: { knight: "guard" as never } }, createRng(1), () => {}), RangeError);
   assert.throws(() => make(1, base, {}).levels.gain("a", "a", 1.5), (e: unknown) => e instanceof RangeError && (e as RangeError).message === "levels: amount must be an integer >= 0");
+});
+test("createLevels keeps its own frozen copy (step 19) so a later edit cannot change an offer", () => {
+  const rules: LevelRules = { bar: "unit", thresholds: [1, 2], offerLevels: [1], offerSize: 3, xp: { move: 1 } };
+  const pools = { knight: ["guard", "charge"] }, { levels } = make(1, rules, pools), given = JSON.parse(JSON.stringify(rules)) as LevelRules;
+  (pools.knight as string[]).push(""); (rules.offerLevels as number[]).splice(0); (rules.thresholds as number[])[0] = 9; (rules.xp as { move: number }).move = 0;
+  assert.deepEqual(levels.rules, given); assert.throws(() => { (levels.rules as { offerSize: number }).offerSize = 4; }, TypeError);
+  levels.gain("knight#1", "knight", 1); assert.deepEqual(levels.offer("knight#1"), ["guard", "charge"]);
+  let n = 0; const live = { get knight(): readonly string[] { n += 1; return n === 1 ? ["guard", "charge"] : [""]; } };
+  const once = createLevels({ rules: given, pools: live }, createRng(streamSeed(1, "levels")), () => {});
+  once.gain("k", "knight", 1); assert.equal(n === 1 && JSON.stringify(once.offer("k")) === JSON.stringify(["guard", "charge"]), true);
+  const text = "createLevels: bad rules or pools", shapes = [null, {}, { rules: null, pools: {} }, { rules: given, pools: null }, { rules: given, pools: [] }, { rules: { ...given, thresholds: undefined }, pools: {} }, { rules: { ...given, offerLevels: 1 }, pools: {} }, { rules: { ...given, xp: null }, pools: {} }];
+  for (const setup of shapes) assert.throws(() => createLevels(setup as never, createRng(1), () => {}), (e: unknown) => e instanceof RangeError && (e as RangeError).message === text);
 });

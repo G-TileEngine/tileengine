@@ -34,10 +34,11 @@ function stillOf(view: ChaosView): ChaosFinding | null {
   const { step, prev, before, after } = view;
   const gap = pair(prev, before);
   if (gap !== null) return gap;
+  const levels = same(before.levels, after.levels) ? null : { key: "levels" as const, expected: before.levels, actual: after.levels };
   if (step.reject !== null) {
-    return pair(before, after) ?? (before.logSeq !== after.logSeq ? { key: "logSeq", expected: before.logSeq, actual: after.logSeq } : same(before.phases, after.phases) ? null : { key: "phases", expected: before.phases, actual: after.phases });
+    return pair(before, after) ?? (before.logSeq !== after.logSeq ? { key: "logSeq", expected: before.logSeq, actual: after.logSeq } : same(before.phases, after.phases) ? levels : { key: "phases", expected: before.phases, actual: after.phases });
   }
-  if (step.action === null) return pair(before, after);
+  if (step.action === null) return pair(before, after) ?? levels;
   const actor = step.action.actor, rest = (snap: SimSnapshot): SimSnapshot["units"] => snap.units.filter((u) => u.id !== actor);
   return same(rest(before), rest(after)) ? null : { key: "units", expected: before.units, actual: after.units };
 }
@@ -61,6 +62,8 @@ export const CHAOS_CHECKS: readonly ChaosCheck[] = [
   { id: "(a)6", run: phaseOf },
   { id: "(a)2", run: gridOf },
   { id: "(a)1", run: occOf }];
+for (const check of CHAOS_CHECKS) Object.freeze(check);
+Object.freeze(CHAOS_CHECKS);
 function play(input: SimInput, opts: ChaosOptions, recorded: readonly ChaosMove[] | null, expectSeed: number | null): ChaosResult {
   const world = createWorld(input);
   if (expectSeed !== null && world.seed !== expectSeed) throw new Error(`chaos: world seed ${world.seed} is not the record seed ${expectSeed}`);

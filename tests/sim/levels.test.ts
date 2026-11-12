@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { test } from "node:test";
 import { BTF_FX_PRESET, BTF_LEVEL_RULES } from "../../src/btf-adapters/src/index.ts";
 import type { LevelRules } from "../../src/rules/levels/index.ts";
-import { CHAOS_CHECKS, createPlayer, createWorld, disposeWorld, replay, replayChaos, restore, runChaos, runMatch, snapshot, type IntentHook } from "../../src/sim/index.ts";
+import { CHAOS_CHECKS, advance, createPlayer, createWorld, disposeWorld, replay, replayChaos, restore, runChaos, runMatch, snapshot, submit, type IntentHook } from "../../src/sim/index.ts";
 import { bot, reachFarRow, seedless } from "./ai.ts";
 import { input } from "./input.ts";
 import { counter, seatAll } from "./seats.ts";
@@ -79,6 +79,9 @@ test("a pick through the door (step 18): an unlock action, and a replay with no 
   assert.deepEqual(step.action, { id: "m1", kind: "unlock", actor: "knight#1", target: null, durationMs: null, turns: null, effects: [offer[1]] });
   assert.deepEqual(world.levels?.state().bars[0]?.abilities, [offer[1]]);
   assert.equal(world.log.lastSeq() === 1 && world.bus.history().filter((rec) => rec.event.type === "level.unlocked").length === 1, true);
+  assert.deepEqual(snapshot(world).levels, world.levels?.state());
+  assert.deepEqual(snapshot(world).levels?.bars, [{ id: "knight#1", xp: 0, level: 1, banked: 0, offer: null, abilities: [offer[1]] }]);
+  const shot = snapshot(world); assert.deepEqual(JSON.parse(JSON.stringify(shot)).levels, shot.levels);
   assert.equal(replay(src, world.log, 0).notices.at(-1)?.code, "unlockFailed");
 });
 test("the side bar (step 18): one bar for the side, a foe cannot pick it, unitId is not read", () => {
@@ -101,4 +104,32 @@ test("a disposed levelling world refuses the pick and keeps the offer", () => {
   disposeWorld(world); const step = player.feed({ type: "ChooseAbility", unitId: "knight#1", index: 0 });
   assert.equal(step.reject === "disposed" && step.action === null && world.log.lastSeq() === 0, true);
   assert.deepEqual(world.levels?.offer("knight#1"), offer);
+});
+test("a malformed unlock never throws (step 19) and is not logged", () => {
+  const world = createWorld({ ...input("stage-fixed"), levels: { rules: UNIT, pools: POOLS } });
+  world.levels?.gain("knight#1", "knight", 17); const first = world.levels?.offer("knight#1")?.[0] ?? "", before = JSON.stringify(world.levels?.state());
+  const bad = (effects: unknown, bare = false): void => { const n = world.notices.length; const action = bare ? { id: "u", kind: "unlock", actor: "knight#1", target: null, durationMs: null, turns: null } : { id: "u", kind: "unlock", actor: "knight#1", target: null, durationMs: null, turns: null, effects }; assert.doesNotThrow(() => submit(world, action as never)); assert.equal(world.notices.length === n + 1 && world.notices.at(-1)?.code === "unlockFailed" && world.log.lastSeq() === 0 && JSON.stringify(world.levels?.state()) === before, true); };
+  bad(undefined, true); for (const effects of [undefined, null, "guard", {}, [7], [first, null]]) bad(effects);
+  const timed = { id: "t", kind: "unlock" as const, actor: "knight#1", target: null, durationMs: 100, turns: null, effects: [first] };
+  submit(world, timed); assert.equal(world.log.lastSeq(), 1); timed.effects = null as never; const n = world.notices.length;
+  assert.doesNotThrow(() => advance(world, 200)); assert.equal(world.notices.length === n + 1 && world.notices.at(-1)?.code === "unlockFailed" && JSON.stringify(world.levels?.state()) === before, true);
+});
+test("the empty id never unlocks (step 19) even when choose would accept it", () => {
+  const pools = { knight: ["guard", "charge"] }, world = createWorld({ ...input("stage-fixed"), levels: { rules: UNIT, pools } });
+  pools.knight.push(""); world.levels?.gain("knight#1", "knight", 17); assert.deepEqual(world.levels?.offer("knight#1"), ["guard", "charge"]);
+  const calls: string[] = [], loose = createWorld({ ...input("stage-fixed"), levels: { rules: UNIT, pools: { knight: ["guard", "charge"] } } });
+  loose.levels?.gain("knight#1", "knight", 17); const real = loose.levels; if (real === null) throw new Error("levels");
+  const world2 = { ...loose, levels: { ...real, choose: (id: string, ability: string): boolean => { calls.push(id + ability); return true; } } };
+  submit(world2, { id: "e", kind: "unlock", actor: "knight#1", target: null, durationMs: null, turns: null, effects: [""] });
+  assert.equal(calls.length === 0 && world2.notices.at(-1)?.code === "unlockFailed" && world2.log.lastSeq() === 1, true);
+  assert.deepEqual(real.offer("knight#1"), ["guard", "charge"]);
+});
+test("a logged unlock with no ability id (step 19) keeps the offer and the bus quiet", () => {
+  const world = createWorld({ ...input("stage-fixed"), levels: { rules: UNIT, pools: POOLS } });
+  world.levels?.gain("knight#1", "knight", 17); const first = world.levels?.offer("knight#1")?.[0] ?? "", before = JSON.stringify(world.levels?.state()), levelRecs = (): number => world.bus.history().filter((rec) => rec.event.type === "level.reached" || rec.event.type === "level.unlocked").length, bus = levelRecs(), notes = world.notices.length;
+  const rows = [[], [""], null, [first, first], ["nope"]] as const;
+  rows.forEach((effects, i) => submit(world, { id: `a${i}`, kind: "unlock", actor: effects === null ? "" : "knight#1", target: null, durationMs: null, turns: null, effects: effects === null ? [first] : effects }));
+  assert.equal(world.notices.length === notes + 5 && world.notices.slice(notes).every((n) => n.code === "unlockFailed") && JSON.stringify(world.levels?.state()) === before && levelRecs() === bus && world.log.lastSeq() === 5, true);
+  submit(world, { id: "ok", kind: "unlock", actor: "knight#1", target: null, durationMs: null, turns: null, effects: [first] });
+  assert.deepEqual(world.levels?.state().bars[0]?.abilities, [first]); assert.equal(world.notices.length, notes + 5);
 });
