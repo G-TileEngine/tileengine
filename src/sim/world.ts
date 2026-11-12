@@ -31,8 +31,8 @@ export function createWorld(input: SimInput): SimWorld {
   input = src as SimInput;
   const limits = input.limits ?? DEFAULT_MATCH_LIMITS;
   if (!withinCeilings(limits)) throw new RangeError("createWorld: limits must be whole numbers from 1 to their ceilings");
-  const manifest = readManifest(input.manifest);
-  const map = readMap(input.map);
+  const manifest = readManifest(input.manifest, input.stageLimits);
+  const map = readMap(input.map, input.stageLimits);
   const stage = readStage(input.stage, input.stageLimits);
   if (!manifest.ok) throw fail("manifest", manifest);
   if (!map.ok) throw fail("map", map);
@@ -54,7 +54,7 @@ export function createWorld(input: SimInput): SimWorld {
     limits,
   );
   const pool = createRng(streamSeed(seed, "pool"));
-  const placed = resolvePlacements(stage.doc, map.doc, input.chosen, (w) => pool.weighted(w));
+  const placed = resolvePlacements(stage.doc, map.doc, input.chosen, (w) => pool.weighted(w), input.stageLimits.notices);
   for (const p of placed.placements) units.place(p);
   const notices: Notice[] = [];
   const levels = input.levels === undefined ? null : createLevels(input.levels, createRng(streamSeed(seed, "levels")), (event) => bus.emit(event));

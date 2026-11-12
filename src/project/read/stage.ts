@@ -1,5 +1,6 @@
 import type { CoreEnemyPool, CoreLoadout, CoreStage, Facing, SpawnSq } from "../../types/core-types.ts";
-import { CURRENT_FORMAT_VERSIONS, bad, checkVersion, isInt, isObj, isStr, strs, type ReadResult } from "./guard.ts";
+import { CURRENT_FORMAT_VERSIONS, bad, checkVersion, isInt, isObj, isStr, strs, type ReadFail, type ReadResult } from "./guard.ts";
+import { UINT32_MAX, docLimits, fitted, overCap, tooMany, type DocLimits } from "./limits.ts";
 
 function face(v: unknown): { readonly ok: true; readonly facing?: Facing | null } | { readonly ok: false } {
   return v === undefined ? { ok: true } : v === null || v === "N" || v === "E" || v === "S" || v === "W" ? { ok: true, facing: v } : { ok: false };
@@ -56,34 +57,47 @@ function pool(v: unknown): CoreEnemyPool | null {
   return { mode: "waves", spawns: spots, waves };
 }
 /** Caller caps on loop-driving counts (step 16), no defaults: weighted `picks`, and the units one wave adds (its counts summed). */
-export type StageLimits = { readonly picks: number; readonly waveUnits: number };
-function capped(pool: CoreEnemyPool, limits: StageLimits): boolean {
-  if (pool.mode === "weighted") return pool.picks > limits.picks || pool.entries.some((e) => !Number.isFinite(e.weight));
-  return pool.mode === "waves" && pool.waves.some((w) => w.entries.reduce((n, e) => n + e.count, 0) > limits.waveUnits);
+export type StageLimits = { readonly picks: number; readonly waveUnits: number } & Partial<DocLimits>;
+function capped(pool: CoreEnemyPool, picks: number, waveUnits: number, turn0: number): boolean {
+  if (pool.mode === "weighted") return pool.picks > picks || pool.entries.some((e) => !Number.isFinite(e.weight));
+  if (pool.mode !== "waves") return false;
+  let t0 = 0; for (const w of pool.waves) { const n = w.entries.reduce((s, e) => s + e.count, 0); if (n > waveUnits) return true; if (w.turn === 0) t0 += n; } return t0 > turn0;
+}
+function take(limits: StageLimits): { picks: number; waveUnits: number; doc: DocLimits } {
+  try { const picks = limits.picks, waveUnits = limits.waveUnits, doc = docLimits(limits); if (doc === null || !Number.isInteger(picks) || picks < 0 || !Number.isInteger(waveUnits) || waveUnits < 0) throw new Error("bad"); return { picks, waveUnits, doc }; }
+  catch { throw new RangeError("readStage: limits must be integers >= 0"); }
+}
+function countOf(json: Record<string, unknown>, lim: DocLimits): ReadFail | null {
+  if (tooMany(json.neutrals, lim.spots)) return overCap("neutrals");
+  if (tooMany(json.playerSpawns, lim.spots)) return overCap("playerSpawns");
+  const pool = json.enemyPool; if (!isObj(pool)) return null; const list = pool.mode === "fixed" ? pool.entries : pool.spawns;
+  if ((pool.mode === "fixed" || pool.mode === "weighted" || pool.mode === "waves") && tooMany(list, lim.spots)) return overCap("enemyPool");
+  return pool.mode === "waves" && tooMany(pool.waves, lim.waves) ? overCap("enemyPool") : null;
 }
 export function stageSeed(stage: CoreStage): number | null {
   return typeof stage.seed === "number" ? stage.seed : null;
 }
 export function readStage(json: unknown, limits: StageLimits): ReadResult<CoreStage> {
-  if (!Number.isInteger(limits.picks) || limits.picks < 0 || !Number.isInteger(limits.waveUnits) || limits.waveUnits < 0) throw new RangeError("readStage: limits must be integers >= 0");
+  const lim = take(limits);
   const ver = checkVersion(json, "stage");
   if (ver !== null) return ver;
   if (!isObj(json) || !isStr(json.id)) return bad("id");
   if (!isInt(json.rev, 0)) return bad("rev");
   if (!isStr(json.mapRef)) return bad("mapRef");
+  const early = countOf(json, lim.doc); if (early !== null) return early;
   const playerSpawns = spawns(json.playerSpawns); if (playerSpawns === null) return bad("playerSpawns");
   const neutral = neutrals(json.neutrals); if (neutral === null) return bad("neutrals");
   const rawSeed = json.seed;
-  const seed = rawSeed === undefined ? undefined : rawSeed === null ? null : isInt(rawSeed) ? rawSeed : undefined;
+  const seed = rawSeed === undefined ? undefined : rawSeed === null ? null : typeof rawSeed === "number" && Number.isInteger(rawSeed) && rawSeed >= 0 && rawSeed <= UINT32_MAX ? rawSeed : undefined;
   if (rawSeed !== undefined && seed === undefined) return bad("seed");
   const sides = json.sides === undefined ? undefined : sidesOf(json.sides); if (sides === null) return bad("sides");
-  const enemyPool = pool(json.enemyPool); if (enemyPool === null || capped(enemyPool, limits)) return bad("enemyPool");
+  const enemyPool = pool(json.enemyPool); if (enemyPool === null || capped(enemyPool, lim.picks, lim.waveUnits, lim.doc.turn0)) return bad("enemyPool");
   const gear = json.loadout === null ? null : loadout(json.loadout);
   if (json.loadout !== null && gear === null) return bad("loadout");
   const rules = strs(json.rules); if (rules === null) return bad("rules");
-  return { ok: true, notices: [], doc: {
+  return fitted({
     kind: "stage", formatVersion: CURRENT_FORMAT_VERSIONS.stage, id: json.id, rev: json.rev, mapRef: json.mapRef,
     playerSpawns, neutrals: neutral, enemyPool, loadout: gear, rules,
     ...(seed === undefined ? {} : { seed }), ...(sides === undefined ? {} : { sides }),
-  } };
+  }, lim.doc, []);
 }

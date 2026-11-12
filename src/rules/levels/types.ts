@@ -5,7 +5,8 @@ import type { RngState } from "../../core/rng/index.ts";
 export type LevelRules = { readonly bar: "side" | "unit"; readonly thresholds: readonly number[]; readonly offerLevels: readonly number[]; readonly offerSize: number; readonly xp: { readonly move: number } };
 /** The abilities a bar may unlock, in the maker's order: by side id when `bar` is "side", by unit document id (`UnitState.unitId`) when "unit". */
 export type AbilityPools = Readonly<Record<string, readonly string[]>>;
-export type LevelSetup = { readonly rules: LevelRules; readonly pools: AbilityPools };
+export type LevelLimits = { readonly levels: number; readonly pool: number; readonly offer: number; readonly pools: number };
+export type LevelSetup = { readonly rules: LevelRules; readonly pools: AbilityPools; readonly limits?: LevelLimits };
 /** One bar (`id`: the side id or the unit instance id); `offer` is the pending pick (null = none), `banked` the XP held while it waits. */
 export type LevelBar = { readonly id: string; readonly xp: number; readonly level: number; readonly banked: number; readonly offer: readonly string[] | null; readonly abilities: readonly string[] };
 export type LevelsState = { readonly rngState: RngState; readonly bars: readonly LevelBar[] };

@@ -36,7 +36,8 @@ function walk(v: unknown, depth: number, left: { n: number }, seen: Set<object>)
 }
 
 export function plainCopy(value: unknown, depth: number, nodes = PLAIN_NODES): unknown {
-  try { return walk(value, depth, { n: nodes }, new Set()); } catch { return NOT_PLAIN; }
+  const left = nodes >= 0 ? Math.min(nodes, PLAIN_NODES) : 0;
+  try { return walk(value, depth, { n: left }, new Set()); } catch { return NOT_PLAIN; }
 }
 export function cellOf(v: unknown): Sq | null {
   const copy = plainCopy(v, 1);

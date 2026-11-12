@@ -91,9 +91,10 @@ test("the linear draw (step 21) matches the base draw and stays fast", () => {
   };
   const live = (seed: number): readonly string[] => { const levels = createLevels({ rules, pools: { u: pool } }, createRng(seed), () => undefined); levels.gain("id", "u", 1); return levels.offer("id") ?? []; };
   for (let s = 1; s <= 20; s += 1) assert.deepEqual(live(s), oracle(s));
-  const many = Array.from({ length: 40000 }, (_, i) => String(i)), t0 = Date.now();
-  const big = createLevels({ rules: { ...rules, offerSize: 8 }, pools: { u: many } }, createRng(1), () => undefined);
-  big.gain("id", "u", 1); assert.equal(big.offer("id")?.length === 8 && Date.now() - t0 < 500, true);
+  const many = Array.from({ length: 4096 }, (_, i) => String(i)), t0 = Date.now();
+  const big = createLevels({ rules: { ...rules, offerSize: 8 }, pools: { u: many }, limits: { levels: 64, pool: 4096, offer: 8, pools: 256 } }, createRng(1), () => undefined);
+  for (let i = 0; i < 256; i += 1) big.gain(String(i), "u", 1);
+  assert.equal(big.offer("0")?.length === 8 && big.offer("255")?.length === 8 && Date.now() - t0 < 500, true);
 });
 test("options are read once (step 21) and place keeps a frozen cell", () => {
   let n = 0; const clock = createClock({ get stepMs() { n += 1; return n === 1 ? 20 : 5; } });
