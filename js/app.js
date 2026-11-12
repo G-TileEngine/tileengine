@@ -2677,6 +2677,8 @@
             ProjectStore.saveMap(state.project, map);
           }
         }
+      } else if (ent.kind === "live" && typeof ent.undo === "function") {
+        ent.undo(); // r65: tap-menu actions (place, move, delete, role) are one step each
       } else if (ent.kind === "refix") {
         const a = state.project.assets[ent.id];
         if (a && a.derivedFrom) {
@@ -3328,6 +3330,8 @@
         if (unit.id === state.selectedUnitId) cell.classList.add("selected");
       }
     });
+    // r65: live view (art tiles, sprites, footprints, grid-lines toggle). View only, same data.
+    if (window.StageLive && grid.id === "stage-grid") { try { StageLive.decorate(grid, cells); } catch (e) { console.error(e); } }
   }
 
   function renderGrid() {
@@ -3421,6 +3425,8 @@
       state._paintGestureHandled = false;
       return;
     }
+    // r65: tap-to-place menus (no rail tool on, not in place mode). Returns true when handled.
+    if (window.StageLive && !state.mapTool && !state.placeMode && StageLive.onCell(x, y, unit, cellEl, ev)) return;
     // Architect: tall units may overhang visually, but hit-test is base cell only.
     // Tokens use pointer-events:none; unit is resolved by this cell's (x,y), never overhang.
     // Objects are not UNIT-targetable — cell tap places/removes them in Objects tool only.
@@ -5680,6 +5686,8 @@
       show("behaviour-summary");
     };
     window.__state = state;
+    window.__pushPaintStroke = pushPaintStroke; // r65 StageLive undo steps
+    window.__persistProject = () => { if (typeof persistProject === "function") persistProject(); };
     
     $("#btn-god-save")?.addEventListener("click", () => {
       const sheet = $("#godmode-save-sheet");

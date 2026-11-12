@@ -6,6 +6,7 @@
   <meta name="color-scheme" content="light dark" />
   <title>TileEngine — UI shell</title>
   <link rel="stylesheet" href="css/app.css" />
+  <link rel="stylesheet" href="css/stage-live.css" />
   <link rel="stylesheet" href="css/imagine-convert.css" />
 </head>
 <body>
@@ -345,6 +346,7 @@
         <div class="stage-top-main">
           <h1 class="stage-title" id="stage-title" tabindex="-1">Stage</h1>
           <div class="stage-top-actions">
+            <button type="button" class="btn btn-ghost stage-view-btn" id="btn-stage-view" aria-label="View: art or simple blocks, grid lines, tap menus" aria-haspopup="dialog" aria-expanded="false">View</button>
             <button type="button" class="btn btn-ghost stage-icon-btn" id="btn-stage-overflow" aria-label="More menus" aria-haspopup="menu" aria-expanded="false">⋯</button>
             <button type="button" class="btn btn-primary stage-play-btn" id="btn-stage-play" aria-label="Play test">Play</button>
           </div>
@@ -1801,5 +1803,6 @@
   <script src="js/convert-engine.js"></script>
   <script src="js/imagine-convert.js"></script>
   <script src="js/welcome.js"></script>
+  <script src="js/stage-live.js"></script>
 </body>
 </html>
