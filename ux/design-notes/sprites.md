@@ -32,3 +32,15 @@ Reproduce: `cd ui-shell/mock-gen-learn && python3 proto.py` (v7 default); `pytho
 | v7 | flared axe wings, claw edge, cream lip, smaller plate/fang; sword T2 midpoint, 15 colours | parked; to-do in gen-learn-plan §22 |
 
 Next fix when unparked (plan only, §19A): size-aware grammar, cleanup pass for clusters/stray pixels, converter re-picking 6–8 colours per size with hand-placed AA and selective outline.
+
+## Tidy (CEO 2026-11-12 19:45): helps sometimes, not every time
+To improve when the sprite passes resume. From reading `tidyLayer()` in `ui-shell/js/sprite-studio.js` (r63); not yet tested case by case.
+- **Helps:** single stray pixels with no neighbours; a lone 1 px speck of another colour inside a part (3+ of its 4 sides agree); 1 px holes and gaps between two same-colour pixels; left/right evening when Both sides is on.
+- **Doesn't help, and why:**
+  - Specks of 2 px or more and small clusters (it only looks at single pixels).
+  - Jaggies, banding and broken diagonal outlines (no line or outline rules).
+  - Muddy colours and too many shades (no colour merge; that's the converter's job, §19A).
+  - Weapon pixels are skipped on drawn sprites, so weapon mess stays.
+  - Only the body, back and imported layers are tidied, not hair or other parts.
+  - Evening copies whichever side has the pixel, so it can copy a mistake to the other side.
+- **Next pass targets (plan):** remove clusters of 1–3 px, a clean-up for diagonal and outline lines, merging near-duplicate colours, and a before/after toggle so makers can see when Tidy made it worse.

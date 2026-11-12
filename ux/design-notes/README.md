@@ -10,3 +10,6 @@ Each entry has: round/version, date, what changed, CEO feedback (quoted or close
 | Home globe | [home-globe.md](home-globe.md) | `ux/home-globe-plan.md` | `ui-shell/screenshots/` |
 | Effects v2 | [effects-v2.md](effects-v2.md) | `ux/effects-v2-plan.md` | `ux/effects-v2-ref/` |
 | Shell and look (always applies) | [shell-and-look.md](shell-and-look.md) | `ux/screen-map.md` | r62 look, r72 live |
+| Animated tiles, objects, edge decoration | [animated-world.md](animated-world.md) | post-H2 / map editor | `painter-proto/atmosphere.js`, `share/animated-world/` |
+| Pixel Composer reference | [pixel-composer-reference.md](pixel-composer-reference.md) | frame loop, Effects v2 | — |
+| Editor behaviours (from Vercel UI SDK) | [editor-behaviours.md](editor-behaviours.md) | all editors | — |
