@@ -51,10 +51,11 @@ src/state/              *.table.ts, types.ts, xgo.ts                          �
 src/project/read/       read-only project reader (current-version docs only)  → may import: src/types, src/core/notice.ts (Notice type only; CN-005)
 src/rules/              (later) turn drivers, stats by name                   → may import: core, state, fx, types
 src/fx/                 effect-order reader, timeline and options (engine sequencing data, no game rules) → may import: src/types, src/core (CN-007)
+src/paint/              sprite recipes: reader, guard and caps (later: rasteriser, bank); integer maths only → may import: src/types, src/core/notice.ts (Notice type only); imported only by runtime, editor and btf-adapters (CN-008)
 src/runtime/input/      pure input intents + gesture mappers (plain pointer data, no DOM) → may import: src/types, src/core (CN-006)
 src/sim/                headless sim harness (tests and tools only)           → may import: core, state, project, rules, runtime/input, types; nothing imports sim
 src/btf-adapters/       thin src/ wrappers (+ vendor/ only for a separately ruled helper, with PROVENANCE.md) → imported only by runtime/editor (later)
-scripts/                check-state.sh, check-law.sh, sim.ts (`npm run sim`: tools only, may import src/sim and tests/; not part of green; CN-006)
+scripts/                check-state.sh, check-law.sh (+ the src/paint ban list, CN-008), sim.ts (`npm run sim`: tools only, may import src/sim and tests/; not part of green; CN-006)
 tests/                  *.test.ts mirroring src/; tests/fixtures/ (excluded from tsc and lint)
 handback/<step-id>/r<N>/ your hand-back for that step (HAND-BACK.md); ignored by lint, excluded from the size cap
 README.md               owned by Chief Of Staff; never edit
