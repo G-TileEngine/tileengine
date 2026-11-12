@@ -27,8 +27,8 @@ export function createLevels(setup: LevelSetup, rng: Rng, emit: (event: BusEvent
   const bars = new Map<string, Live>();
   const poolOf = (key: string): readonly string[] => (Object.hasOwn(pools, key) ? pools[key] : undefined) ?? [];
   const draw = (have: readonly string[], key: string): string[] => {
-    const cands: string[] = [];
-    for (const a of poolOf(key)) if (!have.includes(a) && !cands.includes(a)) cands.push(a);
+    const cands: string[] = [], seen = new Set<string>(have);
+    for (const a of poolOf(key)) if (!seen.has(a)) { seen.add(a); cands.push(a); }
     if (cands.length <= rules.offerSize) return cands;
     for (let i = 0; i < rules.offerSize; i += 1) {
       const j = i + rng.int(cands.length - i), left = cands[i], right = cands[j];

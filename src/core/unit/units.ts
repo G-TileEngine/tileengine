@@ -34,7 +34,7 @@ export function createUnits(grid: Grid, opts?: UnitsOptions): Units {
     const notice: Notice = { code, message, at }; notices.push(notice); return { ok: false, notice };
   };
   const place = (p: ResolvedPlacement): PlaceResult => {
-    const at = p.at;
+    const at = cellOf(p.at); if (at === null) { const notice: Notice = { code: "placeOffMap", message: "off map" }; notices.push(notice); return { ok: false, notice }; }
     if (!grid.inBounds(at)) return deny("placeOffMap", at, "off map");
     if (!grid.isOpen(at)) return deny("placeClosed", at, "closed cell");
     const draft: Live = { id: "", unitId: p.unitId, side: p.side, at, offset: null, facing: p.facing, alive: true };

@@ -1,4 +1,5 @@
 import type { Sq } from "../types/core-types.ts";
+import { PLAIN_NODES } from "./limits.ts";
 
 export const NOT_PLAIN: unique symbol = Symbol("NOT_PLAIN");
 const SKIP = new Set(["__proto__", "constructor", "prototype"]);
@@ -34,7 +35,7 @@ function walk(v: unknown, depth: number, left: { n: number }, seen: Set<object>)
   return Object.freeze(box);
 }
 
-export function plainCopy(value: unknown, depth: number, nodes = Number.POSITIVE_INFINITY): unknown {
+export function plainCopy(value: unknown, depth: number, nodes = PLAIN_NODES): unknown {
   try { return walk(value, depth, { n: nodes }, new Set()); } catch { return NOT_PLAIN; }
 }
 export function cellOf(v: unknown): Sq | null {
