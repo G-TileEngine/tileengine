@@ -1,0 +1,14 @@
+M	src/core/limits.ts
+M	src/core/log/log.ts
+M	src/core/unit/units.ts
+M	src/fx/order/read.ts
+M	src/fx/order/types.ts
+M	src/paint/recipe/read.ts
+M	src/project/read/guard.ts
+M	src/project/read/manifest.ts
+M	src/project/read/map.ts
+M	src/project/read/stage.ts
+M	src/sim/intents.ts
+M	src/sim/run.ts
+M	tests/fx/read.test.ts
+A	tests/sim/speed-memory.test.ts

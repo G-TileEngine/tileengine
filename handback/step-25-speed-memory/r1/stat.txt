@@ -1,0 +1,15 @@
+ src/core/limits.ts             | 21 +++++++++--
+ src/core/log/log.ts            |  3 +-
+ src/core/unit/units.ts         |  5 +--
+ src/fx/order/read.ts           | 17 ++++++---
+ src/fx/order/types.ts          |  3 +-
+ src/paint/recipe/read.ts       | 10 ++++++
+ src/project/read/guard.ts      | 17 +++++++--
+ src/project/read/manifest.ts   |  2 +-
+ src/project/read/map.ts        |  2 +-
+ src/project/read/stage.ts      |  2 +-
+ src/sim/intents.ts             |  5 ++-
+ src/sim/run.ts                 | 16 +++++----
+ tests/fx/read.test.ts          |  2 +-
+ tests/sim/speed-memory.test.ts | 81 ++++++++++++++++++++++++++++++++++++++++++
+ 14 files changed, 160 insertions(+), 26 deletions(-)
