@@ -5,3 +5,4 @@ export { readMap } from "./map.ts";
 export { readManifest } from "./manifest.ts";
 export { resolvePlacements } from "./placements.ts";
 export { readStage, stageSeed, type StageLimits } from "./stage.ts";
+export { DEFAULT_DOC_LIMITS, DOC_CEILINGS, type DocLimits } from "./limits.ts";

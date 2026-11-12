@@ -1,17 +1,19 @@
 import type { BusEvent, EventRegistry, NoModeEvents } from "../../core/events/index.ts";
 import { NOT_PLAIN, isRecord, plainCopy } from "../../core/plain.ts";
 import type { Rng } from "../../core/rng/index.ts";
-import type { AbilityPools, LevelRules, LevelSetup, Levels } from "./types.ts";
+import type { AbilityPools, LevelLimits, LevelRules, LevelSetup, Levels } from "./types.ts";
 
 export const LEVEL_EVENTS: EventRegistry<NoModeEvents> = { mode: "levels", types: ["level.reached", "level.unlocked"] };
+export const LEVEL_CEILINGS: LevelLimits = Object.freeze({ levels: 1024, pool: 4096, offer: 64, pools: 4096 }), DEFAULT_LEVEL_LIMITS: LevelLimits = Object.freeze({ levels: 64, pool: 128, offer: 8, pools: 256 });
+const LKEYS = ["levels", "pool", "offer", "pools"] as const;
 
-const ints = (xs: readonly number[], min: number): boolean => xs.every((n) => Number.isInteger(n) && n >= min);
+const ints = (xs: readonly number[], min: number): boolean => xs.every((n) => Number.isInteger(n) && n >= min && n <= 2147483647);
 function bad(rules: LevelRules, pools: AbilityPools): boolean {
   const top = rules.thresholds.length;
-  return (rules.bar !== "side" && rules.bar !== "unit") || top < 1 || !ints(rules.thresholds, 1) || !rules.offerLevels.every((n) => Number.isInteger(n) && n >= 1 && n <= top) || !Number.isInteger(rules.offerSize) || rules.offerSize < 1 || !Number.isInteger(rules.xp.move) || rules.xp.move < 0 || Object.values(pools).some((pool) => !Array.isArray(pool) || pool.some((a) => typeof a !== "string" || a === ""));
+  return (rules.bar !== "side" && rules.bar !== "unit") || top < 1 || !ints(rules.thresholds, 1) || !rules.offerLevels.every((n) => Number.isInteger(n) && n >= 1 && n <= top) || !Number.isInteger(rules.offerSize) || rules.offerSize < 1 || !Number.isInteger(rules.xp.move) || rules.xp.move < 0 || rules.xp.move > 2147483647 || Object.values(pools).some((pool) => !Array.isArray(pool) || pool.some((a) => typeof a !== "string" || a === ""));
 }
 type Live = { id: string; pool: string; xp: number; level: number; banked: number; offer: string[] | null; abilities: string[] };
-function taken(setup: LevelSetup): { rules: LevelRules; pools: AbilityPools } {
+function taken(setup: LevelSetup): { rules: LevelRules; pools: AbilityPools; limits: unknown } {
   const copy = plainCopy(setup, 3);
   if (copy === NOT_PLAIN || !isRecord(copy) || !isRecord(copy.rules) || !isRecord(copy.pools)) throw new RangeError("createLevels: bad rules or pools");
   const rulesIn = copy.rules, poolsIn = copy.pools;
@@ -19,11 +21,19 @@ function taken(setup: LevelSetup): { rules: LevelRules; pools: AbilityPools } {
   if (!Array.isArray(thresholds) || !Array.isArray(offerLevels) || !isRecord(xpIn)) throw new RangeError("createLevels: bad rules or pools");
   const pools: Record<string, readonly string[]> = {}, move = xpIn.move;
   for (const key of Object.keys(poolsIn)) { const pool = poolsIn[key]; if (!Array.isArray(pool)) throw new RangeError("createLevels: bad rules or pools"); pools[key] = pool as readonly string[]; }
-  return { rules: Object.freeze({ bar, thresholds, offerLevels, offerSize, xp: Object.freeze({ move }) }) as LevelRules, pools: Object.freeze(pools) };
+  return { rules: Object.freeze({ bar, thresholds, offerLevels, offerSize, xp: Object.freeze({ move }) }) as LevelRules, pools: Object.freeze(pools), limits: copy.limits };
+}
+function levelLimits(v: unknown): LevelLimits | null {
+  const src = v === undefined ? DEFAULT_LEVEL_LIMITS : v; if (!isRecord(src)) return null; const out: Record<string, number> = {};
+  for (const key of LKEYS) { const n = src[key]; if (typeof n !== "number" || !Number.isInteger(n) || n < 1 || n > LEVEL_CEILINGS[key]) return null; out[key] = n; }
+  return Object.freeze(out) as LevelLimits;
+}
+function over(rules: LevelRules, pools: AbilityPools, lim: LevelLimits): boolean {
+  return rules.thresholds.length > lim.levels || rules.offerLevels.length > lim.levels || rules.offerSize > lim.offer || Object.keys(pools).length > lim.pools || Object.values(pools).some((pool) => pool.length > lim.pool);
 }
 
 export function createLevels(setup: LevelSetup, rng: Rng, emit: (event: BusEvent<NoModeEvents>) => void): Levels {
-  const { rules, pools } = taken(setup); if (bad(rules, pools)) throw new RangeError("createLevels: bad rules or pools");
+  const { rules, pools, limits } = taken(setup); if (bad(rules, pools)) throw new RangeError("createLevels: bad rules or pools"); const lim = levelLimits(limits); if (lim === null) throw new RangeError("createLevels: limits must be whole numbers from 1 to their ceilings"); if (over(rules, pools, lim)) throw new RangeError("createLevels: over the level caps");
   const bars = new Map<string, Live>();
   const poolOf = (key: string): readonly string[] => (Object.hasOwn(pools, key) ? pools[key] : undefined) ?? [];
   const draw = (have: readonly string[], key: string): string[] => {

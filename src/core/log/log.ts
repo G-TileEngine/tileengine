@@ -1,6 +1,6 @@
 import type { Sq } from "../../types/core-types.ts";
 import type { Aim } from "../targeting/types.ts";
-import { DEFAULT_MATCH_LIMITS, SEED_MAX, type MatchLimits } from "../limits.ts";
+import { DEFAULT_MATCH_LIMITS, SEED_MAX, withinCeilings, type MatchLimits } from "../limits.ts";
 import { NOT_PLAIN, plainCopy } from "../plain.ts";
 import { LOG_FORMAT_VERSION, type Action, type CommandLog, type LogEntry, type LogHeader, type ParseResult } from "./types.ts";
 
@@ -39,12 +39,18 @@ function tooLong(a: Action, n: number): boolean {
   const t = a.target, v = a.via, aim = t === null || (t.pipe === "unit" ? t.unitId.length <= n : t.edge === undefined || t.edge.length <= n);
   return a.id.length > n || a.kind.length > n || a.actor.length > n || a.effects.some((s) => s.length > n) || !aim || (v !== undefined && (v.presentation.length > n || (v.ref !== undefined && v.ref.length > n)));
 }
+const ownLimits = (v: unknown): MatchLimits | null => { const own = v === DEFAULT_MATCH_LIMITS ? v : plainCopy(v, 1); return withinCeilings(own) ? own : null; };
 export function readAction(v: unknown, limits: MatchLimits = DEFAULT_MATCH_LIMITS): Action | null {
+  const cap = ownLimits(limits); if (cap === null) return null;
+  limits = cap;
   const copy = plainCopy(v, 3);
   return copy !== NOT_PLAIN && actionOf(copy) && (copy.durationMs === null || copy.durationMs <= limits.durationMs) && !tooLong(copy, limits.text) ? copy : null;
 }
 
 export function createLog(header: LogHeader, onAppend?: (entry: LogEntry) => void, limits: MatchLimits = DEFAULT_MATCH_LIMITS): CommandLog {
+  const cap = ownLimits(limits); if (cap === null) throw new RangeError("createLog: limits must be whole numbers from 1 to their ceilings");
+  limits = cap; const copied = plainCopy(header, 1); if (!rec(copied)) throw new RangeError("createLog: seed must be a uint32 and header text short");
+  header = copied as LogHeader;
   if (!Number.isInteger(header.seed) || header.seed < 0 || header.seed > SEED_MAX || header.engineVersion.length > limits.text || header.projectHash.length > limits.text) throw new RangeError("createLog: seed must be a uint32 and header text short");
   const list: LogEntry[] = [];
   const head: LogHeader = { seed: header.seed, formatVersion: header.formatVersion, engineVersion: header.engineVersion, projectHash: header.projectHash };
@@ -67,6 +73,8 @@ export function createLog(header: LogHeader, onAppend?: (entry: LogEntry) => voi
 }
 
 export function parseLog(json: string, limits: MatchLimits = DEFAULT_MATCH_LIMITS): ParseResult {
+  const cap = ownLimits(limits); if (cap === null) return { ok: false, error: "bad limits" };
+  limits = cap;
   if (typeof json !== "string") return { ok: false, error: "not JSON" };
   let value: unknown;
   try { value = JSON.parse(json); } catch { return { ok: false, error: "not JSON" }; }

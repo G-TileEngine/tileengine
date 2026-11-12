@@ -1,5 +1,6 @@
 import type { CoreStage, Facing, ResolvedPlacement, SideId, SpawnSq, UnitId } from "../../types/core-types.ts";
 import type { Notice } from "../../core/notice.ts";
+import { DEFAULT_DOC_LIMITS, capNotes } from "./limits.ts";
 
 /** Same shape as step 05's `Rng.weighted`: an index with a positive weight, or -1 when none is left. */
 export type Picker = (weights: readonly number[]) => number;
@@ -13,7 +14,7 @@ function pour(ids: readonly string[], cells: readonly SpawnSq[], side: SideId, m
   for (let i = 0; i < ids.length && i < cells.length; i += 1) { const id = ids[i]; const cell = cells[i]; if (id !== undefined && cell !== undefined) push(out, notes, side, map, id, cell.c, cell.r, cell.facing ?? null); }
   if (ids.length > cells.length) notes.push({ code: "notPlaced", message: "not placed" });
 }
-export function resolvePlacements(stage: CoreStage, map: MapSize, chosen: readonly UnitId[], pick: Picker): Placements {
+export function resolvePlacements(stage: CoreStage, map: MapSize, chosen: readonly UnitId[], pick: Picker, cap = DEFAULT_DOC_LIMITS.notices): Placements {
   const out: ResolvedPlacement[] = [];
   const notes: Notice[] = [];
   const sp = stage.playerSpawns;
@@ -40,5 +41,5 @@ export function resolvePlacements(stage: CoreStage, map: MapSize, chosen: readon
     pour(ids, pool.spawns, enemy, map, out, notes);
   }
   for (const e of stage.neutrals) push(out, notes, e.side ?? stage.sides?.neutrals ?? "neutral", map, e.unitId, e.at.c, e.at.r, e.facing ?? null);
-  return { placements: out, notices: notes };
+  return { placements: out, notices: capNotes(notes, cap) };
 }
