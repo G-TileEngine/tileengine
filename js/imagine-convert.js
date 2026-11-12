@@ -136,22 +136,52 @@
     if (det.used !== "magenta" && keyHsl[1] > 0.5 && keyHsl[2] > 0.25 && keyHsl[2] < 0.8) // a chroma-like key: clear enclosed gaps of it too (never on white/grey)
       for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const i = y * w + x; if (mask[i] && near(x, y, T * 0.6)) mask[i] = 0; }
     if (det.used === "magenta") for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const i = y * w + x; if (mask[i] && isMagenta(px(src, x, y)) && near(x, y, T * 0.8)) mask[i] = 0; }
-    // soft edge: one ring of anti-aliased fringe pixels that are still close to the background
-    const fr = [];
+    // soft edge: one ring of anti-aliased fringe pixels that are still close to the background.
+    // r68: also edge pixels that are a BLEND of the inner colour and the key (anti-aliasing), so tolerance 0 leaves no
+    // magenta fringe. The blend test fades out by tolerance 40 (where the plain distance rule already keeps it clean).
+    // the ring always uses at least the tolerance-40 distance (CEO: 40 looks clean), so 0 never keeps a magenta rim
+    const RING_MIN = (12 + 40 * 1.6) * 1.5;
+    const tMin = 0.3 + Math.min(1, tolerance / 40) * 0.75;
+    // pass 0: one ring (near the key, or an anti-aliased blend). Pass 1: blends only, for soft 2-pixel edges.
+    for (let pass = 0; pass < (tMin > 1 ? 1 : 2); pass++) { const fr = [];
     for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) { const i = y * w + x;
-      if (mask[i] && (!mask[i - 1] || !mask[i + 1] || !mask[i - w] || !mask[i + w]) && near(x, y, T * 1.5)) fr.push(i); }
-    fr.forEach((i) => (mask[i] = 0));
+      if (!mask[i] || (mask[i - 1] && mask[i + 1] && mask[i - w] && mask[i + w])) continue;
+      if (pass === 0 && near(x, y, Math.max(T * 1.5, RING_MIN))) { fr.push(i); continue; }
+      if (tMin > 1) continue;
+      const p = px(src, x, y), k = det.bg(x, y), qs = [];
+      [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { if (!mask[(y + dy) * w + x + dx]) { const X = x - 2 * dx, Y = y - 2 * dy; if (X >= 0 && Y >= 0 && X < w && Y < h && mask[Y * w + X]) qs.push(px(src, X, Y)); } });
+      if (!qs.length) continue;
+      const q = [0, 1, 2].map((c) => qs.reduce((s2, v) => s2 + v[c], 0) / qs.length), kq = [k[0] - q[0], k[1] - q[1], k[2] - q[2]], L2 = kq[0] ** 2 + kq[1] ** 2 + kq[2] ** 2;
+      if (L2 < 3600) continue; // the inner colour is itself close to the key: leave it
+      const t = ((p[0] - q[0]) * kq[0] + (p[1] - q[1]) * kq[1] + (p[2] - q[2]) * kq[2]) / L2;
+      const res = Math.hypot(p[0] - q[0] - t * kq[0], p[1] - q[1] - t * kq[1], p[2] - q[2] - t * kq[2]);
+      if (t >= tMin && t <= 1.1 && res <= 0.25 * Math.sqrt(L2) + 10) fr.push(i); }
+    fr.forEach((i) => (mask[i] = 0)); }
     return mask;
   }
   // Pink inside the sprite? Then the magenta key may eat it — say so in plain words.
-  function pinkInside(src, det, tolerance) {
-    const T = 12 + tolerance * 1.6; let pink = 0, solid = 0;
-    for (let y = 0; y < src.h; y += 2) for (let x = 0; x < src.w; x += 2) { const p = px(src, x, y);
-      if (det.used !== "magenta" && dist(p, det.bg(x, y)) <= T) continue;
-      if (det.used === "magenta" && isMagenta(p) && dist(p, det.bg.key) <= T) continue;
-      solid++; if (isPink(p) || (isMagenta(p) && det.used !== "magenta")) pink++; }
-    return solid > 0 && pink / solid > 0.03;
+  // r68: only colours truly near #FF00FF in OKLab count (pinkish or purple swords and wings don't), and only on the
+  // sprite itself (the keyed background and its one-pixel fringe ring are left out).
+  const MAGENTA_LAB = oklab([255, 0, 255]), PINK_NEAR = 0.12, PINK_SHARE = 0.02;
+  function oklab([r, g, b]) { const f = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; const R = f(r), G = f(g), B = f(b);
+    const l = Math.cbrt(0.4122214708 * R + 0.5363325363 * G + 0.0514459929 * B), m = Math.cbrt(0.2119034982 * R + 0.6806995451 * G + 0.1073969566 * B), s2 = Math.cbrt(0.0883024619 * R + 0.2817188376 * G + 0.6299787005 * B);
+    return [0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s2, 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s2, 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s2]; }
+  function pinkInside(src, det, tolerance, mask) {
+    if (!mask) mask = keyBackground(src, det, tolerance);
+    const w = src.w, key = det.bg.key || [255, 0, 255];
+    // "flat key" = the background itself (or a gap between the legs): within 20 of the key colour. Real magenta-pink in
+    // the sprite is shaded, so it sits NEAR #FF00FF in OKLab without being the flat key. Edge pixels are skipped (fringe).
+    const flat = (x, y) => dist(px(src, x, y), key) <= 20;
+    let pink = 0, solid = 0;
+    for (let y = 1; y < src.h - 1; y += 2) for (let x = 1; x < w - 1; x += 2) { const i = y * w + x;
+      if (flat(x, y)) continue;
+      const interior = !flat(x - 1, y) && !flat(x + 1, y) && !flat(x, y - 1) && !flat(x, y + 1);
+      const L = oklab(px(src, x, y)), near = Math.hypot(L[0] - MAGENTA_LAB[0], L[1] - MAGENTA_LAB[1], L[2] - MAGENTA_LAB[2]) < PINK_NEAR;
+      if (mask[i]) { if (interior) { solid++; if (near) pink++; } }
+      else if (near && interior) { solid++; pink++; } } // eaten by the key, but shaded like sprite art, not flat background
+    return solid > 0 && pink / solid >= PINK_SHARE;
   }
+
 
   /* ===== 2. crop to the subject's box (ignores specks) ===== */
   function subjectBox(mask, w, h) {
@@ -303,7 +333,7 @@
   }
 
   /* ===== 7. one colour set (ramp) per part → slots Sprite Studio understands (ramp*3 + tone + 1) ===== */
-  function buildRamps(idx, palette, groups, reshade, outlineMode, shared) {
+  function buildRamps(idx, palette, groups, reshade, outlineMode, shared, cap) {
     const of = {}; groups.forEach((g, gi) => g.members.forEach((m) => (of[m] = gi)));
     let darkest = [255, 255, 255]; palette.forEach((p) => { if (lum(p.rgb) < lum(darkest)) darkest = p.rgb; });
     const oneLine = hex(lineOf(darkest));
@@ -327,17 +357,18 @@
       if (rc && rc.c) { r.c = rc.c.slice(); r.line = outlineMode === "one" ? oneLine : rc.line; r.sw = rc.name; }
       return r;
     });
-    const N = Math.round(Math.sqrt(idx.length)), slots = new Uint8Array(idx.length);
+    const N = Math.round(Math.sqrt(idx.length)), slots = new Uint8Array(idx.length), base = new Uint8Array(idx.length);
     const solid = (x, y) => x >= 0 && y >= 0 && x < N && y < N && idx[y * N + x] >= 0;
     for (let i = 0; i < idx.length; i++) { const v = idx[i]; if (v < 0) continue; const gi = of[v], r = ramps[gi];
-      let tone = r.toneOf[v] ?? 1;
+      let tone = r.toneOf[v] ?? 1; base[i] = gi * 3 + tone + 1;
       if (reshade && !r.pixels) { // re-shade: light from the top left on the whole silhouette, on top of the art's own values
         const x = i % N, y = (i / N) | 0;
         if (!solid(x, y - 1) || !solid(x - 1, y)) tone = Math.min(2, tone + 1);
         else if (!solid(x, y + 1) || !solid(x + 1, y)) tone = Math.max(0, tone - 1);
       }
       slots[i] = gi * 3 + tone + 1; }
-    return { ramps, slots, N };
+    const capInfo = reshade && cap != null ? capReshade(slots, base, ramps, outlineMode === "none" ? "none" : "ramp", cap) : null;
+    return { ramps, slots, N, capInfo };
   }
 
   /* ===== whole pipeline for one direction ===== */
@@ -378,14 +409,15 @@
       else palette = cols;
     }
     const reshade = !!L.reshade, outline = L.outline;
+    const capFor = look === "gameboy" || look === "pico8" ? 0 : detail; // r68: re-shade stays inside the colour cap
     let groups, built;
-    if (rampMode) { groups = useMaster ? master.result.groups : groupParts(idx, palette, L.merge, true); built = buildRamps(idx, palette, groups, reshade, outline === "none" ? "none" : "ramp", S.shared); }
-    else { groups = useMaster ? master.result.groups : groupExact(idx, palette, L.merge); built = rampsExact(idx, palette, groups, reshade, spr.px, body, outline, S.shared, !useMaster); }
+    if (rampMode) { groups = useMaster ? master.result.groups : groupParts(idx, palette, L.merge, true); built = buildRamps(idx, palette, groups, reshade, outline === "none" ? "none" : "ramp", S.shared, capFor); }
+    else { groups = useMaster ? master.result.groups : groupExact(idx, palette, L.merge); built = rampsExact(idx, palette, groups, reshade, spr.px, body, outline, S.shared, !useMaster, capFor); }
     const flagCols = new Set(flagged.map((i) => spr.px[i].map((v) => v >> 5).join()));
     const cut = document.createElement("canvas"); cut.width = D.src.w; cut.height = D.src.h; { const cg = cut.getContext("2d"), id = cg.createImageData(D.src.w, D.src.h);
       for (let i = 0; i < mask.length; i++) { id.data[i * 4] = D.src.d[i * 4]; id.data[i * 4 + 1] = D.src.d[i * 4 + 1]; id.data[i * 4 + 2] = D.src.d[i * 4 + 2]; id.data[i * 4 + 3] = mask[i] ? 255 : 0; } cg.putImageData(id, 0, 0); }
-    D.result = { cut, N, det: { used: det.used, note: det.note, key: det.bg.key && det.bg.key.map(Math.round) }, box, place: pl, palette, rampMode, groups, idx, slots: built.slots, ramps: built.ramps,
-      reshade, outline, flagged, flagColours: flagCols.size, clean: { strays: 0, specks: 0, holes: 0, islands: 0, fixes: spr.fixes || 0 }, matched: !!useMaster, pink: pinkInside(D.src, det, set.tolerance),
+    D.result = { cut, N, det: { used: det.used, note: det.note, key: det.bg.key && det.bg.key.map(Math.round) }, box, place: pl, palette, rampMode, groups, idx, slots: built.slots, ramps: built.ramps, reshadeCap: built.capInfo || null,
+      reshade, outline, flagged, flagColours: flagCols.size, clean: { strays: 0, specks: 0, holes: 0, islands: 0, fixes: spr.fixes || 0 }, matched: !!useMaster, pink: pinkInside(D.src, det, set.tolerance, mask),
       look, detail, engineColours: E.countColours(spr), hybrid: spr.hybrid || null, analyse: { pick: an.pick, second: an.second, why: an.why, warrior: !!an.metrics.warrior }, enginePx: spr.px,
       ms: Math.round(performance.now() - t0) };
     D.converted = true;
@@ -434,7 +466,18 @@
     out.sort((p, q) => (p.pixels - q.pixels) || q.count - p.count);
     return out;
   }
-  function rampsExact(idx, palette, groups, reshade, px, body, outlineMode, shared, allowTwins) {
+  // r68: "Light from top left" may only add new (synthetic) shadow/light colours up to the colour cap of the look and
+  // detail (16 Standard, 20/24 Detail, 0 extra on fixed palettes). The most-used new colours win; other cells keep their tone.
+  function capReshade(slots, base, ramps, outlineMode, cap) {
+    const col = (s2) => { const r = ramps[((s2 - 1) / 3) | 0]; return r.c[(s2 - 1) % 3]; };
+    const have = new Set(); for (let i = 0; i < slots.length; i++) if (base[i]) have.add(col(base[i]));
+    if (outlineMode !== "none") { const used = new Set(); for (let i = 0; i < base.length; i++) if (base[i]) used.add(((base[i] - 1) / 3) | 0); used.forEach((gi) => ramps[gi].line && have.add(ramps[gi].line)); }
+    const fresh = new Map(); for (let i = 0; i < slots.length; i++) if (slots[i] && slots[i] !== base[i]) { const k = col(slots[i]); if (!have.has(k)) fresh.set(k, (fresh.get(k) || 0) + 1); }
+    const room = Math.max(0, cap - have.size), keep = new Set([...fresh.entries()].sort((a, b) => b[1] - a[1]).slice(0, room).map((e) => e[0]));
+    let reverted = 0; for (let i = 0; i < slots.length; i++) if (slots[i] && slots[i] !== base[i]) { const k = col(slots[i]); if (!have.has(k) && !keep.has(k)) { slots[i] = base[i]; reverted++; } }
+    return { cap, base: have.size, added: keep.size, reverted };
+  }
+  function rampsExact(idx, palette, groups, reshade, px, body, outlineMode, shared, allowTwins, cap) {
     const of = {}, toneOfM = {}; groups.forEach((g, gi) => g.members.forEach((m, k) => { of[m] = gi; toneOfM[m] = g.tones[k]; }));
     const N = Math.round(Math.sqrt(idx.length)), at = (x, y) => (x < 0 || y < 0 || x >= N || y >= N ? -1 : idx[y * N + x]);
     // Sprite Studio draws each outline pixel in the line colour of ONE neighbour: the first filled one of up, left, right, down.
@@ -462,11 +505,13 @@
     for (let i = 0; i < N * N; i++) { const v = idx[i]; if (v < 0 || of[v] === undefined) continue; let gi = of[v]; const want = cellLine.get(i);
       if (allowTwins && want && want !== ramps[gi].line && ramps.length < 80) { const k = gi + "|" + want; if (!twinOf.has(k)) { twinOf.set(k, ramps.length); ramps.push(mk(groups[gi], want, gi)); } gi = twinOf.get(k); }
       cellPart[i] = gi; }
-    const slots = new Uint8Array(idx.length), solid = (x, y) => x >= 0 && y >= 0 && x < N && y < N && idx[y * N + x] >= 0;
+    const slots = new Uint8Array(idx.length), base = new Uint8Array(idx.length), solid = (x, y) => x >= 0 && y >= 0 && x < N && y < N && idx[y * N + x] >= 0;
     for (let i = 0; i < idx.length; i++) { const v = idx[i]; if (v < 0 || cellPart[i] < 0) continue; const gi = cellPart[i], r = ramps[gi]; let tone = toneOfM[v] ?? 1;
+      base[i] = gi * 3 + tone + 1;
       if (reshade && !r.pixels) { const x = i % N, y = (i / N) | 0; if (!solid(x, y - 1) || !solid(x - 1, y)) tone = Math.min(2, tone + 1); else if (!solid(x, y + 1) || !solid(x + 1, y)) tone = Math.max(0, tone - 1); }
       slots[i] = gi * 3 + tone + 1; }
-    return { ramps, slots, N };
+    const capInfo = reshade && cap != null ? capReshade(slots, base, ramps, outlineMode, cap) : null;
+    return { ramps, slots, N, capInfo };
   }
 
   function bakeResult(R) {
@@ -605,7 +650,7 @@
     $$("[data-ic-tool]", r).forEach((b) => (b.onclick = () => openSheet(S.sheet === b.dataset.icTool ? null : b.dataset.icTool)));
   }
   const chip = (attr, v, label, on, extra = "") => `<button type="button" class="toggle ic-chip" data-${attr}="${v}" aria-pressed="${on}"${extra}>${label}</button>`;
-  function row(label, inner) { return `<div class="ic-row"><span class="ic-lbl">${label}</span><div class="ic-ctl">${inner}</div></div>`; }
+  function row(label, inner, cls) { return `<div class="ic-row${cls ? " " + cls : ""}"><span class="ic-lbl">${label}</span><div class="ic-ctl">${inner}</div></div>`; }
   function slider(id, label, min, max, val, lo, hi) { return `<div class="ic-row ic-srow"><span class="ic-lbl" id="${id}-val">${label}</span><label class="ic-slider"><span class="ic-ends" aria-hidden="true"><span>${lo}</span><span>${hi}</span></span><input type="range" id="${id}" min="${min}" max="${max}" step="1" value="${val}" aria-label="${label}"></label></div>`; }
   function sheetHtml(id) {
     const D = cur(), set = D.settings, R = D.result, M = S.dirs[S.master];
@@ -627,7 +672,7 @@
           if (set.look !== "crisp") h += `<p class="hint ss-tight">Shrink, outline and clean-up apply to the Crisp look. ${LOOK_NAME[set.look]} has its own.</p>`;
           h += row("Shrink by", chip("ic-ds", "twopass", "2-pass (best)", set.downscale !== "majority") + chip("ic-ds", "majority", "Most common colour", set.downscale === "majority"));
           h += row("Outline", chip("ic-ol", "black", "Near-black", set.outline === "black") + chip("ic-ol", "hue", "Dark hue", set.outline === "hue") + chip("ic-ol", "none", "None", set.outline === "none"));
-          h += row("Extras", `<button type="button" class="toggle ic-chip" id="ic-clean" aria-pressed="${!!set.clean}">${set.clean ? "✓ " : ""}Tidy stray pixels</button><button type="button" class="toggle ic-chip ic-reshade" id="ic-reshade" aria-pressed="${!!set.reshade}">${set.reshade ? "✓ " : ""}Light from top left</button>`);
+          h += row("Extras", `<button type="button" class="toggle ic-chip ic-tick" id="ic-clean" aria-pressed="${!!set.clean}"><span class="ic-check" aria-hidden="true">${set.clean ? "✓" : ""}</span>Tidy stray pixels</button><button type="button" class="toggle ic-chip ic-tick ic-reshade" id="ic-reshade" aria-pressed="${!!set.reshade}"><span class="ic-check" aria-hidden="true">${set.reshade ? "✓" : ""}</span>Light from top left</button>`, "ic-row-extras");
           h += slider("ic-merge", `Merge ${set.merge}`, 10, 120, set.merge, "More parts", "Fewer");
         }
         return h;
@@ -736,9 +781,12 @@
   function banner() {
     const D = cur(), R = D.result; if (S.pickMode) return { text: "Tap the background colour on the picture.", btns: [["ic-pick-cancel", "Cancel"]] };
     if (!R) return null;
-    if (R.pink && !S.hintHidden.pink) return R.det.used === "magenta"
+    // r68: the pink hint only when the magenta key could eat real magenta-pink in the sprite; after the user switches
+    // it confirms. A missing magenta border is its own note (never blamed on pink).
+    const userKey = cur().settings.bgMode !== "magenta" && R.det.used === cur().settings.bgMode;
+    if (R.pink && !S.hintHidden.pink && (R.det.used === "magenta" || userKey)) return R.det.used === "magenta"
       ? { text: "Your sprite has pink in it. Try Corner colour or Pick background.", btns: [["ic-go-corner", "Corner colour"], ["ic-go-pick", "Pick background"]] }
-      : { text: `Your sprite has pink in it, so ${R.det.used === "pick" ? "your picked background" : "the corner colour"} is used, not the magenta key.`, btns: [["ic-hint-ok", "OK"]] };
+      : { text: `${R.det.used === "pick" ? "Your picked background" : "The corner colour"} is used, so the pink in your sprite stays.`, btns: [["ic-hint-ok", "OK"]] };
     if (R.det.note === "nomagenta" && !S.hintHidden.nomag) return { text: "No magenta background found, so the corner colour is used.", btns: [["ic-hint-ok2", "OK"]] };
     return null;
   }
@@ -842,6 +890,7 @@
     fn: { toStyleRamp, detectBackground, keyBackground, subjectBox, placement, downscale, autoPalette, styleRampPalette, snapPalette, cleanUp, groupParts, buildRamps, convert, pinkInside },
     _cap: {
       enginePx: () => { const R = cur().result; return R ? Array.from(R.enginePx, (c) => (c ? hex(c) : null)) : []; },
+      file: (url, dir) => loadInto(dir || S.cur, url, null),
       sample: (id, dir) => { const s = SAMPLES.find((y) => y.id === id); return loadInto(dir || S.cur, s.file, s.id); },
       convert: doConvert, set: (k, v) => step(() => { cur().settings[k] = v; }), openSheet, setDir: (d) => { S.cur = d; render(); }, divider: (f) => { S.divider = f; drawCanvas(); },
       undo, keep, backToOriginal, recolourPart, renamePart, part: (i) => { S.part = i; render(); },
@@ -849,7 +898,7 @@
       reset: () => { DIRS.forEach(([d]) => (S.dirs[d] = blankDir())); S.cur = "down"; S.hist = []; S.redo = []; S.sheet = null; S.pickMode = false; S.shared = { names: {}, recolours: {} }; S.hintHidden = {}; S.divider = 0.5; render(); },
       state: () => { const D = cur(), R = D.result; return { cur: S.cur, sheet: S.sheet, hist: S.hist.length, converted: D.converted, settings: D.settings, pickMode: S.pickMode,
         result: R && { N: R.N, det: R.det, parts: R.ramps.filter((r) => !r.twin).map((r) => ({ name: r.name, sw: r.sw, pixels: r.pixels, base: r.c[1] })), twins: R.ramps.filter((r) => r.twin).length, solid: R.idx.filter((v) => v >= 0).length, clean: { strays: R.clean.strays, specks: R.clean.specks, holes: R.clean.holes, islands: R.clean.islands },
-          bakedColours: new Set(bakeResult(R).filter(Boolean)).size, flagged: R.flagged.length, flagColours: R.flagColours, matched: R.matched, pink: R.pink, place: R.place,
+          bakedColours: new Set(bakeResult(R).filter(Boolean)).size, reshadeCap: R.reshadeCap, flagged: R.flagged.length, flagColours: R.flagColours, matched: R.matched, pink: R.pink, place: R.place,
           look: R.look, detail: R.detail, engineColours: R.engineColours, hybrid: R.hybrid, analyse: R.analyse, ms: R.ms,
           exact: (() => { const b = bakeResult(R); let same = 0, n = 0; R.enginePx.forEach((c, i) => { if (c || b[i]) { n++; if (c && b[i] && hex(c) === b[i]) same++; } }); return +(same / Math.max(1, n)).toFixed(3); })() } }; },
       // conversion time: cold = a new picture (engine analysis included), warm = changing a setting on the same picture

@@ -1,4 +1,7 @@
 /* Sprite Studio — round 63 clickable prototype (UX half of ux/pixel-editor-plan.md).
+   r68: the walk moves body regions (js/body-map.js) instead of splitting the sprite at the centre line; optional Body map
+   sheet to fix the auto guess; Back/Side views from the picture converter; "Needs back view" instead of a faked Up;
+   Left = mirror of Right is a toggle, plus "Weapon stays in the same hand".
    r64: opens in Basic/Advanced from profile.experience.spriteStudio (window.Experience), toolsShown filters the
    Advanced More sheet (hide only, same data), guided 'Next step' chip, empty-library starter choice.
    r63: true Basic mode for non-artists (ready-made parts, outline+shade always on, colour by part, Tidy, fixed 5-tool rail);
@@ -103,6 +106,7 @@
     unlocked: [], zoom: 1, panX: 0, panY: 0,
     hist: [], redo: [],
     walk: null, walkStyle: "four", touch: {}, frameSel: null, onion: true,
+    bodyMap: {}, bm: { region: 2, tool: "brush", size: 1, view: "down" }, walkOpts: { mirror: true, sameHand: true }, // r68
     chip: null, sheet: null, rotation: 0, upgraded: false, keepHistory: true,
     lastUnlockMsg: "",
     mode: "basic", piece: P_SHIRT, preset: null, edited: false, tidyInfo: null, prevDir: "right",
@@ -115,13 +119,17 @@
     st.parts = {}; PARTS.forEach((p) => (st.parts[p.id] = blank()));
     st.hist = []; st.redo = []; st.walk = null; st.touch = {}; st.frameSel = null; st.chip = null;
     RAMPS = defaultRamps(); st.tidyInfo = null; st.edited = false; st.importPieces = null; st.keepShade = false; st.importInfo = null;
+    st.bodyMap = {}; st.walkOpts = { mirror: true, sameHand: true }; st.bm.view = "down"; guessCache.clear();
   }
   function snapshot() {
     const parts = {}; Object.keys(st.parts).forEach((k) => (parts[k] = st.parts[k].slice()));
-    return { parts, ramps: JSON.stringify(RAMPS), preset: Object.assign({}, st.preset), touch: JSON.stringify(st.touch), outline: st.outline, shade: st.shade, dither: st.dither, upgraded: st.upgraded, walk: st.walk };
+    const bodyMap = {}; Object.keys(st.bodyMap).forEach((k) => (bodyMap[k] = st.bodyMap[k].slice()));
+    return { parts, ramps: JSON.stringify(RAMPS), preset: Object.assign({}, st.preset), touch: JSON.stringify(st.touch), outline: st.outline, shade: st.shade, dither: st.dither, upgraded: st.upgraded, walk: st.walk, bodyMap, walkOpts: Object.assign({}, st.walkOpts) };
   }
   function restore(s) {
     st.parts = s.parts; if (s.ramps) RAMPS = JSON.parse(s.ramps); if (s.preset) st.preset = s.preset; st.touch = JSON.parse(s.touch); st.outline = s.outline; st.shade = s.shade; st.dither = s.dither; st.upgraded = s.upgraded; st.walk = s.walk;
+    if (s.bodyMap) { st.bodyMap = {}; Object.keys(s.bodyMap).forEach((k) => (st.bodyMap[k] = s.bodyMap[k].slice())); }
+    if (s.walkOpts) st.walkOpts = Object.assign({}, s.walkOpts);
   }
   function pushHist() { st.hist.push(snapshot()); if (st.hist.length > 60) st.hist.shift(); st.redo = []; }
   function undo() { if (!st.hist.length) return say("Nothing to undo"); st.redo.push(snapshot()); restore(st.hist.pop()); st.chip = null; renderAll(); say("Undone"); }
@@ -162,32 +170,89 @@
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) o[y * W + x] = a[y * W + (W - 1 - x)];
     return o;
   }
-  function applyFrameOps(img, ops) {
+  // r67 walk, kept only so the r68 captures can show the old frames side by side (dev): it split the sprite at the centre line
+  function legacyFrameOps(img, ops) {
     const W = st.W, H = st.H, legRow = Math.floor(H * 0.72);
     let a = img.slice();
-    if (ops.includes("bob")) { // 1px bob: upper body sinks 1px
-      const o = a.slice();
-      for (let y = legRow - 1; y >= 0; y--) for (let x = 0; x < W; x++) o[y * W + x] = y > 0 ? a[(y - 1) * W + x] : 0;
-      a = o;
-    }
-    const lift = (fromX, toX) => { // one leg steps (its pixels move up 1px: legs swap front/back)
-      const o = a.slice();
-      for (let y = legRow; y < H; y++) for (let x = fromX; x < toX; x++) o[y * W + x] = y + 1 < H ? a[(y + 1) * W + x] : 0;
-      a = o;
-    };
+    if (ops.includes("bob")) { const o = a.slice(); for (let y = legRow - 1; y >= 0; y--) for (let x = 0; x < W; x++) o[y * W + x] = y > 0 ? a[(y - 1) * W + x] : 0; a = o; }
+    const lift = (fromX, toX) => { const o = a.slice(); for (let y = legRow; y < H; y++) for (let x = fromX; x < toX; x++) o[y * W + x] = y + 1 < H ? a[(y + 1) * W + x] : 0; a = o; };
     if (ops.includes("liftL")) lift(0, Math.floor(W / 2));
     if (ops.includes("liftR")) lift(Math.floor(W / 2), W);
     return a;
   }
+  const LEGACY_OPS = { bob: ["base", "bob"], four: ["base", "liftL bob", "base", "liftR bob"], six: ["base", "liftL", "liftL bob", "base", "liftR", "liftR bob"] };
+
+  /* ---------- r68: body map + region walk (js/body-map.js) ---------- */
+  const guessCache = new Map();
+  const hashImg = (a) => { let h = 2166136261; for (let i = 0; i < a.length; i++) { h ^= a[i]; h = Math.imul(h, 16777619); } return (h >>> 0).toString(36) + ":" + a.length; };
+  function bmInfo() {
+    if (st.importPieces) return { partOf: slotRamp };
+    return { partOf: slotRamp, weaponParts: new Set([P_WEAPON]), legParts: new Set([P_TROUSERS, P_BOOTS]), headParts: new Set([P_HAIR]) };
+  }
+  function guessFor(view, img) {
+    const key = view + "|" + (st.importPieces ? "i" : "d") + "|" + hashImg(img);
+    if (!guessCache.has(key)) { if (guessCache.size > 48) guessCache.clear(); guessCache.set(key, window.BodyMap.guess(img, st.W, st.H, bmInfo())); }
+    return guessCache.get(key);
+  }
+  // auto guess, with the user's brush strokes on top (0 = auto)
+  function regionsFor(view, img) {
+    const g = guessFor(view, img).reg, u = st.bodyMap[view]; if (!u || u.length !== g.length) return g;
+    const r = g.slice(); for (let i = 0; i < r.length; i++) if (img[i] && u[i]) r[i] = u[i]; return r;
+  }
+  // Which picture each walk row uses. Converted pictures only have the views the user gave; drawn sprites have them all.
+  function hasView(v) {
+    if (!st.importPieces) return true;
+    return v === "down" || !!st.parts["imp_" + v];
+  }
+  function dirSource(dirId) {
+    const sideView = hasView("side") && !(st.importPieces && !st.parts.imp_side);
+    if (dirId === "down") return { view: "down", kind: "front" };
+    if (dirId === "up") return hasView("up") ? { view: "up", kind: "front" } : { missing: "back" };
+    if (dirId === "right") return { view: "side", kind: sideView ? "side" : "front", frontOnly: !sideView };
+    // left
+    if (st.walkOpts.mirror || !st.importPieces) return { view: "side", kind: sideView ? "side" : "front", frontOnly: !sideView, mirror: true, sameHand: st.walkOpts.sameHand };
+    return hasView("left") ? { view: "left", kind: "side" } : { missing: "left" };
+  }
+  function viewImg(view) { return view === "left" ? st.parts.imp_left.slice() : composeFacing(view); }
   function frameImg(dirId, i) {
-    const d = DIRS.find((x) => x.id === dirId);
-    const ops = WALK_STYLES[st.walk || st.walkStyle].frames[i] || "base";
-    const a = applyFrameOps(composeFacing(d.facing), ops);
+    const src = dirSource(dirId); if (src.missing) return null;
+    const BM = window.BodyMap, phase = (BM.PHASES[st.walk || st.walkStyle] || BM.PHASES.four)[i] || "c1";
+    const img = viewImg(src.view), reg = regionsFor(src.view, img), W = st.W, H = st.H;
+    let a;
+    if (!src.mirror) a = BM.walkFrame(img, reg, W, H, phase, { view: src.kind });
+    else if (src.kind === "side" || !src.sameHand) a = mirrorImg(BM.walkFrame(img, reg, W, H, phase, { view: src.kind, weaponBehind: src.sameHand }));
+    else { // a front view walking left: everything flips except the weapon and the hand holding it
+      const wa = BM.weaponArm(reg, W, H), keep = [BM.WEAPON].concat(wa === BM.ARML || wa === BM.ARMR ? [wa] : []);
+      const rest = [1, 2, 3, 4, 5, 6, 7, 8].filter((r) => !keep.includes(r));
+      a = mirrorImg(BM.walkFrame(img, reg, W, H, phase, { view: src.kind, include: rest }));
+      const k = BM.walkFrame(img, reg, W, H, phase, { view: src.kind, include: keep }); for (let j = 0; j < k.length; j++) if (k[j]) a[j] = k[j];
+    }
     const t = (st.touch[dirId] || {})[i] || {};
-    Object.keys(t).forEach((k) => (a[+k] = t[k]));
+    Object.keys(t).forEach((q) => (a[+q] = t[q]));
     return a;
   }
-  function displayImg() { return st.frameSel ? frameImg(st.frameSel.dir, st.frameSel.i) : composeFacing(st.facing); }
+  function legacyFrame(dirId, i) {
+    const d = DIRS.find((x) => x.id === dirId);
+    return legacyFrameOps(composeFacing(d.facing), (LEGACY_OPS[st.walk || st.walkStyle] || LEGACY_OPS.four)[i] || "base");
+  }
+  function bmViews() {
+    const v = [["down", "Front"]];
+    if (hasView("up")) v.push(["up", st.importPieces ? "Back" : "Back"]);
+    if (!st.importPieces || st.parts.imp_side) v.push(["side", "Side"]);
+    if (st.importPieces && st.parts.imp_left && !st.walkOpts.mirror) v.push(["left", "Left"]);
+    return v;
+  }
+  function bmPaint(x, y) {
+    const W = st.W, H = st.H, v = st.bm.view, r = st.bm.size, o = Math.floor((r - 1) / 2);
+    if (!st.bodyMap[v] || st.bodyMap[v].length !== W * H) st.bodyMap[v] = new Uint8Array(W * H);
+    for (let dy = 0; dy < r; dy++) for (let dx = 0; dx < r; dx++) { const X = x - o + dx, Y = y - o + dy; if (X < 0 || Y < 0 || X >= W || Y >= H) continue; st.bodyMap[v][Y * W + X] = st.bm.tool === "eraser" ? 0 : st.bm.region; }
+  }
+  function bmLine(x0, y0, x1, y1) { const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1; let e = dx + dy;
+    for (;;) { bmPaint(x0, y0); if (x0 === x1 && y0 === y1) break; const e2 = 2 * e; if (e2 >= dy) { e += dy; x0 += sx; } if (e2 <= dx) { e += dx; y0 += sy; } } }
+  function displayImg() {
+    if (st.sheet === "bodymap") return viewImg(st.bm.view);
+    return (st.frameSel && frameImg(st.frameSel.dir, st.frameSel.i)) || composeFacing(st.facing);
+  }
 
   // Render rules: shade (3-step, top-left light) + auto 1px dark-hue outline. Returns colour per pixel.
   function bake(img, opts = {}) {
@@ -237,14 +302,20 @@
       g.fillStyle = document.documentElement.dataset.theme === "dark" ? "rgba(160,175,205,0.22)" : "rgba(40,55,90,0.13)";
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (tplMask(x, y)) g.fillRect(x * c, y * c, c, c);
     }
-    if (st.frameSel && st.onion) {
-      const n = WALK_STYLES[st.walk].frames.length, prev = bake(frameImg(st.frameSel.dir, (st.frameSel.i + n - 1) % n));
+    const prevImg = st.frameSel && st.onion && st.sheet !== "bodymap" ? frameImg(st.frameSel.dir, (st.frameSel.i + WALK_STYLES[st.walk].frames.length - 1) % WALK_STYLES[st.walk].frames.length) : null;
+    if (prevImg) {
+      const prev = bake(prevImg);
       g.globalAlpha = 0.28;
       prev.forEach((col, i) => { if (col) { g.fillStyle = col; g.fillRect((i % W) * c, Math.floor(i / W) * c, c, c); } });
       g.globalAlpha = 1;
     }
-    const cols = bake(displayImg());
+    const shown = displayImg(), cols = bake(shown);
     cols.forEach((col, i) => { if (col) { g.fillStyle = col; g.fillRect((i % W) * c, Math.floor(i / W) * c, c, c); } });
+    if (st.sheet === "bodymap") { // r68: body regions as coloured overlays; the picked region stronger
+      const reg = regionsFor(st.bm.view, shown), RG = window.BodyMap.REGIONS;
+      for (let i = 0; i < reg.length; i++) { if (!shown[i] || !reg[i]) continue; g.globalAlpha = reg[i] === st.bm.region ? 0.9 : 0.62; g.fillStyle = RG[reg[i]].col; g.fillRect((i % W) * c, Math.floor(i / W) * c, c, c); }
+      g.globalAlpha = 1;
+    }
     if (c >= 6) {
       g.fillStyle = css("--grid-line") || "#d0d5dd";
       for (let x = 0; x <= W; x++) g.fillRect(Math.min(x * c, W * c - 1), 0, 1, H * c);
@@ -314,6 +385,9 @@
     e.preventDefault();
     ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, t: Date.now() });
     try { e.target.setPointerCapture(e.pointerId); } catch (_) {}
+    if (ptrs.size === 1 && st.sheet === "bodymap") { // r68: painting the body map, not pixels
+      const [x, y] = cellFromEvent(e); g = { mode: "map", snap: snapshot(), last: [x, y] }; bmPaint(x, y); renderCanvas(); return;
+    }
     if (ptrs.size === 1) {
       const [x, y] = cellFromEvent(e);
       g = { mode: "draw", snap: snapshot(), last: [x, y], start: [x, y], cells: new Set([x + "," + y]), moved: 0, t0: Date.now() };
@@ -321,7 +395,7 @@
       if (st.tool === "fill") { clearTimeout(g.hold); if (fillAt(x, y, st.slot)) { st.hist.push(g.snap); st.redo = []; } g = null; renderAll(); return; }
       paintAt(x, y, st.tool === "eraser" ? 0 : st.slot); renderCanvas();
     } else {
-      if (g && g.mode === "draw") { clearTimeout(g.hold); restore(g.snap); }
+      if (g && (g.mode === "draw" || g.mode === "map")) { clearTimeout(g.hold); restore(g.snap); }
       const pts = [...ptrs.values()];
       g = { mode: "multi", n: ptrs.size, t0: Date.now(), moved: 0, d0: dist(pts), m0: mid(pts), zoom0: st.zoom, pan0: [st.panX, st.panY] };
       renderCanvas();
@@ -332,6 +406,7 @@
   function onMove(e) {
     if (!ptrs.has(e.pointerId) || !g) return;
     const p = ptrs.get(e.pointerId); const dm = Math.hypot(e.clientX - p.x, e.clientY - p.y);
+    if (g.mode === "map") { p.x = e.clientX; p.y = e.clientY; const [x, y] = cellFromEvent(e); if (x !== g.last[0] || y !== g.last[1]) { bmLine(g.last[0], g.last[1], x, y); g.last = [x, y]; renderCanvas(); } return; }
     if (g.mode === "draw") {
       g.moved += dm; p.x = e.clientX; p.y = e.clientY;
       const [x, y] = cellFromEvent(e);
@@ -348,6 +423,7 @@
     if (!ptrs.has(e.pointerId)) return;
     ptrs.delete(e.pointerId);
     if (!g) return;
+    if (g.mode === "map") { st.hist.push(g.snap); st.redo = []; g = null; renderAll(); return; }
     if (g.mode === "draw") {
       clearTimeout(g.hold);
       if (g.mode === "draw" && !g.picked) {
@@ -465,6 +541,27 @@
   function seg(group, opts, cur, attrs = "") {
     return `<div class="sheet-row wrap" role="group" aria-label="${group}">${opts.map(([v, l, dis]) => `<button type="button" class="toggle" data-${attrs}="${v}" aria-pressed="${cur === v}"${dis ? " disabled" : ""}>${l}</button>`).join("")}</div>`;
   }
+  function dirSub(id) {
+    const src = dirSource(id);
+    if (src.missing === "back") return "needs back view";
+    if (src.missing === "left") return "needs left view";
+    if (id === "left") return src.mirror ? "mirror of Right" : "own picture";
+    if (id === "right" && src.frontOnly && st.importPieces) return "front view";
+    return "";
+  }
+  function needsRows() {
+    let h = "";
+    if (dirSource("up").missing) h += `<div class="ss-needs" role="note"><span><b>Up needs a back view.</b> It stays empty instead of showing the face.</span><button type="button" class="btn btn-ghost" data-add-view="up">Add back view</button></div>`;
+    if (st.importPieces && dirSource("right").frontOnly) h += `<div class="ss-needs" role="note"><span>Left and right use the front view for now.</span><button type="button" class="btn btn-ghost" data-add-view="right">Add side view</button></div>`;
+    if (dirSource("left").missing) h += `<div class="ss-needs" role="note"><span>Left has no picture of its own.</span><button type="button" class="btn btn-ghost" data-add-view="left">Add left view</button></div>`;
+    return h;
+  }
+  function walkOptsRow() {
+    return `<div class="ss-walk-opts" role="group" aria-label="Walk options">
+      ${st.importPieces ? `<button type="button" class="toggle" id="ss-mirror-left" aria-pressed="${st.walkOpts.mirror}"><span class="ss-check" aria-hidden="true">${st.walkOpts.mirror ? "✓" : ""}</span>Left mirrors Right</button>` : ""}
+      <button type="button" class="toggle" id="ss-same-hand" aria-pressed="${st.walkOpts.sameHand}"><span class="ss-check" aria-hidden="true">${st.walkOpts.sameHand ? "✓" : ""}</span>Weapon in same hand</button>
+      <button type="button" class="btn btn-ghost" id="ss-open-bodymap">Body map</button></div>`;
+  }
   function frameThumb(dirId, i) { return `<canvas class="ss-thumb" data-thumb="${dirId}:${i}" width="${st.W}" height="${st.H}"></canvas>`; }
 
   function sheetHtml(id) {
@@ -508,7 +605,19 @@
             <figure><canvas id="ss-prev-day" width="96" height="64"></canvas><figcaption>Day</figcaption></figure>
             <figure><canvas id="ss-prev-night" width="96" height="64"></canvas><figcaption>Night · scene tint</figcaption></figure>
           </div>
-          ${seg("Preview direction", [["down", "Down"], ["up", "Up"], ["left", "Left"], ["right", "Right"]], st.prevDir, "pdir")}`;
+          ${seg("Preview direction", [["down", "Down"], ["up", "Up"], ["left", "Left"], ["right", "Right"]], st.prevDir, "pdir")}
+          ${needsRows()}${walkOptsRow()}`;
+      }
+      case "bodymap": {
+        const RG = window.BodyMap.REGIONS, views = bmViews();
+        return `<div class="ss-sheet-head ss-bm-head"><p class="eyebrow">Body map · pick a part, paint it</p><canvas class="ss-bm-walk" id="ss-bm-walk" width="${st.W}" height="${st.H}" role="img" aria-label="Walk preview with this map"></canvas><button type="button" class="toggle" id="ss-bm-done">Done</button></div>
+          ${views.length > 1 ? `<div class="ss-bm-views">${seg("View", views, st.bm.view, "bmview")}</div>` : ""}
+          <div class="ss-bm-chips" role="group" aria-label="Body part">${RG.slice(1).map((r) => `<button type="button" class="ss-bm-chip" data-bmreg="${r.id}" aria-pressed="${st.bm.tool === "brush" && st.bm.region === r.id}"><span class="ss-bm-dot" style="background:${r.col}" aria-hidden="true"></span><span class="ss-bm-name">${r.name}</span></button>`).join("")}</div>
+          <div class="ss-bm-tools" role="group" aria-label="Brush">
+            <button type="button" class="toggle" data-bmtool="brush" aria-pressed="${st.bm.tool === "brush"}">Brush</button><button type="button" class="toggle" data-bmtool="eraser" aria-pressed="${st.bm.tool === "eraser"}">Eraser</button>
+            <button type="button" class="toggle" data-bmsize="1" aria-pressed="${st.bm.size === 1}" aria-label="Brush size 1 pixel">1 px</button><button type="button" class="toggle" data-bmsize="3" aria-pressed="${st.bm.size === 3}" aria-label="Brush size 3 pixels">3 px</button>
+            <button type="button" class="toggle" id="ss-bm-auto"${st.bodyMap[st.bm.view] ? "" : " disabled"}>Auto</button></div>
+          <p class="hint ss-tight">Left and right as you see them. Eraser and Auto put back the guess. The walk moves each part 1–2 pixels, never stretches them.</p>`;
       }
       case "pencil":
         if (st.mode === "basic") return `<p class="eyebrow">Pencil · drawing ${pieces()[st.piece].name.toLowerCase()}</p>
@@ -534,11 +643,12 @@
           <button type="button" class="btn btn-primary ss-wide" id="ss-make-walk">Make walk cycle</button>`;
         const n = WALK_STYLES[st.walk].frames.length;
         return `<div class="ss-sheet-head"><p class="eyebrow">Walk · ${WALK_STYLES[st.walk].name} · 4 directions</p><button type="button" class="toggle" id="ss-onion" aria-pressed="${st.onion}">Onion skin</button></div>
-          <div class="ss-strip" style="--n:${n}">${DIRS.map((d) => `<div class="ss-strip-row"><span class="ss-strip-lbl">${d.label}${d.sub ? `<small>${d.sub}</small>` : ""}</span>${Array.from({ length: n }, (_, i) => {
+          <div class="ss-strip" style="--n:${n}">${DIRS.map((d) => dirSource(d.id).missing ? `<div class="ss-strip-row"><span class="ss-strip-lbl">${d.label}<small>${dirSub(d.id)}</small></span><button type="button" class="ss-needs-btn" style="grid-column: span ${n}" data-add-view="${d.id}">${dirSource(d.id).missing === "back" ? "Add back view" : "Add left view"}</button></div>` : `<div class="ss-strip-row"><span class="ss-strip-lbl">${d.label}${dirSub(d.id) ? `<small>${dirSub(d.id)}</small>` : ""}</span>${Array.from({ length: n }, (_, i) => {
             const sel = st.frameSel && st.frameSel.dir === d.id && st.frameSel.i === i;
             const touched = st.touch[d.id] && st.touch[d.id][i] && Object.keys(st.touch[d.id][i]).length;
             return `<button type="button" class="ss-frame${sel ? " is-sel" : ""}" data-frame="${d.id}:${i}" aria-pressed="${!!sel}" aria-label="${d.label} frame ${i + 1}${touched ? ", touched up" : ""}">${frameThumb(d.id, i)}${touched ? `<span class="ss-touch-dot" aria-hidden="true">✎</span>` : ""}</button>`; }).join("")}</div>`).join("")}</div>
           <p class="hint ss-tight">Tap a frame to touch it up. Drawing there changes only that frame.</p>
+          ${walkOptsRow()}
           ${facingRow}
           <div class="sheet-row wrap" style="margin-top:8px"><button type="button" class="btn btn-ghost" id="ss-rewalk">Change walk style</button><button type="button" class="btn btn-ghost" id="ss-open-preview2">Preview</button></div>`;
       }
@@ -599,7 +709,7 @@
     }
   }
   function drawSmall(cv, img, opts) {
-    if (!cv) return; const g2 = cv.getContext("2d"); g2.clearRect(0, 0, cv.width, cv.height);
+    if (!cv) return; const g2 = cv.getContext("2d"); g2.clearRect(0, 0, cv.width, cv.height); if (!img) return;
     bake(img, opts).forEach((col, i) => { if (col) { g2.fillStyle = col; g2.fillRect(i % st.W, Math.floor(i / st.W), 1, 1); } });
   }
   function wireSheet(id) {
@@ -654,7 +764,24 @@
       $("#ss-up-yes").onclick = () => { pushHist(); st.outline = true; st.shade = true; st.upgraded = true; if (!st.unlocked.includes("outline")) st.unlocked.push("outline"); openSheet(null); toast("Look updated · one undo step"); };
       $("#ss-up-no").onclick = () => openSheet(null);
     }
-    if (id === "preview" || (id === "walk" && st.walk)) startPreview(); else stopPreview();
+    // r68: body map + walk options
+    $("#ss-open-bodymap") && ($("#ss-open-bodymap").onclick = () => { st.bmReturn = st.sheet; st.frameSel = null; if (!bmViews().some((v) => v[0] === st.bm.view)) st.bm.view = "down"; openSheet("bodymap"); say("Body map: pick a part, then paint over it"); });
+    $("#ss-bm-done") && ($("#ss-bm-done").onclick = () => openSheet(st.bmReturn && st.bmReturn !== "bodymap" ? st.bmReturn : null));
+    $$("[data-bmreg]", b).forEach((x) => (x.onclick = () => { st.bm.region = +x.dataset.bmreg; st.bm.tool = "brush"; say(`Painting ${window.BodyMap.REGIONS[st.bm.region].name.toLowerCase()}`); renderAll(); }));
+    $$("[data-bmtool]", b).forEach((x) => (x.onclick = () => { st.bm.tool = x.dataset.bmtool; say(st.bm.tool === "eraser" ? "Eraser: puts back the guess" : "Brush"); renderAll(); }));
+    $$("[data-bmsize]", b).forEach((x) => (x.onclick = () => { st.bm.size = +x.dataset.bmsize; renderAll(); }));
+    $$("[data-bmview]", b).forEach((x) => (x.onclick = () => { st.bm.view = x.dataset.bmview; renderAll(); }));
+    $("#ss-bm-auto") && ($("#ss-bm-auto").onclick = () => { pushHist(); delete st.bodyMap[st.bm.view]; say("Back to the auto guess"); renderAll(); });
+    $("#ss-mirror-left") && ($("#ss-mirror-left").onclick = () => { pushHist(); st.walkOpts.mirror = !st.walkOpts.mirror; st.frameSel = null; say(st.walkOpts.mirror ? "Left mirrors Right" : "Left uses its own picture"); renderAll(); });
+    $("#ss-same-hand") && ($("#ss-same-hand").onclick = () => { pushHist(); st.walkOpts.sameHand = !st.walkOpts.sameHand; say(st.walkOpts.sameHand ? "Weapon stays in the same hand when mirrored" : "Mirror flips the weapon hand too"); renderAll(); });
+    $$("[data-add-view]", b).forEach((x) => (x.onclick = () => addView(x.dataset.addView)));
+    if (id === "preview" || (id === "walk" && st.walk) || id === "bodymap") startPreview(); else stopPreview();
+  }
+  function addView(dir) {
+    if (!window.ImagineConvert) return toast("The picture converter isn't loaded");
+    const name = { up: "back", right: "side", left: "left" }[dir] || dir;
+    ImagineConvert.open({ dir, pick: true });
+    toast(`Pick the ${name} view picture · it uses the same colours as your first picture`);
   }
   function setFacing(f) { st.facing = f; st.frameSel = null; say("Facing " + FACING_LABEL[f]); renderAll(); }
   function makeWalk() {
@@ -832,6 +959,8 @@
     stopPreview();
     const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
     const draw = () => {
+      const bmc = $("#ss-bm-walk");
+      if (bmc) { const dir = { down: "down", up: "up", side: "right", left: "left" }[st.bm.view] || "down", n = (window.BodyMap.PHASES[st.walk || st.walkStyle] || [0, 0, 0, 0]).length; drawSmall(bmc, frameImg(dir, prevTick % n) || viewImg(st.bm.view)); }
       ["day", "night"].forEach((k) => {
         const cv = $("#ss-prev-" + k); if (!cv) return;
         const g2 = cv.getContext("2d"); g2.imageSmoothingEnabled = false;
@@ -844,6 +973,7 @@
         const dir = st.walk ? pd : null, n = st.walk ? WALK_STYLES[st.walk].frames.length : 1;
         const fi = prevTick % n;
         const img = dir ? frameImg(dir, fi) : composeFacing("side");
+        if (!img) { if (k === "night") { g2.globalCompositeOperation = "multiply"; g2.fillStyle = "#6a7cb4"; g2.fillRect(0, 0, 96, 64); g2.globalCompositeOperation = "source-over"; } return; }
         const run = ((prevTick * 2 + 32 + st.W) % (96 + st.W)) - st.W;
         const x0 = reduce || pd === "down" || pd === "up" ? 32 : pd === "left" ? 96 - st.W - run : run, y0 = 60 - st.H;
         bake(img).forEach((col, i) => { if (col) { g2.fillStyle = col; g2.fillRect(x0 + (i % st.W), y0 + Math.floor(i / st.W), 1, 1); } });
@@ -1033,16 +1163,26 @@
   }
   // Keep: the converted picture becomes the sprite being edited. Each part = one colour set, so it recolours like a Basic hero.
   function importConverted(p) {
+    // r68: adding a Back / Side / Left view to the SAME first picture keeps everything (pencil touch-ups, walk, body map)
+    const mKey = p.dirs[p.master] ? hashImg(Uint8Array.from(p.dirs[p.master])) : null;
+    if (st.started && st.importPieces && st.importInfo && st.importInfo.masterKey === mKey && st.W === p.W && st.H === p.H && RAMPS.length === p.ramps.length) {
+      const map = { up: "imp_up", right: "imp_side", left: "imp_left" }, added = [];
+      Object.keys(p.dirs).forEach((d) => { if (d !== p.master && map[d]) { const had = !!st.parts[map[d]]; st.parts[map[d]] = Uint8Array.from(p.dirs[d]); if (!had) added.push(d); } });
+      st.importInfo.dirs = Object.keys(p.dirs); if (added.includes("left")) st.walkOpts.mirror = false;
+      st.sheet = null; renderAll(); say(added.length ? `${added.map((d) => ({ up: "Back", right: "Side", left: "Left" }[d])).join(" and ")} view added to the walk` : "Views updated");
+      return;
+    }
     st.kind = "hero"; st.W = p.W; st.H = p.H; st.tpl = null; st.started = true; st.zoom = 1; st.panX = st.panY = 0; st.tool = "pencil"; st.sheet = null; st.facing = "down";
     resetData();
     RAMPS = p.ramps.map((r) => ({ name: r.name, c: r.c.slice(), line: r.line, sw: r.sw }));
     st.importPieces = p.ramps.map((r) => ({ name: r.name, set: r.set, pixels: !!r.pixels, orig: r.orig, twinOf: r.twinOf }));
-    st.keepShade = !!p.keepShade; st.importInfo = { original: p.original, dirs: Object.keys(p.dirs), oneLine: !!p.oneLine }; // r67: one near-black outline stays on recolour
+    st.keepShade = !!p.keepShade; st.importInfo = { original: p.original, dirs: Object.keys(p.dirs), oneLine: !!p.oneLine, masterKey: mKey }; // r67: one near-black outline stays on recolour
     const map = { down: null, up: "imp_up", right: "imp_side", left: "imp_left" };
     Object.keys(p.dirs).forEach((d) => { if (d === p.master) st.parts.body = Uint8Array.from(p.dirs[d]); else if (map[d]) st.parts[map[d]] = Uint8Array.from(p.dirs[d]); });
     if (p.master !== "down") { st.parts.body = Uint8Array.from(p.dirs[p.master]); }
     st.mirror = false; st.preset = Object.assign({}, DEFAULT_PRESET); st.piece = Math.max(0, st.importPieces.findIndex((x) => !x.pixels)); st.slot = SLOT(st.piece, 1);
     if (st.mode === "advanced") { st.outline = p.outline !== false; st.shade = !st.keepShade; ["outline", "shade"].forEach((id) => { if (!st.unlocked.includes(id)) st.unlocked.push(id); }); }
+    if (window.BodyMap) guessFor("down", composeFacing("down")); // r68: body map auto guess right after Keep
     st.edited = false; renderAll(); say("Picture kept as your sprite. Recolour parts in Colour.");
   }
   window.SpriteStudio = {
@@ -1059,7 +1199,15 @@
       tidyDiff(preset) { const L = buildHero(preset, 32, 32), out = []; ["body", "back"].forEach((k) => { const r = tidyLayer(L[k], true); r.a.forEach((v, i) => { if (v !== L[k][i]) out.push(`${k}:${i % 32},${Math.floor(i / 32)} ${L[k][i]}->${v}`); }); }); return out; },
       rampsUsed: () => RAMPS.map((r) => r.sw),
       bakedColours() { const c = new Set(bake(displayImg()).filter(Boolean)); return c.size; },
-      bakedHex: () => bake(displayImg()), importTwins: () => (st.importPieces || []).map((p, i) => [i, p.twinOf]).filter(([, t]) => t !== undefined && t !== null),
+      bakedHex: () => bake(displayImg()),
+      // r68 walk + body map (dev / captures)
+      frameHex: (dir, i) => { const a = frameImg(dir, i); return a ? bake(a) : null; },
+      legacyFrameHex: (dir, i) => bake(legacyFrame(dir, i)),
+      frameDiffBase: (dir, i) => { const a = frameImg(dir, i), d = DIRS.find((x) => x.id === dir), b = a && composeFacing(d.facing === "left" ? "left" : d.facing); if (!a) return null; let n = 0; for (let k = 0; k < a.length; k++) if (a[k] !== b[k]) n++; return n; },
+      regions: (view) => { const v = view || "down"; return Array.from(regionsFor(v, viewImg(v))); },
+      regionCounts: (view) => { const v = view || "down", r = regionsFor(v, viewImg(v)), out = {}; r.forEach((x) => { if (x) { const k = window.BodyMap.REGIONS[x].key; out[k] = (out[k] || 0) + 1; } }); return out; },
+      bmPaintCells(view, region, cells) { pushHist(); const keep = Object.assign({}, st.bm); st.bm.view = view; st.bm.region = region; st.bm.tool = region ? "brush" : "eraser"; st.bm.size = 1; cells.forEach(([x, y]) => bmPaint(x, y)); Object.assign(st.bm, keep, { view }); renderAll(); },
+      walkOpts: () => Object.assign({}, st.walkOpts), dirSource, hasView: (v) => hasView(v), importTwins: () => (st.importPieces || []).map((p, i) => [i, p.twinOf]).filter(([, t]) => t !== undefined && t !== null),
       reset() { st.userMode = false; st.mode = "basic"; st.preset = Object.assign({}, DEFAULT_PRESET); st.piece = P_SHIRT; st.prevDir = "right"; st.started = false; st.kind = "hero"; st.pickW = 32; st.pickH = 32; st.unlocked = []; st.mirror = false; st.outline = false; st.shade = false; st.dither = "none"; st.advanced = false; st.upgraded = false; st.facing = "down"; st.sheet = null; st.lastUnlockMsg = ""; st.walkStyle = "four"; resetData(); renderAll(); },
       begin, unlock, openSheet, demoHero, setFacing, makeWalk, selectFrame, tapTool,
       touchUpFrame(dir, i) { // per-frame touch-up via the same write path as a pencil stroke

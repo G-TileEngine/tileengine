@@ -2877,3 +2877,19 @@ button.btn.is-blocked {
 .ms-sec .hint.ss-tight { margin: 0 0 8px; }
 .ss-empty-row .btn { font-size: 0.9rem; padding: 0 8px; }
 .ms-sec .big-seg + .hint.ss-tight { margin: 6px 0 0; }
+
+/* r68: unwired battle actions (Play/Test only) show as disabled "Coming soon", never silent buttons */
+.unit-ability-popup .popup-row.is-soon { color: var(--muted); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.unit-ability-popup .popup-soon { font-size: 0.72rem; font-weight: 700; color: var(--muted); border: 1px dashed currentColor; border-radius: 999px; padding: 1px 8px; }
+
+/* r68 (G): wall tips belong to the tapped edge only. No sticky :hover tips on touch screens; vertical edges anchor the
+   tip inside their own tile (not centred off the stage edge). */
+@media (hover: none) {
+  .grid.wall-hover-on .cell .wall-edge:hover:not(.show-tip) .wall-hover-tip { display: none; }
+}
+.cell .wall-edge.w .wall-hover-tip { left: 4px; transform: none; top: 50%; margin-top: -12px; }
+.cell .wall-edge.e .wall-hover-tip { left: auto; right: 4px; transform: none; top: 50%; margin-top: -12px; }
+
+/* r68 (L): keep every stage-card action a 48px touch target on a 390px phone */
+.stage-select-row .row-actions { display: grid; grid-template-columns: repeat(4, minmax(48px, 1fr)); gap: 6px; }
+.stage-select-row .row-actions .btn { min-width: 48px; min-height: 48px; padding-left: 6px; padding-right: 6px; }

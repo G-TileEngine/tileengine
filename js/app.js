@@ -95,6 +95,7 @@
     pendingPresetId: null,
     lastNotices: [],
     previewDev: false,
+    stagePlay: false, // r68: Play/Test mode on the stage. Off = edit mode: a unit tap opens the editor menu, never the battle menu
     previewStage: 1,
     god: { hp: 20, dmg: 1, mana: 14 },
     spriteName: "",
@@ -997,6 +998,8 @@
     window.renderAssign = renderAssign;
     window.closeUnitMenu = closeUnitMenu;
     window.openUnitMenu = openUnitMenu;
+    window.__setStagePlay = (on) => { state.stagePlay = !!on; closeUnitMenu(); }; // r68: Play/Test mode switch (no runtime yet)
+    window.__setStageSheet = (m) => setStageSheet(m);
 
   function orderedSteps(behaviour) {
     const menus = behaviour.menu_order || [];
@@ -1498,8 +1501,8 @@
     state.activeSetupId = entry.id;
     state.draftDoc = null;
     state.lastNotices = entry.notices;
-    toast("Behaviour saved");
-    show("behaviour-summary");
+    toast(`${abilityShortName(b, doc)} added to ${u.name}`); // r68 (J)
+    showAbilities(true); // r68 (K): back to the unit's abilities, which shows the new item and the ✦ count
   }
 
   /* ---------- summary / question ---------- */
@@ -1881,8 +1884,8 @@
     u.setups.push(entry);
     state.activeSetupId = entry.id;
     state.selectedBehaviourId = preset.behaviourId;
-    toast("Preset applied");
-    show("behaviour-summary");
+    toast(`${abilityShortName(behaviourById(preset.behaviourId), entry.doc)} added to ${u.name}`); // r68 (J)
+    showAbilities(true); // r68 (K)
   }
 
   function renderUpdatePreset() {
@@ -2703,7 +2706,46 @@
   }
 
 
+  // r68 (J): short ability name ("Teleport / Reposition" → "Teleport")
+  function abilityShortName(b, doc) { const n = (b && b.name) || (doc && (doc.name || doc.behaviourId)) || "Ability"; return String(n).split(" / ")[0].split(" (")[0]; }
+  window.__abilityShortName = abilityShortName;
+  window.__behaviourById = (id) => behaviourById(id);
+  // r68 (J): the unit's Edit view lists its abilities (behaviours and spells), each with a remove (×)
+  function renderUnitAbilities() {
+    const box = $("#sheet-unit-abilities"), u = selectedUnit(); if (!box) return;
+    const title = $("#sheet-unit-title"); if (title) title.textContent = u ? u.name : "Unit";
+    const list = (u && u.setups) || [];
+    box.innerHTML = `<p class="eyebrow ua-head">Abilities${list.length ? ` · ${list.length}` : ""}</p>` + (list.length
+      ? `<ul class="ua-list">${list.map((st) => { const b = behaviourById(st.doc && st.doc.behaviourId); const nm = abilityShortName(b, st.doc);
+          return `<li class="ua-row"><span class="ua-ico" aria-hidden="true">✦</span><button type="button" class="ua-txt" data-ua-open="${escapeHtml(st.id)}" aria-label="Edit ${escapeHtml(nm)}"><b>${escapeHtml(nm)}</b><small>${escapeHtml((b && b.group) || "Behaviour")}</small></button><button type="button" class="ua-x" data-ua-remove="${escapeHtml(st.id)}" aria-label="Remove ${escapeHtml(nm)} from ${escapeHtml(u.name)}">×</button></li>`; }).join("")}</ul>`
+      : `<p class="hint ua-empty">No behaviours yet.</p>`) +
+      `<div class="ua-actions"><button type="button" class="btn btn-primary ua-add" data-nav="pick-behaviour" aria-label="Add behaviour to ${escapeHtml(u ? u.name : "this unit")}">+ Add behaviour</button>` +
+      `<button type="button" class="btn btn-ghost ua-test" id="btn-unit-test" aria-label="Test this stage with ${escapeHtml(u ? u.name : "this unit")}">▶ Test</button></div>`;
+    const add = box.querySelector(".ua-add"); if (add) add.addEventListener("click", () => show("pick-behaviour"));
+    const tb = box.querySelector("#btn-unit-test"); if (tb) tb.addEventListener("click", () => { if (window.StageLive && StageLive.startTest) StageLive.startTest(u && u.id); });
+    box.querySelectorAll("[data-ua-open]").forEach((btn) => btn.addEventListener("click", () => {
+      state.activeSetupId = btn.dataset.uaOpen; const entry = activeSetupEntry();
+      if (entry) { const loaded = S.loadSetup(entry.doc, state.catalogueDoc); entry.doc = loaded.doc; entry.notices = loaded.notices; state.lastNotices = loaded.notices; }
+      show("behaviour-summary");
+    }));
+    box.querySelectorAll("[data-ua-remove]").forEach((btn) => btn.addEventListener("click", () => {
+      const id = btn.dataset.uaRemove, i = u.setups.findIndex((x) => x.id === id); if (i < 0) return;
+      const [gone] = u.setups.splice(i, 1); const nm = abilityShortName(behaviourById(gone.doc && gone.doc.behaviourId), gone.doc);
+      pushPaintStroke([{ kind: "live", undo: () => { u.setups.splice(i, 0, gone); renderUnitAbilities(); } }]);
+      persistProject(); renderGrid(); renderUnitAbilities(); toast(`${nm} removed from ${u.name}`);
+    }));
+  }
+  window.__renderUnitAbilities = renderUnitAbilities;
+  // r68 (K): THE abilities screen = the stage with the unit's sheet open on its Abilities list (the ✦ badge is visible beside it)
+  function showAbilities(fresh) {
+    const u = selectedUnit(); if (!u) { show("stage"); return; }
+    show("stage"); setStageSheet("unit"); renderUnitAbilities();
+    setTimeout(() => { const box = $("#sheet-unit-abilities"); if (box) { box.scrollIntoView({ block: "nearest" }); if (fresh) box.classList.add("ua-fresh"), setTimeout(() => box.classList.remove("ua-fresh"), 900); } }, 30);
+  }
+  window.__showAbilities = showAbilities;
+
   function setStageSheet(mode) {
+    if (mode === "unit") setTimeout(renderUnitAbilities, 0);
     const sheet = $("#stage-sheet");
     if (!sheet) return;
     const panels = {
@@ -3094,7 +3136,9 @@
       state.editorMinimap = row.minimap;
       state.activeLayer = row.activeLayer;
       state.walkRulesOverlay = !!row.walkRulesOverlay;
-      if (state.walkRulesOverlay) state.mapTool = "walls";
+      // r68 (G): the saved overlay only SHOWS walk rules; it never re-arms the Walls tool behind the user's back
+      // (on the CEO's phone that made empty-tile taps toggle wall edges and show wall tips instead of the tile menu).
+      if (state.walkRulesOverlay && state.mapTool !== "walls") state.walkRulesOverlay = false;
       const btn = $("#btn-walls");
       if (btn) btn.setAttribute("aria-pressed", state.mapTool === "walls" ? "true" : "false");
     } catch (e) {}
@@ -3249,10 +3293,13 @@
           if (ev.pointerType === "mouse" && ev.button !== 0) return;
           clearLp();
           const sx = ev.clientX, sy = ev.clientY;
+          // r68: only a unit that was here at press time can be long-pressed (a unit placed
+          // during the press must not pop a menu and swallow the next tap).
+          const unitAtDown = state.units.find((u) => u.x === x && u.y === y);
           _lpTimer = setTimeout(() => {
             _lpTimer = null;
             const unit = state.units.find((u) => u.x === x && u.y === y);
-            if (unit) {
+            if (unit && unit === unitAtDown) {
               state.selectedUnitId = unit.id;
               state._longPressHandled = true;
               renderGrid();
@@ -3260,7 +3307,7 @@
                 '#stage-grid .cell[data-x="' + x + '"][data-y="' + y + '"]'
               ) || document.querySelector("#stage-grid .cell.selected");
               openUnitMenu(unit, fresh);
-              toast("Long-press · unit menu");
+              if (state.stagePlay) toast("Long-press · unit menu");
             } else if (state.mapTool === "walls" && state.wallHover !== false) {
               state._longPressHandled = true;
               renderGrid();
@@ -3283,6 +3330,14 @@
           cell.addEventListener("pointermove", move);
           cell.addEventListener("pointerup", up);
           cell.addEventListener("pointercancel", up);
+          // r68: the stage scroller captures the pointer, so pointerup may never reach this cell.
+          // Listen on the document too, otherwise the timer fires after a normal tap.
+          document.addEventListener("pointerup", up, { once: true, capture: true });
+          document.addEventListener("pointercancel", up, { once: true, capture: true });
+          document.addEventListener("pointermove", move, { capture: true });
+          const offMove = () => document.removeEventListener("pointermove", move, { capture: true });
+          document.addEventListener("pointerup", offMove, { once: true, capture: true });
+          document.addEventListener("pointercancel", offMove, { once: true, capture: true });
         });
         grid.appendChild(cell);
         cells[x + "," + y] = cell;
@@ -3594,6 +3649,15 @@
   }
 
   function openUnitMenu(unit, cellEl) {
+    // r68: in edit mode a tap on any unit (hero or enemy) opens the editor menu (Edit · Move · Delete, + Behaviour for NPCs),
+    // the same pattern as houses and NPCs. The battle menu (Attack · Spells · Items) is only for Play/Test mode.
+    if (!state.stagePlay) {
+      closeUnitMenu();
+      if (unit) { state.selectedUnitId = unit.id; setStageSheet("unit"); }
+      if (unit && window.StageLive && StageLive.unitMenu) StageLive.unitMenu(unit.x, unit.y);
+      return;
+    }
+    if (window.StageLive && StageLive.battleMenu && StageLive.testing && StageLive.testing()) { closeUnitMenu(); if (unit) StageLive.battleMenu(unit.x, unit.y); return; }
     const popup = $("#unit-ability-popup");
     const backdrop = $("#popup-backdrop");
     // Editor sheet always shows Sprite/Stats/Behaviour for the selected unit.
@@ -4698,6 +4762,17 @@
     state.mapH = map.rows;
   }
 
+  // r68 (L): stages don't carry cols/rows; their map does (stage.mapRef). Fall back to the
+  // project's first map, then the project default map size.
+  function stageSizeLabel(st) {
+    const P = state.project;
+    let m = st && (st.cols && st.rows ? st : (P && st && st.mapRef ? ProjectStore.getMap(P, st.mapRef) : null));
+    if (!m || !m.cols || !m.rows) m = P ? (ProjectStore.listMaps(P).find((x) => x && x.cols && x.rows) || null) : null;
+    const c = (m && m.cols) || state.mapW || 6, r = (m && m.rows) || state.mapH || 9;
+    return `${c}×${r}`;
+  }
+  window.__stageSizeLabel = stageSizeLabel;
+
   function renderStageSelect() {
     const root = $("#stage-select-list");
     if (!root || !state.project) return;
@@ -4708,7 +4783,7 @@
         return `<div class="stage-select-row" role="listitem">
           <div class="row-top">
             <button type="button" class="name-btn" data-open-stage="${escapeHtml(map.id)}" aria-label="Open ${escapeHtml(map.name)}" aria-pressed="${selected}">${escapeHtml(map.name)}</button>
-            <span class="hint" style="margin:0">${map.cols}×${map.rows}</span>
+            <span class="hint" style="margin:0">${stageSizeLabel(map)}</span>
           </div>
           <div class="row-actions">
             <button type="button" class="btn btn-ghost" data-rename-stage="${escapeHtml(map.id)}" aria-label="Rename">Rename</button>
@@ -5492,7 +5567,7 @@
           toast("Hand opened");
           return;
         }
-        toast(c.textContent.trim() + " (placeholder)");
+        if (c.getAttribute("aria-disabled") === "true") { toast(c.dataset.action + " is coming soon"); return; }
         closeUnitMenu();
       })
     );
@@ -5528,6 +5603,8 @@
           state.spriteReturn = curId === "sprite-upload" ? (state.spriteReturn || "stage") : curId;
         }
         if (to === "place-unit") {
+          // r68 (H): stay on the art view. Arm the unit; a tap shows a snapping ghost (green / red) and drops it.
+          if (window.StageLive && StageLive.armUnit) { state.placeMode = false; StageLive.armUnit(); return; }
           state.placeMode = true;
           show("place-unit");
           return;
@@ -5560,6 +5637,7 @@
           wizardBack(btn.getAttribute("data-from"));
           return;
         }
+        if (to === "unit-abilities") { showAbilities(); return; } // r68 (K)
         if (to === "stage") state.placeMode = false;
         if (to === "assign-behaviour" && !state.draftDoc && !state.selectedBehaviourId) {
           show("pick-behaviour");
@@ -5890,7 +5968,7 @@
 
       scroll.addEventListener("pointerdown", (e) => {
         if (e.target.closest(".stage-tools, .stage-rail, .stage-sheet, .stage-top, .stage-fab-undo, .stage-status-chip, .minimap-chip, .minimap, .walls-prefs, .unit-ability-popup, .card-hand, .popup-backdrop")) return;
-        scroll.setPointerCapture(e.pointerId);
+        try { scroll.setPointerCapture(e.pointerId); } catch (_) {}
         pts.set(e.pointerId, e);
         if (pts.size === 2) {
           const [a, b] = [...pts.values()];

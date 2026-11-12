@@ -1,0 +1,30 @@
+/* r68 — Sprite Studio body map + walk options (js/body-map.js, js/sprite-studio.js). 48px targets, calm r62 look. */
+.ss-bm-head { gap: 8px; }
+.ss-bm-head .eyebrow { flex: 1; min-width: 0; }
+.ss-bm-walk { width: 48px; height: 48px; image-rendering: pixelated; border-radius: 10px; border: 2px solid var(--line);
+  background: repeating-conic-gradient(var(--checker-a, #eceff4) 0% 25%, var(--checker-b, #fff) 0% 50%) 0 0 / 8px 8px; flex-shrink: 0; }
+.ss-bm-views .sheet-row { margin: 0 0 6px; flex-wrap: nowrap; }
+.ss-bm-views .toggle { flex: 1; min-width: 0; font-size: 0.85rem; padding: 0 8px; }
+.ss-bm-chips { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-bottom: 6px; }
+.ss-bm-chip { min-height: 48px; min-width: 0; display: flex; align-items: center; gap: 5px; padding: 0 6px; border-radius: 12px;
+  border: 2px solid var(--line); background: var(--surface); color: var(--ink); font-weight: 700; font-size: 0.76rem; line-height: 1.1; text-align: left; }
+.ss-bm-chip[aria-pressed="true"] { border: 3px solid var(--accent); background: var(--accent-soft); padding: 0 5px; }
+.ss-bm-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--ink); }
+.ss-bm-name { min-width: 0; overflow-wrap: normal; hyphens: none; }
+.ss-bm-tools { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin-bottom: 4px; }
+.ss-bm-tools .toggle { min-width: 0; padding: 0 6px; font-size: 0.85rem; }
+.ss-bm-tools .toggle:disabled { opacity: 1; color: var(--muted); border-style: dashed; background: var(--bg); }
+/* walk options: fixed-width check space so the ✓ never reflows the row */
+.ss-walk-opts { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; }
+.ss-walk-opts .toggle, .ss-walk-opts .btn { min-height: 48px; font-size: 0.85rem; padding: 0 12px; }
+.ss-check { display: inline-block; width: 1.1em; text-align: left; }
+.ss-needs { display: flex; align-items: center; gap: 8px; padding: 8px 10px; margin: 8px 0 4px; border-radius: 12px; background: var(--accent-soft); color: var(--ink); font-size: 0.85rem; line-height: 1.3; }
+.ss-needs span { flex: 1; min-width: 0; }
+.ss-needs .btn { min-height: 48px; flex-shrink: 0; font-size: 0.85rem; padding: 0 12px; }
+.ss-needs-btn { min-height: 48px; border-radius: 10px; border: 2px dashed var(--line); background: var(--bg); color: var(--ink); font-weight: 700; font-size: 0.85rem; }
+@media (min-width: 760px) {
+  .ss-bm-chips { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ss-bm-tools { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ss-bm-tools #ss-bm-auto { grid-column: span 2; }
+  .ss-bm-walk { width: 64px; height: 64px; }
+}

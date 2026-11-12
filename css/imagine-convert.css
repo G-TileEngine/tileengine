@@ -95,3 +95,11 @@ label.btn { cursor: pointer; }
   .ic-looks { grid-template-columns: repeat(4, 1fr); }
   .ic-empty { padding: 32px max(32px, calc(50% - 260px)); }
 }
+
+/* r68 (D): Extras chips keep a fixed width when ticked — the ✓ has its own reserved space — and sit on one fixed
+   2-column row, so nothing wraps into the Merge slider. Labels line up with the first row of their controls. */
+.ic-row-extras { align-items: start; }
+.ic-row-extras .ic-lbl { min-height: 48px; display: flex; align-items: center; }
+.ic-row-extras .ic-ctl { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.ic-row-extras .ic-chip { min-width: 0; padding: 0 6px; display: flex; align-items: center; justify-content: center; gap: 2px; line-height: 1.15; text-align: left; }
+.ic-check { display: inline-block; width: 1.1em; flex: 0 0 1.1em; text-align: center; font-weight: 800; }

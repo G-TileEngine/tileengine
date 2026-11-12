@@ -148,6 +148,7 @@
   /* ---------- decorate the grid after app.js paints it ---------- */
   function decorate(grid, cells) {
     const s = S(), art = prefs.look === "art";
+    if ((L.erase || L.arm) && s.mapTool) { L.erase = null; L.arm = null; const eb = $("#btn-erase"); if (eb) eb.setAttribute("aria-pressed", "false"); renderChip(); } // a rail tool took over
     grid.classList.toggle("live-art", art); grid.classList.toggle("live-blocks", !art); grid.classList.toggle("lines-off", !prefs.lines);
     grid.style.setProperty("--gap", prefs.lines ? "1px" : "0px");
     for (let y = 0; y < s.mapH; y++) for (let x = 0; x < s.mapW; x++) {
@@ -175,12 +176,18 @@
       if (art || isNpc(u)) cell.appendChild(el);
       if (!art && isNpc(u)) { const tok = cell.querySelector(".unit-token"); if (tok) tok.textContent = "N"; }
     });
+    // r68 (J): ✦N badge = how many abilities the unit has
+    s.units.forEach((u) => { const n = (u.setups || []).length, cell = cells[u.x + "," + u.y]; if (!n || !cell) return;
+      const b = document.createElement("span"); b.className = "lu-abil"; b.textContent = "✦" + n; b.setAttribute("aria-hidden", "true"); cell.appendChild(b);
+      cell.setAttribute("aria-label", (cell.getAttribute("aria-label") || "") + `, ${n} abilit${n === 1 ? "y" : "ies"}`); });
+    if (L.test && L.test.targeting) L.test.targeting.targets.forEach((k) => { const c = cells[k]; if (c) c.classList.add("test-target"); });
+    if (L.test && L.test.blink) { const b = L.test.blink, c1 = cells[b.to], c0 = cells[b.from]; if (c1) c1.classList.add("test-blink-in"); if (c0) c0.classList.add("test-blink-out"); }
     if (L.move) drawMove(cells);
     if (L.popCell) { const c = cells[L.popCell.x + "," + L.popCell.y]; if (c) c.classList.add("live-target"); }
   }
 
   /* ---------- popover ---------- */
-  const L = { pop: null, popCell: null, move: null, brush: null, drag: null };
+  const L = { pop: null, popCell: null, move: null, brush: null, drag: null, arm: null, erase: null, test: null };
   function popEl() {
     let p = $("#live-pop"); if (p) return p;
     p = document.createElement("div"); p.id = "live-pop"; p.className = "live-pop"; p.hidden = true; p.setAttribute("role", "dialog");
@@ -211,7 +218,7 @@
   const menuBtn = (a, ico, label, v = "") => `<button type="button" class="lp-btn" data-lp="${a}" data-v="${v}"><span class="lp-ico" aria-hidden="true">${ico}</span><span>${esc(label)}</span></button>`;
   const artBtn = (a, v, img, label, extra = "") => `<button type="button" class="lp-art-btn" data-lp="${a}" data-v="${v}" aria-label="${esc(label)}"><span class="lp-art${extra}" style="background-image:url(${img})" aria-hidden="true"></span><span class="lp-art-lbl">${esc(label)}</span></button>`;
   function emptyMenu(x, y) {
-    openPop(x, y, head("Add here", `Tile ${x + 1},${y + 1}`) + `<div class="lp-grid">${menuBtn("pick", "🙂", "NPC", "npc")}${menuBtn("pick", "🏠", "Building", "building")}${menuBtn("pick", "🌊", "Terrain", "terrain")}${menuBtn("pick", "🌱", "Land", "land")}</div>`, "Add here");
+    openPop(x, y, head("Add here", `Tile ${x + 1},${y + 1}`) + `<div class="lp-grid">${menuBtn("addUnit", "🧍", "Unit")}${menuBtn("pick", "🙂", "NPC", "npc")}${menuBtn("pick", "🏠", "Building", "building")}${menuBtn("pick", "🌊", "Terrain", "terrain")}${menuBtn("pick", "🌱", "Land", "land")}</div>`, "Add here");
   }
   function picker(x, y, what, mode) {
     const verb = mode === "edit" ? "swap" : "add";
@@ -225,7 +232,7 @@
     const u = unitAt(x, y), o = objectCovering(x, y), t = typeAt(x, y);
     if (u) {
       const role = isNpc(u) && u.npcRole ? ROLES.find((r) => r[0] === u.npcRole) : null;
-      return openPop(x, y, head(unitName(u), isNpc(u) ? (role ? "Does: " + role[1] : "No behaviour yet") : u.id === 2 ? "Rival team" : "Your team") + `<div class="lp-grid">${isNpc(u) ? menuBtn("roles", "🎭", "Behaviour") : ""}${menuBtn("edit", "✏️", "Edit")}${menuBtn("move", "✥", "Move")}${menuBtn("del", "🗑", "Delete")}</div>`, unitName(u));
+      return openPop(x, y, head(unitName(u), isNpc(u) ? (role ? "Does: " + role[1] : "No behaviour yet") : u.id === 2 ? "Rival team" : "Your team") + `<div class="lp-grid">${isNpc(u) ? menuBtn("roles", "🎭", "Behaviour") : ""}${menuBtn("edit", "✏️", "Edit")}${menuBtn("move", "✥", "Move")}${menuBtn("del", "🗑", "Delete")}${isNpc(u) ? "" : menuBtn("test", "▶", "Test")}</div>`, unitName(u));
     }
     if (o) { const m = objMeta(o.assetId); return openPop(x, y, head(m.name, m.fw > 1 ? `${m.fw}×${m.fh} tiles` : "1 tile") + `<div class="lp-grid">${menuBtn("edit", "✏️", "Edit")}${menuBtn("move", "✥", "Move")}${menuBtn("del", "🗑", "Delete")}</div>`, m.name); }
     return openPop(x, y, head((TILES[t] || TILES.floor).name, `Tile ${x + 1},${y + 1}`) + `<div class="lp-grid">${menuBtn("edit", "✏️", "Edit")}${menuBtn("move", "✥", "Move")}${menuBtn("del", "🗑", "Delete")}</div>`, (TILES[t] || TILES.floor).name);
@@ -268,7 +275,8 @@
     if (a === "edit") {
       const u = unitAt(x, y), o = objectCovering(x, y);
       if (u && isNpc(u)) return picker(x, y, "npc", "edit");
-      if (u) { closePop(); s.selectedUnitId = u.id; window.renderGrid && renderGrid(); const cell = document.querySelector(`#stage-grid .cell[data-x="${x}"][data-y="${y}"]`); window.openUnitMenu && openUnitMenu(u, cell); return; }
+      // r68: Edit on a hero/enemy opens its editor sheet (Sprite · Stats · Behaviour), never the battle menu
+      if (u) { closePop(); s.selectedUnitId = u.id; window.renderGrid && renderGrid(); window.__setStageSheet && __setStageSheet("unit"); toast(`Editing ${unitName(u)}`); return; }
       if (o) return picker(o.at.c, o.at.r, "building", "edit");
       return picker(x, y, "terrain", "edit");
     }
@@ -286,6 +294,160 @@
       const t = typeAt(x, y), list = [setType(x, y, "floor")]; pushUndo(() => restoreTerrain(list)); commit(); toast(`${(TILES[t] || TILES.floor).name} removed`); return;
     }
     if (a === "move") return startMove(x, y);
+    if (a === "addUnit") return startNewUnit(x, y);
+    if (a === "delEdge") return deleteEdge(x, y, v);
+    if (a === "test") { const u = unitAt(x, y); return startTest(u && u.id); }
+    if (a === "soon") { toast(`${v} is coming soon`); return; }
+    if (a === "noplay") { toast(`${v} is not playable yet`); return; }
+    if (a === "tSpells") return spellsMenu(x, y);
+    if (a === "tCast") return castAbility(x, y, v, false);
+    if (a === "tCastAny") return castAbility(x, y, v, true);
+  }
+
+  /* ---------- r68 (I): walls — tap a wall edge for a small Delete menu, long-press to delete with a confirm, Erase tool ---------- */
+  const SIDE_NAME = { n: "top", e: "right", s: "bottom", w: "left" };
+  function edgeKey(e) { return e.c + "," + e.r + "," + e.side; }
+  function hasEdge(x, y, side) {
+    const c = mapCtx(); if (!c || !c.map.logic || !Array.isArray(c.map.logic.edges)) return false;
+    const map = c.map, canon = ProjectStore.canonicalizeEdge(map, { c: x, r: y, side }); if (!canon) return false; const k = edgeKey(canon);
+    return c.map.logic.edges.some((e) => { const q = ProjectStore.canonicalizeEdge(map, e) || e; return edgeKey(q) === k; });
+  }
+  // the wall edge under a tap: the nearest side of the tile that has a wall, within `band` of the tile size
+  function edgeNear(x, y, ev, band) {
+    if (!ev || ev.clientX == null) return null; const cell = document.querySelector(`#stage-grid .cell[data-x="${x}"][data-y="${y}"]`); if (!cell) return null;
+    const r = cell.getBoundingClientRect(), lim = Math.max(6, r.width * band);
+    const d = { n: ev.clientY - r.top, s: r.bottom - ev.clientY, w: ev.clientX - r.left, e: r.right - ev.clientX };
+    let best = null; Object.keys(d).forEach((k) => { if (d[k] <= lim && d[k] >= -2 && hasEdge(x, y, k) && (!best || d[k] < d[best])) best = k; }); return best;
+  }
+  function wallMenu(x, y, side, confirm) {
+    L.popEdge = { x, y, side };
+    openPop(x, y, confirm
+      ? head("Delete this wall?", `${SIDE_NAME[side]} edge of tile ${x + 1},${y + 1}`) + `<div class="lp-grid">${menuBtn("delEdge", "🗑", "Delete wall", side)}${menuBtn("close", "↩", "Keep it")}</div>`
+      : head("Wall", `${SIDE_NAME[side]} edge of tile ${x + 1},${y + 1}`) + `<div class="lp-grid">${menuBtn("delEdge", "🗑", "Delete", side)}</div>`, "Wall");
+  }
+  function deleteEdge(x, y, side) {
+    const c = mapCtx(); closePop(); if (!c || !hasEdge(x, y, side)) return;
+    ProjectStore.toggleMapEdge(c.s.project, c.ref, { c: x, r: y, side });
+    pushUndo(() => { if (!hasEdge(x, y, side)) ProjectStore.toggleMapEdge(S().project, mapCtx().ref, { c: x, r: y, side }); });
+    commit(); toast("Wall removed");
+  }
+  function clearRailTools() {
+    const s = S(); if (!s) return; s.mapTool = null; s.walkRulesOverlay = false;
+    ["#btn-paint", "#btn-fill", "#btn-walls", "#btn-objects", "#btn-move"].forEach((id) => { const b = $(id); if (b) b.setAttribute("aria-pressed", "false"); });
+    const pp = $("#paint-prefs"); if (pp) pp.hidden = true;
+  }
+  function armErase(on) {
+    closePop(); L.brush = null; L.arm = null; if (L.move) cancelMove();
+    L.erase = on === false || (on == null && L.erase) ? null : { last: null };
+    if (L.erase) clearRailTools();
+    const b = $("#btn-erase"); if (b) b.setAttribute("aria-pressed", String(!!L.erase));
+    renderChip(); window.renderGrid && renderGrid();
+  }
+  // erase one thing at a tile: a wall edge near the finger first, then a building / prop, then the terrain (back to grass)
+  function eraseAt(x, y, ev) {
+    const c = mapCtx(); if (!c) return null;
+    const side = edgeNear(x, y, ev, 0.3), key = x + "," + y + ":" + (side || "");
+    if (L.erase && L.erase.last === key) return null; if (L.erase) L.erase.last = key;
+    if (side) { ProjectStore.toggleMapEdge(c.s.project, c.ref, { c: x, r: y, side }); pushUndo(() => { if (!hasEdge(x, y, side)) ProjectStore.toggleMapEdge(S().project, mapCtx().ref, { c: x, r: y, side }); }); commit(); return "wall"; }
+    const o = objectCovering(x, y);
+    if (o) { const keep = JSON.parse(JSON.stringify(o)); ProjectStore.removeMapObjectAt(c.s.project, c.ref, o.at.c, o.at.r); pushUndo(() => ProjectStore.addMapObject(S().project, mapCtx().ref, keep)); commit(); return objMeta(o.assetId).name; }
+    const t = typeAt(x, y);
+    if (t !== "floor") { const list = [setType(x, y, "floor")]; pushUndo(() => restoreTerrain(list)); commit(); return (TILES[t] || TILES.floor).name; }
+    return null;
+  }
+
+  /* ---------- r68 (H): place a unit on the art view — arm, tap a tile, ghost snaps (green / red), drop ---------- */
+  function armUnit() {
+    closePop(); L.brush = null; L.erase = null; if (L.move) cancelMove(); clearRailTools();
+    if (window.__setStageSheet) __setStageSheet(null);
+    L.arm = { kind: "unit" }; renderChip(); window.renderGrid && renderGrid();
+  }
+  function startNewUnit(x, y) {
+    closePop(); L.arm = null;
+    L.move = { kind: "newunit", id: -1, fw: 1, fh: 1, name: "New unit", from: { c: -99, r: -99 }, at: { c: x, r: y } };
+    window.renderGrid && renderGrid(); renderMoveChip();
+  }
+
+  /* ---------- r68 (J): Test mode — a lightweight play test on this stage; nothing is saved ---------- */
+  const knobValue = (doc, b, id) => { const a = doc && doc.answers && doc.answers[id], k = b && (b.knobs || []).find((q) => q.id === id);
+    return a && a.source !== "default" && a.value !== undefined ? a.value : k ? k.default : undefined; };
+  const behaviourOf = (entry) => (window.__behaviourById ? __behaviourById(entry.doc && entry.doc.behaviourId) : null);
+  const shortName = (entry) => (window.__abilityShortName ? __abilityShortName(behaviourOf(entry), entry.doc) : (entry.doc && entry.doc.name) || "Ability");
+  // runtime wiring: only abilities listed here can be played in Test
+  const RUNTIME = {
+    teleport(u, entry, forceAny) { // catalogue: Teleport / Reposition — knob "destination": beside-own-summon (default) | any-empty-tile
+      const b = behaviourOf(entry), dest = forceAny ? "any-empty-tile" : knobValue(entry.doc, b, "destination") || "beside-own-summon", s = S(), out = new Set();
+      if (dest === "any-empty-tile") { for (let y = 0; y < s.mapH; y++) for (let x = 0; x < s.mapW; x++) if (!blockedReason(x, y, 1, 1)) out.add(x + "," + y); }
+      else s.units.filter((q) => q.summon && q.summonedBy === u.id).forEach((q) => { for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if ((dx || dy) && !blockedReason(q.x + dx, q.y + dy, 1, 1)) out.add((q.x + dx) + "," + (q.y + dy)); });
+      return { targets: out, dest, spends: !!knobValue(entry.doc, b, "spends_action"), destLabel: ((b && (b.knobs || []).find((k) => k.id === "destination")) || { options: [] }).options.reduce((m, o) => (o.value === dest ? o.label : m), dest) };
+    },
+  };
+  function testing() { return !!L.test; }
+  function startTest(unitId) {
+    if (L.test) return; closePop(); L.brush = null; L.arm = null; L.erase = null; if (L.move) cancelMove(); clearRailTools();
+    const s = S(); L.test = { snap: JSON.stringify(s.units), targeting: null, blink: null, log: [], focus: unitId || null, actions: {} };
+    if (window.__setStageSheet) __setStageSheet(null); if (window.__setStagePlay) __setStagePlay(true);
+    const u = s.units.find((q) => q.id === unitId);
+    say(u ? `Test started. Tap ${unitName(u)} to act.` : "Test started. Tap a unit to act.");
+    window.renderGrid && renderGrid(); toast("Test mode · nothing is saved");
+  }
+  function exitTest() {
+    if (!L.test) return; const s = S(), snap = JSON.parse(L.test.snap);
+    s.units.length = 0; snap.forEach((u) => s.units.push(u)); // exactly as it was: positions, abilities, everything
+    L.test = null; closePop(); if (window.__setStagePlay) __setStagePlay(false); renderChip(); window.renderGrid && renderGrid();
+    toast("Test ended · the stage is back as it was");
+  }
+  function say(line) { if (!L.test) return; L.test.log.push(line); renderChip(); }
+  function battleMenu(x, y) {
+    const u = unitAt(x, y); if (!u || !L.test) return;
+    const soon = (ico, n) => `<button type="button" class="lp-btn is-soon" aria-disabled="true" data-lp="soon" data-v="${n}"><span class="lp-ico" aria-hidden="true">${ico}</span><span>${n}</span><small class="lp-soon">Coming soon</small></button>`;
+    openPop(x, y, head(unitName(u), "Test · your turn") + `<div class="lp-grid">${soon("⚔", "Attack")}${menuBtn("tSpells", "✦", `Spells (${(u.setups || []).length})`)}${soon("🎒", "Items")}</div>`, "Battle");
+  }
+  function spellsMenu(x, y) {
+    const u = unitAt(x, y); if (!u) return; const list = u.setups || [];
+    const rows = list.map((e) => { const b = behaviourOf(e), id = e.doc && e.doc.behaviourId, nm = shortName(e);
+      return RUNTIME[id] ? menuBtn("tCast", "✦", nm, e.id) : `<button type="button" class="lp-btn is-soon" aria-disabled="true" data-lp="noplay" data-v="${esc(nm)}"><span class="lp-ico" aria-hidden="true">✦</span><span>${esc(nm)}</span><small class="lp-soon">Not playable yet</small></button>`; }).join("");
+    openPop(x, y, head("Spells", `${unitName(u)} · ${list.length} abilit${list.length === 1 ? "y" : "ies"}`) + (rows ? `<div class="lp-grid">${rows}</div>` : `<p class="lp-note">No abilities yet. Exit test, then Behaviour → Add behaviour.</p>`), "Spells");
+  }
+  function castAbility(x, y, setupId, forceAny) {
+    const u = unitAt(x, y); if (!u) return; const e = (u.setups || []).find((q) => q.id === setupId); if (!e) return;
+    const id = e.doc.behaviourId, nm = shortName(e), r = RUNTIME[id](u, e, forceAny);
+    if (!r.targets.size) {
+      openPop(x, y, head(nm, `Destination: ${r.destLabel}`) + `<p class="lp-note">${esc(nm)} lands next to one of ${esc(unitName(u))}'s summons. There are none on the board, so there's nowhere to go.</p><div class="lp-grid">${menuBtn("tCastAny", "🎯", "Try: any empty tile (test only)", setupId)}</div>`, nm);
+      say(`${nm}: no tiles. ${unitName(u)} has no summon on the board.`); return;
+    }
+    closePop(); L.test.targeting = { unitId: u.id, name: nm, targets: r.targets, spends: r.spends, dest: r.destLabel, forced: !!forceAny };
+    say(`${nm}: tap a highlighted tile (${r.targets.size} tiles${forceAny ? ", any empty tile, test only" : ""}).`);
+    window.renderGrid && renderGrid();
+  }
+  function testTap(x, y) {
+    const t = L.test.targeting, s = S();
+    if (t) {
+      const u = s.units.find((q) => q.id === t.unitId); L.test.targeting = null;
+      if (!u || !t.targets.has(x + "," + y)) { say(`${t.name} cancelled: tile ${x + 1},${y + 1} isn't one of the highlighted tiles.`); window.renderGrid && renderGrid(); return; }
+      const from = { x: u.x, y: u.y }; u.x = x; u.y = y; L.test.blink = { from: from.x + "," + from.y, to: x + "," + y };
+      say(`${unitName(u)} used ${t.name}: moved from tile ${from.x + 1},${from.y + 1} to tile ${x + 1},${y + 1}${t.spends ? " and used an action" : ". It didn't use an action"}.`);
+      window.renderGrid && renderGrid(); clearTimeout(L.test._bt); L.test._bt = setTimeout(() => { if (L.test) { L.test.blink = null; window.renderGrid && renderGrid(); } }, 650);
+      return;
+    }
+    if (unitAt(x, y)) return battleMenu(x, y);
+    closePop();
+  }
+
+  /* ---------- one chip for armed modes: Place unit / Erase / Test ---------- */
+  function renderChip() {
+    if (L.move) return renderMoveChip(); if (L.brush) return renderBrushChip();
+    const el = chipEl();
+    if (L.test) {
+      const last = L.test.log.slice(-2);
+      el.innerHTML = `<span class="lc-txt"><b>Test mode · nothing is saved</b>${last.map((l) => `<small class="lc-log">${esc(l)}</small>`).join("")}</span>${L.test.targeting ? `<button type="button" class="btn btn-ghost lc-btn" id="live-test-cancel">Cancel</button>` : ""}<button type="button" class="btn btn-primary lc-btn" id="live-test-exit">Exit test</button>`;
+      el.hidden = false; el.classList.add("is-test"); $("#live-test-exit").onclick = exitTest; const cb = $("#live-test-cancel"); if (cb) cb.onclick = () => { const n = L.test.targeting.name; L.test.targeting = null; say(`${n} cancelled.`); window.renderGrid && renderGrid(); };
+      return;
+    }
+    el.classList.remove("is-test");
+    if (L.arm) { el.innerHTML = `<span class="lc-txt"><b>Place unit</b><small>Tap a tile on the board</small></span><button type="button" class="btn btn-ghost lc-btn" id="live-arm-cancel">Cancel</button>`; el.hidden = false; $("#live-arm-cancel").onclick = () => { L.arm = null; renderChip(); }; return; }
+    if (L.erase) { el.innerHTML = `<span class="lc-art lc-erase" aria-hidden="true">⌫</span><span class="lc-txt"><b>Erase</b><small>Tap or drag: walls, buildings, terrain</small></span><button type="button" class="btn btn-primary lc-btn" id="live-erase-done">Done</button>`; el.hidden = false; $("#live-erase-done").onclick = () => armErase(false); return; }
+    el.hidden = true;
   }
 
   /* ---------- paint run (after picking terrain / land) ---------- */
@@ -315,7 +477,7 @@
   }
   function moveReason() {
     const m = L.move; if (m.at.c === m.from.c && m.at.r === m.from.r) return "same";
-    return blockedReason(m.at.c, m.at.r, m.fw, m.fh, m.kind === "object" ? { obj: m.id } : m.kind === "unit" ? { unit: m.id } : { tile: true });
+    return blockedReason(m.at.c, m.at.r, m.fw, m.fh, m.kind === "object" ? { obj: m.id } : m.kind === "unit" || m.kind === "newunit" ? { unit: m.id } : { tile: true });
   }
   function drawMove(cells) {
     const m = L.move, why = moveReason(), ok = !why || why === "same", s = S();
@@ -323,18 +485,23 @@
     const anchor = cells[Math.min(Math.max(0, m.at.c), s.mapW - 1) + "," + Math.min(Math.max(0, m.at.r), s.mapH - 1)]; if (!anchor) return;
     const g = document.createElement("span"); g.className = "live-ghost " + (ok ? "ok" : "bad"); g.setAttribute("aria-hidden", "true");
     g.style.setProperty("--fw", m.fw); g.style.setProperty("--fh", m.fh);
-    const img = m.kind === "object" ? objArt(m.asset) : m.kind === "unit" ? unitArt(S().units.find((u) => u.id === m.id)) : tileArt(m.type, 0, 0);
+    const img = m.kind === "object" ? objArt(m.asset) : m.kind === "unit" ? unitArt(S().units.find((u) => u.id === m.id)) : m.kind === "newunit" ? unitArt({ id: 1 }) : tileArt(m.type, 0, 0);
     if (img) g.style.backgroundImage = `url(${img})`; anchor.appendChild(g);
   }
   function renderMoveChip() {
     const el = chipEl(); if (!L.move) { el.hidden = true; return; }
     const why = moveReason(), ok = !why || why === "same";
-    el.innerHTML = `<span class="lc-txt"><b>Moving ${esc(L.move.name)}</b><small class="${ok ? "" : "lc-bad"}">${why === "same" ? "Drag it or tap a tile" : ok ? "✓ Fits here" : "✕ " + esc(why)}</small></span><button type="button" class="btn btn-ghost lc-btn" id="live-move-cancel">Cancel</button><button type="button" class="btn btn-primary lc-btn" id="live-move-ok"${ok && why !== "same" ? "" : " disabled"}>Place here</button>`;
+    el.innerHTML = `<span class="lc-txt"><b>${L.move.kind === "newunit" ? "Placing a unit" : "Moving " + esc(L.move.name)}</b><small class="${ok ? "" : "lc-bad"}">${why === "same" ? "Drag it or tap a tile" : ok ? "✓ Fits here" : "✕ " + esc(why)}</small></span><button type="button" class="btn btn-ghost lc-btn" id="live-move-cancel">Cancel</button><button type="button" class="btn btn-primary lc-btn" id="live-move-ok"${ok && why !== "same" ? "" : " disabled"}>Place here</button>`;
     el.hidden = false; $("#live-move-cancel").onclick = cancelMove; $("#live-move-ok").onclick = confirmMove;
   }
-  function cancelMove() { L.move = null; renderMoveChip(); window.renderGrid && renderGrid(); }
+  function cancelMove() { L.move = null; renderChip(); window.renderGrid && renderGrid(); }
   function confirmMove() {
     const m = L.move, s = S(), c = mapCtx(); if (!m || moveReason()) return;
+    if (m.kind === "newunit") { // r68 (H): drop the new unit, select it, open its sheet
+      const u = { id: s.nextId++, name: "Unit " + (s.nextId - 1), x: m.at.c, y: m.at.r, hp: 8, atk: 1, setups: [] };
+      s.units.push(u); pushUndo(() => { const i = s.units.indexOf(u); if (i >= 0) s.units.splice(i, 1); });
+      L.move = null; renderChip(); s.selectedUnitId = u.id; commit(); toast(`${u.name} placed`); if (window.__setStageSheet) __setStageSheet("unit"); return;
+    }
     if (m.kind === "unit") { const u = s.units.find((q) => q.id === m.id); u.x = m.at.c; u.y = m.at.r; pushUndo(() => { u.x = m.from.c; u.y = m.from.r; }); }
     else if (m.kind === "object") { ProjectStore.updateMapObject(s.project, c.ref, m.id, { at: { c: m.at.c, r: m.at.r } }); pushUndo(() => ProjectStore.updateMapObject(s.project, c.ref, m.id, { at: { c: m.from.c, r: m.from.r } })); }
     else { const list = [setType(m.at.c, m.at.r, m.type), setType(m.from.c, m.from.r, "floor")]; pushUndo(() => restoreTerrain(list)); }
@@ -344,14 +511,25 @@
 
   /* ---------- tap hook (from app.js onCell) ---------- */
   function onCell(x, y, unit, cellEl, ev) {
+    if (L.test) { if (!dupTap(x, y, ev)) testTap(x, y); return true; }
     if (L.move) { moveTo(x, y); return true; }
     if (L.brush) { brushAt(x, y); return true; }
+    if (L.arm) { startNewUnit(x, y); return true; }
+    if (L.erase) { if (!L.erasedOnDown) { const what = eraseAt(x, y, ev); if (what) toast(`${what} erased`); } L.erasedOnDown = false; if (L.erase) L.erase.last = null; return true; }
     if (!tapMenusOn()) return false;
-    const now = Date.now(); if (L.lastTap && L.lastTap.x === x && L.lastTap.y === y && now - L.lastTap.t < 400) return true; // one tap, one action
-    L.lastTap = { x, y, t: now };
+    if (dupTap(x, y, ev)) return true;
     const s = S(); s.selectedCell = null; s.selectedUnitId = null;
+    const side = !unitAt(x, y) && edgeNear(x, y, ev, 0.16); // r68 (I): a tap right on a wall edge opens the wall's menu
+    if (side) return wallMenu(x, y, side, false), true;
     if (unitAt(x, y) || objectCovering(x, y) || typeAt(x, y) !== "floor") thingMenu(x, y); else emptyMenu(x, y);
     return true;
+  }
+  // r68 (G): the same physical tap can arrive twice (pointer path + click). Only swallow a repeat within 120 ms;
+  // the old 400 ms window ate real second taps, so the menu opened only every other tap.
+  function dupTap(x, y, ev) {
+    const now = Date.now(), ts = ev && ev.timeStamp;
+    const dup = L.lastTap && L.lastTap.x === x && L.lastTap.y === y && (now - L.lastTap.t < 120 || (ts && L.lastTap.ts === ts));
+    L.lastTap = { x, y, t: now, ts }; return !!dup;
   }
 
   /* ---------- drag (touch): press a building/unit and drag; drag the ghost in Move; drag to paint ---------- */
@@ -361,15 +539,25 @@
     scroll.addEventListener("pointerdown", (e) => {
       const s = S(); if (!s || s.mapTool || !e.target.closest("#stage-grid .cell")) return;
       const hit = cellFromPoint(e.clientX, e.clientY); if (!hit) return;
+      if (L.test) return; // Test: taps only (onCell)
+      if (L.erase) { // r68 (I): erase on press, then along the drag
+        e.stopPropagation(); L.erase.last = null; const what = eraseAt(hit.x, hit.y, e); L.erasedOnDown = true; if (what) toast(`${what} erased`);
+        L.drag = { sx: e.clientX, sy: e.clientY, start: hit, on: false, erase: true }; return;
+      }
+      // r68 (I): long-press a wall edge (no tool on) → "Delete this wall?" confirm
+      clearTimeout(L.lpWall); const side = !L.move && !L.brush && !L.arm && !unitAt(hit.x, hit.y) && edgeNear(hit.x, hit.y, e, 0.16);
+      if (side) { const sx = e.clientX, sy = e.clientY; L.lpWall = setTimeout(() => { L.lpWall = null; if (L.lpMoved) return; s._longPressHandled = true; setTimeout(() => { s._longPressHandled = false; }, 600); wallMenu(hit.x, hit.y, side, true); }, 520); L.lpMoved = false; L.lpStart = { sx, sy }; }
       const inGhost = L.move && hit.x >= L.move.at.c && hit.x < L.move.at.c + L.move.fw && hit.y >= L.move.at.r && hit.y < L.move.at.r + L.move.fh;
-      const thing = !L.move && !L.brush && tapMenusOn() && (unitAt(hit.x, hit.y) || objectCovering(hit.x, hit.y));
+      const thing = !L.move && !L.brush && !L.arm && tapMenusOn() && (unitAt(hit.x, hit.y) || objectCovering(hit.x, hit.y));
       if (!inGhost && !thing && !L.brush) return; // empty board: pan as before
       e.stopPropagation();
       L.drag = { sx: e.clientX, sy: e.clientY, start: hit, off: L.move ? { c: hit.x - L.move.at.c, r: hit.y - L.move.at.r } : null, on: false, brush: !!L.brush };
       if (L.brush) { brushAt(hit.x, hit.y); L.drag.on = true; }
     }, true);
     window.addEventListener("pointermove", (e) => {
+      if (L.lpWall && L.lpStart && Math.hypot(e.clientX - L.lpStart.sx, e.clientY - L.lpStart.sy) > 10) { L.lpMoved = true; clearTimeout(L.lpWall); L.lpWall = null; }
       const d = L.drag; if (!d) return;
+      if (d.erase) { const hit = cellFromPoint(e.clientX, e.clientY); if (hit) { d.on = d.on || Math.hypot(e.clientX - d.sx, e.clientY - d.sy) >= 12; if (d.on) eraseAt(hit.x, hit.y, e); } return; }
       if (!d.on && Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < 12) return;
       if (!d.on) { d.on = true; if (!L.move) { startMove(d.start.x, d.start.y); d.off = { c: d.start.x - L.move.at.c, r: d.start.y - L.move.at.r }; } }
       const hit = cellFromPoint(e.clientX, e.clientY); if (!hit) return;
@@ -377,7 +565,9 @@
       const nc = hit.x - d.off.c, nr = hit.y - d.off.r; if (nc !== L.move.at.c || nr !== L.move.at.r) moveTo(nc, nr);
     });
     window.addEventListener("pointerup", () => {
+      clearTimeout(L.lpWall); L.lpWall = null;
       const d = L.drag; L.drag = null; if (!d || !d.on) return;
+      if (d.erase) { S()._longPressHandled = true; L.erasedOnDown = false; setTimeout(() => { const s = S(); if (s) s._longPressHandled = false; }, 400); return; }
       S()._longPressHandled = true; setTimeout(() => { const s = S(); if (s) s._longPressHandled = false; }, 400); // swallow the click after a drag
       if (!d.brush && L.move) { if (!moveReason()) confirmMove(); else if (moveReason() !== "same") { toast("Can't drop there: " + moveReason().toLowerCase()); cancelMove(); } }
     });
@@ -419,13 +609,16 @@
     viewMenu().hidden = true;
     document.addEventListener("click", (e) => { const m = $("#live-view-menu"); if (m && !m.hidden && !e.target.closest("#live-view-menu, #btn-stage-view")) toggleView(false); });
     bindDrag();
-    window.addEventListener("hashchange", () => { closePop(); L.move = null; L.brush = null; renderBrushChip(); });
+    window.addEventListener("hashchange", () => { closePop(); L.move = null; L.brush = null; L.arm = null; L.erase = null; if (L.test) exitTest(); renderChip(); });
+    const eb = $("#btn-erase"); if (eb) eb.addEventListener("click", () => armErase());
   }
   window.StageLive = {
     decorate, onCell, prefs: () => Object.assign({}, prefs, { tapMenusOn: tapMenusOn(), mode: stageMode() }),
     setPrefs(p) { Object.assign(prefs, p || {}); savePrefs(); window.renderGrid && renderGrid(); },
     toggleView, closePop,
-    _cap: { L, act, startMove, moveTo, confirmMove, objects, typeAt, blockedReason, tileArt, objArt },
+    unitMenu(x, y) { if (unitAt(x, y)) thingMenu(x, y); },
+    armUnit, armErase, startTest, exitTest, testing, battleMenu, // r68: the editor menu for a unit, also in Advanced (app.js openUnitMenu in edit mode)
+    _cap: { L, act, startMove, moveTo, confirmMove, objects, typeAt, blockedReason, tileArt, objArt, hasEdge, eraseAt, testLog: () => (L.test ? L.test.log.slice() : null) },
   };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();
