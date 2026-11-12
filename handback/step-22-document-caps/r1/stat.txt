@@ -1,0 +1,21 @@
+ src/btf-adapters/src/index.ts        |  2 +-
+ src/btf-adapters/src/levels.ts       |  3 +-
+ src/btf-adapters/src/stage-limits.ts |  2 +-
+ src/core/log/log.ts                  | 10 ++++-
+ src/core/plain.ts                    |  3 +-
+ src/project/read/index.ts            |  1 +
+ src/project/read/limits.ts           | 36 ++++++++++++++++
+ src/project/read/manifest.ts         |  7 ++-
+ src/project/read/map.ts              | 20 ++++++---
+ src/project/read/placements.ts       |  5 ++-
+ src/project/read/stage.ts            | 34 ++++++++++-----
+ src/rules/levels/index.ts            |  4 +-
+ src/rules/levels/levels.ts           | 22 +++++++---
+ src/rules/levels/types.ts            |  3 +-
+ src/runtime/input/gestures.ts        |  2 +-
+ src/sim/world.ts                     |  6 +--
+ tests/project/door-guard.test.ts     |  2 +-
+ tests/sim/doc-limits.test.ts         | 82 ++++++++++++++++++++++++++++++++++++
+ tests/sim/exploit-docs.test.ts       |  4 +-
+ tests/sim/hard-limits.test.ts        |  7 +--
+ 20 files changed, 211 insertions(+), 44 deletions(-)
