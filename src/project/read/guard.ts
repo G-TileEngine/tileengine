@@ -22,8 +22,21 @@ export function strs(v: unknown): string[] | null {
   return out;
 }
 export const bad = (key: string): ReadFail => ({ ok: false, needsMigration: false, error: `bad field ${key}` });
-export function guarded<T>(read: () => ReadResult<T>): ReadResult<T> {
-  try { return read(); } catch { return { ok: false, needsMigration: false, error: "unreadable document" }; }
+const generic = (e: string): boolean => e === "unreadable document" || e === "wrong kind object" || e.startsWith("bad field ");
+function cyclic(v: unknown, seen = new Set<object>(), path = new Set<object>()): boolean {
+  if (typeof v !== "object" || v === null) return false;
+  if (path.has(v) || seen.has(v)) return path.has(v);
+  path.add(v);
+  const kids: readonly unknown[] = Array.isArray(v) ? v : Object.values(v);
+  const hit = kids.some((k) => cyclic(k, seen, path));
+  path.delete(v); seen.add(v);
+  return hit;
+}
+export function guarded<T>(read: () => ReadResult<T>, json?: unknown): ReadResult<T> {
+  let out: ReadResult<T>;
+  try { out = read(); } catch { out = { ok: false, needsMigration: false, error: "unreadable document" }; }
+  if (!out.ok && !out.needsMigration && generic(out.error)) { try { if (cyclic(json)) return { ok: false, needsMigration: false, error: "cyclic document" }; } catch { /* the original reason stands */ } }
+  return out;
 }
 
 /** null = the version guard passes. */

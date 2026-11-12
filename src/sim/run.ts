@@ -1,5 +1,4 @@
-import { createClock } from "../core/clock/index.ts";
-import { DEFAULT_MATCH_LIMITS, PLAIN_DEPTH, withinCeilings } from "../core/limits.ts";
+import { DEFAULT_MATCH_LIMITS, PLAIN_DEPTH, TEXT_BYTES, textBytes, textOver, withinCeilings } from "../core/limits.ts";
 import { parseLog, type CommandLog } from "../core/log/index.ts";
 import type { Notice } from "../core/notice.ts";
 import { NOT_PLAIN, isRecord, plainCopy } from "../core/plain.ts";
@@ -58,14 +57,15 @@ export function replay(input: SimInput, log: CommandLog, untilTick: number): Sim
 export function restore(input: SimInput, log: CommandLog, snap: SimSnapshot): SimWorld {
   const shot = plainCopy(snap, 5);
   if (shot === NOT_PLAIN || !isRecord(shot) || !isRecord(shot.phases)) throw new Error("restore: snapshot is not plain data");
-  const tick = shot.tick, stepMs = createClock().stepMs, n = typeof tick === "number" && Number.isInteger(tick) && tick >= 0 ? log.entries().filter((e) => e.tick <= tick).length : -1;
-  if (n < 0 || shot.clockMs !== (tick as number) * stepMs || shot.logSeq !== n) throw new Error("restore: snapshot does not match the log");
+  const tick = shot.tick, ms = shot.clockMs, n = typeof tick === "number" && Number.isInteger(tick) && tick >= 0 ? log.entries().filter((e) => e.tick <= tick).length : -1;
+  const badClock = tick === 0 ? ms !== 0 : typeof ms !== "number" || !Number.isInteger(ms) || ms < (tick as number) || ms % (tick as number) !== 0;
+  if (n < 0 || shot.logSeq !== n || badClock) throw new Error("restore: snapshot does not match the log");
   const world = replay(input, log, tick as number);
   world.phases = { ...(shot.phases as SimSnapshot["phases"]) };
   if (JSON.stringify(snapshot(world)) !== JSON.stringify(shot)) throw new Error("restore: snapshot does not match the log");
   return world;
 }
-export type SaveRefusal = { readonly ok: false; readonly code: "saveEngineMismatch" | "saveProjectMismatch" | "saveFormatNewer" | "saveFormatOlder" | "saveMigrationFailed"; readonly needsMigration: boolean };
+export type SaveRefusal = { readonly ok: false; readonly code: "saveEngineMismatch" | "saveProjectMismatch" | "saveFormatNewer" | "saveFormatOlder" | "saveMigrationFailed" | "saveTooLarge" | "saveTooDeep" | "saveSnapshotTickInvalid"; readonly needsMigration: boolean };
 export type SaveLoad = { readonly ok: true; readonly world: SimWorld; readonly notices: readonly Notice[] } | SaveRefusal;
 export type LoadOptions = { readonly allowProjectMismatch?: boolean; readonly allowEngineMismatch?: boolean };
 export function saveMatch(world: SimWorld, meta: { readonly projectId: string; readonly savedAt: string }): string {
@@ -77,7 +77,8 @@ export function loadSave(input: SimInput, text: unknown, opts?: LoadOptions, cha
   let box: unknown;
   try { box = plainCopy({ input, opts: opts ?? {} }, PLAIN_DEPTH); } catch { throw new Error("load: input is not plain data"); }
   if (box === NOT_PLAIN || !isRecord(box) || !isRecord(box.input)) throw new Error("load: input is not plain data");
-  const src = box.input as SimInput, opt = isRecord(box.opts) ? box.opts : {};
+  const src = box.input as SimInput, opt = isRecord(box.opts) ? box.opts : {}, bytes = src.limits !== undefined && withinCeilings(src.limits) ? textBytes(src.limits) : TEXT_BYTES;
+  if (typeof text === "string") { const hit = textOver(text, bytes); if (hit !== null) return { ok: false, code: hit === "bytes" ? "saveTooLarge" : "saveTooDeep", needsMigration: false }; }
   let raw: unknown = null;
   if (typeof text === "string") { try { raw = JSON.parse(text); } catch { raw = null; } }
   if (!isRecord(raw) || raw.kind !== "match-save" || typeof raw.formatVersion !== "number" || !Number.isInteger(raw.formatVersion)) throw new Error("load: not a match save");
@@ -105,7 +106,8 @@ export function loadSave(input: SimInput, text: unknown, opts?: LoadOptions, cha
   if (engineBad) notices.push({ code: "saveEngineMismatch", message: "saveEngineMismatch" });
   if (projectBad) notices.push({ code: "saveProjectMismatch", message: "saveProjectMismatch" });
   if (notices.length > 0) {
-    const shot = doc.snapshot, tick = isRecord(shot) && typeof shot.tick === "number" && Number.isInteger(shot.tick) && shot.tick >= 0 ? shot.tick : 0;
+    const shot = doc.snapshot, tick = isRecord(shot) && typeof shot.tick === "number" && Number.isInteger(shot.tick) && shot.tick >= 0 ? shot.tick : -1;
+    if (tick < 0) return { ok: false, code: "saveSnapshotTickInvalid", needsMigration: false };
     return { ok: true, world: replay(src, parsed.log, tick), notices };
   }
   return { ok: true, world: restore(src, parsed.log, doc.snapshot as SimSnapshot), notices };

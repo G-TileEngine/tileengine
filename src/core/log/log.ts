@@ -1,6 +1,6 @@
 import type { Sq } from "../../types/core-types.ts";
 import type { Aim } from "../targeting/types.ts";
-import { DEFAULT_MATCH_LIMITS, SEED_MAX, withinCeilings, type MatchLimits } from "../limits.ts";
+import { DEFAULT_MATCH_LIMITS, SEED_MAX, textBytes, textOver, withinCeilings, type MatchLimits } from "../limits.ts";
 import { NOT_PLAIN, plainCopy } from "../plain.ts";
 import { LOG_FORMAT_VERSION, type Action, type CommandLog, type LogEntry, type LogHeader, type ParseResult } from "./types.ts";
 
@@ -77,6 +77,7 @@ export function parseLog(json: string, limits: MatchLimits = DEFAULT_MATCH_LIMIT
   const cap = ownLimits(limits); if (cap === null) return { ok: false, error: "bad limits" };
   limits = cap;
   if (typeof json !== "string") return { ok: false, error: "not JSON" };
+  const over = textOver(json, textBytes(limits)); if (over !== null) return { ok: false, error: "over cap " + over };
   let value: unknown;
   try { value = JSON.parse(json); } catch { return { ok: false, error: "not JSON" }; }
   if (!rec(value) || !rec(value.header) || !Array.isArray(value.entries)) return { ok: false, error: "missing header or entries" };

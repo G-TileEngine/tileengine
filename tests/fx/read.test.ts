@@ -46,7 +46,7 @@ test("§A7 SKILLRIG.md:178, :27 — damage null or absent stays null (no number 
   assert.equal(read(block("p", { ...frame, damage: null })).order?.damage, null);
   assert.equal(read(block("p", frame)).order?.damage, null);
   assert.equal(read(block("p", { ...frame, damage: 3 })).order?.damage, 3);
-  assert.deepEqual(read(block("p", { ...frame, look: { ease: "linear" } })).order?.raw.look, { ease: "linear" });
+  assert.deepEqual(readFxOrder(block("p", { ...frame, look: { ease: "linear" } }), limits, { raw: true }).order?.raw?.look, { ease: "linear" });
   assert.deepEqual(codes(block("p", { ...frame, damage: 3 })), []);
 });
 test("read limits are the caller's input: other limits change clamps and fill-ins; bad limits throw", () => {

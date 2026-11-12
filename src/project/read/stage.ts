@@ -82,7 +82,7 @@ export function stageSeed(stage: CoreStage): number | null {
 }
 export function readStage(json: unknown, limits: StageLimits): ReadResult<CoreStage> {
   const lim = take(limits);
-  return guarded(() => readStageDoc(json, lim));
+  return guarded(() => readStageDoc(json, lim), json);
 }
 function readStageDoc(json: unknown, lim: ReturnType<typeof take>): ReadResult<CoreStage> {
   const ver = checkVersion(json, "stage");

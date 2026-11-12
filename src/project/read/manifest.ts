@@ -16,7 +16,7 @@ function occupancy(v: unknown): OccupancyPolicy | null | undefined {
 export function readManifest(json: unknown, limits?: Partial<DocLimits>): ReadResult<CoreProjectManifest> {
   const lim = docLimits(limits === undefined ? {} : limits);
   if (lim === null) throw new RangeError("readManifest: limits must be whole numbers from 1 to their ceilings");
-  return guarded(() => readManifestDoc(json, lim));
+  return guarded(() => readManifestDoc(json, lim), json);
 }
 function readManifestDoc(json: unknown, lim: DocLimits): ReadResult<CoreProjectManifest> {
   const ver = checkVersion(json, "tile-project");

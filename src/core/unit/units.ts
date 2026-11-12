@@ -76,11 +76,12 @@ export function createUnits(grid: Grid, opts?: UnitsOptions): Units {
     return { moved, at: u.at, blocker, cellsRemaining: left };
   };
   const alive = (id: string): Live | undefined => { const u = byId.get(id); return u?.alive ? u : undefined; };
+  const view = (u: Live): UnitState => Object.freeze({ id: u.id, unitId: u.unitId, side: u.side, at: Object.freeze({ c: u.at.c, r: u.at.r }), offset: u.offset, facing: u.facing, alive: u.alive });
   return {
     occupancy: STRICT1.id, notices, place, moveTo, push,
-    get: (id) => byId.get(id), all: () => order.slice(),
+    get: (id) => { const u = byId.get(id); return u === undefined ? undefined : view(u); }, all: () => order.map(view),
     occupantAt: (at) => idsAt(at)[0], occupantsAt: (at) => idsAt(at).slice(),
-    setOffset: (id, offset) => { const u = alive(id); if (!u) return false; u.offset = offset; return true; },
+    setOffset: (id, offset) => { const u = alive(id); if (!u) return false; u.offset = offset === null ? null : Object.freeze({ dx: offset.dx, dy: offset.dy }); return true; },
     setFacing: (id, facing) => { const u = alive(id); if (!u) return false; u.facing = facing; return true; },
     remove: (id) => { const u = alive(id); if (!u) return false; u.alive = false; u.offset = null; take(id, u.at); return true; },
   };

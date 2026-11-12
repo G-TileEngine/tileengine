@@ -1,10 +1,11 @@
+import { TEXT_BYTES, TEXT_BYTES_MAX, textOver } from "../../core/limits.ts";
 import type { Notice } from "../../core/notice.ts";
 import type { FxEase, FxRamp, FxRead, FxReadLimits, FxStep, FxStyle } from "./types.ts";
 
 /** Format limits and fill-ins the docs state, each cited. The only numbers in src/fx; the rest come in FxReadLimits. */
 export const FX_FORMAT = {
   maxMs: 3000,                       // seconds up to 3.00 (SKILLRIG.md:86)
-  maxSteps: 6,                       // six steps at most (SKILLRIG.md:36); 7+ kept inactive (project-format §6.7 K-4)
+  maxSteps: 6, maxFrames: 64,       // six play; at most 64 frames, more refused (project-format §6.7 K-4)
   connect: 0.92, reelConnect: 0.42,  // missing connect: 0.92, an old reel 0.42 (SKILLRIG.md:178, :165)
   msPerSecond: 1000,
   maxTaps: 8,                        // a bounce hits at most eight tapped squares (SKILLRIG.md:94)
@@ -16,7 +17,8 @@ function limitsOk(limits: FxReadLimits): boolean {
   const step = Number.isInteger(limits.minStepMs) && limits.minStepMs >= 1 && limits.minStepMs <= FX_FORMAT.maxMs;
   const fill = Number.isInteger(limits.fillStepMs) && limits.fillStepMs >= limits.minStepMs && limits.fillStepMs <= FX_FORMAT.maxMs;
   const span = limits.minConnect >= 0 && limits.maxConnect <= 1 && limits.minConnect <= limits.maxConnect;
-  return step && fill && span;
+  const sized = limits.bytes === undefined || (Number.isInteger(limits.bytes) && limits.bytes >= 1 && limits.bytes <= TEXT_BYTES_MAX);
+  return step && fill && span && sized;
 }
 const num = (value: unknown): number | null => (typeof value === "number" && Number.isFinite(value) ? value : null);
 function frameKind(row: Record<string, unknown>): string | null {
@@ -63,14 +65,19 @@ function styleOf(row: Record<string, unknown>, kind: string | null): FxStyle {
     count: motion === null ? null : num(motion.count),
   };
 }
-export function readFxOrder(text: string, limits: FxReadLimits): FxRead {
+export function readFxOrder(text: string, limits: FxReadLimits, opts?: { readonly raw?: boolean }): FxRead {
   if (!limitsOk(limits)) throw new RangeError("readFxOrder: limits out of range");
+  const cap = limits.bytes ?? TEXT_BYTES;
+  if (text.length > cap) return { order: null, notices: [note("fxTooLarge", "fxTooLarge")] };
   const open = text.indexOf("{"), close = text.lastIndexOf("}");
   const bad = (): FxRead => ({ order: null, notices: [note("fxBadBlock", "Effect order block is not usable.")] });
   if (open < 0 || close < open) return bad();
+  const block = text.slice(open, close + 1);
+  if (textOver(block, cap) === "depth") return { order: null, notices: [note("fxTooDeep", "fxTooDeep")] };
   let parsed: unknown;
-  try { parsed = JSON.parse(text.slice(open, close + 1)); } catch { return bad(); }
+  try { parsed = JSON.parse(block); } catch { return bad(); }
   if (!plain(parsed) || !Array.isArray(parsed.frames) || parsed.frames.length < 1) return bad();
+  if (parsed.frames.length > FX_FORMAT.maxFrames) return { order: null, notices: [note("fxTooManyFrames", "fxTooManyFrames")] };
   const notices: Notice[] = [];
   const all: FxStep[] = parsed.frames.map((frame) => {
     const row = plain(frame) ? frame : {};
@@ -103,5 +110,5 @@ export function readFxOrder(text: string, limits: FxReadLimits): FxRead {
   const given = parsed.damage;
   const damage = typeof given === "number" && Number.isFinite(given) ? given : null;
   if (given !== undefined && given !== null && damage === null) notices.push(note("fxNotNumber", "The hit amount is not a number."));
-  return { order: { steps, inactive, styles: styled.slice(0, FX_FORMAT.maxSteps), inactiveStyles: styled.slice(FX_FORMAT.maxSteps), connect, damage, raw: parsed }, notices };
+  return { order: { steps, inactive, styles: styled.slice(0, FX_FORMAT.maxSteps), inactiveStyles: styled.slice(FX_FORMAT.maxSteps), connect, damage, ...(opts?.raw === true ? { raw: parsed } : {}) }, notices };
 }

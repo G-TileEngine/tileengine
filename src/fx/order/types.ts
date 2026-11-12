@@ -32,7 +32,7 @@ export type FxOrder = {
   readonly inactiveStyles: readonly FxStyle[]; // styles past the cap: kept, never played
   readonly connect: number;                   // fraction through the last step where the hit applies
   readonly damage: number | null;             // passed through untouched; null = no hit amount (effect-order §A)
-  readonly raw: Readonly<Record<string, unknown>>;  // the parsed JSON, kept for later steps
+  readonly raw?: Readonly<Record<string, unknown>>;  // the parsed JSON, only when the caller asks
 };
 export type FxRead = { readonly order: FxOrder | null; readonly notices: readonly Notice[] };
 
@@ -82,6 +82,7 @@ export type FxReadLimits = {
   readonly fillStepMs: number;  // a step with no seconds
   readonly minConnect: number;
   readonly maxConnect: number;
+  readonly bytes?: number;
 };
 
 /** One play of an effect, built by the caller (rules, or a later mapping from the effect document). TileEngine names; no game numbers. */

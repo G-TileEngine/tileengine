@@ -1,4 +1,5 @@
 import type { Sq } from "../types/core-types.ts";
+import { NOT_PLAIN, cellOf, isRecord, plainCopy } from "../core/plain.ts";
 import type { Intent } from "../runtime/input/index.ts";
 import { xGo, type Event, type Phase } from "../state/index.ts";
 import type { SimWorld } from "./types.ts";
@@ -19,7 +20,9 @@ export function intentEvent(phase: Phase, intent: Intent, aim: Sq | null): Event
 export function feedIntent(world: SimWorld, intent: Intent, aim?: Sq | null): Event | null {
   const battle = world.phases.battle;
   if (battle === undefined) throw new Error("feedIntent: battle phase missing");
-  const event = intentEvent(battle, intent, aim ?? null);
+  const copy = plainCopy(intent, 3);
+  if (copy === NOT_PLAIN || !isRecord(copy)) return null;
+  const event = intentEvent(battle, copy as Intent, aim == null ? null : cellOf(aim));
   if (event !== null) world.phases = { ...world.phases, battle: xGo(battle, event) };
   return event;
 }
