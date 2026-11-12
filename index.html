@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="css/qol-r69.css" />
   <link rel="stylesheet" href="css/social-r70.css" />
   <link rel="stylesheet" href="css/home-globe-r71.css" />
+  <link rel="stylesheet" href="css/qol-r72.css" />
 </head>
 <body>
   <div class="app" role="application" aria-label="TileEngine editor prototype">
@@ -22,6 +23,7 @@
   </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <p id="save-chip" hidden role="status" aria-live="polite">Saved</p>
     <button type="button" id="ach-toast" class="ach-toast" hidden aria-live="polite">
       <span class="ach-ico" aria-hidden="true">★</span>
       <span class="ach-copy"><b id="ach-toast-title">Achievement</b><small id="ach-toast-sub">Unlocked</small></span>
@@ -37,7 +39,7 @@
     <section id="screen-home" class="screen" aria-label="Home">
       <div class="topbar">
         <p class="eyebrow">TileEngine</p>
-        <div class="topbar-row"><h1 tabindex="-1">New project</h1><span data-sh-bell-slot></span></div>
+        <div class="topbar-row"><h1 tabindex="-1">New project</h1><span data-sh-bell-slot><button type="button" class="sh-bell" data-sh-bell data-nav="inbox" aria-label="Notifications"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5m6 0a3 3 0 1 1-6 0"/></svg><span class="nbadge" hidden aria-hidden="true">0</span></button></span></div>
       </div>
       <div class="body">
         <div class="home-hero">
@@ -84,16 +86,15 @@
           <button type="button" class="btn btn-ghost" data-nav="hub-chart" aria-label="Monthly thumbs-up chart">Thumbs-up chart</button>
           <button type="button" class="btn btn-ghost" data-nav="hub-shop" aria-label="Hub assets shop">Asset shop</button>
           <button type="button" class="btn btn-ghost" data-nav="project-settings" aria-label="Open project settings">Project settings</button>
-          <button type="button" class="btn btn-ghost" id="btn-export-project" aria-label="Export project JSON">Export project</button>
+          <button type="button" class="btn btn-ghost" id="btn-export-project" aria-label="Download a copy of this project">Download project</button>
         </div>
+        <button type="button" class="btn btn-ghost" id="btn-restore-project" style="width:100%;margin-top:8px" aria-label="Restore from a saved file">Restore from a file</button>
         <details class="advanced" style="margin-top:16px">
           <summary>About</summary>
           <div class="inner">
-            <p class="hint" style="margin:0">Catalogue snapshot <code>data/behaviours.json</code>. Sync with <code>scripts/sync-catalogue.sh</code> when <code>catalogue_rev</code> goes up.</p>
-            <p class="hint" id="catalogue-rev" style="margin:8px 0 0">catalogue_rev: —</p>
+            <p class="hint" id="catalogue-rev" style="margin:0">Editor version: —</p>
           </div>
         </details>
-        <p class="hint" style="margin-top:16px">Prototype shell — taps navigate screens; setups use the Data &amp; Save format.</p>
       </div>
     </section>
 
@@ -656,7 +657,7 @@
     <section id="screen-sprite-studio" class="screen" aria-label="Sprite Studio">
       <div class="stage-top ss-top" role="banner">
         <div class="stage-top-main">
-          <button type="button" class="btn btn-ghost stage-icon-btn" id="ss-back" aria-label="Back to the stage editor">‹</button>
+          <button type="button" class="btn btn-ghost btn-back-label" id="ss-back" aria-label="Back to the stage editor">Back</button>
           <h1 class="stage-title" id="ss-title" tabindex="-1">New sprite</h1>
           <div class="stage-top-actions">
             <div class="ss-mode" role="group" aria-label="Editor mode">
@@ -779,7 +780,7 @@
             <button type="button" class="toggle" id="btn-team-inherit" aria-pressed="true">Inherit</button>
             <button type="button" class="toggle" id="btn-team-custom" aria-pressed="false">Custom</button>
           </div>
-          <p class="hint">null team_colour = inherit the side palette (rev 9 / L30).</p>
+          <p class="hint">Use the side's colours, or pick a custom colour for this unit.</p>
         </div>
         <div class="field" id="unit-team-colour-field" hidden>
           <label>Custom colour</label>
@@ -794,7 +795,7 @@
             <button type="button" class="toggle" id="btn-clip-cues-on" aria-pressed="true">On</button>
             <button type="button" class="toggle" id="btn-clip-cues-off" aria-pressed="false">Off</button>
           </div>
-          <p class="hint">unit-roster.clip_cues — for units without clips.</p>
+          <p class="hint">A short flash when this unit is hit.</p>
         </div>
         <p class="eyebrow" style="margin:18px 0 8px">Behaviours</p>
         <!-- r68 (K): one abilities screen. The list lives in the stage's unit sheet (Behaviour); this is a link to it. -->
@@ -1602,7 +1603,7 @@
     <!-- r64 WELCOME QUIZ (first launch, full screen) -->
     <section id="screen-welcome" class="screen wq" aria-label="Welcome">
       <div class="wq-top">
-        <button type="button" class="btn btn-ghost wq-back" id="wq-back" aria-label="Back">‹ Back</button>
+        <button type="button" class="btn btn-ghost wq-back" id="wq-back" aria-label="Back">Back</button>
         <div class="dots wq-dots" id="wq-dots" aria-hidden="true"></div>
         <span class="wq-count" id="wq-count">1 of 5</span>
       </div>
@@ -1632,7 +1633,7 @@
     </section>
 
     <section id="screen-starter-make" class="screen" aria-label="Make some for me">
-      <div class="topbar"><div class="topbar-row"><button type="button" class="btn btn-ghost" id="sm-back" aria-label="Back">‹ Back</button><h1 tabindex="-1">Made for you</h1><span class="topbar-spacer" aria-hidden="true"></span></div></div>
+      <div class="topbar"><div class="topbar-row"><button type="button" class="btn btn-ghost" id="sm-back" aria-label="Back">Back</button><h1 tabindex="-1">Made for you</h1><span class="topbar-spacer" aria-hidden="true"></span></div></div>
       <div class="body" id="sm-body"></div>
       <div class="bottombar">
         <button type="button" class="btn btn-ghost" id="sm-shuffle">Shuffle</button>
@@ -1641,7 +1642,7 @@
     </section>
 
     <section id="screen-starter-pack" class="screen" aria-label="Free Starter Pack">
-      <div class="topbar"><div class="topbar-row"><button type="button" class="btn btn-ghost" id="sp-back" aria-label="Back">‹ Back</button><h1 tabindex="-1">Hub</h1><span class="topbar-spacer" aria-hidden="true"></span></div></div>
+      <div class="topbar"><div class="topbar-row"><button type="button" class="btn btn-ghost" id="sp-back" aria-label="Back">Back</button><h1 tabindex="-1">Hub</h1><span class="topbar-spacer" aria-hidden="true"></span></div></div>
       <div class="body" id="sp-body"></div>
       <div class="bottombar sp-bar">
         <button type="button" class="btn btn-primary" id="sp-add">Add to my library</button>
@@ -1975,22 +1976,31 @@
   </div>
 </div>
 
+<div id="restore-root" hidden>
+  <div class="restore-scrim" aria-hidden="true"></div>
+  <div id="restore-sheet" role="dialog" aria-modal="true" aria-labelledby="restore-title">
+    <h2 id="restore-title">Restore from a file</h2>
+    <p class="restore-error" hidden role="alert"></p>
+    <div class="restore-body"></div>
+    <div class="restore-foot">
+      <button type="button" class="btn btn-ghost" id="btn-restore-cancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="btn-restore-confirm">Restore</button>
+    </div>
+  </div>
+</div>
+<input id="restore-file" type="file" accept="application/json,.json,.tileproj.json" hidden />
+
 <script src="js/setup-store.js"></script>
   <script src="js/project-store.js"></script>
   <script src="js/profile-store.js"></script>
+  <script src="js/te-loader.js"></script>
   <script src="js/sound-panel.js"></script>
-  <script src="js/sprite-slice.js"></script>
   <script src="js/app.js"></script>
   <script src="js/ux-features.js"></script>
-  <script src="js/body-map.js"></script>
-  <script src="js/sprite-studio.js"></script>
-  <script src="js/convert-engine.js"></script>
-  <script src="js/imagine-convert.js"></script>
   <script src="js/welcome.js"></script>
   <script src="js/stage-live.js"></script>
   <script src="js/qol-r69.js"></script>
-  <script src="js/social-store.js"></script>
-  <script src="js/social-hub.js"></script>
   <script src="js/home-globe-r71.js"></script>
+  <script src="js/qol-r72.js"></script>
 </body>
 </html>

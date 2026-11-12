@@ -162,7 +162,7 @@
   // Pink inside the sprite? Then the magenta key may eat it — say so in plain words.
   // r68: only colours truly near #FF00FF in OKLab count (pinkish or purple swords and wings don't), and only on the
   // sprite itself (the keyed background and its one-pixel fringe ring are left out).
-  const MAGENTA_LAB = oklab([255, 0, 255]), PINK_NEAR = 0.12, PINK_SHARE = 0.02;
+  const MAGENTA_LAB = oklab([255, 0, 255]), PINK_NEAR = 0.20, PINK_SHARE = 0.008;
   function oklab([r, g, b]) { const f = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; const R = f(r), G = f(g), B = f(b);
     const l = Math.cbrt(0.4122214708 * R + 0.5363325363 * G + 0.0514459929 * B), m = Math.cbrt(0.2119034982 * R + 0.6806995451 * G + 0.1073969566 * B), s2 = Math.cbrt(0.0883024619 * R + 0.2817188376 * G + 0.6299787005 * B);
     return [0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s2, 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s2, 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s2]; }
@@ -176,10 +176,13 @@
     for (let y = 1; y < src.h - 1; y += 2) for (let x = 1; x < w - 1; x += 2) { const i = y * w + x;
       if (flat(x, y)) continue;
       const interior = !flat(x - 1, y) && !flat(x + 1, y) && !flat(x, y - 1) && !flat(x, y + 1);
-      const L = oklab(px(src, x, y)), near = Math.hypot(L[0] - MAGENTA_LAB[0], L[1] - MAGENTA_LAB[1], L[2] - MAGENTA_LAB[2]) < PINK_NEAR;
+      const L = oklab(px(src, x, y));
+        const distM = Math.hypot(L[0] - MAGENTA_LAB[0], L[1] - MAGENTA_LAB[1], L[2] - MAGENTA_LAB[2]);
+        // Candy pink / orchid / magenta-purple sit a little farther from #FF00FF than 0.12.
+        const near = distM < PINK_NEAR || (distM < 0.28 && L[1] > 0.06 && L[0] > 0.45 && Math.abs(L[2]) < 0.16);
       if (mask[i]) { if (interior) { solid++; if (near) pink++; } }
       else if (near && interior) { solid++; pink++; } } // eaten by the key, but shaded like sprite art, not flat background
-    return solid > 0 && pink / solid >= PINK_SHARE;
+    return solid > 0 && (pink / solid >= PINK_SHARE || pink >= 6);
   }
 
 
@@ -551,7 +554,18 @@
       render(); say("Picture loaded. Tap Convert."); res(); }; img.onerror = () => { toast("That file didn't open as a picture"); rej(); }; img.src = url; });
   }
   function pickFile() { const f = $("#ic-file"); if (f) { f.value = ""; f.click(); } }
-  function onFile(e) { const file = e.target.files && e.target.files[0]; if (!file) return; const r = new FileReader(); r.onload = () => loadInto(S.cur, r.result, null); r.readAsDataURL(file); }
+  function onFile(e) {
+    const file = e.target.files && e.target.files[0]; if (!file) return;
+    const go = (f) => { const r = new FileReader(); r.onload = () => loadInto(S.cur, r.result, null); r.readAsDataURL(f); };
+    if (window.TileEngineSafe && TileEngineSafe.validateImageFile) {
+      TileEngineSafe.validateImageFile(file).then((res) => {
+        if (!res.ok) { toast(res.error); return; }
+        go(file);
+      });
+      return;
+    }
+    go(file);
+  }
 
   /* ===== UI ===== */
   function say(m) { const l = $("#ic-live"); if (l) l.textContent = m; }
@@ -561,7 +575,7 @@
     const el = document.createElement("div"); el.id = "ic-root"; el.className = "ic-root"; el.hidden = true;
     el.innerHTML = `
       <div class="stage-top ic-top" role="banner"><div class="stage-top-main">
-        <button type="button" class="btn btn-ghost stage-icon-btn" id="ic-back" aria-label="Back to Sprite Studio">‹</button>
+        <button type="button" class="btn btn-ghost btn-back-label" id="ic-back" aria-label="Back to Sprite Studio">Back</button>
         <h1 class="stage-title" id="ic-title">Picture</h1>
         <div class="stage-top-actions">
           <div class="ss-mode" role="group" aria-label="Editor mode"><button type="button" class="ss-mode-btn" data-ic-mode="basic" aria-pressed="true">Basic</button><button type="button" class="ss-mode-btn" data-ic-mode="advanced" aria-pressed="false">Advanced</button></div>
@@ -749,7 +763,7 @@
       default: return "";
     }
   }
-  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const esc = (s) => (window.TileEngineSafe && TileEngineSafe.escapeHtml) ? TileEngineSafe.escapeHtml(s) : String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   function wireSheet() {
     const b = $("#ic-sheet-body"), D = cur();
     const set = (k, v, msg) => step(() => { D.settings[k] = v; }, msg);
@@ -785,7 +799,7 @@
     $("#ic-match") && ($("#ic-match").onclick = () => step(() => { D.match = !D.match; }, D.match ? "Own colours for this direction" : "Matched to the master"));
     $("#ic-flags") && ($("#ic-flags").onclick = () => { S.showFlags = !S.showFlags; render(); });
   }
-  function renamePart(name) { const R = cur().result; if (!R || !name) return; const auto = R.ramps[S.part].autoName; step(() => { S.shared.names[auto] = name; S.renaming = false; }, `Part renamed to ${name}`); }
+  function renamePart(name) { const R = cur().result; if (!R || !name) return; if (window.TileEngineSafe && TileEngineSafe.clampName) name = TileEngineSafe.clampName(name); const auto = R.ramps[S.part].autoName; step(() => { S.shared.names[auto] = name; S.renaming = false; }, `Part renamed to ${name}`); }
   function recolourPart(swName) {
     const R = cur().result; if (!R) return; const r = R.ramps[S.part];
     const sw = swName === "Original" ? null : (SpriteStudio.parts.SWATCHES[r.set] || []).find((s) => s.name === swName);

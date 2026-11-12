@@ -1206,9 +1206,9 @@
       if (data.hp != null && data.hp !== army.unit_hp) stats.unit_hp = { value: data.hp, rev: 0 };
       if (data.atk != null && data.atk !== army.unit_atk) stats.unit_atk = { value: data.atk, rev: 0 };
       if (data.stats) Object.assign(stats, data.stats);
-      unit = makeUnit({ id: data.id, name: data.name, stats, sprite: data.sprite || null });
+      unit = makeUnit({ id: data.id, name: (window.TileEngineSafe && TileEngineSafe.clampName && data.name) ? TileEngineSafe.clampName(data.name) : data.name, stats, sprite: data.sprite || null });
     } else {
-      if (data.name) unit.name = data.name;
+      if (data.name) unit.name = (window.TileEngineSafe && TileEngineSafe.clampName) ? TileEngineSafe.clampName(data.name) : String(data.name).slice(0, 80);
       unit.stats = unit.stats || {};
       if (data.stats) {
         Object.keys(data.stats).forEach((k) => {

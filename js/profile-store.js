@@ -261,8 +261,19 @@
       profile.coins = normalizeCoins(profile.coins);
       profile.rewards = normalizeRewards(profile.rewards);
       return profile;
-    } catch {
-      return defaults();
+    } catch (err) {
+      try {
+        const raw = localStorage.getItem(KEY);
+        if (window.TileEngineSafe && TileEngineSafe.backupCorrupt) TileEngineSafe.backupCorrupt(KEY, raw);
+        else if (raw) localStorage.setItem(KEY + ".damaged-" + Date.now(), String(raw).slice(0, 200000));
+        localStorage.removeItem(KEY);
+      } catch (_) {}
+      if (window.TileEngineSafe && TileEngineSafe.toast) {
+        TileEngineSafe.toast("Your profile file was damaged, so a fresh profile was started. A backup of the old file was kept on this device.");
+      }
+      const fresh = defaults();
+      try { save(fresh); } catch (_) {}
+      return fresh;
     }
   }
 

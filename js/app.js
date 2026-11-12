@@ -651,6 +651,18 @@
 
   function show(id) {
     if (id === "sliders") id = "unit-editor";
+    if (window.TileEngineLoad) {
+      const need = TileEngineLoad.needs(id);
+      if (need && need.length && !TileEngineLoad.ready(need)) {
+        const pending = id;
+        TileEngineLoad.ensure(need).then(() => {
+          if (pending) show(pending);
+        }).catch(() => {
+          toast("Couldn't load that screen. Try again.");
+        });
+        return;
+      }
+    }
     const toastEl = $("#toast");
     if (toastEl && id !== "_keep_toast") toastEl.classList.remove("show");
 
@@ -744,7 +756,7 @@
     }
     if (id === "home") {
       const rev = $("#catalogue-rev");
-      if (rev) rev.textContent = "catalogue_rev: " + (state.catalogueRev != null ? state.catalogueRev : "—");
+      if (rev) rev.textContent = "Editor " + (state.catalogueRev != null ? "rev " + state.catalogueRev : "ready");
     }
   }
 
@@ -4753,8 +4765,9 @@
         banner.textContent = state.sizeWarn;
       } else banner.hidden = true;
     }
-    if (res.opfsNote) {
-      /* soft note already toasted on open */
+    if (res.opfsNote && /failed/i.test(res.opfsNote)) {
+      if (window.TileEngineSafe) TileEngineSafe.markSaveFailed("Couldn't save this project on the device. Download a copy so you don't lose it.");
+      else toast("Couldn't save this project on the device. Download a copy so you don't lose it.");
     }
   }
 
@@ -5234,8 +5247,24 @@
     show(known.includes(id) ? id : "home");
   }
 
+  function applyCatalogue(data) {
+    if (!data) return;
+    state.catalogueDoc = data;
+    state.catalogue = data.behaviours || [];
+    state.catalogueRev = data.catalogue_rev;
+    const rev = $("#catalogue-rev");
+    if (rev) rev.textContent = "Editor " + (state.catalogueRev != null ? "rev " + state.catalogueRev : "ready");
+    if (state.project && window.ProjectStore && ProjectStore.recomputeIndex) {
+      try { ProjectStore.recomputeIndex(state.project, state.catalogueDoc); } catch (e) { /* keep going */ }
+    }
+  }
+  window.__applyCatalogue = applyCatalogue;
+
   async function init() {
-    await loadCatalogue();
+    // r72: don't block first paint on the 767 KB catalogue. Open the project with a stub;
+    // TileEngineLoad fetches the catalogue when a screen needs it (or applyCatalogue when it arrives).
+    state.catalogueDoc = state.catalogueDoc || { behaviours: [], schema_version: 3, catalogue_rev: null };
+    state.catalogue = state.catalogue || [];
     if (window.ProjectStore) {
       const opened = await ProjectStore.openOrCreate(state.catalogueDoc, {
         name: "Demo project",
@@ -5535,9 +5564,14 @@
       }
       show("preview");
     });
-    $("#btn-export-project")?.addEventListener("click", () => {
-      if (state.project) ProjectStore.exportPlaceholder(state.project);
-      toast("Export downloaded (JSON placeholder)");
+    $("#btn-export-project")?.addEventListener("click", (e) => {
+      if (window.TileEngineSafe && TileEngineSafe.downloadBackup) {
+        e && e.preventDefault && e.preventDefault();
+        TileEngineSafe.downloadBackup();
+        return;
+      }
+      if (state.project && ProjectStore.exportBackup) ProjectStore.exportBackup(state.project);
+      else if (state.project) ProjectStore.exportPlaceholder(state.project);
     });
     // Preview notes → notes/notes.json
     $("#preview-notes")?.addEventListener("change", () => {
@@ -5665,6 +5699,10 @@
     file?.addEventListener("change", async () => {
       const f = file.files && file.files[0];
       if (!f) return;
+      if (window.TileEngineSafe && TileEngineSafe.validateImageFile) {
+        const check = await TileEngineSafe.validateImageFile(f);
+        if (!check.ok) { toast(check.error); return; }
+      }
       if (!window.SpriteSlice) {
         toast("Slice helper missing");
         return;

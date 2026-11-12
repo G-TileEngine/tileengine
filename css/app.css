@@ -1887,7 +1887,7 @@ button.btn.is-blocked {
 /* Contextual sheet — max ~40% height */
 .stage-sheet {
   flex-shrink: 0;
-  max-height: 45%;
+  max-height: 40%;
   background: var(--surface);
   border-top: 1px solid var(--line);
   box-shadow: 0 -6px 20px rgba(18,20,26,.08);

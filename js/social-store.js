@@ -119,11 +119,18 @@
   function load() {
     if (db) return db;
     try { const raw = localStorage.getItem(KEY); db = raw ? JSON.parse(raw) : null; } catch (_) { db = null; }
-    if (!db || !db.accounts) { db = seed(); save(); }
+    if (!db || !db.accounts) { db = seed(); /* r72: keep the seed in memory until something actually changes */ }
     if (db.wishes.some((w) => w.moderation && w.moderation.decision == null)) setTimeout(scheduleModeration, 0); // resume local review after a reload
     return db;
   }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (_) { /* quota: keep in memory */ } listeners.forEach((f) => { try { f(); } catch (_) {} }); }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(db)); }
+    catch (e) {
+      if (window.TileEngineSafe && TileEngineSafe.onQuota) TileEngineSafe.onQuota();
+      /* quota: keep in memory */
+    }
+    listeners.forEach((f) => { try { f(); } catch (_) {} });
+  }
   function reset() { db = seed(); save(); try { localStorage.removeItem(SEEN_KEY); } catch (_) {} return db; }
   const listeners = [];
   function onChange(f) { listeners.push(f); }
