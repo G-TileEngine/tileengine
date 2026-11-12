@@ -688,6 +688,7 @@
     if (window.Experience) window.Experience.onShow(id); // r64: tiers, Next-step chip, quiz/setup screens
     if (window.TileEngineQoL && TileEngineQoL.onShow) TileEngineQoL.onShow(id);
     if (window.TileEngineSocial && TileEngineSocial.onShow) TileEngineSocial.onShow(id); // r70 social hub
+    if (window.TileEngineGlobe && TileEngineGlobe.onShow) TileEngineGlobe.onShow(id); // r71 home globe
     if (id === "unit-list") renderUnitList();
     if (id === "unit-editor") renderUnitEditor();
     if (id === "refix") { renderRefix(); }
