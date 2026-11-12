@@ -8,7 +8,7 @@ Delivery (CN-003): `git bundle create step-24-trusted-saves-r<N>.bundle <base>..
 Hand-back location: in the repo, on that branch: `handback/step-24-trusted-saves/r<N>/` (HAND-BACK.md), committed as the branch's last commit
 Depends on: step-07 (`createLog`, `parseLog`, `LogHeader`), step-09 (`replay`, `restore`, `snapshot`), step-20-every-door (`plainCopy`), step-21-hard-limits (`MatchLimits`, `withinCeilings`), step-22-document-caps (`readManifest`, `readMap`, `readStage`, `DEFAULT_DOC_LIMITS`), step-23-recipe-caps (`RECIPE_CAPS`, `BTF_SPRITE_RECIPE_LIMITS`, `BTF_STAGE_LIMITS`)
 Read first: BUILD_GUIDE.md §2 laws 4, 5, 7, 9, 12, M4, M7 and §3 (layers: `src/project` and `src/paint` import only their own files, `types` and `core/notice.ts`); `change-notices/CN-009-match-save-type.md`; `handoff/steps/step-23-recipe-caps.md` ("Not in this step"); `docs/qa/step-23-review.md` (carries 1 and 2); `src/sim/run.ts`; `src/core/log/log.ts`; `src/project/read/guard.ts`.
-Kit: kit-2, 2026-11-12. Engine Architect. Hardening step H3 (CEO order after H2: H3, then H4, then the renderer). One number is **proposed** and flagged in "Decisions": the `historyBytes` ceiling of 1,048,576. The 144 entries and 1,024 stages are CEO-approved (2026-11-12 19:35). The interfaces below were prototyped and run green on Node 24.22.1 on the base (prototype branch `h3r3`, head `7aa021d`, one code commit: r2 carried DSK's CN-009 findings F1–F4, and r3 carries QA r2's must-fix, containing the hook). A fresh clone runs `npm ci && npm run green` with exit 0: `tests 513 pass 513 fail 0 skipped 0 todo 0`.
+Kit: kit-2, 2026-11-12. Engine Architect. Hardening step H3 (CEO order after H2: H3, then H4, then the renderer). One number is new and named in "Decisions": the `historyBytes` ceiling of 1,048,576 (CEO-approved 2026-11-12 21:55). The 144 entries and 1,024 stages are CEO-approved (2026-11-12 19:35). The interfaces below were prototyped and run green on Node 24.22.1 on the base (prototype branch `h3r3`, head `7aa021d`, one code commit: r2 carried DSK's CN-009 findings F1–F4, and r3 carries QA r2's must-fix, containing the hook). A fresh clone runs `npm ci && npm run green` with exit 0: `tests 513 pass 513 fail 0 skipped 0 todo 0`.
 Carries: **CN-009 r2** (core-types adds the shared `SaveHeader` and `MatchSave`, five lines, add-only; `core-types.ts` `f00c722c…` → `61fad786…`, and `tests/smoke.test.ts` pins the new sha). Data & Save Keeper signs CN-009 off before this step is sent. No other pinned file changes: `package.json` (`1e5dd82c…`), `.dependency-cruiser.cjs` (`45a3dbaa…`), `scripts/check-law.sh` (`4d7bbf48…`), lock (`d7f64a09…`), BUILD_GUIDE, STATES and every state table are unchanged. `src/project` and `src/paint` still import no `core/limits.ts` or `core/plain.ts`. One new folder and source file: `src/sim/migrations/save/index.ts`, the save-side migrations hook (project-format §6.9). No other new file.
 
 > Working style: use your helper agents, take your time, self-review against Acceptance + QA checklist before hand-back (see BUILD_GUIDE).
@@ -203,7 +203,7 @@ readMap(new Proxy({}, { get() { throw new Error("boom"); } })); // { ok: false, 
 ```
 
 ## Decisions note: what to name
-- The one new number, the `historyBytes` ceiling 1,048,576 (proposed), and that you added no other.
+- The one new number, the `historyBytes` ceiling 1,048,576 (CEO-approved 2026-11-12 21:55), and that you added no other.
 - The order of `loadSave`'s checks, and that none of them reads a document before the log is parsed.
 - That `saveFormatOlder` is a fourth code beside DSK's three (`saveEngineMismatch`, `saveProjectMismatch`, `saveFormatNewer`). It is how an older file reports `needsMigration: true`. If DSK names it otherwise, use DSK's name.
 - That `saveMigrationFailed` is a fifth code (QA r2 must-fix, ruled 2026-11-12), with `needsMigration: true`, and that `loadSave` takes the registry as a fourth argument only so tests can pass a hostile one.
@@ -249,4 +249,4 @@ readMap(new Proxy({}, { get() { throw new Error("boom"); } })); // { ok: false, 
 - Editing `docs/qa/**` (QA), `data/core-types.ts` (DSK, at CN-009 sign-off) or `docs/chaos-player-outline.md` (Architect).
 
 ## Out of scope
-- Any HP, attack, damage or stat rule; networking, lobbies, cloud saves, save slots or UI; any change to the command log format, the snapshot shape, the state tables or the gesture intents; any cap number other than the one proposed here.
+- Any HP, attack, damage or stat rule; networking, lobbies, cloud saves, save slots or UI; any change to the command log format, the snapshot shape, the state tables or the gesture intents; any cap number other than the one named here.
