@@ -1,0 +1,16 @@
+M	src/core/clock/clock.ts
+M	src/core/log/index.ts
+M	src/core/log/log.ts
+A	src/core/plain.ts
+M	src/core/unit/units.ts
+M	src/rules/levels/levels.ts
+M	src/runtime/input/gestures.ts
+M	src/sim/actions.ts
+M	src/sim/chaos-gen.ts
+M	src/sim/run.ts
+M	src/sim/world.ts
+M	tests/core/clock.test.ts
+M	tests/core/dispose.test.ts
+A	tests/sim/every-door.test.ts
+M	tests/sim/exploit-levels.test.ts
+M	tests/sim/levels.test.ts
