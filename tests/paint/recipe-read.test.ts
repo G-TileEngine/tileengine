@@ -11,17 +11,17 @@ for (const fv of ["1", 1.5, undefined]) assert.equal(err({ ...SAMPLE, formatVers
 assert.deepEqual(readSpriteRecipe({ ...SAMPLE, formatVersion: 0 }, LIM), { ok: false, needsMigration: true, kind: "sprite-recipe", found: 0 });
 const neu = ok({ ...copy(SAMPLE), formatVersion: 2 }); assert.equal(neu.readOnly && neu.doc.formatVersion === 2 && neu.doc.parts.length === 8, true);
 assert.deepEqual(msgs(neu), ["newerFormat formatVersion"]);
-const cyc: Record<string, unknown> = copy(SAMPLE); cyc.self = cyc; assert.equal(err(cyc), "not plain JSON");
+const cyc: Record<string, unknown> = copy(SAMPLE); cyc.self = cyc; assert.equal(err(cyc), "over cap bytes");
 for (const prop of ["kind", "formatVersion", "name"]) { const o = copy(SAMPLE) as Record<string, unknown>;
 Object.defineProperty(o, prop, { enumerable: true, get() { throw new Error("get"); } }); assert.equal(err(o), "not plain JSON"); }
 const rev = Proxy.revocable(copy(SAMPLE), {}); rev.revoke(); assert.equal(err(rev.proxy), "not plain JSON");
 assert.equal(err(new Proxy(copy(SAMPLE), { get() { throw new Error("trap"); } })), "not plain JSON");
-const boom = copy(SAMPLE) as { toJSON?: () => unknown }; boom.toJSON = () => { throw new Error("json"); }; assert.equal(err(boom), "not plain JSON");
+let calls = 0; const boom = copy(SAMPLE) as { toJSON?: () => unknown }; boom.toJSON = () => { calls += 1; throw new Error("json"); }; assert.equal(ok(boom).doc.kind === "sprite-recipe" && calls === 0, true);
 const nest = (n: number): unknown => { let d: unknown = []; for (let i = 0; i < n; i += 1) d = [d]; return { ...copy(SAMPLE), deep: d }; };
 assert.equal(ok(nest(1000)).readOnly, false); assert.equal(err(nest(100000)), "not plain JSON"); assert.equal(SPRITE_RASTER, 1);
 const ras = ok({ ...copy(SAMPLE), raster: 2 }); assert.deepEqual(msgs(ras), ["rasterTooNew raster"]); assert.equal(ras.doc.raster, 2); });
 test("recipe limits (SE-01) rejects a non-integer cap", () => {
-assert.deepEqual(LIM, { side: 256, parts: 256, points: 256, runs: 16384, joints: 64, anims: 32, frames: 64, variants: 32, historyBatches: 2000, historyBytes: 1000000 });
+assert.deepEqual(LIM, { side: 256, parts: 256, points: 256, runs: 16384, joints: 64, anims: 32, frames: 64, variants: 32, historyBatches: 2000, historyBytes: 1000000, totalRuns: 32768, totalPoints: 32768, totalTweaks: 32768, bytes: 2097152, notices: 256 });
 for (const x of [-1, 1.5, Number.NaN]) assert.throws(() => readSpriteRecipe(SAMPLE, { ...LIM, runs: x }), { name: "RangeError", message: "readSpriteRecipe: limits must be integers >= 0" });
 }); test("recipe caps (SE-01) warns one under the sample count and not at it", () => {
 const bytes = new TextEncoder().encode(JSON.stringify(SAMPLE.history)).length; const rows: readonly [keyof typeof LIM, number, string, boolean][] = [
@@ -29,7 +29,7 @@ const bytes = new TextEncoder().encode(JSON.stringify(SAMPLE.history)).length; c
 ["joints", 2, "skeleton.joints", true], ["anims", 1, "anims", true], ["frames", 1, "anims[0].frames", true], ["variants", 1, "variants", true],
 ["historyBatches", 2, "history.ops", true], ["historyBytes", bytes, "history", false], ]; for (const [cap, n, key, asLen] of rows) {
 assert.deepEqual(msgs(ok(copy(SAMPLE), { ...LIM, [cap]: n })), []); const under = ok(copy(SAMPLE), { ...LIM, [cap]: n - 1 });
-assert.deepEqual(msgs(under), ["overCap " + key]); assert.deepEqual(under.stored, SAMPLE);
+assert.deepEqual(msgs(under), ["overCap " + key]); if (asLen) assert.equal((getPath(under.stored, key) as unknown[]).length, n - 1); else assert.deepEqual(under.stored, SAMPLE);
 if (cap === "historyBytes") assert.deepEqual(under.doc.history, SAMPLE.history);
 else assert.equal(asLen ? (getPath(under.doc, key) as unknown[]).length : getPath(under.doc, key), n - 1); } });
 test("recipe floats, ids and runs (SE-01) floors, rejects duplicates and bad runs", () => {
@@ -62,7 +62,7 @@ const text = JSON.stringify(SAMPLE).replace("\"light\":135", "\"light\":1.5").re
 const src = JSON.parse(text) as Record<string, unknown>; src.extra = [1, { a: 2 }]; const lim = { ...LIM, parts: 6 }; const r = ok(src, lim);
 assert.deepEqual(msgs(r), ["droppedKey __proto__", "floatParam light", "overCap parts", "badField parts[1].z"]);
 const again = ok(JSON.parse(JSON.stringify(r.stored)), lim); assert.deepEqual(again.doc, r.doc); assert.deepEqual(again.stored, r.stored);
-assert.equal(again.readOnly, r.readOnly); assert.deepEqual(msgs(again), ["floatParam light", "overCap parts", "badField parts[1].z"]);
+assert.equal(again.readOnly, r.readOnly); assert.deepEqual(msgs(again), ["floatParam light", "badField parts[1].z"]);
 const paint = copy(SAMPLE) as { history?: unknown; name?: unknown; rev?: unknown; parts: Record<string, unknown>[]; code: { src?: unknown } };
 delete paint.history; delete paint.name; delete paint.rev; delete paint.parts[0]?.locked; delete paint.parts[0]?.promotedFrom; delete paint.code.src;
 assert.deepEqual(msgs(ok(paint)), []); });

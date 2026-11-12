@@ -14,7 +14,7 @@ export function runTicks(world: SimWorld, opts: TickOptions): MatchResult {
   const busy = new Map<string, number>();
   let outcome: Outcome | null = null;
   let rounds = 0;
-  while (outcome === null && world.clock.now() < opts.maxSimMs) {
+  while (outcome === null && world.clock.now() < opts.maxSimMs && world.clock.tick() < world.limits.ticks) {
     rounds += 1;
     const now = world.clock.now();
     for (const side of opts.sides) {
@@ -27,7 +27,7 @@ export function runTicks(world: SimWorld, opts: TickOptions): MatchResult {
       const got = opts.victory(world, { round: rounds, side });
       if (got !== null) { outcome = got; break; }
     }
-    if (outcome === null) advance(world, opts.everyMs);
+    if (outcome === null) advance(world, Math.min(opts.everyMs, (world.limits.ticks - world.clock.tick()) * step));
   }
   const events: Event[] = outcome === null ? [] : [{ type: "CHECK_END", outcome }];
   return { outcome: outcome ?? "timeout", rounds, events };

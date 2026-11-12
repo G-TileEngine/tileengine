@@ -51,7 +51,7 @@ export function createLog(header: LogHeader, onAppend?: (entry: LogEntry) => voi
   const cap = ownLimits(limits); if (cap === null) throw new RangeError("createLog: limits must be whole numbers from 1 to their ceilings");
   limits = cap; const copied = plainCopy(header, 1); if (!rec(copied)) throw new RangeError("createLog: seed must be a uint32 and header text short");
   header = copied as LogHeader;
-  if (!Number.isInteger(header.seed) || header.seed < 0 || header.seed > SEED_MAX || header.engineVersion.length > limits.text || header.projectHash.length > limits.text) throw new RangeError("createLog: seed must be a uint32 and header text short");
+  if (!Number.isInteger(header.seed) || header.seed < 0 || header.seed > SEED_MAX || typeof header.engineVersion !== "string" || typeof header.projectHash !== "string" || header.engineVersion.length > limits.text || header.projectHash.length > limits.text) throw new RangeError("createLog: seed must be a uint32 and header text short");
   const list: LogEntry[] = [];
   const head: LogHeader = { seed: header.seed, formatVersion: header.formatVersion, engineVersion: header.engineVersion, projectHash: header.projectHash };
   return {

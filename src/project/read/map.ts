@@ -26,7 +26,7 @@ function objectOf(v: unknown, max: number): CoreMapObject | null {
   return { id: v.id, at, ...(footprint === undefined ? {} : { footprint }), ...(typeof v.blocks === "boolean" ? { blocks: v.blocks } : {}) };
 }
 export function readMap(json: unknown, limits?: Partial<DocLimits>): ReadResult<CoreMap> {
-  const lim = docLimits(limits ?? {});
+  const lim = docLimits(limits === undefined ? {} : limits);
   if (lim === null) throw new RangeError("readMap: limits must be whole numbers from 1 to their ceilings");
   const ver = checkVersion(json, "map");
   if (ver !== null) return ver;

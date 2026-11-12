@@ -1,0 +1,17 @@
+M	src/btf-adapters/src/sprite-recipe-limits.ts
+M	src/btf-adapters/src/stage-limits.ts
+M	src/core/log/log.ts
+M	src/paint/recipe/fields.ts
+M	src/paint/recipe/limits.ts
+M	src/paint/recipe/read.ts
+M	src/project/read/limits.ts
+M	src/project/read/manifest.ts
+M	src/project/read/map.ts
+M	src/project/read/stage.ts
+M	src/sim/driver-phase.ts
+M	src/sim/driver-tick.ts
+M	src/sim/world.ts
+M	tests/paint/recipe-read.test.ts
+M	tests/project/door-guard.test.ts
+M	tests/sim/doc-limits.test.ts
+A	tests/sim/recipe-caps.test.ts
