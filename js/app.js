@@ -686,6 +686,7 @@
     }
     if (id === "sprite-studio" && window.SpriteStudio) window.SpriteStudio.onShow();
     if (window.Experience) window.Experience.onShow(id); // r64: tiers, Next-step chip, quiz/setup screens
+    if (window.TileEngineQoL && TileEngineQoL.onShow) TileEngineQoL.onShow(id);
     if (id === "unit-list") renderUnitList();
     if (id === "unit-editor") renderUnitEditor();
     if (id === "refix") { renderRefix(); }
@@ -864,12 +865,7 @@
   }
 
   function knobStatusTag(knob) {
-    const st = knob.status || {};
-    const fields = ["default", "min", "max", "options", "step"];
-    const bad = fields.some((f) => S.fieldNeedsPlaceholder(knob, f));
-    if (bad || (Array.isArray(knob.proposed) && knob.proposed.length)) {
-      return `<span class="tag-ph">placeholder value</span>`;
-    }
+    // r69: no "placeholder value" tags in the clean edit.
     return "";
   }
 
@@ -892,6 +888,7 @@
   /* ---------- pick / assign ---------- */
 
   function renderPickList() {
+    if (window.TileEngineQoL && TileEngineQoL.renderPickList()) return;
     const u = selectedUnit();
     const nameEl = $("#pick-unit-name");
     if (nameEl) nameEl.textContent = u ? u.name : "No unit";
@@ -982,7 +979,8 @@
     });
   }
 
-  function openBehaviour(id) {
+  function openBehaviour(id, opts) {
+    if (window.TileEngineQoL && TileEngineQoL.tryQuickAdd(id, opts || {})) return;
     const created = S.createSetup(id, state.catalogueDoc, behaviourById(id)?.name);
     if (!created.doc) {
       toast("Can't open that behaviour");
@@ -1085,6 +1083,8 @@
 
     const rendered = new Set();
     let html = presetBar;
+    const qCount = {};
+    orderedSteps(b).forEach((step) => { (step.knobs || []).forEach(() => { qCount[step.question] = (qCount[step.question] || 0) + 1; }); });
     orderedSteps(b).forEach((step) => {
       step.knobs.forEach((knob) => {
         if (rendered.has(knob.id)) return;
@@ -1101,7 +1101,7 @@
             const gateReason = gates[knob.id];
             const inactiveReason = !active ? S.activeWhenReason(knob.active_when) : null;
             html += `<div class="knob-card ${!active ? "inactive" : ""}" data-knob-card="${escapeHtml(knob.id)}">
-              <h2>${escapeHtml(step.question)}</h2>
+              <h2>${escapeHtml(qCount[step.question] > 1 && knob.label ? knob.label : step.question)}</h2>
               <div class="unlimited-row">
                 <span class="knob-label">${escapeHtml(tog.label)}</span>
                 <div class="toggle-row" role="group" aria-label="${escapeHtml(tog.label)}">
@@ -2712,6 +2712,7 @@
   window.__behaviourById = (id) => behaviourById(id);
   // r68 (J): the unit's Edit view lists its abilities (behaviours and spells), each with a remove (×)
   function renderUnitAbilities() {
+    if (window.TileEngineQoL && TileEngineQoL.renderUnitSheet()) return;
     const box = $("#sheet-unit-abilities"), u = selectedUnit(); if (!box) return;
     const title = $("#sheet-unit-title"); if (title) title.textContent = u ? u.name : "Unit";
     const list = (u && u.setups) || [];
@@ -2738,6 +2739,7 @@
   window.__renderUnitAbilities = renderUnitAbilities;
   // r68 (K): THE abilities screen = the stage with the unit's sheet open on its Abilities list (the ✦ badge is visible beside it)
   function showAbilities(fresh) {
+    if (window.TileEngineQoL && typeof TileEngineQoL.resetUnitTab === "function") TileEngineQoL.resetUnitTab();
     const u = selectedUnit(); if (!u) { show("stage"); return; }
     show("stage"); setStageSheet("unit"); renderUnitAbilities();
     setTimeout(() => { const box = $("#sheet-unit-abilities"); if (box) { box.scrollIntoView({ block: "nearest" }); if (fresh) box.classList.add("ua-fresh"), setTimeout(() => box.classList.remove("ua-fresh"), 900); } }, 30);
@@ -5208,12 +5210,18 @@
       "render-soon",
       "project-settings",
       "profile",
+      "profile-avatar",
+      "profile-achievements",
       "game-settings",
       "how-earn",
       "stage-select",
       "stage-enemy-pool",
       "stage-map",
       "stage-loadout",
+      "stage-type",
+      "stage-lairs",
+      "stage-change-type",
+      "effects-designer",
       "loadout",
       "sprite-studio",
       "welcome", "my-setup", "get-started", "starter-make", "starter-pack",
@@ -5497,15 +5505,12 @@
         jumpToHardError(hard[0]);
         return;
       }
+      if (window.TileEngineQoL && TileEngineQoL.onPlayClicked()) return;
       show("loadout");
     });
     $("#btn-add-stage")?.addEventListener("click", () => {
       if (!state.project) return;
-      const map = ProjectStore.addStage(state.project, state.catalogueDoc);
-      state.currentStageId = map.id;
-      persistProject();
-      renderStageSelect();
-      toast("Stage added");
+      show("stage-type");
     });
     $("#btn-loadout-play")?.addEventListener("click", () => {
       if (!state.loadoutSelected.length) {

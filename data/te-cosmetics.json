@@ -1,0 +1,23 @@
+{
+  "libraryId": "te-cosmetics",
+  "kind": "library-manifest",
+  "formatVersion": 1,
+  "note": "STUB (r69 / profile-format r8 §1.12.3). Art is placeholder. Thresholds follow accepted §1.12.9.",
+  "assets": [
+    {"key": "badge_first_stage", "slot": "badge", "title": "First stage", "assetKey": "badge_first_stage", "unlockedBy": {"achievement": "ach_first_stage"}},
+    {"key": "badge_night_editor", "slot": "badge", "title": "Night editor", "assetKey": "badge_night_editor", "unlockedBy": {"achievement": "ach_dark_mode"}},
+    {"key": "badge_wizard", "slot": "badge", "title": "Wizard graduate", "assetKey": "badge_wizard", "unlockedBy": {"achievement": "ach_wizard_done"}},
+    {"key": "badge_seller_10", "slot": "badge", "title": "Seller", "assetKey": "badge_seller_10", "unlockedBy": {"achievement": "ach_sold_10"}},
+    {"key": "badge_seller_50", "slot": "badge", "title": "Established seller", "assetKey": "badge_seller_50", "unlockedBy": {"achievement": "ach_sold_50"}},
+    {"key": "badge_seller_250", "slot": "badge", "title": "Best seller", "assetKey": "badge_seller_250", "unlockedBy": {"achievement": "ach_sold_250"}},
+    {"key": "border_seller_100", "slot": "border", "title": "Seller trim", "assetKey": "border_seller_100", "unlockedBy": {"achievement": "ach_sold_100"}},
+    {"key": "badge_published_1", "slot": "badge", "title": "First publish", "assetKey": "badge_published_1", "unlockedBy": {"achievement": "ach_published_1"}},
+    {"key": "badge_published_5", "slot": "badge", "title": "Studio author", "assetKey": "badge_published_5", "unlockedBy": {"achievement": "ach_published_5"}},
+    {"key": "badge_published_20", "slot": "badge", "title": "Publisher", "assetKey": "badge_published_20", "unlockedBy": {"achievement": "ach_published_20"}},
+    {"key": "border_published_10", "slot": "border", "title": "Published trim", "assetKey": "border_published_10", "unlockedBy": {"achievement": "ach_published_10"}},
+    {"key": "border_achievements_10", "slot": "border", "title": "Dedicated maker", "assetKey": "border_achievements_10", "unlockedBy": {"achievement": "ach_unlocks_10"}},
+    {"key": "badge_achievements_20", "slot": "badge", "title": "Completionist", "assetKey": "badge_achievements_20", "unlockedBy": {"achievement": "ach_unlocks_20"}},
+    {"key": "badge_game_of_the_month", "slot": "badge", "title": "Game of the Month", "assetKey": "badge_game_of_the_month", "unlockedBy": {"coinReason": "gameOfTheMonth"}},
+    {"key": "badge_asset_of_the_month", "slot": "badge", "title": "Asset of the Month", "assetKey": "badge_asset_of_the_month", "unlockedBy": {"coinReason": "assetOfTheMonth"}}
+  ]
+}

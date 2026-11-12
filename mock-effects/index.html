@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light" />
+  <title>TileEngine — Effect Designer (mock)</title>
+  <link rel="stylesheet" href="../css/app.css" />
+  <link rel="stylesheet" href="effects.css" />
+</head>
+<body>
+  <div class="app" role="application" aria-label="TileEngine Effect Designer mockup">
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <!-- SAVED EFFECTS (library) -->
+    <section id="screen-library" class="screen" aria-label="Effects in this project">
+      <div class="topbar">
+        <p class="eyebrow">Project · My Tactics</p>
+        <div class="topbar-row"><h1 tabindex="-1">Effects</h1><span class="chip" id="lib-count">0 in project</span></div>
+      </div>
+      <div class="body" id="lib-body"></div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="ability">Back</button>
+        <button type="button" class="btn btn-primary" id="lib-new">New effect</button>
+      </div>
+    </section>
+
+    <!-- PRESETS -->
+    <section id="screen-presets" class="screen" aria-label="Start from a look">
+      <div class="topbar">
+        <p class="eyebrow" id="pre-eyebrow">New effect · Step 1 of 2</p>
+        <div class="topbar-row"><h1 tabindex="-1">Start from a look</h1><span class="chip">10 built-in</span></div>
+      </div>
+      <div class="fx-stage" id="pre-stage"></div>
+      <div class="body" id="pre-body"></div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" id="pre-back">Back</button>
+        <button type="button" class="btn btn-primary" id="pre-go" disabled>Use this look</button>
+      </div>
+    </section>
+
+    <!-- DESIGNER (simple + advanced) -->
+    <section id="screen-design" class="screen" aria-label="Effect Designer">
+      <div class="topbar">
+        <p class="eyebrow" id="des-eyebrow">Effect Designer</p>
+        <div class="topbar-row"><h1 tabindex="-1" id="des-title">Effect</h1><span class="chip" id="des-base">BTF</span></div>
+      </div>
+      <div id="des-return" class="fx-return" hidden></div>
+      <div class="fx-stage" id="des-stage"></div>
+      <div class="fx-tabs" role="tablist" aria-label="Controls">
+        <button type="button" class="toggle" role="tab" id="tab-simple" data-nav="simple" aria-pressed="true">Simple</button>
+        <button type="button" class="toggle" role="tab" id="tab-adv" data-nav="advanced" aria-pressed="false">Advanced steps</button>
+      </div>
+      <div class="body" id="des-body"></div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" id="des-useon">Use on…</button>
+        <button type="button" class="btn btn-primary" id="des-save">Save effect</button>
+      </div>
+    </section>
+
+    <!-- PICTURE (sprite) PICKER -->
+    <section id="screen-sprite" class="screen" aria-label="Pick a picture">
+      <div class="topbar">
+        <p class="eyebrow">Effect Designer · Picture</p>
+        <div class="topbar-row"><h1 tabindex="-1">Pick a picture</h1><span class="chip">64 px tiles</span></div>
+      </div>
+      <div class="body" id="spr-body"></div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="simple">Back</button>
+        <button type="button" class="btn btn-primary" id="spr-done">Use this picture</button>
+      </div>
+    </section>
+
+    <!-- ABILITY (Effect row) -->
+    <section id="screen-ability" class="screen" aria-label="Ability settings">
+      <div class="topbar">
+        <p class="eyebrow">Unit · Archer · Ability</p>
+        <div class="topbar-row"><h1 tabindex="-1" id="ab-title">Sky Drop</h1><span class="chip">Spells</span></div>
+      </div>
+      <div class="body" id="ab-body"></div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-toast="Back to the unit (placeholder)">Back</button>
+        <button type="button" class="btn btn-primary" data-nav="library">All effects</button>
+      </div>
+      <div class="sheet" id="ab-sheet" hidden>
+        <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="ab-sheet-title" id="ab-sheet-card"></div>
+      </div>
+    </section>
+
+    <!-- PREVIEW GODMODE: Effect section -->
+    <section id="screen-godmode" class="screen" aria-label="Preview Godmode, Effect section">
+      <div class="topbar">
+        <p class="eyebrow">Preview · Stage 2: Bridge · Godmode</p>
+        <div class="topbar-row"><h1 tabindex="-1">Godmode</h1><span class="chip" id="gm-count">No changes</span></div>
+      </div>
+      <div class="fx-tabs" role="tablist" aria-label="Godmode sections" id="gm-tabs"></div>
+      <div class="fx-stage" id="gm-stage"></div>
+      <div class="body" id="gm-body"></div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" id="gm-fork">Fork for this stage</button>
+        <button type="button" class="btn btn-primary" id="gm-save" disabled>Save to all stages</button>
+      </div>
+    </section>
+
+    <!-- USE ON… -->
+    <section id="screen-useon" class="screen" aria-label="Use this effect on abilities">
+      <div class="topbar">
+        <p class="eyebrow">Effect Designer · Use on…</p>
+        <div class="topbar-row"><h1 tabindex="-1" id="use-title">Use on…</h1><span class="chip" id="use-count">0 picked</span></div>
+      </div>
+      <div class="body" id="use-body"></div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" id="use-cancel">Cancel</button>
+        <button type="button" class="btn btn-primary" id="use-apply">Apply</button>
+      </div>
+    </section>
+  </div>
+  <script src="js/effects.js"></script>
+</body>
+</html>

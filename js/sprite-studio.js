@@ -731,7 +731,7 @@
     $("#ss-shade-on") && ($("#ss-shade-on").onclick = () => { pushHist(); st.shade = !st.shade; renderAll(); });
     $$("[data-dither]", b).forEach((x) => (x.onclick = () => { pushHist(); st.dither = x.dataset.dither; renderAll(); }));
     ["#ss-adv", "#ss-adv2"].forEach((s) => $(s) && ($(s).onclick = () => { st.advanced = !st.advanced; if (!st.advanced && st.dither === "bayer") st.dither = "checker"; renderAll(); }));
-    $("#ss-glow-link") && ($("#ss-glow-link").onclick = (e) => { e.preventDefault(); toast("Opens the Effect Designer (mock-effects) · glow is an effect, not sprite pixels"); });
+    $("#ss-glow-link") && ($("#ss-glow-link").onclick = (e) => { e.preventDefault(); if (window.TileEngineQoL && TileEngineQoL.openEffects) TileEngineQoL.openEffects(); else if (window.__show) __show("effects-designer"); else toast("Opens the Effect Designer"); });
     $$("[data-shape]", b).forEach((x) => (x.onclick = () => { st.shapeKind = x.dataset.shape; renderAll(); }));
     $("#ss-rot90") && ($("#ss-rot90").onclick = rotate90);
     $("#ss-flip") && ($("#ss-flip").onclick = flipPart);

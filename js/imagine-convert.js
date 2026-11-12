@@ -639,7 +639,26 @@
       keepShade: true, reshade: R.reshade, outline: R.outline !== "none", original: M.sample || "your picture" });
     const n = Object.keys(dirs).length;
     close();
-    toast(`Kept as your sprite · ${R.ramps.filter((r) => !r.pixels && !r.twin).length} parts${n > 1 ? ` · ${n} directions` : ""}${rematched.length ? " · matched to the first picture" : ""} · original kept`);
+    let dataUrl = null;
+    try {
+      const cols = bakeResult(R);
+      if (cols && cols.length) {
+        const c = document.createElement("canvas"); c.width = R.N; c.height = R.N;
+        const g = c.getContext("2d");
+        for (let i = 0; i < cols.length; i++) {
+          const col = cols[i]; if (!col) continue;
+          g.fillStyle = typeof col === "string" ? col : ("#" + (col >>> 0).toString(16).padStart(6, "0"));
+          g.fillRect(i % R.N, Math.floor(i / R.N), 1, 1);
+        }
+        dataUrl = c.toDataURL("image/png");
+      }
+    } catch (_) {}
+    if (window.TileEngineQoL && TileEngineQoL.keepAsProjectAsset) {
+      const id = TileEngineQoL.keepAsProjectAsset({ name: "Kept sprite", w: R.N, h: R.N, dataUrl });
+      if (id && TileEngineQoL.offerPlaceKept) TileEngineQoL.offerPlaceKept(id);
+    } else {
+      toast(`Kept as your sprite · ${R.ramps.filter((r) => !r.pixels && !r.twin).length} parts${n > 1 ? ` · ${n} directions` : ""}${rematched.length ? " · matched to the first picture" : ""} · original kept`);
+    }
   }
 
   function railBtn(id, name, ico, pressed, dis) { return `<button type="button" class="rail-btn" data-ic-tool="${id}" aria-pressed="${pressed}"${dis ? " disabled" : ""} aria-label="${name}"><span class="rail-ico" aria-hidden="true">${ico}</span><span class="rail-lbl">${name}</span></button>`; }

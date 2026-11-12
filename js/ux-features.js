@@ -368,7 +368,7 @@
     const name = $("#profile-name");
     if (name) name.value = (p.prefs && p.prefs.name) || "Maker";
     const av = $("#profile-avatar");
-    if (av) {
+    if (av && !(window.TileEngineQoL && TileEngineQoL.enhanceProfile)) {
       const id = p.prefs && p.prefs.avatarId;
       if (id) {
         const meta = ProfileStore.AVATARS.find((a) => a.id === id);
@@ -402,7 +402,7 @@
     }
 
     const list = $("#ach-list");
-    if (list) {
+    if (list && !(window.TileEngineQoL && TileEngineQoL.renderAchievementsScreen)) {
       const rows = ProfileStore.listForUi(p);
       const unknownCount = rows.filter((r) => r.status === "unknown").length;
       list.innerHTML = rows.map((r) => {
@@ -424,6 +424,7 @@
       const val = $("#preview-volume-val");
       if (val) val.textContent = ep.previewVolume + "%";
     }
+    if (window.TileEngineQoL && TileEngineQoL.enhanceProfile) TileEngineQoL.enhanceProfile();
   }
 
   /* ---------- Game settings ---------- */

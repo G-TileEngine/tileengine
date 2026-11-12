@@ -74,6 +74,10 @@
     asset_shop: { name: "Shop", fw: 2, fh: 2, blocks: true },
     asset_well: { name: "Well", fw: 1, fh: 1, blocks: true },
     asset_prop_tree: { name: "Tree", fw: 1, fh: 1, blocks: true },
+    asset_rock: { name: "Rock", fw: 1, fh: 1, blocks: true },
+    asset_crate: { name: "Crate", fw: 1, fh: 1, blocks: true },
+    asset_barrel: { name: "Barrel", fw: 1, fh: 1, blocks: true },
+    asset_torch: { name: "Torch", fw: 1, fh: 1, blocks: false },
   };
   const objMeta = (id) => OBJECTS[id] || OBJECTS.asset_prop_tree;
   function objArt(id) {
@@ -92,6 +96,14 @@
       } else if (id === "asset_well") {
         px(2, 9, "#2a2a34", 12, 7); px(3, 10, "#8a8fa0", 10, 5); px(3, 10, "#b8bcc8", 10, 1); px(5, 11, "#3f7fc4", 6, 2);
         px(3, 2, "#3a2a3a", 1, 8); px(12, 2, "#3a2a3a", 1, 8); px(1, 1, "#2a1a1a", 14, 3); px(2, 1, "#b8402e", 12, 2);
+      } else if (id === "asset_rock") {
+        px(2, 7, "#2a1a1a", 12, 8); px(3, 8, "#7a6a58", 10, 6); px(4, 8, "#9a8a70", 4, 3);
+      } else if (id === "asset_crate") {
+        px(2, 4, "#2a1a1a", 12, 12); px(3, 5, "#8a6230", 10, 10); px(3, 9, "#2a1a1a", 10, 1); px(7, 5, "#2a1a1a", 1, 10);
+      } else if (id === "asset_barrel") {
+        px(4, 3, "#2a1a1a", 8, 13); px(5, 4, "#8a4a20", 6, 11); px(5, 7, "#2a1a1a", 6, 1); px(5, 11, "#2a1a1a", 6, 1);
+      } else if (id === "asset_torch") {
+        px(7, 7, "#6e4a35", 2, 9); px(6, 2, "#c44a22", 4, 6); px(7, 1, "#f0d070", 2, 3);
       } else { // tree
         px(7, 11, "#2a1a1a", 3, 5); px(7, 11, "#6e4a35", 2, 5);
         for (let y = 0; y < 12; y++) for (let x = 0; x < 16; x++) { const d = Math.hypot(x - 7.5, y - 6); if (d < 6.5) px(x, y, d > 5.6 ? "#1e3a24" : (x + y < 10 ? "#7fb05a" : x - y > 4 ? "#3a6a30" : "#5a8a40")); }
@@ -104,6 +116,22 @@
     guard: { name: "Guard", preset: { body: "sturdy", hair: "short", outfit: "armour", weapon: "sword" }, colours: { Skin: "Brown", Hair: "Black", Shirt: "Grey", Trousers: "Blue", Boots: "Steel", Weapon: "Steel" } },
     elder: { name: "Elder", preset: { body: "small", hair: "long", outfit: "robe", weapon: "staff" }, colours: { Skin: "Fair", Hair: "White", Shirt: "Blue", Trousers: "White", Boots: "Leather", Weapon: "Wood" } },
   };
+  const ENEMIES = {
+    slime: { name: "Slime", col: "#5a8a40" },
+    bat: { name: "Bat", col: "#4a3a6a" },
+    skeleton: { name: "Skeleton", col: "#c8c0b0" },
+    wolf: { name: "Wolf", col: "#6a5a4a" },
+    goblin: { name: "Goblin", col: "#3a6a30" },
+    acolyte: { name: "Acolyte", col: "#5a3a6a" },
+    "tall-boss": { name: "Tall boss", col: "#6a2a4a" },
+    "big-boss": { name: "Big boss", col: "#5a2a2a" },
+  };
+  function enemyArt(id) {
+    const e = ENEMIES[id] || ENEMIES.slime;
+    return draw("e:" + id, 16, 16, (g, px) => {
+      px(3, 4, "#1a1210", 10, 11); px(4, 5, e.col, 8, 9); px(6, 7, "#1a1210", 2, 2); px(9, 7, "#1a1210", 2, 2);
+    });
+  }
   const HEROES = [
     { preset: { body: "classic", hair: "short", outfit: "tunic", weapon: "sword" }, colours: { Skin: "Peach", Hair: "Brown", Shirt: "Blue", Trousers: "Brown", Boots: "Leather", Weapon: "Steel" } },
     { preset: { body: "small", hair: "long", outfit: "robe", weapon: "staff" }, colours: { Skin: "Fair", Hair: "Black", Shirt: "Red", Trousers: "Purple", Boots: "Dark leather", Weapon: "Crystal" } },
@@ -115,7 +143,9 @@
     const c = document.createElement("canvas"); SpriteStudio.heroThumb(def.preset, def.colours, c); return (cache["u:" + key] = c.toDataURL());
   }
   const isNpc = (u) => u && u.kind === "npc";
-  const unitArt = (u) => isNpc(u) ? spriteArt(NPCS[u.npcType] || NPCS.villager, "npc:" + (u.npcType || "villager")) : spriteArt(HEROES[u.id === 2 ? 1 : 0], "hero:" + (u.id === 2 ? 1 : 0));
+  const isEnemy = (u) => u && u.kind === "enemy";
+  const pal = () => (window.TileEngineQoL && TileEngineQoL.stagePalette && TileEngineQoL.stagePalette()) || { showEnemies: true, showLava: true, showLairs: false, showThreats: true, allowHostileNpc: true, hideNote: null, lairSet: null, type: "freestyle" };
+  const unitArt = (u) => isNpc(u) ? spriteArt(NPCS[u.npcType] || NPCS.villager, "npc:" + (u.npcType || "villager")) : isEnemy(u) ? enemyArt(u.enemyType || "slime") : spriteArt(HEROES[u.id === 2 ? 1 : 0], "hero:" + (u.id === 2 ? 1 : 0));
   const unitName = (u) => isNpc(u) ? (NPCS[u.npcType] || NPCS.villager).name : (u.name || "Unit");
 
   /* ---------- data helpers (same data as the rail tools) ---------- */
@@ -218,14 +248,32 @@
   const menuBtn = (a, ico, label, v = "") => `<button type="button" class="lp-btn" data-lp="${a}" data-v="${v}"><span class="lp-ico" aria-hidden="true">${ico}</span><span>${esc(label)}</span></button>`;
   const artBtn = (a, v, img, label, extra = "") => `<button type="button" class="lp-art-btn" data-lp="${a}" data-v="${v}" aria-label="${esc(label)}"><span class="lp-art${extra}" style="background-image:url(${img})" aria-hidden="true"></span><span class="lp-art-lbl">${esc(label)}</span></button>`;
   function emptyMenu(x, y) {
-    openPop(x, y, head("Add here", `Tile ${x + 1},${y + 1}`) + `<div class="lp-grid">${menuBtn("addUnit", "🧍", "Unit")}${menuBtn("pick", "🙂", "NPC", "npc")}${menuBtn("pick", "🏠", "Building", "building")}${menuBtn("pick", "🌊", "Terrain", "terrain")}${menuBtn("pick", "🌱", "Land", "land")}</div>`, "Add here");
+    const p = pal();
+    let btns = menuBtn("addUnit", "🧍", "Unit") + menuBtn("pick", "🙂", "NPC", "npc") + menuBtn("pick", "🏠", "Building", "building");
+    if (p.showEnemies) btns += menuBtn("pick", "💀", "Enemy", "enemy");
+    if (p.showLairs) btns += menuBtn("lairs", "🏛", "Lair sets");
+    btns += menuBtn("pick", "🌊", "Terrain", "terrain") + menuBtn("pick", "🌱", "Land", "land");
+    const kept = S() && S().qolPlaceAsset;
+    if (kept) btns += menuBtn("addKept", "🎨", "Kept art");
+    const sub = p.hideNote || `Tile ${x + 1},${y + 1}`;
+    openPop(x, y, head("Add here", sub) + `<div class="lp-grid">${btns}</div>`, "Add here");
   }
   function picker(x, y, what, mode) {
     const verb = mode === "edit" ? "swap" : "add";
     let body = "", title = "";
     if (what === "npc") { title = "Pick an NPC"; body = Object.keys(NPCS).map((k) => artBtn(verb === "swap" ? "swapNpc" : "addNpc", k, spriteArt(NPCS[k], "npc:" + k), NPCS[k].name, " is-sprite")).join(""); }
     if (what === "building") { title = "Pick a building"; body = Object.keys(OBJECTS).map((k) => artBtn(verb === "swap" ? "swapObj" : "addObj", k, objArt(k), OBJECTS[k].name + (OBJECTS[k].fw > 1 ? ` ${OBJECTS[k].fw}×${OBJECTS[k].fh}` : ""))).join(""); }
-    if (what === "terrain" || what === "land") { title = what === "terrain" ? "Pick terrain" : "Pick land"; body = Object.keys(TILES).filter((k) => TILES[k].group === what || (mode === "edit")).map((k) => artBtn("tile", k, tileArt(k, 0, k === "water" ? 5 : 0), TILES[k].name)).join(""); }
+    if (what === "enemy") {
+      title = "Pick an enemy";
+      const p = pal();
+      let ids = Object.keys(ENEMIES);
+      if (p.lairSet && p.lairSet !== "all") {
+        const focus = p.lairSet === "bandit" ? ["acolyte"] : [p.lairSet];
+        ids = ids.filter((k) => focus.indexOf(k) >= 0).concat(ids.filter((k) => focus.indexOf(k) < 0));
+      }
+      body = ids.map((k) => artBtn(verb === "swap" ? "swapEnemy" : "addEnemy", k, enemyArt(k), ENEMIES[k].name + (p.lairSet && (p.lairSet === k || (p.lairSet === "bandit" && k === "acolyte")) ? " · set" : ""))).join("");
+    }
+    if (what === "terrain" || what === "land") { title = what === "terrain" ? "Pick terrain" : "Pick land"; body = Object.keys(TILES).filter((k) => (TILES[k].group === what || (mode === "edit")) && (k !== "lava" || pal().showLava || mode === "edit")).map((k) => artBtn("tile", k, tileArt(k, 0, k === "water" ? 5 : 0), TILES[k].name)).join(""); }
     openPop(x, y, head(title, mode === "edit" ? "Tap to swap" : "Starter Pack · free") + `<div class="lp-row${body.split("lp-art-btn").length > 5 ? " wrap" : ""}">${body}</div>`, title);
   }
   function thingMenu(x, y) {
@@ -239,7 +287,10 @@
   }
   function rolesMenu(x, y, fresh) {
     const u = unitAt(x, y); if (!u) return;
-    openPop(x, y, head(fresh ? `${unitName(u)} placed` : "Assign behaviour", "What do they do?") + `<div class="lp-grid">${ROLES.map(([id, n, ico]) => menuBtn("role", ico, n, id).replace('class="lp-btn"', `class="lp-btn" aria-pressed="${u.npcRole === id}"`)).join("")}</div>` + (fresh ? `<button type="button" class="lp-later" data-lp="close">Later</button>` : ""), "Assign behaviour");
+    const host = pal().allowHostileNpc
+      ? menuBtn("hostile", u.npcHostile ? "⚔" : "☮", u.npcHostile ? "Hostile · On" : "Hostile · Off")
+      : "";
+    openPop(x, y, head(fresh ? `${unitName(u)} placed` : "Assign behaviour", "What do they do? NPCs are friendly until you opt in to hostility.") + `<div class="lp-grid">${ROLES.map(([id, n, ico]) => menuBtn("role", ico, n, id).replace('class="lp-btn"', `class="lp-btn" aria-pressed="${u.npcRole === id}"`)).join("")}${host}</div>` + (fresh ? `<button type="button" class="lp-later" data-lp="close">Later</button>` : ""), "Assign behaviour");
   }
 
   /* ---------- actions ---------- */
@@ -257,9 +308,32 @@
     }
     if (a === "addNpc") {
       if (blockedReason(x, y, 1, 1)) { toast(blockedReason(x, y, 1, 1)); return; }
-      const u = { id: s.nextId++, name: NPCS[v].name, kind: "npc", npcType: v, npcRole: null, x, y, hp: 5, atk: 0, setups: [] };
+      const u = { id: s.nextId++, name: NPCS[v].name, kind: "npc", npcType: v, npcRole: null, npcHostile: false, x, y, hp: 5, atk: 0, setups: [] };
       s.units.push(u); pushUndo(() => { const i = s.units.indexOf(u); if (i >= 0) s.units.splice(i, 1); });
       commit(); return rolesMenu(x, y, true);
+    }
+    if (a === "lairs") { closePop(); if (window.__show) __show("stage-lairs"); return; }
+    if (a === "addEnemy") {
+      if (!pal().showEnemies) { toast("Enemies stay hidden on a Safe stage until you add a threat or event."); return; }
+      if (blockedReason(x, y, 1, 1)) { toast(blockedReason(x, y, 1, 1)); return; }
+      const e = ENEMIES[v] || ENEMIES.slime;
+      const u = { id: s.nextId++, name: e.name, kind: "enemy", enemyType: v, x, y, hp: 6, atk: 1, setups: [], hostile: true };
+      s.units.push(u); pushUndo(() => { const i = s.units.indexOf(u); if (i >= 0) s.units.splice(i, 1); });
+      commit(); toast(e.name + " placed"); return thingMenu(x, y);
+    }
+    if (a === "addKept") {
+      const id = s.qolPlaceAsset; if (!id) return;
+      if (blockedReason(x, y, 1, 1)) { toast(blockedReason(x, y, 1, 1)); return; }
+      ensureAsset(id);
+      const o = ProjectStore.addMapObject(s.project, c.ref, { assetId: id, at: { c: x, r: y }, blocks: true });
+      pushUndo(() => { const h = objects().find((q) => q.id === o.id); if (h) ProjectStore.removeMapObjectAt(s.project, c.ref, h.at.c, h.at.r); });
+      s.qolPlaceAsset = null; commit(); toast("Kept art placed"); return thingMenu(x, y);
+    }
+    if (a === "hostile") {
+      const u = unitAt(x, y); if (!u) return;
+      if (!pal().allowHostileNpc && !u.npcHostile) { toast("Hostility is locked on a Safe stage until you add a threat or event."); return; }
+      const prev = !!u.npcHostile; u.npcHostile = !prev; pushUndo(() => { u.npcHostile = prev; });
+      commit(); toast(unitName(u) + (u.npcHostile ? " is now hostile" : " is friendly again")); return rolesMenu(x, y, false);
     }
     if (a === "roles") return rolesMenu(x, y, false);
     if (a === "role") {
@@ -612,12 +686,41 @@
     window.addEventListener("hashchange", () => { closePop(); L.move = null; L.brush = null; L.arm = null; L.erase = null; if (L.test) exitTest(); renderChip(); });
     const eb = $("#btn-erase"); if (eb) eb.addEventListener("click", () => armErase());
   }
+
+  function stampLair(id) {
+    const s = S(), c = mapCtx(); if (!s || !c) return 0;
+    const recipes = {
+      goblin: { enemies: ["goblin", "goblin", "goblin"], props: ["asset_rock", "asset_torch", "asset_crate"] },
+      slime: { enemies: ["slime", "slime", "slime"], props: ["asset_rock", "asset_rock"], water: true },
+      bandit: { enemies: ["acolyte", "acolyte"], props: ["asset_barrel", "asset_crate", "asset_torch"] },
+    };
+    const rec = recipes[id] || recipes.goblin;
+    const empties = [];
+    for (let y = 0; y < s.mapH; y++) for (let x = 0; x < s.mapW; x++) if (!blockedReason(x, y, 1, 1)) empties.push({ x, y });
+    let n = 0, i = 0;
+    rec.enemies.forEach((et) => {
+      if (i >= empties.length) return;
+      const { x, y } = empties[i++]; const e = ENEMIES[et] || ENEMIES.slime;
+      const u = { id: s.nextId++, name: e.name, kind: "enemy", enemyType: et, x, y, hp: 6, atk: 1, setups: [], hostile: true };
+      s.units.push(u); n++;
+    });
+    rec.props.forEach((pid) => {
+      if (i >= empties.length) return;
+      const { x, y } = empties[i++]; const m = objMeta(pid);
+      if (blockedReason(x, y, m.fw, m.fh)) return;
+      ensureAsset(pid); ProjectStore.addMapObject(s.project, c.ref, { assetId: pid, at: { c: x, r: y }, blocks: m.blocks }); n++;
+    });
+    if (rec.water && empties[i]) { const { x, y } = empties[i++]; setType(x, y, "water"); n++; }
+    commit();
+    return n;
+  }
+
   window.StageLive = {
     decorate, onCell, prefs: () => Object.assign({}, prefs, { tapMenusOn: tapMenusOn(), mode: stageMode() }),
     setPrefs(p) { Object.assign(prefs, p || {}); savePrefs(); window.renderGrid && renderGrid(); },
     toggleView, closePop,
     unitMenu(x, y) { if (unitAt(x, y)) thingMenu(x, y); },
-    armUnit, armErase, startTest, exitTest, testing, battleMenu, // r68: the editor menu for a unit, also in Advanced (app.js openUnitMenu in edit mode)
+    armUnit, armErase, startTest, exitTest, testing, battleMenu, stampLair, // r69 lair stamp + r68 test
     _cap: { L, act, startMove, moveTo, confirmMove, objects, typeAt, blockedReason, tileArt, objArt, hasEdge, eraseAt, testLog: () => (L.test ? L.test.log.slice() : null) },
   };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();

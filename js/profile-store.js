@@ -50,6 +50,57 @@
     { id: "ach_library_use", rev: 1, title: "Kenney stash", description: "Use a library art asset in a project.", category: "sharing", scope: "editor", trigger: { event: "libraryAssetUsed", count: 1 }, hidden: false },
   ];
 
+  /* r8 §1.12.4 / §1.12.9 ACCEPTED: metric achievements (editor set). Thresholds are final. */
+  const METRIC_ACHIEVEMENTS = [
+    { id: "ach_sold_10", rev: 1, title: "Sold 10", description: "Sell your own assets in the shop, 10 paid sales.", category: "sharing", scope: "editor", trigger: { metric: "assetSales", count: 10 }, hidden: false },
+    { id: "ach_sold_50", rev: 1, title: "Sold 50", description: "Sell your own assets in the shop, 50 paid sales.", category: "sharing", scope: "editor", trigger: { metric: "assetSales", count: 50 }, hidden: false },
+    { id: "ach_sold_250", rev: 1, title: "Sold 250", description: "Sell your own assets in the shop, 250 paid sales.", category: "sharing", scope: "editor", trigger: { metric: "assetSales", count: 250 }, hidden: false },
+    { id: "ach_sold_100", rev: 1, title: "Sold 100", description: "Sell your own assets in the shop, 100 paid sales.", category: "sharing", scope: "editor", trigger: { metric: "assetSales", count: 100 }, hidden: false },
+    { id: "ach_published_1", rev: 1, title: "Published 1", description: "Publish a game.", category: "sharing", scope: "editor", trigger: { metric: "gamesPublished", count: 1 }, hidden: false },
+    { id: "ach_published_5", rev: 1, title: "Published 5", description: "Publish 5 games.", category: "sharing", scope: "editor", trigger: { metric: "gamesPublished", count: 5 }, hidden: false },
+    { id: "ach_published_20", rev: 1, title: "Published 20", description: "Publish 20 games.", category: "sharing", scope: "editor", trigger: { metric: "gamesPublished", count: 20 }, hidden: false },
+    { id: "ach_published_10", rev: 1, title: "Published 10", description: "Publish 10 games.", category: "sharing", scope: "editor", trigger: { metric: "gamesPublished", count: 10 }, hidden: false },
+    { id: "ach_unlocks_10", rev: 1, title: "Ten unlocked", description: "Unlock 10 achievements.", category: "editor", scope: "editor", trigger: { metric: "achievementsUnlocked", count: 10 }, hidden: false },
+    { id: "ach_unlocks_20", rev: 1, title: "All 20 starters", description: "Unlock all 20 starter achievements.", category: "editor", scope: "editor", trigger: { metric: "achievementsUnlocked", count: 20 }, hidden: false },
+  ];
+
+  /* Stub of data/te-cosmetics.json (r8 §1.12.3). Art is placeholder. Thresholds are accepted. Verified creator and Made by TileEngine are not listed — they are trust marks, not cosmetics. */
+  const COSMETICS = [
+    { key: "badge_first_stage", slot: "badge", title: "First stage", assetKey: "badge_first_stage", unlockedBy: { achievement: "ach_first_stage" } },
+    { key: "badge_night_editor", slot: "badge", title: "Night editor", assetKey: "badge_night_editor", unlockedBy: { achievement: "ach_dark_mode" } },
+    { key: "badge_wizard", slot: "badge", title: "Wizard graduate", assetKey: "badge_wizard", unlockedBy: { achievement: "ach_wizard_done" } },
+    { key: "badge_seller_10", slot: "badge", title: "Seller", assetKey: "badge_seller_10", unlockedBy: { achievement: "ach_sold_10" } },
+    { key: "badge_seller_50", slot: "badge", title: "Established seller", assetKey: "badge_seller_50", unlockedBy: { achievement: "ach_sold_50" } },
+    { key: "badge_seller_250", slot: "badge", title: "Best seller", assetKey: "badge_seller_250", unlockedBy: { achievement: "ach_sold_250" } },
+    { key: "border_seller_100", slot: "border", title: "Seller trim", assetKey: "border_seller_100", unlockedBy: { achievement: "ach_sold_100" } },
+    { key: "badge_published_1", slot: "badge", title: "First publish", assetKey: "badge_published_1", unlockedBy: { achievement: "ach_published_1" } },
+    { key: "badge_published_5", slot: "badge", title: "Studio author", assetKey: "badge_published_5", unlockedBy: { achievement: "ach_published_5" } },
+    { key: "badge_published_20", slot: "badge", title: "Publisher", assetKey: "badge_published_20", unlockedBy: { achievement: "ach_published_20" } },
+    { key: "border_published_10", slot: "border", title: "Published trim", assetKey: "border_published_10", unlockedBy: { achievement: "ach_published_10" } },
+    { key: "border_achievements_10", slot: "border", title: "Dedicated maker", assetKey: "border_achievements_10", unlockedBy: { achievement: "ach_unlocks_10" } },
+    { key: "badge_achievements_20", slot: "badge", title: "Completionist", assetKey: "badge_achievements_20", unlockedBy: { achievement: "ach_unlocks_20" } },
+    { key: "badge_game_of_the_month", slot: "badge", title: "Game of the Month", assetKey: "badge_game_of_the_month", unlockedBy: { coinReason: "gameOfTheMonth" } },
+    { key: "badge_asset_of_the_month", slot: "badge", title: "Asset of the Month", assetKey: "badge_asset_of_the_month", unlockedBy: { coinReason: "assetOfTheMonth" } },
+  ];
+
+  function emptyRewards() {
+    return { metrics: {}, metricsAt: null, metricsSig: null, entries: [] };
+  }
+  function normalizeRewards(raw) {
+    if (!raw || typeof raw !== "object") return emptyRewards();
+    const m = raw.metrics && typeof raw.metrics === "object" ? raw.metrics : {};
+    const metrics = {};
+    ["assetSales", "gamesPublished", "achievementsUnlocked"].forEach((k) => {
+      if (m[k] != null && m[k] !== "") metrics[k] = Number(m[k]) || 0;
+    });
+    return {
+      metrics,
+      metricsAt: raw.metricsAt || null,
+      metricsSig: raw.metricsSig || null,
+      entries: Array.isArray(raw.entries) ? raw.entries.slice() : [],
+    };
+  }
+
   const BTF_TEMPLATE = {
     kind: "game-settings-template",
     formatVersion: 1,
@@ -120,12 +171,14 @@
       formatVersion: 1,
       profileId: ulid("profile"),
       createdAt: at,
-      prefs: { theme: "system", name: "Maker", avatarId: null },
+      prefs: { theme: "system", name: "Maker", avatarId: null, badgeId: null, borderId: null },
       prefStamps: {},
       stats: { counters: {} },
       achievements: [],
       // r2 §1.10: coins ledger is server-authoritative; balance is derived, never stored
       coins: { checkpoint: null, entries: [] },
+      // r7 §1.12.5: rewards is a read-only copy of the server's; the client never writes metrics or entries
+      rewards: emptyRewards(),
       ownedPacks: [], // local mock of hub purchases (server owns real owned set)
     };
   }
@@ -133,14 +186,15 @@
   function loadEditorPrefs() {
     try {
       const raw = localStorage.getItem(PREFS_KEY);
-      if (!raw) return { seenToasts: {}, previewVolume: 100 };
+      if (!raw) return { seenToasts: {}, previewVolume: 100, achievementsSeen: [] };
       const o = JSON.parse(raw);
       return {
         seenToasts: o.seenToasts && typeof o.seenToasts === "object" ? o.seenToasts : {},
         previewVolume: typeof o.previewVolume === "number" ? o.previewVolume : 100,
+        achievementsSeen: Array.isArray(o.achievementsSeen) ? o.achievementsSeen.map(String) : [],
       };
     } catch {
-      return { seenToasts: {}, previewVolume: 100 };
+      return { seenToasts: {}, previewVolume: 100, achievementsSeen: [] };
     }
   }
 
@@ -160,6 +214,7 @@
         prefStamps: raw.prefStamps || {},
         stats: raw.stats && raw.stats.counters ? raw.stats : { counters: {} },
         achievements: Array.isArray(raw.achievements) ? raw.achievements : [],
+        rewards: raw.rewards ? normalizeRewards(raw.rewards) : emptyRewards(),
       };
     }
     // legacy tile-user-profile
@@ -204,6 +259,7 @@
       }
       const profile = migrateLegacy(JSON.parse(raw));
       profile.coins = normalizeCoins(profile.coins);
+      profile.rewards = normalizeRewards(profile.rewards);
       return profile;
     } catch {
       return defaults();
@@ -212,6 +268,7 @@
 
   function save(profile) {
     profile.coins = normalizeCoins(profile.coins);
+    profile.rewards = normalizeRewards(profile.rewards);
     profile.achievements = (profile.achievements || []).slice().sort((a, b) => (a.id < b.id ? -1 : 1));
     try { localStorage.setItem(KEY, JSON.stringify(profile)); } catch (_) {}
     return profile;
@@ -374,7 +431,11 @@
     next.prefs.theme = (old.prefs && old.prefs.theme) || "system";
     // r2 §1.7: coins NEVER reset — server ledger wins / local mock keeps ledger
     next.coins = normalizeCoins(old.coins);
+    next.rewards = normalizeRewards(old.rewards); // server copy, like coins
     next.ownedPacks = (old.ownedPacks || []).slice();
+    const ep = loadEditorPrefs();
+    ep.achievementsSeen = [];
+    saveEditorPrefs(ep);
     save(next);
     return { profile: next, wipeSynced: !!wipeSyncedFlag, backupKept: true, coinsKept: true };
   }
@@ -404,6 +465,84 @@
     profile.prefs.avatarId = avatarId;
     stamp(profile, "avatarId");
     return save(profile);
+  }
+
+  function setBadge(badgeId) {
+    const profile = load();
+    profile.prefs = profile.prefs || {};
+    profile.prefs.badgeId = badgeId || null;
+    stamp(profile, "badgeId");
+    return save(profile);
+  }
+
+  function setBorder(borderId) {
+    const profile = load();
+    profile.prefs = profile.prefs || {};
+    profile.prefs.borderId = borderId || null;
+    stamp(profile, "borderId");
+    return save(profile);
+  }
+
+  function defByIdAny(id) {
+    return defById(id) || METRIC_ACHIEVEMENTS.find((a) => a.id === id) || null;
+  }
+
+  function metricUnlockStatus(profile, achievementId) {
+    const entries = (profile && profile.rewards && profile.rewards.entries) || [];
+    let last = null;
+    entries.forEach((e) => { if (e && e.achievementId === achievementId) last = e; });
+    return last && last.action === "unlocked";
+  }
+
+  function coinReasonCount(profile, reason) {
+    const entries = (profile && profile.coins && profile.coins.entries) || [];
+    return entries.filter((e) => e && e.reason === reason && e.kind !== "spend").length;
+  }
+
+  function eventAchievementUnlocked(profile, achId) {
+    const e = ledgerEntry(profile, achId);
+    return !!(e && e.unlockedAt);
+  }
+
+  function isAchievementUnlocked(profile, achId) {
+    const def = defByIdAny(achId);
+    if (def && def.trigger && def.trigger.metric) return metricUnlockStatus(profile, achId);
+    return eventAchievementUnlocked(profile, achId);
+  }
+
+  function isCosmeticUnlocked(profile, item) {
+    if (!item || item.retired) return false;
+    const by = item.unlockedBy;
+    if (by === "always") return true;
+    if (by && by.achievement) return isAchievementUnlocked(profile, by.achievement);
+    if (by && by.coinReason) return coinReasonCount(profile, by.coinReason) > 0;
+    return false;
+  }
+
+  function cosmeticByKey(key) {
+    return COSMETICS.find((c) => c.key === key) || null;
+  }
+
+  /* Locked, revoked, retired or unknown: value is kept, editor shows none (r7 §1.12.6). */
+  function shownCosmetic(profile, slot) {
+    const key = slot === "badge" ? (profile.prefs || {}).badgeId : (profile.prefs || {}).borderId;
+    if (!key) return { key: null, shown: null, notice: null };
+    const item = cosmeticByKey(key);
+    if (!item || item.slot !== slot) return { key, shown: null, notice: "cosmeticUnknown" };
+    if (!isCosmeticUnlocked(profile, item)) return { key, shown: null, notice: "cosmeticNotUnlocked" };
+    return { key, shown: key, notice: null, item };
+  }
+
+  function achievementsSeen() {
+    return (loadEditorPrefs().achievementsSeen || []).slice();
+  }
+
+  function markAchievementsSeen(ids) {
+    const ep = loadEditorPrefs();
+    const set = new Set(ep.achievementsSeen || []);
+    (ids || []).forEach((id) => { if (id) set.add(id); });
+    ep.achievementsSeen = Array.from(set);
+    return saveEditorPrefs(ep);
   }
 
   function markToastSeen(achId) {
@@ -471,11 +610,15 @@
   }
 
   global.ProfileStore = {
-    KEY, LEGACY_KEY, PREFS_KEY, DEVICE, AVATARS, ACHIEVEMENTS, BTF_TEMPLATE, COIN_REWARDS,
+    KEY, LEGACY_KEY, PREFS_KEY, DEVICE, AVATARS, ACHIEVEMENTS, METRIC_ACHIEVEMENTS, COSMETICS,
+    BTF_TEMPLATE, COIN_REWARDS,
     load, save, defaults, loadEditorPrefs, saveEditorPrefs,
-    applyTheme, resolvedTheme, setTheme, setName, setAvatar,
-    recordEvent, defById, ledgerEntry, progressOf, counterSum,
+    applyTheme, resolvedTheme, setTheme, setName, setAvatar, setBadge, setBorder,
+    recordEvent, defById, defByIdAny, ledgerEntry, progressOf, counterSum,
     markToastSeen, toastSeen, setPreviewVolume,
     listForUi, categoryLabel, getCoins, coinBalance, normalizeCoins, spendCoins, resetLocal, appendCoinTx,
+    emptyRewards, normalizeRewards, metricUnlockStatus, coinReasonCount,
+    isAchievementUnlocked, isCosmeticUnlocked, cosmeticByKey, shownCosmetic,
+    achievementsSeen, markAchievementsSeen,
   };
 })(typeof window !== "undefined" ? window : globalThis);

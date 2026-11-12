@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="css/stage-live.css" />
   <link rel="stylesheet" href="css/imagine-convert.css" />
   <link rel="stylesheet" href="css/body-map.css" />
+  <link rel="stylesheet" href="css/qol-r69.css" />
 </head>
 <body>
   <div class="app" role="application" aria-label="TileEngine editor prototype">
@@ -360,7 +361,10 @@
         </div>
       </div>
 
+      <div id="stage-type-bar" class="stage-type-bar" hidden></div>
       <div class="stage-wrap stage-wrap-lean">
+        <div id="stage-hide-chip" class="stage-hide-chip" hidden></div>
+        <div id="stage-playing-chip" class="stage-playing-chip" hidden></div>
         <!-- Floating status chip (replaces full-width banner on stage) -->
         <div id="stage-status-chip" class="stage-status-chip" hidden role="status">
           <span id="stage-status-text">Can't play yet</span>
@@ -467,13 +471,10 @@
             <!-- Unit selected -->
             <div class="sheet-panel" id="sheet-unit" hidden>
               <p class="eyebrow" style="margin:0 0 8px" id="sheet-unit-title">Unit</p>
-              <div class="sheet-row" role="group" aria-label="Unit edit">
-                <button type="button" class="tool" data-nav="sprite-upload" aria-label="Upload sprite">Sprite</button>
-                <button type="button" class="tool" data-nav="unit-editor" aria-label="Unit stats">Stats</button>
-                <button type="button" class="tool" data-nav="unit-abilities" id="btn-unit-behaviour" aria-label="Behaviour: this unit's abilities">Behaviour</button>
-                <button type="button" class="tool" id="btn-unit-sounds" aria-label="Unit sounds">Sounds</button>
-              </div>
+              <div class="segs segs-3 ua-tabs" id="sheet-unit-tabs" role="tablist" aria-label="Unit sections"></div>
               <div id="sheet-unit-abilities" class="unit-abilities" aria-live="polite"></div>
+              <div id="sheet-unit-stats" class="unit-stats" hidden></div>
+              <div id="sheet-unit-art" class="unit-art" hidden></div>
             </div>
 
             <!-- Move / zoom -->
@@ -501,6 +502,7 @@
                 <button type="button" class="tool" id="btn-open-sound" aria-label="Sound panel">Sound</button>
                 <button type="button" class="tool" data-tier="standard" data-nav="game-settings" aria-label="Game settings menu">Game settings</button>
                 <button type="button" class="tool" data-nav="sprite-studio" id="btn-open-sprite-studio" aria-label="Sprite Studio">Sprite Studio</button>
+                <button type="button" class="tool" data-nav="effects-designer" id="btn-open-effects" aria-label="Effect Designer">Effect Designer</button>
               </div>
               <div class="readonly-music" id="stage-music-readonly" style="margin-top:10px">
                 <span class="hint" style="margin:0">Stage music:</span>
@@ -714,7 +716,7 @@
       <div class="bottombar three">
         <button type="button" class="btn btn-ghost" data-nav="pick-behaviour" aria-label="Back to behaviour list">Back</button>
         <button type="button" class="btn btn-ghost" data-nav="pick-behaviour" aria-label="Cancel">Cancel</button>
-        <button type="button" class="btn btn-primary" id="btn-save-behaviour" aria-label="Save behaviour settings">Save</button>
+        <button type="button" class="btn btn-primary" id="btn-save-behaviour" aria-label="Done">Done</button>
       </div>
     </section>
 
@@ -1335,6 +1337,10 @@
           </div>
         </div>
 
+        <p class="eyebrow" style="margin-top:18px">How stages chain</p>
+        <p class="hint">A project setting. Type (Safe, Battle, Freestyle) is what a stage contains; this is how stages chain.</p>
+        <div id="run-layer-list"></div>
+
         <p class="eyebrow" style="margin-top:18px">Platform</p>
         <div class="card-grid cols-3" role="group" aria-label="Platform">
           <button type="button" class="choice" data-group="platform" data-value="mobile" aria-pressed="true"><span class="label">Mobile</span><span class="sub">Phone-first</span></button>
@@ -1446,9 +1452,8 @@
         <div class="topbar-row"><h1 tabindex="-1">Studio profile</h1></div>
       </div>
       <div class="body">
-        <p class="proposed-banner">Proposed: not final</p>
         <div class="profile-hero">
-          <div class="profile-avatar" id="profile-avatar" aria-hidden="true">M</div>
+          <button type="button" class="profile-avatar" id="profile-avatar" aria-label="Change avatar">M</button>
           <div style="flex:1;min-width:0">
             <label class="sr-only" for="profile-name">Display name</label>
             <input id="profile-name" type="text" maxlength="40" aria-label="Display name" style="min-height:48px;width:100%;border:2px solid var(--line);border-radius:12px;padding:0 12px;background:var(--surface);color:var(--ink);font-weight:700" />
@@ -1456,7 +1461,7 @@
               <span class="coin-chip" id="profile-coins" aria-label="Gold coins">🪙 <b id="profile-coin-count">0</b></span>
               <button type="button" class="btn btn-ghost" id="btn-how-earn" style="min-height:48px">How to earn</button>
             </div>
-            <p class="hint" style="margin:6px 0 0">Avatar placeholder · Studio only (not a player profile)</p>
+            <p class="hint" style="margin:6px 0 0">Studio only · not a player profile. Tap the picture to change it.</p>
           </div>
         </div>
         <button type="button" class="setup-entry" id="btn-open-my-setup" data-nav="my-setup">
@@ -1471,21 +1476,21 @@
           <button type="button" class="toggle" data-appearance="system" aria-pressed="true">Follow device</button>
         </div>
         <p class="hint" style="margin-top:8px">Applies across the whole editor. Default Follow device.</p>
-        <p class="eyebrow" style="margin-top:16px">Avatar</p>
-        <div class="appearance-row" id="profile-avatars" role="group" aria-label="Avatar"></div>
-        <p class="hint">12 built-in CC0 picks. Initials when none selected. Upload comes later.</p>
-        <p class="eyebrow" style="margin-top:16px">Editor preview volume</p>
-        <div class="field">
-          <label>Preview volume <span class="val" id="preview-volume-val">100%</span></label>
-          <input id="preview-volume" class="slider" type="range" min="0" max="100" step="1" value="100" aria-label="Editor preview volume" />
-          <p class="hint">Editor-only. Never exported. Does not change in-game BGM/SFX defaults.</p>
-        </div>
-        <div class="profile-stats" id="profile-stats"></div>
-        <p class="eyebrow">Achievements</p>
-        <div class="ach-list" id="ach-list"></div>
+        <button type="button" class="ach-entry" id="btn-profile-achievements" aria-label="Achievements">
+          <span class="nbadge" id="ach-new-badge" hidden aria-hidden="true">0</span>
+          <span><span class="t">Achievements</span><span class="s" id="ach-entry-sub">0 of 22</span></span>
+          <span class="go" aria-hidden="true">›</span>
+        </button>
         <details class="advanced" style="margin-top:18px">
           <summary>Advanced</summary>
           <div class="inner">
+            <p class="eyebrow" style="margin-top:8px">Editor preview volume</p>
+            <div class="field">
+              <label>Preview volume <span class="val" id="preview-volume-val">100%</span></label>
+              <input id="preview-volume" class="slider" type="range" min="0" max="100" step="1" value="100" aria-label="Editor preview volume" />
+              <p class="hint">Editor-only. Never exported. Does not change in-game BGM/SFX defaults.</p>
+            </div>
+            <div class="profile-stats" id="profile-stats"></div>
             <div class="danger-zone">
               <p class="eyebrow" style="margin:0 0 6px;color:var(--danger)">Reset achievements</p>
               <p class="hint" style="margin:0 0 8px">Local by default. Starts a new studio profile on this device and keeps a backup. Unlocked never relocks in place.</p>
@@ -1501,6 +1506,53 @@
       <div class="bottombar">
         <button type="button" class="btn btn-ghost" data-nav="home" aria-label="Back">Back</button>
         <button type="button" class="btn btn-primary" data-nav="home" aria-label="Done">Done</button>
+      </div>
+    </section>
+
+    <!-- r69: Avatar & rewards (full-height Pictures / Badges / Borders) -->
+    <section id="screen-profile-avatar" class="screen" aria-label="Avatar and rewards">
+      <div class="topbar">
+        <p class="eyebrow">Studio</p>
+        <div class="topbar-row">
+          <button type="button" class="btn btn-ghost" data-nav="profile" aria-label="Back to Studio profile">Back</button>
+          <h1 tabindex="-1">Avatar &amp; rewards</h1>
+        </div>
+      </div>
+      <div class="body pad-tight" id="profile-avatar-body"></div>
+      <div id="profile-reward-sheet" class="pf-reward-sheet" hidden role="dialog" aria-label="Locked reward">
+        <div class="pf-sheet-bar">
+          <span class="handle" aria-hidden="true"></span>
+          <h2 id="reward-sheet-title">Reward</h2>
+          <p id="reward-sheet-kicker">Locked</p>
+        </div>
+        <div class="pf-sheet-body">
+          <p class="hint" id="reward-sheet-how" style="margin:0"></p>
+          <div class="prog" id="reward-sheet-prog">
+            <div class="lbl"><span id="reward-sheet-kind">Progress</span><span id="reward-sheet-frac">0/0</span></div>
+            <div class="track" aria-hidden="true"><i id="reward-sheet-bar"></i></div>
+          </div>
+          <p class="example" id="reward-sheet-example"></p>
+        </div>
+        <div class="pf-sheet-foot">
+          <button type="button" class="btn btn-ghost" id="btn-reward-sheet-close" aria-label="Close">Close</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- r69: Achievements list -->
+    <section id="screen-profile-achievements" class="screen" aria-label="Achievements">
+      <div class="topbar">
+        <p class="eyebrow">Studio</p>
+        <div class="topbar-row">
+          <button type="button" class="btn btn-ghost" data-nav="profile" aria-label="Back to Studio profile">Back</button>
+          <h1 tabindex="-1">Achievements</h1>
+        </div>
+      </div>
+      <div class="body">
+        <div class="ach-list" id="ach-list"></div>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="profile" aria-label="Back">Back</button>
       </div>
     </section>
 
@@ -1560,6 +1612,59 @@
       <div class="bottombar ms-bar">
         <button type="button" class="btn btn-ghost" id="ms-retake">Retake the quiz</button>
         <button type="button" class="btn btn-primary" id="ms-done">Done</button>
+      </div>
+    </section>
+
+
+    <!-- r69: New stage type picker -->
+    <section id="screen-stage-type" class="screen" aria-label="New stage">
+      <div class="topbar">
+        <p class="eyebrow">Stages</p>
+        <div class="topbar-row"><h1 tabindex="-1">New stage</h1></div>
+        <p class="hint" style="margin:6px 0 0">What kind of place is this?</p>
+      </div>
+      <div class="body">
+        <p class="hint">This choice filters what you can place. You can change it later. How stages chain is a separate setting.</p>
+        <div id="stage-type-list"></div>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="stage-select" aria-label="Back to Stages">Back</button>
+      </div>
+    </section>
+
+    <section id="screen-stage-lairs" class="screen" aria-label="Themed sets">
+      <div class="topbar">
+        <p class="eyebrow">Battle</p>
+        <div class="topbar-row"><h1 tabindex="-1">Themed sets</h1></div>
+      </div>
+      <div class="body" id="stage-lair-list"></div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="stage" aria-label="Back to the stage">Back</button>
+      </div>
+    </section>
+
+    <section id="screen-stage-change-type" class="screen" aria-label="Change stage type">
+      <div class="topbar">
+        <p class="eyebrow">Stage</p>
+        <div class="topbar-row"><h1 tabindex="-1">Change type</h1></div>
+      </div>
+      <div class="body" id="stage-change-body"></div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="stage" aria-label="Back">Back</button>
+      </div>
+    </section>
+
+    <section id="screen-effects-designer" class="screen" aria-label="Effect Designer">
+      <div class="topbar">
+        <p class="eyebrow">Effects</p>
+        <div class="topbar-row"><h1 tabindex="-1">Effect Designer</h1></div>
+      </div>
+      <div class="body" style="padding:0;display:flex;flex-direction:column;min-height:0;flex:1">
+        <p class="hint" style="padding:12px 16px 0">Add glows and hits here, not in the sprite. This opens the existing designer.</p>
+        <iframe src="mock-effects/index.html" title="Effect Designer" style="flex:1;width:100%;border:0;min-height:60vh;background:var(--bg)"></iframe>
+      </div>
+      <div class="bottombar">
+        <button type="button" class="btn btn-ghost" data-nav="stage" aria-label="Back">Back</button>
       </div>
     </section>
 
@@ -1808,5 +1913,6 @@
   <script src="js/imagine-convert.js"></script>
   <script src="js/welcome.js"></script>
   <script src="js/stage-live.js"></script>
+  <script src="js/qol-r69.js"></script>
 </body>
 </html>
