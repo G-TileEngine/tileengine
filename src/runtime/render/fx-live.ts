@@ -7,7 +7,6 @@ export type LiveEvent = FxEvent & { readonly fx: string };
 export type LiveGrid = { readonly tileW: number; readonly tileH: number; readonly stepMs: number; readonly lite?: boolean; readonly mapSeed: number };
 export type LiveOut = { readonly standing: Standing[]; readonly overlays: Overlay[]; readonly fired: LiveEvent[]; readonly views: Record<string, number>; readonly notes: FxNote[]; readonly dueMs: number };
 export type FxLive = { frame(list: readonly LiveFx[], unitOf: (id: string) => LiveUnit | null, t1: number, t2: number, grid: LiveGrid): LiveOut; unit(st: Standing, facing: string | null, box: Box | undefined, tMs: number, grid: LiveGrid): LiveUnit; readonly held: () => number };
-const rank = (t: FxEvent["type"]): number => (t === "fx:loop" ? 5 : t === "fx:end" ? 4 : t === "fx:hit" ? 3 : t === "fx:release" ? 2 : t === "clip:event" ? 1 : 0);
 const blank = (): PointTable => ({ hand: [], tip: [], head: [], centre: [] });
 type Mem = { readonly lap: number; readonly at: Map<string, FxActor> };
 export function clipIndex(clip: Clip, tMs: number, stepMs: number, offsetMs: number): number {
@@ -54,7 +53,7 @@ export function createFxLive(): FxLive {
           if (!Number.isFinite(p.at) || !Number.isFinite(p.ms)) continue;
           const warn = p.clip === undefined ? null : stripNote(p.clip, p.sheet.id);
           if (warn !== null && p.clip !== undefined && !strips.has(p.clip)) { strips.add(p.clip); notes.push(warn); }
-          const aimed = (p.anchor ?? "caster") === "target" ? target : caster, cell = aimed !== null ? aimed.actor : p.anchor === "target" && e.at !== undefined ? e.at : null, actor = aimed === null ? null : aimed.actor;
+          const aimed = (p.anchor ?? "caster") === "target" ? target : caster, cell = aimed !== null ? aimed.actor : e.at ?? null, actor = aimed === null ? null : aimed.actor;
           if (cell === null) continue;
           const placed = placeStep(p, start, drawT, hit, (sample) => {
             if (actor === null) return null;
@@ -68,7 +67,7 @@ export function createFxLive(): FxLive {
         }
       }
       for (const id of store.keys()) if (!keep.has(id)) store.delete(id);
-      fired.sort((a, b) => a.at - b.at || rank(a.type) - rank(b.type));
+      fired.sort((a, b) => a.at - b.at); // stable: ties keep effect order, then timeline order, laps last (ruling 5)
       return { standing, overlays, fired, views, notes, dueMs: playing ? nextChangeMs(t2, lite) : Infinity };
     },
   };
