@@ -1,4 +1,4 @@
-import assert from "node:assert/strict"; import { test } from "node:test";
+import assert from "node:assert/strict"; import { test } from "node:test"; import { getHeapSpaceStatistics, setFlagsFromString } from "node:v8"; import { runInNewContext } from "node:vm";
 import { BTF_FX_READ_LIMITS, BTF_SPRITE_RECIPE_LIMITS, BTF_STAGE_LIMITS } from "../../src/btf-adapters/src/index.ts";
 import { DEFAULT_MATCH_LIMITS, TEXT_BYTES, TEXT_BYTES_MAX, textOver } from "../../src/core/limits.ts";
 import { parseLog } from "../../src/core/log/index.ts";
@@ -8,6 +8,8 @@ import { readManifest, readMap, readStage } from "../../src/project/read/index.t
 import { advance, createWorld, feedIntent, loadSave, restore, saveMatch, snapshot, submit } from "../../src/sim/index.ts";
 import { SAMPLE, fieldPaths, getPath } from "../paint/sample.ts";
 import { input, move } from "./input.ts";
+setFlagsFromString("--expose-gc"); const gc = runInNewContext("gc") as () => void; // in-test gc, so package.json keeps its pin
+const bigHeap = (): number => getHeapSpaceStatistics().filter((s) => s.space_name.endsWith("large_object_space")).reduce((n, s) => n + s.space_used_size, 0);
 const FX = BTF_FX_READ_LIMITS, LIM = DEFAULT_MATCH_LIMITS, src = input("stage-fixed");
 const world = createWorld(src); submit(world, move("a", "knight#1", 0, 7, null)); advance(world, world.clock.stepMs);
 const save = saveMatch(world, { projectId: "p1", savedAt: "2026-11-12T21:00:00Z" }), logText = world.log.toJSON(), shot = snapshot(world);
@@ -74,8 +76,9 @@ test("every part field is read (step 25)", () => {
   for (const path of fieldPaths(SAMPLE)) assert.notEqual(getPath(got.doc, path), undefined, path);
 });
 test("the recipe size count copies nothing over the cap (step 25)", () => {
-  const fat: Record<string, unknown> = { ...SAMPLE }; for (let i = 0; i < 300000; i += 1) fat["k" + String(i)] = 1;
-  const before = process.memoryUsage().heapUsed, got = readSpriteRecipe(fat, { ...BTF_SPRITE_RECIPE_LIMITS, bytes: 1000000 }), grew = process.memoryUsage().heapUsed - before;
-  assert.equal(!got.ok && "error" in got && got.error === "over cap bytes" && grew < 12 * 1024 * 1024, true);
+  // load-proof: collect first, then count only the large-object heap (a copy of fat's 3M-entry list lands there, ~16 MiB or more; scan garbage never does)
+  const fat = { ...SAMPLE, extra: Array.from({ length: 3000000 }, (_, i) => i) };
+  gc(); const before = bigHeap(), got = readSpriteRecipe(fat, { ...BTF_SPRITE_RECIPE_LIMITS, bytes: 1000000 }), grew = bigHeap() - before;
+  assert.equal(!got.ok && "error" in got && got.error === "over cap bytes" && grew < 1024 * 1024, true, "large-object growth " + String(grew));
   const odd = { ...SAMPLE, box: 1n }, refused = readSpriteRecipe(odd, BTF_SPRITE_RECIPE_LIMITS); assert.equal(!refused.ok && "error" in refused && refused.error === "not plain JSON", true);
 });
