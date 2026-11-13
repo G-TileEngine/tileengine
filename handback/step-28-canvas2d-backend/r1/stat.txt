@@ -1,0 +1,9 @@
+ src/runtime/canvas/canvas2d.ts           | 109 +++++++++++++++++++++++++
+ src/runtime/render/chunk-plan.ts         |  38 +++++++++
+ src/runtime/render/dirty.ts              |   5 +-
+ src/runtime/render/draw-list.ts          |   2 +-
+ src/runtime/render/index.ts              |   1 +
+ tests/runtime/canvas/canvas2d.test.ts    | 132 +++++++++++++++++++++++++++++++
+ tests/runtime/canvas/fake-canvas.ts      |  44 +++++++++++
+ tests/runtime/render/render-core.test.ts |   4 +-
+ 8 files changed, 331 insertions(+), 4 deletions(-)

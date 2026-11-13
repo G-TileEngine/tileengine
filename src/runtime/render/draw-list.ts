@@ -55,7 +55,7 @@ export function buildDrawList(scene: RenderScene, fit: Fit, cam: Cam, tMs: numbe
     push(o.band, o.sheet, () => {
       const fr = o.clip ? frameAt(o.clip, tMs - start, stepMs) : { frame: o.frame ?? 0, nextMs: Infinity };
       return { frame: fr.frame, nextMs: o.clip !== undefined && fr.nextMs !== Infinity ? start + fr.nextMs : fr.nextMs };
-    }, o.x, o.y, o.op ?? (o.band === "glow" ? "add" : "normal"), false);
+    }, o.x, o.y, o.band === "glow" ? "add" : o.op ?? "normal", false);
   }
   return { cmds, dueMs };
 }
