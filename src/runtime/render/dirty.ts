@@ -11,6 +11,7 @@ export function needsDraw(prev: FrameStamp | null, prevDueMs: number, next: Fram
 
 export function present(renderer: Renderer, fit: Fit, list: DrawList, clear: string): void {
   renderer.beginFrame(fit, clear);
-  for (const cmd of list.cmds) renderer.drawImage(cmd.sheet, cmd.sx, cmd.sy, cmd.sw, cmd.sh, cmd.dx, cmd.dy, cmd.dw, cmd.dh, cmd.op, cmd.flipX);
-  renderer.endFrame();
+  try {
+    for (const cmd of list.cmds) renderer.drawImage(cmd.sheet, cmd.sx, cmd.sy, cmd.sw, cmd.sh, cmd.dx, cmd.dy, cmd.dw, cmd.dh, cmd.op, cmd.flipX);
+  } finally { renderer.endFrame(); }
 }

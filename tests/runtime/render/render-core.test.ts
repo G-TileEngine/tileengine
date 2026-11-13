@@ -79,7 +79,7 @@ test("the draw list keeps the band order and y-sorts by feet with stable ties (s
     stand("o-c3", "object", 3, 3), stand("tie-a", "object", 5, 2), stand("tie-b", "object", 5, 2, { flipX: true }),
   ];
   const list = buildDrawList(world({ ground: [{ sheet: sh("ground", 16, 16, 1), tiles }], above: [{ sheet: sh("roof", 16, 16, 1), tiles: above }], standing, overlays: [
-    { band: "ui", sheet: sh("ui"), x: 0, y: 0, frame: 0 }, { band: "glow", sheet: sh("glow"), x: 1, y: 1, frame: 0 },
+    { band: "ui", sheet: sh("ui"), x: 0, y: 0, frame: 0 }, { band: "glow", sheet: sh("glow"), x: 1, y: 1, frame: 0, op: "normal" },
     { band: "wash", sheet: sh("wash"), x: 2, y: 2, frame: 0 }, { band: "fxAir", sheet: sh("air"), x: 3, y: 3, frame: 0 },
   ] }), fit1, cam0, 0, 10);
   assert.deepEqual(list.cmds.map((c) => c.sheet), ["ground", "ground", "o-r0c0", "o-r0c1", "o-r1", "walk", "tie-a", "tie-b", "o-same", "u-z", "o-c3", "u-z0", "u-z2", "roof", "wash", "air", "glow", "ui"]);
@@ -91,6 +91,8 @@ test("the draw list keeps the band order and y-sorts by feet with stable ties (s
   ] }), fit1, cam0, 0, 10);
   const at = (id: string) => anchored.cmds.find((c) => c.sheet === id);
   assert.deepEqual([at("def")?.dx, at("def")?.dy, at("auto")?.dx, at("auto")?.dy, at("norm")?.dx, at("norm")?.dy, at("pxa")?.dx, at("pxa")?.dy], [96, 0, 96, 16, 100, 40, 100, 56]);
+  const wide = (x: number, y: number): boolean => buildDrawList(world({ cols: 4, rows: 4, ground: [{ sheet: sh("big", 32, 32, 1), tiles: [1, ...Array<number | null>(15).fill(null)] }] }), fitView(64, 64, 1, 16, 16), snapCamera(x, y, 1), 0, 10).cmds.some((c) => c.sheet === "big");
+  assert.deepEqual([16, 0, 0, 16, 16, 16, 32, 0].reduce<boolean[]>((acc, n, i) => (i % 2 === 0 ? [...acc, wide(n, [16, 0, 0, 16, 16, 16, 32, 0][i + 1] ?? 0)] : acc), []), [true, true, true, false]);
 });
 
 test("the dirty flag redraws on state, camera, size and anim ticks, and skips idle frames (step 27)", () => {
