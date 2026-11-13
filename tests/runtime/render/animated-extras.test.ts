@@ -15,7 +15,7 @@ test("colour cycle bake: one frame per ramp step, ramp colours rotate, other and
 
 test("slow scroll bake: size/step frames, each shifted step px downstream and wrapping, so the loop is seamless; a bad step bakes no scroll (step 32)", () => {
   const row = pix(4, 1, (x) => [0x010101 * (x + 1), 255]), sc = scrollFrames(row, 2), y = pix(1, 4, (_x, yy) => [0x10 * (yy + 1), 255]), ys = scrollFrames(y, 1, "y");
-  assert.equal(sc[0], row); assert.equal(sc.length, 2); assert.equal(ch(sc[1] ?? row, 2, 0), ch(row, 0, 0)); assert.equal(ch(sc[1] ?? row, 0, 0), ch(row, 2, 0)); assert.equal(scrollFrames(row, 4).length, 1);
+  assert.equal(sc[0], row); assert.equal(sc.length, 2); assert.equal(ch(sc[1] ?? row, 2, 0), ch(row, 0, 0)); assert.equal(ch(sc[1] ?? row, 0, 0), ch(row, 2, 0)); assert.equal(scrollFrames(row, 4).length, 1); assert.deepEqual([1, 2, 3].map((x) => ch(scrollFrames(row, 1)[1] ?? row, x, 0)), [0, 1, 2].map((x) => ch(row, x, 0)));
   assert.equal(ys.length, 4); assert.equal(ch(ys[1] ?? y, 0, 1), ch(y, 0, 0)); assert.equal(ch(ys[1] ?? y, 0, 0), ch(y, 0, 3)); assert.equal(ch(ys[3] ?? y, 0, 0), ch(y, 0, 1));
   assert.deepEqual([0, 3, 1.5, 8].map((step) => scrollFrames(row, step).length), [0, 0, 0, 0]);
 });
@@ -24,6 +24,7 @@ test("leafy sway bake: four whole-pixel poses, the trunk rows never move, no hol
   const block = pix(4, 4, (x, y) => [0x10000 * y + x + 1, 255]), sw = swayFrames(block, 99, 1), right = sw[3] ?? block, tree = pix(3, 4, (x, y) => (y >= 3 ? [0x00ff00, 255] : x === 0 && y === 0 ? [0xff0000, 255] : [0, 0])), tw = swayFrames(tree, 3, 1), pose = tw[3] ?? tree;
   assert.equal(sw.length, 4); assert.equal(sw[0], block); assert.equal(ch(right, 2, 0) & 0xffffff, ch(block, 1, 0) & 0xffffff); assert.equal(ch(right, 2, 2), ch(block, 2, 2)); assert.equal(ch(right, 2, 1), ch(block, 2, 1)); assert.equal(ch(right, 0, 1), ch(block, 0, 1));
   assert.equal(ch(pose, 0, 3), ch(tree, 0, 3)); assert.equal(ch(pose, 1, 3), ch(tree, 1, 3)); assert.equal(ch(pose, 0, 0) & 0xffffff, 0xff0000); assert.equal(ch(pose, 1, 0) & 0xffffff, 0xff0000); assert.equal((pose.data[0] ?? 0) !== 0, true);
+  const bark = pix(3, 4, (x, y) => (y >= 2 ? [0x300000 + 16 * y + x, 255] : x === 1 ? [0x00ff00, 255] : [0, 0])); for (const p of swayFrames(bark, 2, 2)) for (let y = 2; y < 4; y += 1) for (let x = 0; x < 3; x += 1) assert.equal(ch(p, x, y), ch(bark, x, y));
 });
 
 test("traveling wave: a plant's pose lags by how far downwind it stands, so a gust rolls across the map (step 32)", () => {

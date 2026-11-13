@@ -24,8 +24,8 @@ const coloursOf = (ramp: Ramp, ramps: MotionCtx["ramps"]): number[] | null => {
 };
 
 export function bakeMotion(img: Pixels, m: Motion | null, ctx: MotionCtx): MotionBake {
-  if (ctx.animated) return { frames: [img], parts: [], notices: ["motionInvalid"], message: ANIM_HINT };
   if (m === null) return { frames: [img], parts: [], notices: [] };
+  if (ctx.animated) return { frames: [img], parts: [], notices: ["motionInvalid"], message: ANIM_HINT };
   const notices: ("motionInvalid" | "motionTooLarge")[] = [], bad = (): void => { if (!notices.includes("motionInvalid")) notices.push("motionInvalid"); };
   let colours: number[] | null = null, cycMs = 0, scrStep = 0, scrAxis: "x" | "y" = "x", scrMs = 0, trunk = 0, edge = 0, swayMs = 0, doC = false, doS = false, doW = false;
   if (m.cycle !== undefined) { const ms = msOk(m.cycle.ms, 50, 1000, 150), cols = coloursOf(m.cycle.ramp, ctx.ramps); if (ms === null || cols === null) bad(); else { doC = true; colours = cols; cycMs = ms; } }

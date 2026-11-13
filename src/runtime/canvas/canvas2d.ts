@@ -78,7 +78,7 @@ export function canvas2d(canvas: CanvasLike, opts: Canvas2DOptions): Canvas2D {
     dispose() { canvas.removeEventListener?.("contextlost", onLost); canvas.removeEventListener?.("contextrestored", onRestored); for (const entry of [...lru]) drop(entry); freeLights(); lightMiss = null; scene = null; },
     lights(plan, fit, cam) {
       if (!open || lost) return;
-      if (lightMiss === plan) { missing = true; return; }
+      if (lightMiss === plan) return;
       if (lightsKey !== plan) {
         const same = darkC !== null && glowC !== null && darkC.width === plan.w && darkC.height === plan.h;
         if (!same) freeLights();
