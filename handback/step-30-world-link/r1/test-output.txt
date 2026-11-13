@@ -1,0 +1,3413 @@
+
+> tileengine-engine@0.0.0 test
+> node --test "tests/**/*.test.ts"
+
+TAP version 13
+# Subtest: lane ids 1–18 map to {c, r} and back, column-major (TILE.md): id 2 = (0,1), id 11 = (3,1)
+ok 1 - lane ids 1–18 map to {c, r} and back, column-major (TILE.md): id 2 = (0,1), id 11 = (3,1)
+  ---
+  duration_ms: 1.68765
+  type: 'test'
+  ...
+# Subtest: events are ordered and stamped
+ok 2 - events are ordered and stamped
+  ---
+  duration_ms: 2.101157
+  type: 'test'
+  ...
+# Subtest: a throwing listener is isolated
+ok 3 - a throwing listener is isolated
+  ---
+  duration_ms: 0.439502
+  type: 'test'
+  ...
+# Subtest: unit hooks emit the DSK core events
+ok 4 - unit hooks emit the DSK core events
+  ---
+  duration_ms: 2.414707
+  type: 'test'
+  ...
+# Subtest: mode registry: typed mode events
+ok 5 - mode registry: typed mode events
+  ---
+  duration_ms: 0.221512
+  type: 'test'
+  ...
+# Subtest: registry collisions and unregistered types throw
+ok 6 - registry collisions and unregistered types throw
+  ---
+  duration_ms: 0.554082
+  type: 'test'
+  ...
+# Subtest: same deltas give the same ticks
+ok 7 - same deltas give the same ticks
+  ---
+  duration_ms: 2.187861
+  type: 'test'
+  ...
+# Subtest: 1000 frames of 16 ms
+ok 8 - 1000 frames of 16 ms
+  ---
+  duration_ms: 2.118316
+  type: 'test'
+  ...
+# Subtest: a long stall is clamped
+ok 9 - a long stall is clamped
+  ---
+  duration_ms: 0.158517
+  type: 'test'
+  ...
+# Subtest: bad options fall back to 10 and 100
+ok 10 - bad options fall back to 10 and 100
+  ---
+  duration_ms: 0.197837
+  type: 'test'
+  ...
+# Subtest: integer ms only
+ok 11 - integer ms only
+  ---
+  duration_ms: 0.850474
+  type: 'test'
+  ...
+# Subtest: game speed runs more steps, same step size
+ok 12 - game speed runs more steps, same step size
+  ---
+  duration_ms: 0.230869
+  type: 'test'
+  ...
+# Subtest: pause, step, resume
+ok 13 - pause, step, resume
+  ---
+  duration_ms: 0.356642
+  type: 'test'
+  ...
+# Subtest: timers fire on sim time in due order
+ok 14 - timers fire on sim time in due order
+  ---
+  duration_ms: 5.809806
+  type: 'test'
+  ...
+# Subtest: a throwing subscriber is isolated
+ok 15 - a throwing subscriber is isolated
+  ---
+  duration_ms: 0.533257
+  type: 'test'
+  ...
+# Subtest: unsubscribe during a callback is safe
+ok 16 - unsubscribe during a callback is safe
+  ---
+  duration_ms: 0.464829
+  type: 'test'
+  ...
+# Subtest: render alpha is in [0, 1)
+ok 17 - render alpha is in [0, 1)
+  ---
+  duration_ms: 0.192271
+  type: 'test'
+  ...
+# Subtest: bus history cap (step 17): the newest records stay, seq keeps counting, and a bad limit throws
+ok 18 - bus history cap (step 17): the newest records stay, seq keeps counting, and a bad limit throws
+  ---
+  duration_ms: 3.914409
+  type: 'test'
+  ...
+# Subtest: bus dispose (step 17): a dispose inside an emit stops the rest, and a second call keeps later subscriptions quiet
+ok 19 - bus dispose (step 17): a dispose inside an emit stops the rest, and a second call keeps later subscriptions quiet
+  ---
+  duration_ms: 0.378203
+  type: 'test'
+  ...
+# Subtest: clock dispose (step 17): a dispose inside tick 1 stops that tick, and time still counts after a second call
+ok 20 - clock dispose (step 17): a dispose inside tick 1 stops that tick, and time still counts after a second call
+  ---
+  duration_ms: 0.704118
+  type: 'test'
+  ...
+# Subtest: a wall blocks both ways
+ok 21 - a wall blocks both ways
+  ---
+  duration_ms: 1.162801
+  type: 'test'
+  ...
+# Subtest: every stored form is the same wall, counted once
+ok 22 - every stored form is the same wall, counted once
+  ---
+  duration_ms: 0.683609
+  type: 'test'
+  ...
+# Subtest: off-map edge is skipped with a notice
+ok 23 - off-map edge is skipped with a notice
+  ---
+  duration_ms: 0.39131
+  type: 'test'
+  ...
+# Subtest: edge walls always stop forced movement
+ok 24 - edge walls always stop forced movement
+  ---
+  duration_ms: 0.30896
+  type: 'test'
+  ...
+# Subtest: closed or non-enterable tiles stop forced movement as wall-block
+ok 25 - closed or non-enterable tiles stop forced movement as wall-block
+  ---
+  duration_ms: 0.353989
+  type: 'test'
+  ...
+# Subtest: any size builds (M8)
+ok 26 - any size builds (M8)
+  ---
+  duration_ms: 1.479391
+  type: 'test'
+  ...
+# Subtest: index and sqAt round-trip row-major
+ok 27 - index and sqAt round-trip row-major
+  ---
+  duration_ms: 1.039236
+  type: 'test'
+  ...
+# Subtest: bad dimensions throw
+ok 28 - bad dimensions throw
+  ---
+  duration_ms: 0.417729
+  type: 'test'
+  ...
+# Subtest: unknown palette key or id runs as floor with a notice
+ok 29 - unknown palette key or id runs as floor with a notice
+  ---
+  duration_ms: 0.407518
+  type: 'test'
+  ...
+# Subtest: terrain length mismatch and missing floor warn
+ok 30 - terrain length mismatch and missing floor warn
+  ---
+  duration_ms: 0.25241
+  type: 'test'
+  ...
+# Subtest: closed tiles and blocking objects are not open
+ok 31 - closed tiles and blocking objects are not open
+  ---
+  duration_ms: 0.295607
+  type: 'test'
+  ...
+# Subtest: wrapEdges is ignored with a notice
+ok 32 - wrapEdges is ignored with a notice
+  ---
+  duration_ms: 0.260733
+  type: 'test'
+  ...
+# Subtest: non-1x1 footprint plays 1x1
+ok 33 - non-1x1 footprint plays 1x1
+  ---
+  duration_ms: 0.173076
+  type: 'test'
+  ...
+# Subtest: reachable respects walls, closed cells, maxSteps and isBlocked
+ok 34 - reachable respects walls, closed cells, maxSteps and isBlocked
+  ---
+  duration_ms: 0.694578
+  type: 'test'
+  ...
+# Subtest: header carries seed, formatVersion 1, engineVersion and projectHash
+ok 35 - header carries seed, formatVersion 1, engineVersion and projectHash
+  ---
+  duration_ms: 1.692106
+  type: 'test'
+  ...
+# Subtest: an action is data with a duration (M4)
+ok 36 - an action is data with a duration (M4)
+  ---
+  duration_ms: 0.606897
+  type: 'test'
+  ...
+# Subtest: round trip is byte-identical
+ok 37 - round trip is byte-identical
+  ---
+  duration_ms: 0.882408
+  type: 'test'
+  ...
+# Subtest: parseLog never throws on bad input
+ok 38 - parseLog never throws on bad input
+  ---
+  duration_ms: 0.730295
+  type: 'test'
+  ...
+# Subtest: seq is the 1-based append order; 0 = none
+ok 39 - seq is the 1-based append order; 0 = none
+  ---
+  duration_ms: 0.38218
+  type: 'test'
+  ...
+# Subtest: actionLogged carries seq, kind, durationMs
+ok 40 - actionLogged carries seq, kind, durationMs
+  ---
+  duration_ms: 0.531712
+  type: 'test'
+  ...
+# Subtest: append-only, ticks never go backwards
+ok 41 - append-only, ticks never go backwards
+  ---
+  duration_ms: 0.588056
+  type: 'test'
+  ...
+# Subtest: via is logged and never read by core (M9)
+ok 42 - via is logged and never read by core (M9)
+  ---
+  duration_ms: 0.203049
+  type: 'test'
+  ...
+# Subtest: no third pipe exists
+ok 43 - no third pipe exists
+  ---
+  duration_ms: 1.586951
+  type: 'test'
+  ...
+# Subtest: UNIT follows the body
+ok 44 - UNIT follows the body
+  ---
+  duration_ms: 1.320441
+  type: 'test'
+  ...
+# Subtest: UNIT never hits a dead target's old cell
+ok 45 - UNIT never hits a dead target's old cell
+  ---
+  duration_ms: 0.378547
+  type: 'test'
+  ...
+# Subtest: TILE hits whoever stands there on arrival
+ok 46 - TILE hits whoever stands there on arrival
+  ---
+  duration_ms: 0.469919
+  type: 'test'
+  ...
+# Subtest: TILE never retargets
+ok 47 - TILE never retargets
+  ---
+  duration_ms: 0.397902
+  type: 'test'
+  ...
+# Subtest: edge target is TILE + side
+ok 48 - edge target is TILE + side
+  ---
+  duration_ms: 0.222743
+  type: 'test'
+  ...
+# Subtest: Gale fallback is UNIT
+ok 49 - Gale fallback is UNIT
+  ---
+  duration_ms: 0.472729
+  type: 'test'
+  ...
+# Subtest: no target: the context gets the caster only
+ok 50 - no target: the context gets the caster only
+  ---
+  duration_ms: 0.161238
+  type: 'test'
+  ...
+# Subtest: roster lists the living only, same tick
+ok 51 - roster lists the living only, same tick
+  ---
+  duration_ms: 0.676995
+  type: 'test'
+  ...
+# Subtest: toCell rounds half-up per axis
+ok 52 - toCell rounds half-up per axis
+  ---
+  duration_ms: 0.373688
+  type: 'test'
+  ...
+# Subtest: push stops before a wall-block
+ok 53 - push stops before a wall-block
+  ---
+  duration_ms: 2.388345
+  type: 'test'
+  ...
+# Subtest: edge walls always stop forced movement
+ok 54 - edge walls always stop forced movement
+  ---
+  duration_ms: 0.39208
+  type: 'test'
+  ...
+# Subtest: a body stops a push
+ok 55 - a body stops a push
+  ---
+  duration_ms: 0.291609
+  type: 'test'
+  ...
+# Subtest: hook order and causes
+ok 56 - hook order and causes
+  ---
+  duration_ms: 0.370342
+  type: 'test'
+  ...
+# Subtest: push_into_walls off: same stop, no pushBlocked
+ok 57 - push_into_walls off: same stop, no pushBlocked
+  ---
+  duration_ms: 0.401496
+  type: 'test'
+  ...
+# Subtest: bad push input is a no-op
+ok 58 - bad push input is a no-op
+  ---
+  duration_ms: 0.31309
+  type: 'test'
+  ...
+# Subtest: reach respects walls, closed cells and maxSteps
+ok 59 - reach respects walls, closed cells and maxSteps
+  ---
+  duration_ms: 2.777305
+  type: 'test'
+  ...
+# Subtest: allies pass, enemies block, nobody ends on a body
+ok 60 - allies pass, enemies block, nobody ends on a body
+  ---
+  duration_ms: 0.596058
+  type: 'test'
+  ...
+# Subtest: replaying a log reproduces the event history
+ok 61 - replaying a log reproduces the event history
+  ---
+  duration_ms: 4.402184
+  type: 'test'
+  ...
+# Subtest: golden next() vector for seed 0x5eed
+ok 62 - golden next() vector for seed 0x5eed
+  ---
+  duration_ms: 1.489779
+  type: 'test'
+  ...
+# Subtest: golden int(6) vector
+ok 63 - golden int(6) vector
+  ---
+  duration_ms: 0.199355
+  type: 'test'
+  ...
+# Subtest: same seed, same sequence
+ok 64 - same seed, same sequence
+  ---
+  duration_ms: 0.862951
+  type: 'test'
+  ...
+# Subtest: restore continues identically
+ok 65 - restore continues identically
+  ---
+  duration_ms: 0.275515
+  type: 'test'
+  ...
+# Subtest: int stays in range
+ok 66 - int stays in range
+  ---
+  duration_ms: 4.606727
+  type: 'test'
+  ...
+# Subtest: int and pick reject bad input
+ok 67 - int and pick reject bad input
+  ---
+  duration_ms: 0.500498
+  type: 'test'
+  ...
+# Subtest: weighted never picks a zero weight
+ok 68 - weighted never picks a zero weight
+  ---
+  duration_ms: 4.584302
+  type: 'test'
+  ...
+# Subtest: weighted with no positive weight returns -1 and draws nothing
+ok 69 - weighted with no positive weight returns -1 and draws nothing
+  ---
+  duration_ms: 0.179391
+  type: 'test'
+  ...
+# Subtest: streams are stable and independent
+ok 70 - streams are stable and independent
+  ---
+  duration_ms: 0.384446
+  type: 'test'
+  ...
+# Subtest: no global patching
+ok 71 - no global patching
+  ---
+  duration_ms: 0.352146
+  type: 'test'
+  ...
+# Subtest: place: ids, facing, side
+ok 72 - place: ids, facing, side
+  ---
+  duration_ms: 2.204844
+  type: 'test'
+  ...
+# Subtest: no unit may occupy a closed cell
+ok 73 - no unit may occupy a closed cell
+  ---
+  duration_ms: 0.474383
+  type: 'test'
+  ...
+# Subtest: strict1 refuses a second unit
+ok 74 - strict1 refuses a second unit
+  ---
+  duration_ms: 0.232095
+  type: 'test'
+  ...
+# Subtest: softStack and laneSlots warn and run strict1
+ok 75 - softStack and laneSlots warn and run strict1
+  ---
+  duration_ms: 0.366229
+  type: 'test'
+  ...
+# Subtest: moveTo is atomic and reports landedOn once
+ok 76 - moveTo is atomic and reports landedOn once
+  ---
+  duration_ms: 0.677555
+  type: 'test'
+  ...
+# Subtest: offset never changes occupancy (M3)
+ok 77 - offset never changes occupancy (M3)
+  ---
+  duration_ms: 0.362753
+  type: 'test'
+  ...
+# Subtest: remove frees the cell the same call
+ok 78 - remove frees the cell the same call
+  ---
+  duration_ms: 0.232731
+  type: 'test'
+  ...
+# Subtest: §A3 + §A8 SKILLRIG.md:77-84, :177, :179, :139-140 — spawn is chosen once, before any step; impact and trail only when set
+ok 79 - §A3 + §A8 SKILLRIG.md:77-84, :177, :179, :139-140 — spawn is chosen once, before any step; impact and trail only when set
+  ---
+  duration_ms: 2.164611
+  type: 'test'
+  ...
+# Subtest: §A10 SKILLRIG.md:112 — a second motion starts late by a fraction of its step, adds no step and does not move the hit
+ok 80 - §A10 SKILLRIG.md:112 — a second motion starts late by a fraction of its step, adds no step and does not move the hit
+  ---
+  duration_ms: 0.594742
+  type: 'test'
+  ...
+# Subtest: §A13 SKILLRIG.md:94 + spot 12 — bounce hits the taps in tap order at connect, at most eight; a body is hit once
+ok 81 - §A13 SKILLRIG.md:94 + spot 12 — bounce hits the taps in tap order at connect, at most eight; a body is hit once
+  ---
+  duration_ms: 0.619496
+  type: 'test'
+  ...
+# Subtest: §A14 SKILLRIG.md:91 + spots 8, 9 — free fire passes through near to far; each body is struck when the flight reaches its tile (CEO 2026-11-10)
+ok 82 - §A14 SKILLRIG.md:91 + spots 8, 9 — free fire passes through near to far; each body is struck when the flight reaches its tile (CEO 2026-11-10)
+  ---
+  duration_ms: 1.464862
+  type: 'test'
+  ...
+# Subtest: §A8 SKILLRIG.md:179 — every body hit gets its own impact when the shot reaches it (CEO 2026-11-10); once_at_contact gives one
+ok 83 - §A8 SKILLRIG.md:179 — every body hit gets its own impact when the shot reaches it (CEO 2026-11-10); once_at_contact gives one
+  ---
+  duration_ms: 0.573013
+  type: 'test'
+  ...
+# Subtest: §A15 SKILLRIG.md:98 + spot 10 — chain: hit, then that body's one-tile pull toward the one before it, near to far
+ok 84 - §A15 SKILLRIG.md:98 + spot 10 — chain: hit, then that body's one-tile pull toward the one before it, near to far
+  ---
+  duration_ms: 0.222292
+  type: 'test'
+  ...
+# Subtest: §A15 + §A16 SKILLRIG.md:98, :142 + spot 11 — yank pulls the one body all the way, even when the hit is None; Knock 1 only with pull_then_knock1
+ok 85 - §A15 + §A16 SKILLRIG.md:98, :142 + spot 11 — yank pulls the one body all the way, even when the hit is None; Knock 1 only with pull_then_knock1
+  ---
+  duration_ms: 0.314204
+  type: 'test'
+  ...
+# Subtest: §A17 SKILLRIG.md:134-137 — the hit kind rides on each strike as given (visual; rules move bodies)
+ok 86 - §A17 SKILLRIG.md:134-137 — the hit kind rides on each strike as given (visual; rules move bodies)
+  ---
+  duration_ms: 0.168394
+  type: 'test'
+  ...
+# Subtest: §A18 SKILLRIG.md:38 — loop and speed are preview only; the plan plays on the one clock
+ok 87 - §A18 SKILLRIG.md:38 — loop and speed are preview only; the plan plays on the one clock
+  ---
+  duration_ms: 1.148173
+  type: 'test'
+  ...
+# Subtest: holy-sword landing (CEO 2026-11-10): the free neighbour nearest the sword; 8 around by default, 4 sides as the option
+ok 88 - holy-sword landing (CEO 2026-11-10): the free neighbour nearest the sword; 8 around by default, 4 sides as the option
+  ---
+  duration_ms: 1.61706
+  type: 'test'
+  ...
+# Subtest: holy-sword landing (CEO 2026-11-10): every neighbour filled by objects or units means the sword cannot reach the target
+ok 89 - holy-sword landing (CEO 2026-11-10): every neighbour filled by objects or units means the sword cannot reach the target
+  ---
+  duration_ms: 0.179864
+  type: 'test'
+  ...
+# Subtest: landing across a seam (CoS 2026-11-10): the caller's canLand decides; blocked rejects the seam-cut side tile
+ok 90 - landing across a seam (CoS 2026-11-10): the caller's canLand decides; blocked rejects the seam-cut side tile
+  ---
+  duration_ms: 0.228359
+  type: 'test'
+  ...
+# Subtest: §A9 SKILLRIG.md:176, :110 — look channels ramp across the step with look.ease; a null channel holds the blade
+ok 91 - §A9 SKILLRIG.md:176, :110 — look channels ramp across the step with look.ease; a null channel holds the blade
+  ---
+  duration_ms: 2.404852
+  type: 'test'
+  ...
+# Subtest: §A11 SKILLRIG.md:101-106 — release is together or split on a later straight, swerve or bounce; they leave together in time
+ok 92 - §A11 SKILLRIG.md:101-106 — release is together or split on a later straight, swerve or bounce; they leave together in time
+  ---
+  duration_ms: 0.740277
+  type: 'test'
+  ...
+# Subtest: §A12 SKILLRIG.md:116, :176 — copies on a row, spin or free-fire may jitter, start late and vary in size, yet arrive together; the same numbers every play
+ok 93 - §A12 SKILLRIG.md:116, :176 — copies on a row, spin or free-fire may jitter, start late and vary in size, yet arrive together; the same numbers every play
+  ---
+  duration_ms: 1.17842
+  type: 'test'
+  ...
+# Subtest: §A12 + §A6 — a later free-fire keeps the spin's copies and spread; motion.kind is read; loop and speed change nothing; bad tune throws
+ok 94 - §A12 + §A6 — a later free-fire keeps the spin's copies and spread; motion.kind is read; loop and speed change nothing; bad tune throws
+  ---
+  duration_ms: 0.703998
+  type: 'test'
+  ...
+# Subtest: the BTF preset is current play (CEO/CoS 2026-11-09) and every preset value is an allowed value
+ok 95 - the BTF preset is current play (CEO/CoS 2026-11-09) and every preset value is an allowed value
+  ---
+  duration_ms: 1.599584
+  type: 'test'
+  ...
+# Subtest: every option is the user's: answers override the base; doc-differs, unknown and bad values warn and never block
+ok 96 - every option is the user's: answers override the base; doc-differs, unknown and bad values warn and never block
+  ---
+  duration_ms: 0.313652
+  type: 'test'
+  ...
+# Subtest: 10b options: holy-sword landing checks all 8 around by default (CEO 2026-11-10); PROPOSED silent-spot defaults are the user's
+ok 97 - 10b options: holy-sword landing checks all 8 around by default (CEO 2026-11-10); PROPOSED silent-spot defaults are the user's
+  ---
+  duration_ms: 0.373389
+  type: 'test'
+  ...
+# Subtest: §A1 SKILLRIG.md:161, :163 — the JSON wins over the paragraph; the read is first { to last }
+ok 98 - §A1 SKILLRIG.md:161, :163 — the JSON wins over the paragraph; the read is first { to last }
+  ---
+  duration_ms: 1.867415
+  type: 'test'
+  ...
+# Subtest: §A2 SKILLRIG.md:163 — a bad block is ignored with a notice; every clamp and fill-in is a notice (X14)
+ok 99 - §A2 SKILLRIG.md:163 — a bad block is ignored with a notice; every clamp and fill-in is a notice (X14)
+  ---
+  duration_ms: 0.733246
+  type: 'test'
+  ...
+# Subtest: §A4 SKILLRIG.md:176, :36 — steps keep list order; six play, 7+ are kept inactive with a notice
+ok 100 - §A4 SKILLRIG.md:176, :36 — steps keep list order; six play, 7+ are kept inactive with a notice
+  ---
+  duration_ms: 0.404078
+  type: 'test'
+  ...
+# Subtest: §A6 SKILLRIG.md:178, :165 — a missing connect is 0.92, or 0.42 when the last step is a reel, each with a notice
+ok 101 - §A6 SKILLRIG.md:178, :165 — a missing connect is 0.92, or 0.42 when the last step is a reel, each with a notice
+  ---
+  duration_ms: 0.219315
+  type: 'test'
+  ...
+# Subtest: §A7 SKILLRIG.md:178, :27 — damage null or absent stays null (no number invented); a number passes through
+ok 102 - §A7 SKILLRIG.md:178, :27 — damage null or absent stays null (no number invented); a number passes through
+  ---
+  duration_ms: 0.343114
+  type: 'test'
+  ...
+# Subtest: read limits are the caller's input: other limits change clamps and fill-ins; bad limits throw
+ok 103 - read limits are the caller's input: other limits change clamps and fill-ins; bad limits throw
+  ---
+  duration_ms: 0.498672
+  type: 'test'
+  ...
+# Subtest: §A4 + §A5 + §A6 SKILLRIG.md:176, :126, :178 — steps back to back; the hit lands at start(last) + connect × ms(last)
+ok 104 - §A4 + §A5 + §A6 SKILLRIG.md:176, :126, :178 — steps back to back; the hit lands at start(last) + connect × ms(last)
+  ---
+  duration_ms: 2.107977
+  type: 'test'
+  ...
+# Subtest: CN-001 + law 1 — a plan plays on the one clock in sim ms, and cancel stops what is left
+ok 105 - CN-001 + law 1 — a plan plays on the one clock in sim ms, and cancel stops what is left
+  ---
+  duration_ms: 1.194309
+  type: 'test'
+  ...
+# Subtest: gates: check:state passes on src and on a clean fixture
+ok 106 - gates: check:state passes on src and on a clean fixture
+  ---
+  duration_ms: 48.060971
+  type: 'test'
+  ...
+# Subtest: gates: check:state fails on direct phase writes and a second transition function
+ok 107 - gates: check:state fails on direct phase writes and a second transition function
+  ---
+  duration_ms: 19.243355
+  type: 'test'
+  ...
+# Subtest: gates: check:law passes on src and fails on a law-breaking core fixture
+ok 108 - gates: check:law passes on src and fails on a law-breaking core fixture
+  ---
+  duration_ms: 201.929952
+  type: 'test'
+  ...
+# Subtest: gates: eslint allows the frame loop only in src/runtime/host/raf-driver.ts
+ok 109 - gates: eslint allows the frame loop only in src/runtime/host/raf-driver.ts
+  ---
+  duration_ms: 681.358203
+  type: 'test'
+  ...
+# Subtest: gates: eslint rejects wall time, Math.random, rule words and upward imports in src/core
+ok 110 - gates: eslint rejects wall time, Math.random, rule words and upward imports in src/core
+  ---
+  duration_ms: 47.203625
+  type: 'test'
+  ...
+# Subtest: recipe sample reads clean (SE-01) doc and stored match the sample
+ok 111 - recipe sample reads clean (SE-01) doc and stored match the sample
+  ---
+  duration_ms: 6.257971
+  type: 'test'
+  ...
+# Subtest: recipe field list (SE-01) is the 240 sample paths
+ok 112 - recipe field list (SE-01) is the 240 sample paths
+  ---
+  duration_ms: 1.256391
+  type: 'test'
+  ...
+# Subtest: recipe field id (SE-01) a wrong type names that key
+ok 113 - recipe field id (SE-01) a wrong type names that key
+  ---
+  duration_ms: 4.477625
+  type: 'test'
+  ...
+# Subtest: recipe field rev (SE-01) a wrong type names that key
+ok 114 - recipe field rev (SE-01) a wrong type names that key
+  ---
+  duration_ms: 3.627033
+  type: 'test'
+  ...
+# Subtest: recipe field name (SE-01) a wrong type names that key
+ok 115 - recipe field name (SE-01) a wrong type names that key
+  ---
+  duration_ms: 4.647633
+  type: 'test'
+  ...
+# Subtest: recipe field raster (SE-01) a wrong type names that key
+ok 116 - recipe field raster (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.455857
+  type: 'test'
+  ...
+# Subtest: recipe field size (SE-01) a wrong type names that key
+ok 117 - recipe field size (SE-01) a wrong type names that key
+  ---
+  duration_ms: 3.384973
+  type: 'test'
+  ...
+# Subtest: recipe field size.w (SE-01) a wrong type names that key
+ok 118 - recipe field size.w (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.393621
+  type: 'test'
+  ...
+# Subtest: recipe field size.h (SE-01) a wrong type names that key
+ok 119 - recipe field size.h (SE-01) a wrong type names that key
+  ---
+  duration_ms: 2.32888
+  type: 'test'
+  ...
+# Subtest: recipe field light (SE-01) a wrong type names that key
+ok 120 - recipe field light (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.903466
+  type: 'test'
+  ...
+# Subtest: recipe field palette (SE-01) a wrong type names that key
+ok 121 - recipe field palette (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.576299
+  type: 'test'
+  ...
+# Subtest: recipe field palette.slots (SE-01) a wrong type names that key
+ok 122 - recipe field palette.slots (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.51315
+  type: 'test'
+  ...
+# Subtest: recipe field palette.slots[0] (SE-01) a wrong type names that key
+ok 123 - recipe field palette.slots[0] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.574542
+  type: 'test'
+  ...
+# Subtest: recipe field palette.slots[0].id (SE-01) a wrong type names that key
+ok 124 - recipe field palette.slots[0].id (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.992061
+  type: 'test'
+  ...
+# Subtest: recipe field palette.slots[0].ramp (SE-01) a wrong type names that key
+ok 125 - recipe field palette.slots[0].ramp (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.258827
+  type: 'test'
+  ...
+# Subtest: recipe field palette.slots[0].ramp[0] (SE-01) a wrong type names that key
+ok 126 - recipe field palette.slots[0].ramp[0] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.254548
+  type: 'test'
+  ...
+# Subtest: recipe field palette.slots[0].ramp[1] (SE-01) a wrong type names that key
+ok 127 - recipe field palette.slots[0].ramp[1] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.374304
+  type: 'test'
+  ...
+# Subtest: recipe field palette.slots[0].ramp[2] (SE-01) a wrong type names that key
+ok 128 - recipe field palette.slots[0].ramp[2] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.468798
+  type: 'test'
+  ...
+# Subtest: recipe field palette.slots[0].base (SE-01) a wrong type names that key
+ok 129 - recipe field palette.slots[0].base (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.555195
+  type: 'test'
+  ...
+# Subtest: recipe field palette.slots[1] (SE-01) a wrong type names that key
+ok 130 - recipe field palette.slots[1] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.42643
+  type: 'test'
+  ...
+# Subtest: recipe field palette.slots[1].id (SE-01) a wrong type names that key
+ok 131 - recipe field palette.slots[1].id (SE-01) a wrong type names that key
+  ---
+  duration_ms: 2.204623
+  type: 'test'
+  ...
+# Subtest: recipe field palette.slots[1].ramp (SE-01) a wrong type names that key
+ok 132 - recipe field palette.slots[1].ramp (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.417148
+  type: 'test'
+  ...
+# Subtest: recipe field palette.slots[1].ramp[0] (SE-01) a wrong type names that key
+ok 133 - recipe field palette.slots[1].ramp[0] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.908044
+  type: 'test'
+  ...
+# Subtest: recipe field palette.slots[1].ramp[1] (SE-01) a wrong type names that key
+ok 134 - recipe field palette.slots[1].ramp[1] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.177325
+  type: 'test'
+  ...
+# Subtest: recipe field palette.slots[1].base (SE-01) a wrong type names that key
+ok 135 - recipe field palette.slots[1].base (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.215533
+  type: 'test'
+  ...
+# Subtest: recipe field palette.slots[1].team (SE-01) a wrong type names that key
+ok 136 - recipe field palette.slots[1].team (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.819781
+  type: 'test'
+  ...
+# Subtest: recipe field defaults (SE-01) a wrong type names that key
+ok 137 - recipe field defaults (SE-01) a wrong type names that key
+  ---
+  duration_ms: 2.070871
+  type: 'test'
+  ...
+# Subtest: recipe field defaults.outline (SE-01) a wrong type names that key
+ok 138 - recipe field defaults.outline (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.839876
+  type: 'test'
+  ...
+# Subtest: recipe field defaults.outline.on (SE-01) a wrong type names that key
+ok 139 - recipe field defaults.outline.on (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.287777
+  type: 'test'
+  ...
+# Subtest: recipe field defaults.outline.px (SE-01) a wrong type names that key
+ok 140 - recipe field defaults.outline.px (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.192172
+  type: 'test'
+  ...
+# Subtest: recipe field defaults.outline.colour (SE-01) a wrong type names that key
+ok 141 - recipe field defaults.outline.colour (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.138737
+  type: 'test'
+  ...
+# Subtest: recipe field defaults.outline.sides (SE-01) a wrong type names that key
+ok 142 - recipe field defaults.outline.sides (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.202365
+  type: 'test'
+  ...
+# Subtest: recipe field defaults.shade (SE-01) a wrong type names that key
+ok 143 - recipe field defaults.shade (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.137851
+  type: 'test'
+  ...
+# Subtest: recipe field defaults.shade.steps (SE-01) a wrong type names that key
+ok 144 - recipe field defaults.shade.steps (SE-01) a wrong type names that key
+  ---
+  duration_ms: 2.403062
+  type: 'test'
+  ...
+# Subtest: recipe field defaults.shade.strength (SE-01) a wrong type names that key
+ok 145 - recipe field defaults.shade.strength (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.815153
+  type: 'test'
+  ...
+# Subtest: recipe field defaults.shade.highlight (SE-01) a wrong type names that key
+ok 146 - recipe field defaults.shade.highlight (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.376311
+  type: 'test'
+  ...
+# Subtest: recipe field defaults.shade.dither (SE-01) a wrong type names that key
+ok 147 - recipe field defaults.shade.dither (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.101443
+  type: 'test'
+  ...
+# Subtest: recipe field parts (SE-01) a wrong type names that key
+ok 148 - recipe field parts (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.779504
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0] (SE-01) a wrong type names that key
+ok 149 - recipe field parts[0] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.04503
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].id (SE-01) a wrong type names that key
+ok 150 - recipe field parts[0].id (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.13288
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].kind (SE-01) a wrong type names that key
+ok 151 - recipe field parts[0].kind (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.199779
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].slot (SE-01) a wrong type names that key
+ok 152 - recipe field parts[0].slot (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.038307
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].z (SE-01) a wrong type names that key
+ok 153 - recipe field parts[0].z (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.767689
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].joint (SE-01) a wrong type names that key
+ok 154 - recipe field parts[0].joint (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.153967
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].mirror (SE-01) a wrong type names that key
+ok 155 - recipe field parts[0].mirror (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.782751
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].visible (SE-01) a wrong type names that key
+ok 156 - recipe field parts[0].visible (SE-01) a wrong type names that key
+  ---
+  duration_ms: 3.558334
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].locked (SE-01) a wrong type names that key
+ok 157 - recipe field parts[0].locked (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.326133
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].geom (SE-01) a wrong type names that key
+ok 158 - recipe field parts[0].geom (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.189834
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].geom.x (SE-01) a wrong type names that key
+ok 159 - recipe field parts[0].geom.x (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.176929
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].geom.y (SE-01) a wrong type names that key
+ok 160 - recipe field parts[0].geom.y (SE-01) a wrong type names that key
+  ---
+  duration_ms: 2.36267
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].geom.w (SE-01) a wrong type names that key
+ok 161 - recipe field parts[0].geom.w (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.202835
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].geom.h (SE-01) a wrong type names that key
+ok 162 - recipe field parts[0].geom.h (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.107548
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].geom.round (SE-01) a wrong type names that key
+ok 163 - recipe field parts[0].geom.round (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.976233
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].geom.rot (SE-01) a wrong type names that key
+ok 164 - recipe field parts[0].geom.rot (SE-01) a wrong type names that key
+  ---
+  duration_ms: 3.181402
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].outline (SE-01) a wrong type names that key
+ok 165 - recipe field parts[0].outline (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.05017
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].outline.on (SE-01) a wrong type names that key
+ok 166 - recipe field parts[0].outline.on (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.034214
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].outline.px (SE-01) a wrong type names that key
+ok 167 - recipe field parts[0].outline.px (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.673591
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].outline.colour (SE-01) a wrong type names that key
+ok 168 - recipe field parts[0].outline.colour (SE-01) a wrong type names that key
+  ---
+  duration_ms: 4.01485
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].outline.sides (SE-01) a wrong type names that key
+ok 169 - recipe field parts[0].outline.sides (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.059793
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].shade (SE-01) a wrong type names that key
+ok 170 - recipe field parts[0].shade (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.169425
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].shade.angle (SE-01) a wrong type names that key
+ok 171 - recipe field parts[0].shade.angle (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.097168
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].shade.steps (SE-01) a wrong type names that key
+ok 172 - recipe field parts[0].shade.steps (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.064322
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].shade.strength (SE-01) a wrong type names that key
+ok 173 - recipe field parts[0].shade.strength (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.115232
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].shade.highlight (SE-01) a wrong type names that key
+ok 174 - recipe field parts[0].shade.highlight (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.009011
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].shade.dither (SE-01) a wrong type names that key
+ok 175 - recipe field parts[0].shade.dither (SE-01) a wrong type names that key
+  ---
+  duration_ms: 2.31246
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].runs (SE-01) a wrong type names that key
+ok 176 - recipe field parts[0].runs (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.075503
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].runs[0] (SE-01) a wrong type names that key
+ok 177 - recipe field parts[0].runs[0] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.734969
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].runs[1] (SE-01) a wrong type names that key
+ok 178 - recipe field parts[0].runs[1] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.157663
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].promotedFrom (SE-01) a wrong type names that key
+ok 179 - recipe field parts[0].promotedFrom (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.044502
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].promotedFrom.runs (SE-01) a wrong type names that key
+ok 180 - recipe field parts[0].promotedFrom.runs (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.05514
+  type: 'test'
+  ...
+# Subtest: recipe field parts[0].promotedFrom.runs[0] (SE-01) a wrong type names that key
+ok 181 - recipe field parts[0].promotedFrom.runs[0] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.031967
+  type: 'test'
+  ...
+# Subtest: recipe field parts[1] (SE-01) a wrong type names that key
+ok 182 - recipe field parts[1] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.598207
+  type: 'test'
+  ...
+# Subtest: recipe field parts[1].id (SE-01) a wrong type names that key
+ok 183 - recipe field parts[1].id (SE-01) a wrong type names that key
+  ---
+  duration_ms: 3.903774
+  type: 'test'
+  ...
+# Subtest: recipe field parts[1].kind (SE-01) a wrong type names that key
+ok 184 - recipe field parts[1].kind (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.745778
+  type: 'test'
+  ...
+# Subtest: recipe field parts[1].slot (SE-01) a wrong type names that key
+ok 185 - recipe field parts[1].slot (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.403909
+  type: 'test'
+  ...
+# Subtest: recipe field parts[1].z (SE-01) a wrong type names that key
+ok 186 - recipe field parts[1].z (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.427458
+  type: 'test'
+  ...
+# Subtest: recipe field parts[1].joint (SE-01) a wrong type names that key
+ok 187 - recipe field parts[1].joint (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.474345
+  type: 'test'
+  ...
+# Subtest: recipe field parts[1].mirror (SE-01) a wrong type names that key
+ok 188 - recipe field parts[1].mirror (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.610656
+  type: 'test'
+  ...
+# Subtest: recipe field parts[1].visible (SE-01) a wrong type names that key
+ok 189 - recipe field parts[1].visible (SE-01) a wrong type names that key
+  ---
+  duration_ms: 2.126978
+  type: 'test'
+  ...
+# Subtest: recipe field parts[1].geom (SE-01) a wrong type names that key
+ok 190 - recipe field parts[1].geom (SE-01) a wrong type names that key
+  ---
+  duration_ms: 4.531844
+  type: 'test'
+  ...
+# Subtest: recipe field parts[1].geom.cx (SE-01) a wrong type names that key
+ok 191 - recipe field parts[1].geom.cx (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.568008
+  type: 'test'
+  ...
+# Subtest: recipe field parts[1].geom.cy (SE-01) a wrong type names that key
+ok 192 - recipe field parts[1].geom.cy (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.600878
+  type: 'test'
+  ...
+# Subtest: recipe field parts[1].geom.rx (SE-01) a wrong type names that key
+ok 193 - recipe field parts[1].geom.rx (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.630082
+  type: 'test'
+  ...
+# Subtest: recipe field parts[1].geom.ry (SE-01) a wrong type names that key
+ok 194 - recipe field parts[1].geom.ry (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.493021
+  type: 'test'
+  ...
+# Subtest: recipe field parts[2] (SE-01) a wrong type names that key
+ok 195 - recipe field parts[2] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.426306
+  type: 'test'
+  ...
+# Subtest: recipe field parts[2].id (SE-01) a wrong type names that key
+ok 196 - recipe field parts[2].id (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.496879
+  type: 'test'
+  ...
+# Subtest: recipe field parts[2].kind (SE-01) a wrong type names that key
+ok 197 - recipe field parts[2].kind (SE-01) a wrong type names that key
+  ---
+  duration_ms: 2.47099
+  type: 'test'
+  ...
+# Subtest: recipe field parts[2].slot (SE-01) a wrong type names that key
+ok 198 - recipe field parts[2].slot (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.284613
+  type: 'test'
+  ...
+# Subtest: recipe field parts[2].z (SE-01) a wrong type names that key
+ok 199 - recipe field parts[2].z (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.230968
+  type: 'test'
+  ...
+# Subtest: recipe field parts[2].joint (SE-01) a wrong type names that key
+ok 200 - recipe field parts[2].joint (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.390717
+  type: 'test'
+  ...
+# Subtest: recipe field parts[2].mirror (SE-01) a wrong type names that key
+ok 201 - recipe field parts[2].mirror (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.745009
+  type: 'test'
+  ...
+# Subtest: recipe field parts[2].visible (SE-01) a wrong type names that key
+ok 202 - recipe field parts[2].visible (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.340581
+  type: 'test'
+  ...
+# Subtest: recipe field parts[2].geom (SE-01) a wrong type names that key
+ok 203 - recipe field parts[2].geom (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.209131
+  type: 'test'
+  ...
+# Subtest: recipe field parts[2].geom.x0 (SE-01) a wrong type names that key
+ok 204 - recipe field parts[2].geom.x0 (SE-01) a wrong type names that key
+  ---
+  duration_ms: 2.177672
+  type: 'test'
+  ...
+# Subtest: recipe field parts[2].geom.y0 (SE-01) a wrong type names that key
+ok 205 - recipe field parts[2].geom.y0 (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.568591
+  type: 'test'
+  ...
+# Subtest: recipe field parts[2].geom.x1 (SE-01) a wrong type names that key
+ok 206 - recipe field parts[2].geom.x1 (SE-01) a wrong type names that key
+  ---
+  duration_ms: 9.526917
+  type: 'test'
+  ...
+# Subtest: recipe field parts[2].geom.y1 (SE-01) a wrong type names that key
+ok 207 - recipe field parts[2].geom.y1 (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.55459
+  type: 'test'
+  ...
+# Subtest: recipe field parts[2].geom.r (SE-01) a wrong type names that key
+ok 208 - recipe field parts[2].geom.r (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.508547
+  type: 'test'
+  ...
+# Subtest: recipe field parts[3] (SE-01) a wrong type names that key
+ok 209 - recipe field parts[3] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.372604
+  type: 'test'
+  ...
+# Subtest: recipe field parts[3].id (SE-01) a wrong type names that key
+ok 210 - recipe field parts[3].id (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.380819
+  type: 'test'
+  ...
+# Subtest: recipe field parts[3].kind (SE-01) a wrong type names that key
+ok 211 - recipe field parts[3].kind (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.772983
+  type: 'test'
+  ...
+# Subtest: recipe field parts[3].slot (SE-01) a wrong type names that key
+ok 212 - recipe field parts[3].slot (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.72352
+  type: 'test'
+  ...
+# Subtest: recipe field parts[3].z (SE-01) a wrong type names that key
+ok 213 - recipe field parts[3].z (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.296251
+  type: 'test'
+  ...
+# Subtest: recipe field parts[3].joint (SE-01) a wrong type names that key
+ok 214 - recipe field parts[3].joint (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.532613
+  type: 'test'
+  ...
+# Subtest: recipe field parts[3].mirror (SE-01) a wrong type names that key
+ok 215 - recipe field parts[3].mirror (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.321116
+  type: 'test'
+  ...
+# Subtest: recipe field parts[3].visible (SE-01) a wrong type names that key
+ok 216 - recipe field parts[3].visible (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.361844
+  type: 'test'
+  ...
+# Subtest: recipe field parts[3].geom (SE-01) a wrong type names that key
+ok 217 - recipe field parts[3].geom (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.37131
+  type: 'test'
+  ...
+# Subtest: recipe field parts[3].geom.pts (SE-01) a wrong type names that key
+ok 218 - recipe field parts[3].geom.pts (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.404087
+  type: 'test'
+  ...
+# Subtest: recipe field parts[3].geom.pts[0] (SE-01) a wrong type names that key
+ok 219 - recipe field parts[3].geom.pts[0] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 2.943772
+  type: 'test'
+  ...
+# Subtest: recipe field parts[3].geom.pts[1] (SE-01) a wrong type names that key
+ok 220 - recipe field parts[3].geom.pts[1] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.996934
+  type: 'test'
+  ...
+# Subtest: recipe field parts[3].geom.pts[2] (SE-01) a wrong type names that key
+ok 221 - recipe field parts[3].geom.pts[2] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.952108
+  type: 'test'
+  ...
+# Subtest: recipe field parts[3].geom.pts[3] (SE-01) a wrong type names that key
+ok 222 - recipe field parts[3].geom.pts[3] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.471434
+  type: 'test'
+  ...
+# Subtest: recipe field parts[3].geom.round (SE-01) a wrong type names that key
+ok 223 - recipe field parts[3].geom.round (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.057837
+  type: 'test'
+  ...
+# Subtest: recipe field parts[4] (SE-01) a wrong type names that key
+ok 224 - recipe field parts[4] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 3.577964
+  type: 'test'
+  ...
+# Subtest: recipe field parts[4].id (SE-01) a wrong type names that key
+ok 225 - recipe field parts[4].id (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.978249
+  type: 'test'
+  ...
+# Subtest: recipe field parts[4].kind (SE-01) a wrong type names that key
+ok 226 - recipe field parts[4].kind (SE-01) a wrong type names that key
+  ---
+  duration_ms: 5.777569
+  type: 'test'
+  ...
+# Subtest: recipe field parts[4].slot (SE-01) a wrong type names that key
+ok 227 - recipe field parts[4].slot (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.18399
+  type: 'test'
+  ...
+# Subtest: recipe field parts[4].z (SE-01) a wrong type names that key
+ok 228 - recipe field parts[4].z (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.859447
+  type: 'test'
+  ...
+# Subtest: recipe field parts[4].joint (SE-01) a wrong type names that key
+ok 229 - recipe field parts[4].joint (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.877444
+  type: 'test'
+  ...
+# Subtest: recipe field parts[4].mirror (SE-01) a wrong type names that key
+ok 230 - recipe field parts[4].mirror (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.963038
+  type: 'test'
+  ...
+# Subtest: recipe field parts[4].visible (SE-01) a wrong type names that key
+ok 231 - recipe field parts[4].visible (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.892136
+  type: 'test'
+  ...
+# Subtest: recipe field parts[4].geom (SE-01) a wrong type names that key
+ok 232 - recipe field parts[4].geom (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.866441
+  type: 'test'
+  ...
+# Subtest: recipe field parts[4].geom.pts (SE-01) a wrong type names that key
+ok 233 - recipe field parts[4].geom.pts (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.862155
+  type: 'test'
+  ...
+# Subtest: recipe field parts[4].geom.pts[0] (SE-01) a wrong type names that key
+ok 234 - recipe field parts[4].geom.pts[0] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 2.139849
+  type: 'test'
+  ...
+# Subtest: recipe field parts[4].geom.pts[1] (SE-01) a wrong type names that key
+ok 235 - recipe field parts[4].geom.pts[1] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.132234
+  type: 'test'
+  ...
+# Subtest: recipe field parts[4].geom.pts[2] (SE-01) a wrong type names that key
+ok 236 - recipe field parts[4].geom.pts[2] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.925734
+  type: 'test'
+  ...
+# Subtest: recipe field parts[5] (SE-01) a wrong type names that key
+ok 237 - recipe field parts[5] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.807431
+  type: 'test'
+  ...
+# Subtest: recipe field parts[5].id (SE-01) a wrong type names that key
+ok 238 - recipe field parts[5].id (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.926835
+  type: 'test'
+  ...
+# Subtest: recipe field parts[5].kind (SE-01) a wrong type names that key
+ok 239 - recipe field parts[5].kind (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.940528
+  type: 'test'
+  ...
+# Subtest: recipe field parts[5].slot (SE-01) a wrong type names that key
+ok 240 - recipe field parts[5].slot (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.839159
+  type: 'test'
+  ...
+# Subtest: recipe field parts[5].z (SE-01) a wrong type names that key
+ok 241 - recipe field parts[5].z (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.798877
+  type: 'test'
+  ...
+# Subtest: recipe field parts[5].joint (SE-01) a wrong type names that key
+ok 242 - recipe field parts[5].joint (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.517864
+  type: 'test'
+  ...
+# Subtest: recipe field parts[5].mirror (SE-01) a wrong type names that key
+ok 243 - recipe field parts[5].mirror (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.127362
+  type: 'test'
+  ...
+# Subtest: recipe field parts[5].visible (SE-01) a wrong type names that key
+ok 244 - recipe field parts[5].visible (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.951063
+  type: 'test'
+  ...
+# Subtest: recipe field parts[5].geom (SE-01) a wrong type names that key
+ok 245 - recipe field parts[5].geom (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.838721
+  type: 'test'
+  ...
+# Subtest: recipe field parts[5].geom.x0 (SE-01) a wrong type names that key
+ok 246 - recipe field parts[5].geom.x0 (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.942492
+  type: 'test'
+  ...
+# Subtest: recipe field parts[5].geom.y0 (SE-01) a wrong type names that key
+ok 247 - recipe field parts[5].geom.y0 (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.877627
+  type: 'test'
+  ...
+# Subtest: recipe field parts[5].geom.x1 (SE-01) a wrong type names that key
+ok 248 - recipe field parts[5].geom.x1 (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.838327
+  type: 'test'
+  ...
+# Subtest: recipe field parts[5].geom.y1 (SE-01) a wrong type names that key
+ok 249 - recipe field parts[5].geom.y1 (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.821194
+  type: 'test'
+  ...
+# Subtest: recipe field parts[5].geom.width (SE-01) a wrong type names that key
+ok 250 - recipe field parts[5].geom.width (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.3852
+  type: 'test'
+  ...
+# Subtest: recipe field parts[5].geom.cap (SE-01) a wrong type names that key
+ok 251 - recipe field parts[5].geom.cap (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.85132
+  type: 'test'
+  ...
+# Subtest: recipe field parts[6] (SE-01) a wrong type names that key
+ok 252 - recipe field parts[6] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.921942
+  type: 'test'
+  ...
+# Subtest: recipe field parts[6].id (SE-01) a wrong type names that key
+ok 253 - recipe field parts[6].id (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.846133
+  type: 'test'
+  ...
+# Subtest: recipe field parts[6].kind (SE-01) a wrong type names that key
+ok 254 - recipe field parts[6].kind (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.311952
+  type: 'test'
+  ...
+# Subtest: recipe field parts[6].slot (SE-01) a wrong type names that key
+ok 255 - recipe field parts[6].slot (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.921653
+  type: 'test'
+  ...
+# Subtest: recipe field parts[6].z (SE-01) a wrong type names that key
+ok 256 - recipe field parts[6].z (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.895417
+  type: 'test'
+  ...
+# Subtest: recipe field parts[6].joint (SE-01) a wrong type names that key
+ok 257 - recipe field parts[6].joint (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.349679
+  type: 'test'
+  ...
+# Subtest: recipe field parts[6].mirror (SE-01) a wrong type names that key
+ok 258 - recipe field parts[6].mirror (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.198285
+  type: 'test'
+  ...
+# Subtest: recipe field parts[6].visible (SE-01) a wrong type names that key
+ok 259 - recipe field parts[6].visible (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.821071
+  type: 'test'
+  ...
+# Subtest: recipe field parts[6].geom (SE-01) a wrong type names that key
+ok 260 - recipe field parts[6].geom (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.829673
+  type: 'test'
+  ...
+# Subtest: recipe field parts[6].geom.pts (SE-01) a wrong type names that key
+ok 261 - recipe field parts[6].geom.pts (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.757531
+  type: 'test'
+  ...
+# Subtest: recipe field parts[6].geom.pts[0] (SE-01) a wrong type names that key
+ok 262 - recipe field parts[6].geom.pts[0] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.847188
+  type: 'test'
+  ...
+# Subtest: recipe field parts[6].geom.pts[1] (SE-01) a wrong type names that key
+ok 263 - recipe field parts[6].geom.pts[1] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.803818
+  type: 'test'
+  ...
+# Subtest: recipe field parts[6].geom.width (SE-01) a wrong type names that key
+ok 264 - recipe field parts[6].geom.width (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.219834
+  type: 'test'
+  ...
+# Subtest: recipe field parts[6].geom.cap (SE-01) a wrong type names that key
+ok 265 - recipe field parts[6].geom.cap (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.551806
+  type: 'test'
+  ...
+# Subtest: recipe field parts[7] (SE-01) a wrong type names that key
+ok 266 - recipe field parts[7] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.85532
+  type: 'test'
+  ...
+# Subtest: recipe field parts[7].id (SE-01) a wrong type names that key
+ok 267 - recipe field parts[7].id (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.874478
+  type: 'test'
+  ...
+# Subtest: recipe field parts[7].kind (SE-01) a wrong type names that key
+ok 268 - recipe field parts[7].kind (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.752463
+  type: 'test'
+  ...
+# Subtest: recipe field parts[7].slot (SE-01) a wrong type names that key
+ok 269 - recipe field parts[7].slot (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.840486
+  type: 'test'
+  ...
+# Subtest: recipe field parts[7].z (SE-01) a wrong type names that key
+ok 270 - recipe field parts[7].z (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.845968
+  type: 'test'
+  ...
+# Subtest: recipe field parts[7].joint (SE-01) a wrong type names that key
+ok 271 - recipe field parts[7].joint (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.83584
+  type: 'test'
+  ...
+# Subtest: recipe field parts[7].mirror (SE-01) a wrong type names that key
+ok 272 - recipe field parts[7].mirror (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.863532
+  type: 'test'
+  ...
+# Subtest: recipe field parts[7].visible (SE-01) a wrong type names that key
+ok 273 - recipe field parts[7].visible (SE-01) a wrong type names that key
+  ---
+  duration_ms: 3.7065
+  type: 'test'
+  ...
+# Subtest: recipe field parts[7].runs (SE-01) a wrong type names that key
+ok 274 - recipe field parts[7].runs (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.966832
+  type: 'test'
+  ...
+# Subtest: recipe field parts[7].runs[0] (SE-01) a wrong type names that key
+ok 275 - recipe field parts[7].runs[0] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.014754
+  type: 'test'
+  ...
+# Subtest: recipe field parts[7].runs[1] (SE-01) a wrong type names that key
+ok 276 - recipe field parts[7].runs[1] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.083172
+  type: 'test'
+  ...
+# Subtest: recipe field parts[7].runs[2] (SE-01) a wrong type names that key
+ok 277 - recipe field parts[7].runs[2] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.906298
+  type: 'test'
+  ...
+# Subtest: recipe field skeleton (SE-01) a wrong type names that key
+ok 278 - recipe field skeleton (SE-01) a wrong type names that key
+  ---
+  duration_ms: 2.05543
+  type: 'test'
+  ...
+# Subtest: recipe field skeleton.joints (SE-01) a wrong type names that key
+ok 279 - recipe field skeleton.joints (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.11774
+  type: 'test'
+  ...
+# Subtest: recipe field skeleton.joints[0] (SE-01) a wrong type names that key
+ok 280 - recipe field skeleton.joints[0] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.445022
+  type: 'test'
+  ...
+# Subtest: recipe field skeleton.joints[0].id (SE-01) a wrong type names that key
+ok 281 - recipe field skeleton.joints[0].id (SE-01) a wrong type names that key
+  ---
+  duration_ms: 5.052187
+  type: 'test'
+  ...
+# Subtest: recipe field skeleton.joints[0].parent (SE-01) a wrong type names that key
+ok 282 - recipe field skeleton.joints[0].parent (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.166643
+  type: 'test'
+  ...
+# Subtest: recipe field skeleton.joints[0].at (SE-01) a wrong type names that key
+ok 283 - recipe field skeleton.joints[0].at (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.039253
+  type: 'test'
+  ...
+# Subtest: recipe field skeleton.joints[0].at.x (SE-01) a wrong type names that key
+ok 284 - recipe field skeleton.joints[0].at.x (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.841755
+  type: 'test'
+  ...
+# Subtest: recipe field skeleton.joints[0].at.y (SE-01) a wrong type names that key
+ok 285 - recipe field skeleton.joints[0].at.y (SE-01) a wrong type names that key
+  ---
+  duration_ms: 7.12265
+  type: 'test'
+  ...
+# Subtest: recipe field skeleton.joints[1] (SE-01) a wrong type names that key
+ok 286 - recipe field skeleton.joints[1] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.122997
+  type: 'test'
+  ...
+# Subtest: recipe field skeleton.joints[1].id (SE-01) a wrong type names that key
+ok 287 - recipe field skeleton.joints[1].id (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.902105
+  type: 'test'
+  ...
+# Subtest: recipe field skeleton.joints[1].parent (SE-01) a wrong type names that key
+ok 288 - recipe field skeleton.joints[1].parent (SE-01) a wrong type names that key
+  ---
+  duration_ms: 3.967129
+  type: 'test'
+  ...
+# Subtest: recipe field skeleton.joints[1].at (SE-01) a wrong type names that key
+ok 289 - recipe field skeleton.joints[1].at (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.965551
+  type: 'test'
+  ...
+# Subtest: recipe field skeleton.joints[1].at.x (SE-01) a wrong type names that key
+ok 290 - recipe field skeleton.joints[1].at.x (SE-01) a wrong type names that key
+  ---
+  duration_ms: 2.927009
+  type: 'test'
+  ...
+# Subtest: recipe field skeleton.joints[1].at.y (SE-01) a wrong type names that key
+ok 291 - recipe field skeleton.joints[1].at.y (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.017016
+  type: 'test'
+  ...
+# Subtest: recipe field anims (SE-01) a wrong type names that key
+ok 292 - recipe field anims (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.74273
+  type: 'test'
+  ...
+# Subtest: recipe field anims[0] (SE-01) a wrong type names that key
+ok 293 - recipe field anims[0] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.684066
+  type: 'test'
+  ...
+# Subtest: recipe field anims[0].name (SE-01) a wrong type names that key
+ok 294 - recipe field anims[0].name (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.874193
+  type: 'test'
+  ...
+# Subtest: recipe field anims[0].loop (SE-01) a wrong type names that key
+ok 295 - recipe field anims[0].loop (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.867715
+  type: 'test'
+  ...
+# Subtest: recipe field anims[0].gen (SE-01) a wrong type names that key
+ok 296 - recipe field anims[0].gen (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.511355
+  type: 'test'
+  ...
+# Subtest: recipe field anims[0].gen.kind (SE-01) a wrong type names that key
+ok 297 - recipe field anims[0].gen.kind (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.9085
+  type: 'test'
+  ...
+# Subtest: recipe field anims[0].gen.style (SE-01) a wrong type names that key
+ok 298 - recipe field anims[0].gen.style (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.791571
+  type: 'test'
+  ...
+# Subtest: recipe field anims[0].gen.stride (SE-01) a wrong type names that key
+ok 299 - recipe field anims[0].gen.stride (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.865982
+  type: 'test'
+  ...
+# Subtest: recipe field anims[0].gen.bob (SE-01) a wrong type names that key
+ok 300 - recipe field anims[0].gen.bob (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.829918
+  type: 'test'
+  ...
+# Subtest: recipe field anims[0].gen.arm (SE-01) a wrong type names that key
+ok 301 - recipe field anims[0].gen.arm (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.779996
+  type: 'test'
+  ...
+# Subtest: recipe field anims[0].frames (SE-01) a wrong type names that key
+ok 302 - recipe field anims[0].frames (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.76263
+  type: 'test'
+  ...
+# Subtest: recipe field anims[0].frames[0] (SE-01) a wrong type names that key
+ok 303 - recipe field anims[0].frames[0] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.342873
+  type: 'test'
+  ...
+# Subtest: recipe field anims[0].frames[0].ms (SE-01) a wrong type names that key
+ok 304 - recipe field anims[0].frames[0].ms (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.015952
+  type: 'test'
+  ...
+# Subtest: recipe field anims[0].frames[0].pose (SE-01) a wrong type names that key
+ok 305 - recipe field anims[0].frames[0].pose (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.824124
+  type: 'test'
+  ...
+# Subtest: recipe field anims[0].frames[0].pose.root (SE-01) a wrong type names that key
+ok 306 - recipe field anims[0].frames[0].pose.root (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.910142
+  type: 'test'
+  ...
+# Subtest: recipe field anims[0].frames[0].pose.root.dx (SE-01) a wrong type names that key
+ok 307 - recipe field anims[0].frames[0].pose.root.dx (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.95027
+  type: 'test'
+  ...
+# Subtest: recipe field anims[0].frames[0].pose.root.dy (SE-01) a wrong type names that key
+ok 308 - recipe field anims[0].frames[0].pose.root.dy (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.82735
+  type: 'test'
+  ...
+# Subtest: recipe field anims[0].frames[0].pose.root.rot (SE-01) a wrong type names that key
+ok 309 - recipe field anims[0].frames[0].pose.root.rot (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.79765
+  type: 'test'
+  ...
+# Subtest: recipe field anims[0].frames[0].parts (SE-01) a wrong type names that key
+ok 310 - recipe field anims[0].frames[0].parts (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.925815
+  type: 'test'
+  ...
+# Subtest: recipe field anims[0].frames[0].parts.head (SE-01) a wrong type names that key
+ok 311 - recipe field anims[0].frames[0].parts.head (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.436284
+  type: 'test'
+  ...
+# Subtest: recipe field anims[0].frames[0].parts.head.visible (SE-01) a wrong type names that key
+ok 312 - recipe field anims[0].frames[0].parts.head.visible (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.9568
+  type: 'test'
+  ...
+# Subtest: recipe field anims[0].frames[0].parts.head.slot (SE-01) a wrong type names that key
+ok 313 - recipe field anims[0].frames[0].parts.head.slot (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.856716
+  type: 'test'
+  ...
+# Subtest: recipe field anims[0].frames[0].parts.head.geom (SE-01) a wrong type names that key
+ok 314 - recipe field anims[0].frames[0].parts.head.geom (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.003433
+  type: 'test'
+  ...
+# Subtest: recipe field anims[0].frames[0].runs (SE-01) a wrong type names that key
+ok 315 - recipe field anims[0].frames[0].runs (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.884566
+  type: 'test'
+  ...
+# Subtest: recipe field anims[0].frames[0].runs.eyes (SE-01) a wrong type names that key
+ok 316 - recipe field anims[0].frames[0].runs.eyes (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.838058
+  type: 'test'
+  ...
+# Subtest: recipe field anims[0].frames[0].runs.eyes[0] (SE-01) a wrong type names that key
+ok 317 - recipe field anims[0].frames[0].runs.eyes[0] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.832295
+  type: 'test'
+  ...
+# Subtest: recipe field facings (SE-01) a wrong type names that key
+ok 318 - recipe field facings (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.193953
+  type: 'test'
+  ...
+# Subtest: recipe field facings.down (SE-01) a wrong type names that key
+ok 319 - recipe field facings.down (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.003947
+  type: 'test'
+  ...
+# Subtest: recipe field facings.down.parts (SE-01) a wrong type names that key
+ok 320 - recipe field facings.down.parts (SE-01) a wrong type names that key
+  ---
+  duration_ms: 2.143753
+  type: 'test'
+  ...
+# Subtest: recipe field facings.down.parts.cape (SE-01) a wrong type names that key
+ok 321 - recipe field facings.down.parts.cape (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.005186
+  type: 'test'
+  ...
+# Subtest: recipe field facings.down.parts.cape.visible (SE-01) a wrong type names that key
+ok 322 - recipe field facings.down.parts.cape.visible (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.944725
+  type: 'test'
+  ...
+# Subtest: recipe field facings.up (SE-01) a wrong type names that key
+ok 323 - recipe field facings.up (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.832597
+  type: 'test'
+  ...
+# Subtest: recipe field facings.up.parts (SE-01) a wrong type names that key
+ok 324 - recipe field facings.up.parts (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.819028
+  type: 'test'
+  ...
+# Subtest: recipe field facings.up.parts.head (SE-01) a wrong type names that key
+ok 325 - recipe field facings.up.parts.head (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.798392
+  type: 'test'
+  ...
+# Subtest: recipe field facings.up.parts.head.z (SE-01) a wrong type names that key
+ok 326 - recipe field facings.up.parts.head.z (SE-01) a wrong type names that key
+  ---
+  duration_ms: 5.610168
+  type: 'test'
+  ...
+# Subtest: recipe field facings.up.parts.head.geom (SE-01) a wrong type names that key
+ok 327 - recipe field facings.up.parts.head.geom (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.900207
+  type: 'test'
+  ...
+# Subtest: recipe field facings.up.pose (SE-01) a wrong type names that key
+ok 328 - recipe field facings.up.pose (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.933866
+  type: 'test'
+  ...
+# Subtest: recipe field facings.up.pose.neck (SE-01) a wrong type names that key
+ok 329 - recipe field facings.up.pose.neck (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.888737
+  type: 'test'
+  ...
+# Subtest: recipe field facings.up.pose.neck.dx (SE-01) a wrong type names that key
+ok 330 - recipe field facings.up.pose.neck.dx (SE-01) a wrong type names that key
+  ---
+  duration_ms: 5.242299
+  type: 'test'
+  ...
+# Subtest: recipe field facings.up.pose.neck.dy (SE-01) a wrong type names that key
+ok 331 - recipe field facings.up.pose.neck.dy (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.840957
+  type: 'test'
+  ...
+# Subtest: recipe field facings.up.pose.neck.rot (SE-01) a wrong type names that key
+ok 332 - recipe field facings.up.pose.neck.rot (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.882181
+  type: 'test'
+  ...
+# Subtest: recipe field facings.side (SE-01) a wrong type names that key
+ok 333 - recipe field facings.side (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.969454
+  type: 'test'
+  ...
+# Subtest: recipe field facings.side.parts (SE-01) a wrong type names that key
+ok 334 - recipe field facings.side.parts (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.468394
+  type: 'test'
+  ...
+# Subtest: recipe field facings.sideMirror (SE-01) a wrong type names that key
+ok 335 - recipe field facings.sideMirror (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.842121
+  type: 'test'
+  ...
+# Subtest: recipe field variants (SE-01) a wrong type names that key
+ok 336 - recipe field variants (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.760914
+  type: 'test'
+  ...
+# Subtest: recipe field variants[0] (SE-01) a wrong type names that key
+ok 337 - recipe field variants[0] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.128704
+  type: 'test'
+  ...
+# Subtest: recipe field variants[0].id (SE-01) a wrong type names that key
+ok 338 - recipe field variants[0].id (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.005832
+  type: 'test'
+  ...
+# Subtest: recipe field variants[0].swap (SE-01) a wrong type names that key
+ok 339 - recipe field variants[0].swap (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.786187
+  type: 'test'
+  ...
+# Subtest: recipe field variants[0].swap.skin (SE-01) a wrong type names that key
+ok 340 - recipe field variants[0].swap.skin (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.836291
+  type: 'test'
+  ...
+# Subtest: recipe field variants[0].swap.skin[0] (SE-01) a wrong type names that key
+ok 341 - recipe field variants[0].swap.skin[0] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.222072
+  type: 'test'
+  ...
+# Subtest: recipe field variants[0].swap.skin[1] (SE-01) a wrong type names that key
+ok 342 - recipe field variants[0].swap.skin[1] (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.946834
+  type: 'test'
+  ...
+# Subtest: recipe field variants[0].swap.cloak (SE-01) a wrong type names that key
+ok 343 - recipe field variants[0].swap.cloak (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.932026
+  type: 'test'
+  ...
+# Subtest: recipe field code (SE-01) a wrong type names that key
+ok 344 - recipe field code (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.876816
+  type: 'test'
+  ...
+# Subtest: recipe field code.lang (SE-01) a wrong type names that key
+ok 345 - recipe field code.lang (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.001271
+  type: 'test'
+  ...
+# Subtest: recipe field code.src (SE-01) a wrong type names that key
+ok 346 - recipe field code.src (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.887081
+  type: 'test'
+  ...
+# Subtest: recipe field code.out (SE-01) a wrong type names that key
+ok 347 - recipe field code.out (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.911363
+  type: 'test'
+  ...
+# Subtest: recipe field code.outHash (SE-01) a wrong type names that key
+ok 348 - recipe field code.outHash (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.091631
+  type: 'test'
+  ...
+# Subtest: recipe field history (SE-01) a wrong type names that key
+ok 349 - recipe field history (SE-01) a wrong type names that key
+  ---
+  duration_ms: 1.501634
+  type: 'test'
+  ...
+# Subtest: recipe field history.cap (SE-01) a wrong type names that key
+ok 350 - recipe field history.cap (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.882039
+  type: 'test'
+  ...
+# Subtest: recipe field history.baseSeq (SE-01) a wrong type names that key
+ok 351 - recipe field history.baseSeq (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.742441
+  type: 'test'
+  ...
+# Subtest: recipe field history.ops (SE-01) a wrong type names that key
+ok 352 - recipe field history.ops (SE-01) a wrong type names that key
+  ---
+  duration_ms: 0.752764
+  type: 'test'
+  ...
+# Subtest: recipe guard (SE-01) only an unreadable document fails
+ok 353 - recipe guard (SE-01) only an unreadable document fails
+  ---
+  duration_ms: 45.19933
+  type: 'test'
+  ...
+# Subtest: recipe limits (SE-01) rejects a non-integer cap
+ok 354 - recipe limits (SE-01) rejects a non-integer cap
+  ---
+  duration_ms: 1.270457
+  type: 'test'
+  ...
+# Subtest: recipe caps (SE-01) warns one under the sample count and not at it
+ok 355 - recipe caps (SE-01) warns one under the sample count and not at it
+  ---
+  duration_ms: 6.819557
+  type: 'test'
+  ...
+# Subtest: recipe floats, ids and runs (SE-01) floors, rejects duplicates and bad runs
+ok 356 - recipe floats, ids and runs (SE-01) floors, rejects duplicates and bad runs
+  ---
+  duration_ms: 2.055536
+  type: 'test'
+  ...
+# Subtest: recipe formats and ranges (SE-01) one badField names the key
+ok 357 - recipe formats and ranges (SE-01) one badField names the key
+  ---
+  duration_ms: 2.152623
+  type: 'test'
+  ...
+# Subtest: recipe droppedKey (SE-01) drops proto keys in document order
+ok 358 - recipe droppedKey (SE-01) drops proto keys in document order
+  ---
+  duration_ms: 0.917289
+  type: 'test'
+  ...
+# Subtest: recipe R1 round-trip (SE-01) a second read of stored matches
+ok 359 - recipe R1 round-trip (SE-01) a second read of stored matches
+  ---
+  duration_ms: 1.309009
+  type: 'test'
+  ...
+# Subtest: B2: a wrong kind is object for any object or array, else the old String text, in all three readers
+ok 360 - B2: a wrong kind is object for any object or array, else the old String text, in all three readers
+  ---
+  duration_ms: 2.139169
+  type: 'test'
+  ...
+# Subtest: B3: picks and a wave's summed counts are capped by the caller; at the cap reads; bad limits throw
+ok 361 - B3: picks and a wave's summed counts are capped by the caller; at the cap reads; bad limits throw
+  ---
+  duration_ms: 2.698264
+  type: 'test'
+  ...
+# Subtest: B4: a weighted weight must be finite; 0, negative and 2.5 still read
+ok 362 - B4: a weighted weight must be finite; 0, negative and 2.5 still read
+  ---
+  duration_ms: 0.479927
+  type: 'test'
+  ...
+# Subtest: a map palette key __proto__ is dropped with one notice on both returns; a fixture has none
+ok 363 - a map palette key __proto__ is dropped with one notice on both returns; a fixture has none
+  ---
+  duration_ms: 0.501712
+  type: 'test'
+  ...
+# Subtest: current versions are accepted: map 5, stage 2, tile-project 6
+ok 364 - current versions are accepted: map 5, stage 2, tile-project 6
+  ---
+  duration_ms: 6.132421
+  type: 'test'
+  ...
+# Subtest: any other formatVersion needs migration and is never patched
+ok 365 - any other formatVersion needs migration and is never patched
+  ---
+  duration_ms: 0.312752
+  type: 'test'
+  ...
+# Subtest: not an object, wrong kind or a non-integer formatVersion is a hard error
+ok 366 - not an object, wrong kind or a non-integer formatVersion is a hard error
+  ---
+  duration_ms: 0.331144
+  type: 'test'
+  ...
+# Subtest: manifest: settings pass through; wrapEdges is read, the grid owns its notice
+ok 367 - manifest: settings pass through; wrapEdges is read, the grid owns its notice
+  ---
+  duration_ms: 0.327268
+  type: 'test'
+  ...
+# Subtest: the 6x9 and 12x12 fixtures load and build a grid (M8); unknown keys are dropped
+ok 368 - the 6x9 and 12x12 fixtures load and build a grid (M8); unknown keys are dropped
+  ---
+  duration_ms: 3.163514
+  type: 'test'
+  ...
+# Subtest: a missing or malformed required field is a hard error naming the top-level key
+ok 369 - a missing or malformed required field is a hard error naming the top-level key
+  ---
+  duration_ms: 1.596247
+  type: 'test'
+  ...
+# Subtest: loadout fills playerSpawns in order; sides and facing; extras are not placed
+ok 370 - loadout fills playerSpawns in order; sides and facing; extras are not placed
+  ---
+  duration_ms: 2.630558
+  type: 'test'
+  ...
+# Subtest: weighted picks go through the picker, without repeats
+ok 371 - weighted picks go through the picker, without repeats
+  ---
+  duration_ms: 0.52021
+  type: 'test'
+  ...
+# Subtest: the same seed gives the same placements
+ok 372 - the same seed gives the same placements
+  ---
+  duration_ms: 0.578531
+  type: 'test'
+  ...
+# Subtest: waves place turn 0 only; an off-map spawn is a notice, not an error
+ok 373 - waves place turn 0 only; an off-map spawn is a notice, not an error
+  ---
+  duration_ms: 0.211593
+  type: 'test'
+  ...
+# Subtest: stage fixtures load; seed is returned as-is
+ok 374 - stage fixtures load; seed is returned as-is
+  ---
+  duration_ms: 2.130315
+  type: 'test'
+  ...
+# Subtest: a stage hard error names the top-level key
+ok 375 - a stage hard error names the top-level key
+  ---
+  duration_ms: 0.684901
+  type: 'test'
+  ...
+# Subtest: a 30000 ms fuse fires once at 30000 sim ms
+ok 376 - a 30000 ms fuse fires once at 30000 sim ms
+  ---
+  duration_ms: 10.28566
+  type: 'test'
+  ...
+# Subtest: 60000 ms fuse at 60000; off never; bad values are invalidValue
+ok 377 - 60000 ms fuse at 60000; off never; bad values are invalidValue
+  ---
+  duration_ms: 10.478863
+  type: 'test'
+  ...
+# Subtest: a paused clock stops the fuse
+ok 378 - a paused clock stops the fuse
+  ---
+  duration_ms: 2.288122
+  type: 'test'
+  ...
+# Subtest: game speed x2 halves the frames needed
+ok 379 - game speed x2 halves the frames needed
+  ---
+  duration_ms: 0.323995
+  type: 'test'
+  ...
+# Subtest: levels gain (step 18): bars, banking, a pick, and a pool-less climb to the top
+ok 380 - levels gain (step 18): bars, banking, a pick, and a pool-less climb to the top
+  ---
+  duration_ms: 2.897179
+  type: 'test'
+  ...
+# Subtest: offer draw order (step 18): the partial shuffle, duplicates dropped, no draw when the pool fits or the key is inherited
+ok 381 - offer draw order (step 18): the partial shuffle, duplicates dropped, no draw when the pool fits or the key is inherited
+  ---
+  duration_ms: 0.878243
+  type: 'test'
+  ...
+# Subtest: createLevels refuses bad rules (step 18): never clamped
+ok 382 - createLevels refuses bad rules (step 18): never clamped
+  ---
+  duration_ms: 0.867391
+  type: 'test'
+  ...
+# Subtest: createLevels keeps its own frozen copy (step 19) so a later edit cannot change an offer
+ok 383 - createLevels keeps its own frozen copy (step 19) so a later edit cannot change an offer
+  ---
+  duration_ms: 0.475199
+  type: 'test'
+  ...
+# Subtest: chunks draw the same pixels as per-tile drawing, from 1x 16x16-tile canvases (step 28)
+ok 384 - chunks draw the same pixels as per-tile drawing, from 1x 16x16-tile canvases (step 28)
+  ---
+  duration_ms: 1678.033536
+  type: 'test'
+  ...
+# Subtest: the chunk plan keeps the anim due time and leaves off-size layers live (step 28)
+ok 385 - the chunk plan keeps the anim due time and leaves off-size layers live (step 28)
+  ---
+  duration_ms: 15.745223
+  type: 'test'
+  ...
+# Subtest: smoothing is off after every resize, the letterbox is never painted, glow is lighter and flips mirror (step 28)
+ok 386 - smoothing is off after every resize, the letterbox is never painted, glow is lighter and flips mirror (step 28)
+  ---
+  duration_ms: 145.913717
+  type: 'test'
+  ...
+# Subtest: a draw that throws leaves no clip, flip or lighter behind (step 28)
+ok 387 - a draw that throws leaves no clip, flip or lighter behind (step 28)
+  ---
+  duration_ms: 2.299704
+  type: 'test'
+  ...
+# Subtest: a tile or image change rebuilds only its chunks, a few per frame, never showing a hole or stale pixels (step 28)
+ok 388 - a tile or image change rebuilds only its chunks, a few per frame, never showing a hole or stale pixels (step 28)
+  ---
+  duration_ms: 235.661346
+  type: 'test'
+  ...
+# Subtest: the chunk cache keeps a byte budget, never evicts what is on screen and zeroes what it drops (step 28)
+ok 389 - the chunk cache keeps a byte budget, never evicts what is on screen and zeroes what it drops (step 28)
+  ---
+  duration_ms: 323.216502
+  type: 'test'
+  ...
+# Subtest: a lost context skips drawing and a restored one rebuilds every chunk (step 28)
+ok 390 - a lost context skips drawing and a restored one rebuilds every chunk (step 28)
+  ---
+  duration_ms: 5.45544
+  type: 'test'
+  ...
+# Subtest: the canvas lives only in the backend and the host driver; the backend imports only the render core (steps 28, 29)
+ok 391 - the canvas lives only in the backend and the host driver; the backend imports only the render core (steps 28, 29)
+  ---
+  duration_ms: 5.980311
+  type: 'test'
+  ...
+# Subtest: idle: a static scene draws once after its sheets load, then 0 a second; one water tile draws 5 a second (step 29)
+ok 392 - idle: a static scene draws once after its sheets load, then 0 a second; one water tile draws 5 a second (step 29)
+  ---
+  duration_ms: 51.325862
+  type: 'test'
+  ...
+# Subtest: a 120 Hz panning view draws 120 a second, 60 with capFps 60, and the clock keeps time either way (step 29)
+ok 393 - a 120 Hz panning view draws 120 a second, 60 with capFps 60, and the clock keeps time either way (step 29)
+  ---
+  duration_ms: 466.884345
+  type: 'test'
+  ...
+# Subtest: a sheet that never loads, or fails, settles to 0 draws a second; a late load bumps rev and redraws (step 29 must-fix)
+ok 394 - a sheet that never loads, or fails, settles to 0 draws a second; a late load bumps rev and redraws (step 29 must-fix)
+  ---
+  duration_ms: 19.346045
+  type: 'test'
+  ...
+# Subtest: a late sheet load bumps rev and redraws the real picture (step 29)
+ok 395 - a late sheet load bumps rev and redraws the real picture (step 29)
+  ---
+  duration_ms: 12.43309
+  type: 'test'
+  ...
+# Subtest: busy() is false while lost, even after restore-then-lose; a restore redraws, then settles (QA A-pick carry)
+ok 396 - busy() is false while lost, even after restore-then-lose; a restore redraws, then settles (QA A-pick carry)
+  ---
+  duration_ms: 25.680565
+  type: 'test'
+  ...
+# Subtest: world() runs before the plan: a new scene object bumps rev, and a replaced stale chunk canvas ends 0x0 (step 29, QA :63)
+ok 397 - world() runs before the plan: a new scene object bumps rev, and a replaced stale chunk canvas ends 0x0 (step 29, QA :63)
+  ---
+  duration_ms: 22.739297
+  type: 'test'
+  ...
+# Subtest: dispose removes every listener and stops the loop; canvas factory and sizing fall back cleanly (step 29)
+ok 398 - dispose removes every listener and stops the loop; canvas factory and sizing fall back cleanly (step 29)
+  ---
+  duration_ms: 539.334682
+  type: 'test'
+  ...
+# Subtest: hidden cancels rAF and freezes the clock; showing again does not replay the gap (step 29)
+ok 399 - hidden cancels rAF and freezes the clock; showing again does not replay the gap (step 29)
+  ---
+  duration_ms: 10.075777
+  type: 'test'
+  ...
+# Subtest: a rAF pile-up goes through one bulk clock.skip: no 100 ms clamp, timers fire in order (step 29)
+ok 400 - a rAF pile-up goes through one bulk clock.skip: no 100 ms clamp, timers fire in order (step 29)
+  ---
+  duration_ms: 1.675049
+  type: 'test'
+  ...
+# Subtest: clock.skip matches stepping tick for tick, honours timeScale and pause, and jumps big gaps fast (step 29)
+ok 401 - clock.skip matches stepping tick for tick, honours timeScale and pause, and jumps big gaps fast (step 29)
+  ---
+  duration_ms: 1.245508
+  type: 'test'
+  ...
+# Subtest: the host folder holds only the driver; it imports only the clock, backend and render index, and reads no wall time or globals (step 29)
+ok 402 - the host folder holds only the driver; it imports only the clock, backend and render index, and reads no wall time or globals (step 29)
+  ---
+  duration_ms: 2.245029
+  type: 'test'
+  ...
+# Subtest: step 30 driver and clock carries: no loop before start(), a backwards timestamp clears the view back-off, hide drops the sub-ms carry, skip reports its own dtMs and name
+ok 403 - step 30 driver and clock carries: no loop before start(), a backwards timestamp clears the view back-off, hide drops the sub-ms carry, skip reports its own dtMs and name
+  ---
+  duration_ms: 1.365445
+  type: 'test'
+  ...
+# Subtest: a tap on a unit selects it, a tap on an empty cell targets it, off the grid gives nothing
+ok 404 - a tap on a unit selects it, a tap on an empty cell targets it, off the grid gives nothing
+  ---
+  duration_ms: 1.886302
+  type: 'test'
+  ...
+# Subtest: tap-tap and drag-to-target give identical intents (M7)
+ok 405 - tap-tap and drag-to-target give identical intents (M7)
+  ---
+  duration_ms: 0.495087
+  type: 'test'
+  ...
+# Subtest: hold then drag is a BoxSelect; a hold without moving boxes one cell; a long drag stays a drag; an empty-start drag is nothing
+ok 406 - hold then drag is a BoxSelect; a hold without moving boxes one cell; a long drag stays a drag; an empty-start drag is nothing
+  ---
+  duration_ms: 0.315521
+  type: 'test'
+  ...
+# Subtest: only the first touch owns a gesture; a second finger and a cancel give nothing
+ok 407 - only the first touch owns a gesture; a second finger and a cancel give nothing
+  ---
+  duration_ms: 0.171371
+  type: 'test'
+  ...
+# Subtest: thresholds are the caller's: a wider tapMaxPx turns the drag into a tap; bad options and time going back throw
+ok 408 - thresholds are the caller's: a wider tapMaxPx turns the drag into a tap; bad options and time going back throw
+  ---
+  duration_ms: 0.747407
+  type: 'test'
+  ...
+# Subtest: a second down from the same pointer id with no up in between is ignored (QA 09c)
+ok 409 - a second down from the same pointer id with no up in between is ignored (QA 09c)
+  ---
+  duration_ms: 0.175789
+  type: 'test'
+  ...
+# Subtest: the backing store is device pixels and art pixels are s wide at DPR 1, 2, 2.625, 2.75 and 3 (step 27)
+ok 410 - the backing store is device pixels and art pixels are s wide at DPR 1, 2, 2.625, 2.75 and 3 (step 27)
+  ---
+  duration_ms: 41.121853
+  type: 'test'
+  ...
+# Subtest: bigger phones see more tiles at the same whole scale; zoom snaps to steps (step 27)
+ok 411 - bigger phones see more tiles at the same whole scale; zoom snaps to steps (step 27)
+  ---
+  duration_ms: 0.295914
+  type: 'test'
+  ...
+# Subtest: the camera snaps to device pixels and nothing is drawn at half a pixel (step 27)
+ok 412 - the camera snaps to device pixels and nothing is drawn at half a pixel (step 27)
+  ---
+  duration_ms: 0.706346
+  type: 'test'
+  ...
+# Subtest: frames follow clockMs with per-frame ms, fps and loop (step 27)
+ok 413 - frames follow clockMs with per-frame ms, fps and loop (step 27)
+  ---
+  duration_ms: 0.607338
+  type: 'test'
+  ...
+# Subtest: shared tiles stay in step and each prop gets a stable derived offset (step 27)
+ok 414 - shared tiles stay in step and each prop gets a stable derived offset (step 27)
+  ---
+  duration_ms: 0.719808
+  type: 'test'
+  ...
+# Subtest: the draw list keeps the band order and y-sorts by feet with stable ties (step 27)
+ok 415 - the draw list keeps the band order and y-sorts by feet with stable ties (step 27)
+  ---
+  duration_ms: 0.874708
+  type: 'test'
+  ...
+# Subtest: the dirty flag redraws on state, camera, size and anim ticks, and skips idle frames (step 27)
+ok 416 - the dirty flag redraws on state, camera, size and anim ticks, and skips idle frames (step 27)
+  ---
+  duration_ms: 0.600203
+  type: 'test'
+  ...
+# Subtest: the render core stays pure: no DOM, no wall time, no frame loop, imports only its own folder (step 27)
+ok 417 - the render core stays pure: no DOM, no wall time, no frame loop, imports only its own folder (step 27)
+  ---
+  duration_ms: 1.316917
+  type: 'test'
+  ...
+# Subtest: K2: animated tiles are never baked into chunks; uncovered water animates and matches the live picture (step 30)
+ok 418 - K2: animated tiles are never baked into chunks; uncovered water animates and matches the live picture (step 30)
+  ---
+  duration_ms: 41.818967
+  type: 'test'
+  ...
+# Subtest: r27: an off-size tile sits bottom-left on its cell at native size, unclipped, overflowing up and right (step 30)
+ok 419 - r27: an off-size tile sits bottom-left on its cell at native size, unclipped, overflowing up and right (step 30)
+  ---
+  duration_ms: 1.29461
+  type: 'test'
+  ...
+# Subtest: r27: draw order is rows top to bottom then left to right, so a lower row covers an upper row's overflow (step 30)
+ok 420 - r27: draw order is rows top to bottom then left to right, so a lower row covers an upper row's overflow (step 30)
+  ---
+  duration_ms: 0.89069
+  type: 'test'
+  ...
+# Subtest: r27: culling widens to rows below and columns to the left, so offscreen tiles still draw their overflow (step 30)
+ok 421 - r27: culling widens to rows below and columns to the left, so offscreen tiles still draw their overflow (step 30)
+  ---
+  duration_ms: 2.914958
+  type: 'test'
+  ...
+# Subtest: r27: overflow crosses chunk edges because off-size layers are drawn live, never chunked (step 30)
+ok 422 - r27: overflow crosses chunk edges because off-size layers are drawn live, never chunked (step 30)
+  ---
+  duration_ms: 4.950661
+  type: 'test'
+  ...
+# Subtest: odd sizes: the r27 bottom-left anchor is exact (no rounding); a sprite centred on an odd tile lands on a half art px that rounds up before scaling (step 30)
+ok 423 - odd sizes: the r27 bottom-left anchor is exact (no rounding); a sprite centred on an odd tile lands on a half art px that rounds up before scaling (step 30)
+  ---
+  duration_ms: 0.634565
+  type: 'test'
+  ...
+# Subtest: r26 clips: short ms[] pads with its last value, long ms[] is cut, empty ms[] means fps; fps may be fractional, a bad fps plays at 8 (step 30)
+ok 424 - r26 clips: short ms[] pads with its last value, long ms[] is cut, empty ms[] means fps; fps may be fractional, a bad fps plays at 8 (step 30)
+  ---
+  duration_ms: 0.385465
+  type: 'test'
+  ...
+# Subtest: r26 clips: a bad fps warns clipFpsInvalid once and never fails the load (ms[] length and ms-over-fps warn too); the stored clip is passed on unchanged (step 30)
+ok 425 - r26 clips: a bad fps warns clipFpsInvalid once and never fails the load (ms[] length and ms-over-fps warn too); the stored clip is passed on unchanged (step 30)
+  ---
+  duration_ms: 0.878241
+  type: 'test'
+  ...
+# Subtest: r29 clips: an ms[] with any entry that is not a whole number >= 1 is ignored whole; clipMsInvalid once per clip, before clipMsLength and clipFpsIgnored (step 30)
+ok 426 - r29 clips: an ms[] with any entry that is not a whole number >= 1 is ignored whole; clipMsInvalid once per clip, before clipMsLength and clipFpsIgnored (step 30)
+  ---
+  duration_ms: 0.688836
+  type: 'test'
+  ...
+# Subtest: the link maps layers, units, objects and overlays: aboveUnits goes above, hidden or tileset-less layers drop, tileProps.anim becomes anims (step 30)
+ok 427 - the link maps layers, units, objects and overlays: aboveUnits goes above, hidden or tileset-less layers drop, tileProps.anim becomes anims (step 30)
+  ---
+  duration_ms: 0.831714
+  type: 'test'
+  ...
+# Subtest: a stable scene: the same world rebuilt each frame returns the same scene object, so a still picture settles to 0 draws a second (step 30)
+ok 428 - a stable scene: the same world rebuilt each frame returns the same scene object, so a still picture settles to 0 draws a second (step 30)
+  ---
+  duration_ms: 21.211971
+  type: 'test'
+  ...
+# Subtest: standing order is stable: objects in document order then units by id; a walking unit keeps its animation phase across cells; dx does not break c ties (step 30)
+ok 429 - standing order is stable: objects in document order then units by id; a walking unit keeps its animation phase across cells; dx does not break c ties (step 30)
+  ---
+  duration_ms: 1.370912
+  type: 'test'
+  ...
+# Subtest: an overlay is not drawn before its startMs and wakes the frame loop at startMs (step 30)
+ok 430 - an overlay is not drawn before its startMs and wakes the frame loop at startMs (step 30)
+  ---
+  duration_ms: 0.331748
+  type: 'test'
+  ...
+# Subtest: §7.3 clip fallback: exact, bare facing for move, mirror unless noMirror, down then bare then left/right/up, idle, die→hit→idle, first frame (step 30)
+ok 431 - §7.3 clip fallback: exact, bare facing for move, mirror unless noMirror, down then bare then left/right/up, idle, die→hit→idle, first frame (step 30)
+  ---
+  duration_ms: 0.362216
+  type: 'test'
+  ...
+# Subtest: a move changes occupancy only at the end of its durationMs (M4)
+ok 432 - a move changes occupancy only at the end of its durationMs (M4)
+  ---
+  duration_ms: 5.696691
+  type: 'test'
+  ...
+# Subtest: wait does nothing; a failed move and an unknown kind are notices, still logged
+ok 433 - wait does nothing; a failed move and an unknown kind are notices, still logged
+  ---
+  duration_ms: 1.265047
+  type: 'test'
+  ...
+# Subtest: advance takes integer ms in whole steps and is not clamped like a host frame
+ok 434 - advance takes integer ms in whole steps and is not clamped like a host frame
+  ---
+  duration_ms: 1.00209
+  type: 'test'
+  ...
+# Subtest: the test bot plays only through the player driver: no ai, the pinned 50-seed histories, no rejects, every logged move is a player step
+ok 435 - the test bot plays only through the player driver: no ai, the pinned 50-seed histories, no rejects, every logged move is a player step
+  ---
+  duration_ms: 210.782472
+  type: 'test'
+  ...
+# Subtest: parity (CEO: kept until the old hook is removed): the deprecated action hook and the bot through seats give the same outcome, events, log and history on every seed
+ok 436 - parity (CEO: kept until the old hook is removed): the deprecated action hook and the bot through seats give the same outcome, events, log and history on every seed
+  ---
+  duration_ms: 205.015135
+  type: 'test'
+  ...
+# Subtest: the bot answers only with SelectUnit / TargetCell pairs for the units in its budget; a forged input in front of its batch is a reported reject and changes nothing else
+ok 437 - the bot answers only with SelectUnit / TargetCell pairs for the units in its budget; a forged input in front of its batch is a reported reject and changes nothing else
+  ---
+  duration_ms: 2.502189
+  type: 'test'
+  ...
+# Subtest: every reject reason is reached and changes nothing, including a selected unit that turns foreign or dies before the tap; a side with no seat and no ai throws
+ok 438 - every reject reason is reached and changes nothing, including a selected unit that turns foreign or dies before the tap; a side with no seat and no ai throws
+  ---
+  duration_ms: 5.410286
+  type: 'test'
+  ...
+# Subtest: online is just another driver: seats fed only from intents sent as JSON (as a peer would) give the same per-step snapshot hashes, log and history; nothing in src/ knows
+ok 439 - online is just another driver: seats fed only from intents sent as JSON (as a peer would) give the same per-step snapshot hashes, log and history; nothing in src/ knows
+  ---
+  duration_ms: 16.972805
+  type: 'test'
+  ...
+# Subtest: the generator is a seeded IntentHook on its own named stream; runChaosGen records its settings; the run replays identically
+ok 440 - the generator is a seeded IntentHook on its own named stream; runChaosGen records its settings; the run replays identically
+  ---
+  duration_ms: 139.157751
+  type: 'test'
+  ...
+# Subtest: generator settings are the caller's, with no defaults: a bad stream, mix, burst or gesture setting throws RangeError
+ok 441 - generator settings are the caller's, with no defaults: a bad stream, mix, burst or gesture setting throws RangeError
+  ---
+  duration_ms: 1.026017
+  type: 'test'
+  ...
+# Subtest: each kind makes its documented batch; every reject is reported and passes the checks
+ok 442 - each kind makes its documented batch; every reject is reported and passes the checks
+  ---
+  duration_ms: 62.769461
+  type: 'test'
+  ...
+# Subtest: gesture recipes are the (a)10 edge cases and reach the player driver only through the touch mapper
+ok 443 - gesture recipes are the (a)10 edge cases and reach the player driver only through the touch mapper
+  ---
+  duration_ms: 0.838865
+  type: 'test'
+  ...
+# Subtest: the simple shrink: ddmin over the moves keeps a candidate only on the same invariant and key; same record in, same record out; the result replays
+ok 444 - the simple shrink: ddmin over the moves keeps a candidate only on the same invariant and key; same record in, same record out; the result replays
+  ---
+  duration_ms: 195.037939
+  type: 'test'
+  ...
+# Subtest: chaos generator smoke, report-only (CEO Q6/Q7): both official boards, seeds 1-20, a swarm mix per seed, gestures on odd seeds; a failure is printed, shrunk and must replay, never asserted away
+ok 445 - chaos generator smoke, report-only (CEO Q6/Q7): both official boards, seeds 1-20, a swarm mix per seed, gestures on odd seeds; a failure is printed, shrunk and must replay, never asserted away
+  ---
+  duration_ms: 304.131566
+  type: 'test'
+  ...
+# chaos gen smoke stage-fixed seeds 1-20: runs 20 failed 0 steps 1730 rejects 278 shrunk 0->0
+# chaos gen smoke stage-weighted seeds 1-20: runs 20 failed 0 steps 3154 rejects 563 shrunk 0->0
+# Subtest: a clean run goes only through the player driver, checks every step and replays identically from its JSON
+ok 446 - a clean run goes only through the player driver, checks every step and replays identically from its JSON
+  ---
+  duration_ms: 60.288528
+  type: 'test'
+  ...
+# Subtest: a broken promise stops the match with one record in the outline §4 shape; the record replays the same failure; a change outside the door fails the end replay (a)4
+ok 447 - a broken promise stops the match with one record in the outline §4 shape; the record replays the same failure; a change outside the door fails the end replay (a)4
+  ---
+  duration_ms: 11.294432
+  type: 'test'
+  ...
+# Subtest: each QA (a) check passes a clean step and flags its planted fault with the key it names
+ok 448 - each QA (a) check passes a clean step and flags its planted fault with the key it names
+  ---
+  duration_ms: 1.773382
+  type: 'test'
+  ...
+# Subtest: chaos smoke, report-only (CEO Q6/Q7): both official boards, seeds 1-50, BTF defaults; a failure is printed and must replay, never asserted away
+ok 449 - chaos smoke, report-only (CEO Q6/Q7): both official boards, seeds 1-50, BTF defaults; a failure is printed and must replay, never asserted away
+  ---
+  duration_ms: 578.215972
+  type: 'test'
+  ...
+# chaos smoke stage-fixed seeds 1-50: runs 50 failed 0 steps 3120 rejects 0
+# chaos smoke stage-weighted seeds 1-50: runs 50 failed 0 steps 5542 rejects 0
+# Subtest: disposeWorld (step 17): a second call does nothing; feed, submit and the drivers refuse; the log and units stay
+ok 450 - disposeWorld (step 17): a second call does nothing; feed, submit and the drivers refuse; the log and units stay
+  ---
+  duration_ms: 14.159772
+  type: 'test'
+  ...
+# Subtest: the match log is kept for the whole match: a small bus window matches the result, and replaying the log rebuilds the units
+ok 451 - the match log is kept for the whole match: a small bus window matches the result, and replaying the log rebuilds the units
+  ---
+  duration_ms: 37.524656
+  type: 'test'
+  ...
+# Subtest: the door limits are read once (step 22)
+ok 452 - the door limits are read once (step 22)
+  ---
+  duration_ms: 87.90044
+  type: 'test'
+  ...
+# Subtest: map caps (step 22)
+ok 453 - map caps (step 22)
+  ---
+  duration_ms: 15.921007
+  type: 'test'
+  ...
+# Subtest: stage caps (step 22)
+ok 454 - stage caps (step 22)
+  ---
+  duration_ms: 2.78346
+  type: 'test'
+  ...
+# Subtest: notices per read (step 22)
+ok 455 - notices per read (step 22)
+  ---
+  duration_ms: 0.840395
+  type: 'test'
+  ...
+# Subtest: gesture options are never live (step 22)
+ok 456 - gesture options are never live (step 22)
+  ---
+  duration_ms: 0.319724
+  type: 'test'
+  ...
+# Subtest: level caps (step 22)
+ok 457 - level caps (step 22)
+  ---
+  duration_ms: 2.817358
+  type: 'test'
+  ...
+# Subtest: the door's shape guard (B1): malformed is named, changes nothing, and a later tap still moves the selected unit
+ok 458 - the door's shape guard (B1): malformed is named, changes nothing, and a later tap still moves the selected unit
+  ---
+  duration_ms: 7.107132
+  type: 'test'
+  ...
+# Subtest: runMatch never throws on a wire input of any shape (B1): nine shapes are malformed and units stay
+ok 459 - runMatch never throws on a wire input of any shape (B1): nine shapes are malformed and units stay
+  ---
+  duration_ms: 1.92834
+  type: 'test'
+  ...
+# Subtest: createWorld reads the stage under the host's stageLimits: over the cap and a hostile kind throw; at the cap loads
+ok 460 - createWorld reads the stage under the host's stageLimits: over the cap and a hostile kind throw; at the cap loads
+  ---
+  duration_ms: 2.213968
+  type: 'test'
+  ...
+# Subtest: the door copy (step 20) refuses a lying length, a hole and a poisoned prototype
+ok 461 - the door copy (step 20) refuses a lying length, a hole and a poisoned prototype
+  ---
+  duration_ms: 106.055133
+  type: 'test'
+  ...
+# Subtest: moveTo keeps its own cell (step 20) when the caller edits it later
+ok 462 - moveTo keeps its own cell (step 20) when the caller edits it later
+  ---
+  duration_ms: 5.170977
+  type: 'test'
+  ...
+# Subtest: clock.after says no politely (step 20) and reports a RangeError
+ok 463 - clock.after says no politely (step 20) and reports a RangeError
+  ---
+  duration_ms: 0.516268
+  type: 'test'
+  ...
+# Subtest: the log door (step 20) stores the copy and reads its own text back
+ok 464 - the log door (step 20) stores the copy and reads its own text back
+  ---
+  duration_ms: 4.654641
+  type: 'test'
+  ...
+# Subtest: submit says no politely (step 20) and logs nothing
+ok 465 - submit says no politely (step 20) and logs nothing
+  ---
+  duration_ms: 175.274573
+  type: 'test'
+  ...
+# Subtest: a hostile unlock (step 20) is refused by name and the log still reads back
+ok 466 - a hostile unlock (step 20) is refused by name and the log still reads back
+  ---
+  duration_ms: 2.013934
+  type: 'test'
+  ...
+# Subtest: the world does what the log says (step 20) after a timed edit
+ok 467 - the world does what the log says (step 20) after a timed edit
+  ---
+  duration_ms: 2.574978
+  type: 'test'
+  ...
+# Subtest: createLevels refuses a hostile setup by name (step 20)
+ok 468 - createLevels refuses a hostile setup by name (step 20)
+  ---
+  duration_ms: 3.236757
+  type: 'test'
+  ...
+# Subtest: restore and createWorld say no politely (step 20)
+ok 469 - restore and createWorld say no politely (step 20)
+  ---
+  duration_ms: 6.697054
+  type: 'test'
+  ...
+# Subtest: the gesture mapper ignores what is not a pointer (step 20)
+ok 470 - the gesture mapper ignores what is not a pointer (step 20)
+  ---
+  duration_ms: 3.378279
+  type: 'test'
+  ...
+# Subtest: chaos-gen reads its settings once (step 20)
+ok 471 - chaos-gen reads its settings once (step 20)
+  ---
+  duration_ms: 6.071509
+  type: 'test'
+  ...
+# Subtest: tamperDoc: raw JSON keeps 1e400 and own __proto__; a bad path throws; the fixture is not written
+ok 472 - tamperDoc: raw JSON keeps 1e400 and own __proto__; a bad path throws; the fixture is not written
+  ---
+  duration_ms: 1.873652
+  type: 'test'
+  ...
+# Subtest: checkDoc promises on named tampering: refusals name a key; B2 throws, B3 is capped, B4 is not plain
+ok 473 - checkDoc promises on named tampering: refusals name a key; B2 throws, B3 is capped, B4 is not plain
+  ---
+  duration_ms: 4.49395
+  type: 'test'
+  ...
+# Subtest: huntDocs: one seeded mutation per try, replayable findings, no defaults
+ok 474 - huntDocs: one seeded mutation per try, replayable findings, no defaults
+  ---
+  duration_ms: 117.83647
+  type: 'test'
+  ...
+# Subtest: exploit docs smoke, report-only (findings replay; buckets are not a failure)
+ok 475 - exploit docs smoke, report-only (findings replay; buckets are not a failure)
+  ---
+  duration_ms: 195.252533
+  type: 'test'
+  ...
+# exploit docs smoke stage-fixed seeds 1-5: tries 2000 accepted 516 refused 1484 findings 0 buckets []
+# exploit docs smoke stage-weighted seeds 1-5: tries 2000 accepted 547 refused 1453 findings 0 buckets []
+# Subtest: hostile picks (step 19) cover every index text and leave a refused pick's levels alone
+ok 476 - hostile picks (step 19) cover every index text and leave a refused pick's levels alone
+  ---
+  duration_ms: 455.75287
+  type: 'test'
+  ...
+# Subtest: (e)1 and (a)9 with levelling (step 19) read the offer from before the step
+ok 477 - (e)1 and (a)9 with levelling (step 19) read the offer from before the step
+  ---
+  duration_ms: 1.322564
+  type: 'test'
+  ...
+# Subtest: exploit levels smoke (step 19) pins the four hunter lines
+ok 478 - exploit levels smoke (step 19) pins the four hunter lines
+  ---
+  duration_ms: 1004.76831
+  type: 'test'
+  ...
+# exploit levels smoke btf-side stage-fixed seeds 1-20: runs 20 failed 0 steps 1746 rejects 485 unlocked 0 buckets [] hashes b4200d6ec2acfe7d95498be21f27f3cb881476717867ad97627d2d07cdb874eb
+# exploit levels smoke btf-side stage-weighted seeds 1-20: runs 20 failed 0 steps 2337 rejects 689 unlocked 5 buckets [] hashes 78bc5fb6de8e44e404f1ed9a0c4a57cf47bff84acd556e9d47c61af1da7dde6c
+# exploit levels smoke quick-unit stage-fixed seeds 1-20: runs 20 failed 0 steps 1746 rejects 484 unlocked 1 buckets [] hashes 1bdb13470d2e0e45776099e3d7a58d1330b3b91bf7b154348d7d4fde2ceb70ba
+# exploit levels smoke quick-unit stage-weighted seeds 1-20: runs 20 failed 0 steps 2337 rejects 689 unlocked 5 buckets [] hashes 7e7ee7a6ac6f7f1ebffd4fe301f944f592974483e50f4c3ebed30b53fa2b0866
+# Subtest: the hunter's settings are its own (step 19) and the kind and check lists are frozen
+ok 479 - the hunter's settings are its own (step 19) and the kind and check lists are frozen
+  ---
+  duration_ms: 1.718517
+  type: 'test'
+  ...
+# Subtest: a tampered log (step 19) of six bad unlocks adds six notices and no levels change
+ok 480 - a tampered log (step 19) of six bad unlocks adds six notices and no levels change
+  ---
+  duration_ms: 4.647079
+  type: 'test'
+  ...
+# Subtest: the exploit hunter is a seeded hostile peer on its own stream: JSON text only, recorded, replayed identically; settings are the caller's
+ok 481 - the exploit hunter is a seeded hostile peer on its own stream: JSON text only, recorded, replayed identically; settings are the caller's
+  ---
+  duration_ms: 89.025561
+  type: 'test'
+  ...
+# Subtest: each hostile kind sends its documented wire and gets a named reject or a clean move; no reject changes the world (e)1, (a)9
+ok 482 - each hostile kind sends its documented wire and gets a named reject or a clean move; no reject changes the world (e)1, (a)9
+  ---
+  duration_ms: 100.022876
+  type: 'test'
+  ...
+# Subtest: (e)1, branch by branch: a reject, an own select and a clean move are quiet; a foreign select, a dirty event, a foreign actor, a bad cell or a bad duration is units
+ok 483 - (e)1, branch by branch: a reject, an own select and a clean move are quiet; a foreign select, a dirty event, a foreign actor, a bad cell or a bad duration is units
+  ---
+  duration_ms: 0.786779
+  type: 'test'
+  ...
+# Subtest: door guard (step 16, was B1): shape wires are malformed rejects, every shape is sent, and the run replays
+ok 484 - door guard (step 16, was B1): shape wires are malformed rejects, every shape is sent, and the run replays
+  ---
+  duration_ms: 623.120704
+  type: 'test'
+  ...
+# Subtest: (e)3 prototypes, (e)4 desync and a broken (a) promise are each reported with their id
+ok 485 - (e)3 prototypes, (e)4 desync and a broken (a) promise are each reported with their id
+  ---
+  duration_ms: 21.667302
+  type: 'test'
+  ...
+# Subtest: exploit smoke, report-only (every failure is printed with its run and replays to the same failure)
+ok 486 - exploit smoke, report-only (every failure is printed with its run and replays to the same failure)
+  ---
+  duration_ms: 820.488754
+  type: 'test'
+  ...
+# exploit smoke stage-fixed seeds 1-20 all kinds: runs 20 failed 0 steps 1604 rejects 309 buckets []
+# exploit smoke stage-fixed seeds 1-20 no shape: runs 20 failed 0 steps 1617 rejects 367 buckets []
+# exploit smoke stage-weighted seeds 1-20 all kinds: runs 20 failed 0 steps 2043 rejects 480 buckets []
+# exploit smoke stage-weighted seeds 1-20 no shape: runs 20 failed 0 steps 2299 rejects 592 buckets []
+# Subtest: a finished, disposed world is collected while its clock and bus are kept; the same world without dispose is not
+ok 487 - a finished, disposed world is collected while its clock and bus are kept; the same world without dispose is not
+  ---
+  duration_ms: 66.267539
+  type: 'test'
+  ...
+# Subtest: heap smoke (step 17, report-only): thirty disposed matches print one heap line and never assert a number
+ok 488 - heap smoke (step 17, report-only): thirty disposed matches print one heap line and never assert a number
+  ---
+  duration_ms: 103.998014
+  type: 'test'
+  ...
+# heap smoke stage-weighted matches 30 run+disposed: before 9.21 MiB after 9.67 MiB delta +0.46 MiB
+# Subtest: the door budget (step 21) refuses a huge array at its length
+ok 489 - the door budget (step 21) refuses a huge array at its length
+  ---
+  duration_ms: 276.877187
+  type: 'test'
+  ...
+# Subtest: the log caps (step 21) refuse a bad seed, a long string and a log past its caps
+ok 490 - the log caps (step 21) refuse a bad seed, a long string and a log past its caps
+  ---
+  duration_ms: 2.974783
+  type: 'test'
+  ...
+# Subtest: submit says logFull (step 21) once the log holds its entries
+ok 491 - submit says logFull (step 21) once the log holds its entries
+  ---
+  duration_ms: 4.202
+  type: 'test'
+  ...
+# Subtest: submit says timeLimit (step 21) when the clock is past the tick cap
+ok 492 - submit says timeLimit (step 21) when the clock is past the tick cap
+  ---
+  duration_ms: 1.357124
+  type: 'test'
+  ...
+# Subtest: replay and restore stop at the tick cap (step 21) before any tick runs
+ok 493 - replay and restore stop at the tick cap (step 21) before any tick runs
+  ---
+  duration_ms: 3.519082
+  type: 'test'
+  ...
+# Subtest: notices per match (step 21) keep one line and count the rest
+ok 494 - notices per match (step 21) keep one line and count the rest
+  ---
+  duration_ms: 1.142039
+  type: 'test'
+  ...
+# Subtest: createWorld checks the caps (step 21) before it builds
+ok 495 - createWorld checks the caps (step 21) before it builds
+  ---
+  duration_ms: 2.956245
+  type: 'test'
+  ...
+# Subtest: the linear draw (step 21) matches the base draw and stays fast
+ok 496 - the linear draw (step 21) matches the base draw and stays fast
+  ---
+  duration_ms: 75.492058
+  type: 'test'
+  ...
+# Subtest: options are read once (step 21) and place keeps a frozen cell
+ok 497 - options are read once (step 21) and place keeps a frozen cell
+  ---
+  duration_ms: 1.541067
+  type: 'test'
+  ...
+# Subtest: intents map to tactics events by phase (STATES §3.4); BoxSelect is a no-op that never throws
+ok 498 - intents map to tactics events by phase (STATES §3.4); BoxSelect is a no-op that never throws
+  ---
+  duration_ms: 5.047223
+  type: 'test'
+  ...
+# Subtest: tap-tap and drag give identical events and phases through feedIntent
+ok 499 - tap-tap and drag give identical events and phases through feedIntent
+  ---
+  duration_ms: 1.962021
+  type: 'test'
+  ...
+# Subtest: a missing battle phase throws in feedIntent and runMatch (no silent fallback)
+ok 500 - a missing battle phase throws in feedIntent and runMatch (no silent fallback)
+  ---
+  duration_ms: 1.209848
+  type: 'test'
+  ...
+# Subtest: levelling is off unless the match opts in (step 18): no registry, no snapshot key, until it is asked for
+ok 501 - levelling is off unless the match opts in (step 18): no registry, no snapshot key, until it is asked for
+  ---
+  duration_ms: 6.48405
+  type: 'test'
+  ...
+# Subtest: levels smoke (step 18): both bars, the quick per-unit rules, replay and restore
+ok 502 - levels smoke (step 18): both bars, the quick per-unit rules, replay and restore
+  ---
+  duration_ms: 419.764672
+  type: 'test'
+  ...
+# levels smoke btf-side stage-fixed seeds 1-20: win 18 lose 2 draw 0 timeout 0 reached 18 offers 17 unlocked 13 history 6b91cebadee3a4bfc960daecb92a6b51b673139250cbde83f5767b8cfda5fc53
+# levels smoke btf-side stage-weighted seeds 1-20: win 5 lose 15 draw 0 timeout 0 reached 64 offers 40 unlocked 40 history 3a58d03a4ee6980e394fe76d6343ca8bd5617151df6d099119c688a2f2592a64
+# levels smoke btf-unit stage-fixed seeds 1-20: win 18 lose 2 draw 0 timeout 0 reached 0 offers 0 unlocked 0 history f09905f4472d21fa7c0b7726eef350b9d9ba07704f44fcc0e5cf127b1d78d9af
+# levels smoke btf-unit stage-weighted seeds 1-20: win 5 lose 15 draw 0 timeout 0 reached 8 offers 6 unlocked 3 history 885c1a7b242dc260ea640021230ea04e0cd85322178ff3862eccdb49b851bd44
+# levels smoke quick-unit stage-fixed seeds 1-20: win 18 lose 2 draw 0 timeout 0 reached 283 offers 167 unlocked 151 history 5a8d757fd935d9b95e1b589b8b4a5c672bfcaaf2cba0f914314715eff53f448d
+# levels smoke quick-unit stage-weighted seeds 1-20: win 5 lose 15 draw 0 timeout 0 reached 320 offers 160 unlocked 160 history ac883a9882f1a8c8315c666be603a697603aa466134a5e2f88be9503e03bcd30
+# Subtest: the chaos checks hold with levelling on and the run replays from its JSON
+ok 503 - the chaos checks hold with levelling on and the run replays from its JSON
+  ---
+  duration_ms: 151.038687
+  type: 'test'
+  ...
+# Subtest: a pick through the door (step 18): an unlock action, and a replay with no offer warns
+ok 504 - a pick through the door (step 18): an unlock action, and a replay with no offer warns
+  ---
+  duration_ms: 1.502766
+  type: 'test'
+  ...
+# Subtest: the side bar (step 18): one bar for the side, a foe cannot pick it, unitId is not read
+ok 505 - the side bar (step 18): one bar for the side, a foe cannot pick it, unitId is not read
+  ---
+  duration_ms: 0.803235
+  type: 'test'
+  ...
+# Subtest: a disposed levelling world refuses the pick and keeps the offer
+ok 506 - a disposed levelling world refuses the pick and keeps the offer
+  ---
+  duration_ms: 0.557063
+  type: 'test'
+  ...
+# Subtest: a malformed unlock never throws (step 19) and is not logged
+ok 507 - a malformed unlock never throws (step 19) and is not logged
+  ---
+  duration_ms: 0.926455
+  type: 'test'
+  ...
+# Subtest: the empty id never unlocks (step 19) even when choose would accept it
+ok 508 - the empty id never unlocks (step 19) even when choose would accept it
+  ---
+  duration_ms: 0.863319
+  type: 'test'
+  ...
+# Subtest: a logged unlock with no ability id (step 19) keeps the offer and the bus quiet
+ok 509 - a logged unlock with no ability id (step 19) keeps the offer and the bus quiet
+  ---
+  duration_ms: 0.950572
+  type: 'test'
+  ...
+# Subtest: the phase driver gives every side the same events; the AI hook gets side and budget only (M6)
+ok 510 - the phase driver gives every side the same events; the AI hook gets side and budget only (M6)
+  ---
+  duration_ms: 15.714894
+  type: 'test'
+  ...
+# Subtest: the turn fuse ends a stalled side at exactly its ms, also mid-move; the length is the user's
+ok 511 - the turn fuse ends a stalled side at exactly its ms, also mid-move; the length is the user's
+  ---
+  duration_ms: 22.863802
+  type: 'test'
+  ...
+# Subtest: with the fuse off a stalled side runs to maxSimMs and the match is a timeout
+ok 512 - with the fuse off a stalled side runs to maxSimMs and the match is a timeout
+  ---
+  duration_ms: 6.719884
+  type: 'test'
+  ...
+# Subtest: 50 seeds on 6x9 and 12x12 each end in win, lose or draw, and each log replays to the same history
+ok 513 - 50 seeds on 6x9 and 12x12 each end in win, lose or draw, and each log replays to the same history
+  ---
+  duration_ms: 243.134859
+  type: 'test'
+  ...
+# Subtest: the snapshot carries phases; restore takes them from the snapshot and checks the rest
+ok 514 - the snapshot carries phases; restore takes them from the snapshot and checks the rest
+  ---
+  duration_ms: 2.568649
+  type: 'test'
+  ...
+# Subtest: the tick driver asks the same hook every everyMs for idle units only, and replays (M1, M6)
+ok 515 - the tick driver asks the same hook every everyMs for idle units only, and replays (M1, M6)
+  ---
+  duration_ms: 1.324205
+  type: 'test'
+  ...
+# Subtest: the test AI as intents through the player driver gives the same 50-seed histories, byte for byte
+ok 516 - the test AI as intents through the player driver gives the same 50-seed histories, byte for byte
+  ---
+  duration_ms: 239.96505
+  type: 'test'
+  ...
+# Subtest: rejects are reported, add no event and change no unit, occupancy, log or phase (CEO Q3)
+ok 517 - rejects are reported, add no event and change no unit, occupancy, log or phase (CEO Q3)
+  ---
+  duration_ms: 3.425603
+  type: 'test'
+  ...
+# Subtest: a tap-move submits one move with the caller's id and ms; the core still decides blocked cells
+ok 518 - a tap-move submits one move with the caller's id and ms; the core still decides blocked cells
+  ---
+  duration_ms: 1.632825
+  type: 'test'
+  ...
+# Subtest: touch gestures reach submit through the same door; events match the AI turn (CEO Q2, STATES rule 8)
+ok 519 - touch gestures reach submit through the same door; events match the AI turn (CEO Q2, STATES rule 8)
+  ---
+  duration_ms: 1.322066
+  type: 'test'
+  ...
+# Subtest: onStep runs after every input (moves landed); per-step snapshots repeat and the log replays; bad seats throw
+ok 520 - onStep runs after every input (moves landed); per-step snapshots repeat and the log replays; bad seats throw
+  ---
+  duration_ms: 9.102286
+  type: 'test'
+  ...
+# Subtest: recipe caps (step 23)
+ok 521 - recipe caps (step 23)
+  ---
+  duration_ms: 10.918525
+  type: 'test'
+  ...
+# Subtest: SE-01 carries (step 23)
+ok 522 - SE-01 carries (step 23)
+  ---
+  duration_ms: 167.418506
+  type: 'test'
+  ...
+# Subtest: stage and manifest caps (step 23)
+ok 523 - stage and manifest caps (step 23)
+  ---
+  duration_ms: 3.047799
+  type: 'test'
+  ...
+# Subtest: explicit null limits are refused (step 23)
+ok 524 - explicit null limits are refused (step 23)
+  ---
+  duration_ms: 1.944713
+  type: 'test'
+  ...
+# Subtest: drivers stop at the tick cap (step 23)
+ok 525 - drivers stop at the tick cap (step 23)
+  ---
+  duration_ms: 5.432362
+  type: 'test'
+  ...
+# Subtest: the door copy (step 23)
+ok 526 - the door copy (step 23)
+  ---
+  duration_ms: 0.583104
+  type: 'test'
+  ...
+# Subtest: replaying a log reproduces the event history at non-zero ticks
+ok 527 - replaying a log reproduces the event history at non-zero ticks
+  ---
+  duration_ms: 15.890756
+  type: 'test'
+  ...
+# Subtest: same seed and commands give the same snapshot, with or without a frame driver
+ok 528 - same seed and commands give the same snapshot, with or without a frame driver
+  ---
+  duration_ms: 6.90499
+  type: 'test'
+  ...
+# Subtest: snapshot → restore → replayTicks(n) equals n ticks straight
+ok 529 - snapshot → restore → replayTicks(n) equals n ticks straight
+  ---
+  duration_ms: 6.10223
+  type: 'test'
+  ...
+# Subtest: the sim script's report is the 50-seed batch, byte for byte
+ok 530 - the sim script's report is the 50-seed batch, byte for byte
+  ---
+  duration_ms: 224.3781
+  type: 'test'
+  ...
+# Subtest: text doors check size before the parse (step 25)
+ok 531 - text doors check size before the parse (step 25)
+  ---
+  duration_ms: 5.569665
+  type: 'test'
+  ...
+# Subtest: an effect block keeps its frames bounded and raw is opt-in (step 25)
+ok 532 - an effect block keeps its frames bounded and raw is opt-in (step 25)
+  ---
+  duration_ms: 47.173994
+  type: 'test'
+  ...
+# Subtest: a resumed save refuses a bad snapshot tick (step 25)
+ok 533 - a resumed save refuses a bad snapshot tick (step 25)
+  ---
+  duration_ms: 3.493165
+  type: 'test'
+  ...
+# Subtest: restore checks the clock on the world's own step (step 25)
+ok 534 - restore checks the clock on the world's own step (step 25)
+  ---
+  duration_ms: 2.173546
+  type: 'test'
+  ...
+# Subtest: a direct reader names a cycle (step 25)
+ok 535 - a direct reader names a cycle (step 25)
+  ---
+  duration_ms: 0.519132
+  type: 'test'
+  ...
+# Subtest: callers get a copy of a unit, never the live record (step 25)
+ok 536 - callers get a copy of a unit, never the live record (step 25)
+  ---
+  duration_ms: 0.528205
+  type: 'test'
+  ...
+# Subtest: every part field is read (step 25)
+ok 537 - every part field is read (step 25)
+  ---
+  duration_ms: 3.613305
+  type: 'test'
+  ...
+# Subtest: the recipe size count copies nothing over the cap (step 25)
+ok 538 - the recipe size count copies nothing over the cap (step 25)
+  ---
+  duration_ms: 162.667539
+  type: 'test'
+  ...
+# Subtest: trusted saves (step 24)
+ok 539 - trusted saves (step 24)
+  ---
+  duration_ms: 11.39049
+  type: 'test'
+  ...
+# Subtest: save opt-ins (step 24)
+ok 540 - save opt-ins (step 24)
+  ---
+  duration_ms: 2.311492
+  type: 'test'
+  ...
+# Subtest: save migrations path (step 24)
+ok 541 - save migrations path (step 24)
+  ---
+  duration_ms: 2.68583
+  type: 'test'
+  ...
+# Subtest: the migrations hook is contained (step 24)
+ok 542 - the migrations hook is contained (step 24)
+  ---
+  duration_ms: 2.945155
+  type: 'test'
+  ...
+# Subtest: tamper reach (step 24)
+ok 543 - tamper reach (step 24)
+  ---
+  duration_ms: 4.449169
+  type: 'test'
+  ...
+# Subtest: the log is read-only through an entry (step 24)
+ok 544 - the log is read-only through an entry (step 24)
+  ---
+  duration_ms: 0.590361
+  type: 'test'
+  ...
+# Subtest: a direct reader refuses a live hostile document (step 24)
+ok 545 - a direct reader refuses a live hostile document (step 24)
+  ---
+  duration_ms: 0.943966
+  type: 'test'
+  ...
+# Subtest: restore checks before any work (step 24)
+ok 546 - restore checks before any work (step 24)
+  ---
+  duration_ms: 0.784624
+  type: 'test'
+  ...
+# Subtest: one source for the BTF defaults (step 24)
+ok 547 - one source for the BTF defaults (step 24)
+  ---
+  duration_ms: 3.128638
+  type: 'test'
+  ...
+# Subtest: a world loads the step-08 fixtures and places every unit at tick 0
+ok 548 - a world loads the step-08 fixtures and places every unit at tick 0
+  ---
+  duration_ms: 13.183587
+  type: 'test'
+  ...
+# Subtest: the host seed is used when the stage has none; picks use the pool stream
+ok 549 - the host seed is used when the stage has none; picks use the pool stream
+  ---
+  duration_ms: 1.587059
+  type: 'test'
+  ...
+# Subtest: a bad document is a hard error
+ok 550 - a bad document is a hard error
+  ---
+  duration_ms: 1.623473
+  type: 'test'
+  ...
+# Subtest: smoke: engine root exports name and version
+ok 551 - smoke: engine root exports name and version
+  ---
+  duration_ms: 0.868316
+  type: 'test'
+  ...
+# Subtest: smoke: core-types.ts is the pinned DSK copy
+ok 552 - smoke: core-types.ts is the pinned DSK copy
+  ---
+  duration_ms: 0.571378
+  type: 'test'
+  ...
+# Subtest: ALL_PHASES and ALL_EVENT_TYPES are exhaustive
+ok 553 - ALL_PHASES and ALL_EVENT_TYPES are exhaustive
+  ---
+  duration_ms: 1.355228
+  type: 'test'
+  ...
+# Subtest: every phase is reachable
+ok 554 - every phase is reachable
+  ---
+  duration_ms: 0.394224
+  type: 'test'
+  ...
+# Subtest: only play.result is terminal
+ok 555 - only play.result is terminal
+  ---
+  duration_ms: 0.412956
+  type: 'test'
+  ...
+# Subtest: the three tables merge with no duplicate key
+ok 556 - the three tables merge with no duplicate key
+  ---
+  duration_ms: 0.829481
+  type: 'test'
+  ...
+# Subtest: a duplicate (from, event) throws
+ok 557 - a duplicate (from, event) throws
+  ---
+  duration_ms: 0.469493
+  type: 'test'
+  ...
+# Subtest: scripted battle reaches play.result
+ok 558 - scripted battle reaches play.result
+  ---
+  duration_ms: 1.652571
+  type: 'test'
+  ...
+# Subtest: overlay rows push and pop
+ok 559 - overlay rows push and pop
+  ---
+  duration_ms: 0.18261
+  type: 'test'
+  ...
+# Subtest: every row of every table is accepted
+ok 560 - every row of every table is accepted
+  ---
+  duration_ms: 1.115168
+  type: 'test'
+  ...
+# Subtest: CHOOSE_ACTION with next resolving skips targeting
+ok 561 - CHOOSE_ACTION with next resolving skips targeting
+  ---
+  duration_ms: 0.152234
+  type: 'test'
+  ...
+# Subtest: no row → xGo returns from
+ok 562 - no row → xGo returns from
+  ---
+  duration_ms: 1.5541
+  type: 'test'
+  ...
+# Subtest: illegal next on a pick-list row → from
+ok 563 - illegal next on a pick-list row → from
+  ---
+  duration_ms: 0.18407
+  type: 'test'
+  ...
+1..563
+# tests 563
+# suites 0
+# pass 563
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 22549.207133
