@@ -26,7 +26,7 @@ export type Driver = { start(): void; touch(): void; catchUp(ms: number): void; 
 export function createDriver(o: DriverOptions): Driver {
   const stall = o.stallMs ?? 100, clear = o.clear ?? "#000000", stats = { frames: 0, draws: 0, rev: 0, failed: 0, errors: 0 };
   const images = new Map<string, object>(), asked = new Set<string>();
-  let disposed = false, handle = 0, lastTs: number | null = null, frac = 0, lastDraw = Number.NEGATIVE_INFINITY, exact: { w: number; h: number } | undefined;
+  let disposed = false, handle = 0, lastTs: number | null = null, frac = 0, lastDraw = Number.NEGATIVE_INFINITY, live = false, exact: { w: number; h: number } | undefined;
   let scene: RenderScene | null = null, prev: FrameStamp | null = null, due = Infinity, broken = Number.NaN, brokeAt = 0, ro: { disconnect(): void } | undefined;
   const backend = canvas2d(o.canvas, {
     images(id) {
@@ -39,8 +39,8 @@ export function createDriver(o: DriverOptions): Driver {
     ...(o.budgetBytes === undefined ? {} : { budgetBytes: o.budgetBytes }),
   });
   const onVis = (): void => {
-    if (o.env.document.visibilityState === "hidden") { if (handle !== 0) o.env.cancelAnimationFrame(handle); handle = 0; lastTs = null; return; }
-    if (!disposed && handle === 0) handle = o.env.requestAnimationFrame(frame);
+    if (o.env.document.visibilityState === "hidden") { if (handle !== 0) o.env.cancelAnimationFrame(handle); handle = 0; lastTs = null; frac = 0; return; }
+    if (live && !disposed && handle === 0) handle = o.env.requestAnimationFrame(frame);
   };
   const Watch = o.env.ResizeObserver;
   if (Watch !== undefined) {
@@ -59,7 +59,7 @@ export function createDriver(o: DriverOptions): Driver {
     }
     if (o.capFps !== undefined && ts - lastDraw < 1000 / o.capFps - 2) return;
     let view: View;
-    try { if (broken === stats.rev && ts - brokeAt < 1000) return; view = o.view(); broken = Number.NaN; }
+    try { if (broken === stats.rev && ts >= brokeAt && ts - brokeAt < 1000) return; view = o.view(); broken = Number.NaN; }
     catch { stats.errors += 1; broken = stats.rev; brokeAt = ts; return; }
     if (view.scene !== scene) { scene = view.scene; stats.rev += 1; }
     const current = scene; if (current === null) return;
@@ -74,7 +74,7 @@ export function createDriver(o: DriverOptions): Driver {
   }
   return {
     stats, backend,
-    start() { if (!disposed && handle === 0) handle = o.env.requestAnimationFrame(frame); },
+    start() { if (disposed) return; live = true; if (handle === 0) handle = o.env.requestAnimationFrame(frame); },
     touch() { stats.rev += 1; },
     catchUp(ms) { o.clock.skip(ms); },
     dispose() {

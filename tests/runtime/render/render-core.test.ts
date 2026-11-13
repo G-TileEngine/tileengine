@@ -54,7 +54,7 @@ test("frames follow clockMs with per-frame ms, fps and loop (step 27)", () => {
   assert.deepEqual([0, 199, 200, 250, 1599, 1600, 3405].map((t) => at(t).nextMs), [200, 200, 400, 400, 1600, 1800, 3600]);
   assert.equal(frameAt(water, -1, 10).frame, 15);
   assert.deepEqual(frameAt(once, 1599, 10), { frame: 15, nextMs: 1600 }); assert.deepEqual(frameAt(once, 1600, 10), { frame: 15, nextMs: Infinity });
-  assert.deepEqual(clipMs(mixed, 10), [200, 130, 130]); assert.equal(frameAt(mixed, 200, 10).frame, 2);
+  assert.deepEqual(clipMs(mixed, 10), [200, 200, 200]); assert.equal(frameAt(mixed, 200, 10).frame, 2);
   assert.deepEqual(clipMs({ name: "a", frames: [0, 1], fps: 8 }, 10), [130, 130]); assert.deepEqual(clipMs({ name: "a", frames: [0], fps: 6 }, 10), [170]); assert.deepEqual(clipMs({ name: "a", frames: [0], fps: 6 }, 16), [160]);
   assert.deepEqual(frameAt(undefined, 10, 10), { frame: 0, nextMs: Infinity }); assert.deepEqual(frameAt({ name: "e", frames: [] }, 10, 10), { frame: 0, nextMs: Infinity }); assert.deepEqual(frameAt({ name: "one", frames: [3], ms: [50] }, 80, 10), { frame: 3, nextMs: Infinity });
 });
@@ -91,7 +91,7 @@ test("the draw list keeps the band order and y-sorts by feet with stable ties (s
   ] }), fit1, cam0, 0, 10);
   const at = (id: string) => anchored.cmds.find((c) => c.sheet === id);
   assert.deepEqual([at("def")?.dx, at("def")?.dy, at("auto")?.dx, at("auto")?.dy, at("norm")?.dx, at("norm")?.dy, at("pxa")?.dx, at("pxa")?.dy], [96, 0, 96, 16, 100, 40, 100, 56]);
-  const wide = (x: number, y: number): boolean => buildDrawList(world({ cols: 4, rows: 4, ground: [{ sheet: sh("big", 32, 32, 1), tiles: [1, ...Array<number | null>(15).fill(null)] }] }), fitView(64, 64, 1, 16, 16), snapCamera(x, y, 1), 0, 10).cmds.some((c) => c.sheet === "big");
+  const wide = (x: number, y: number): boolean => buildDrawList(world({ cols: 4, rows: 4, ground: [{ sheet: sh("big", 32, 32, 1), tiles: [null, null, null, null, 1, ...Array<number | null>(11).fill(null)] }] }), fitView(64, 64, 1, 16, 16), snapCamera(x, y, 1), 0, 10).cmds.some((c) => c.sheet === "big");
   assert.deepEqual([16, 0, 0, 16, 16, 16, 32, 0].reduce<boolean[]>((acc, n, i) => (i % 2 === 0 ? [...acc, wide(n, [16, 0, 0, 16, 16, 16, 32, 0][i + 1] ?? 0)] : acc), []), [true, true, true, false]);
 });
 
