@@ -1,6 +1,6 @@
 # Hand-back step-29-frame-driver r1
 Step file: handoff/steps/step-29-frame-driver.md
-Base commit: 4d9d872b34fc8b375df152d4873c607673e3475c     Head commit: b9528a563b384faa1db6264015e04cbfbbb7f4b8     Branch: step/step-29-frame-driver-r1     PR: opened by Chief Of Staff from the bundle
+Base commit: 4d9d872b34fc8b375df152d4873c607673e3475c     Head commit: b9dc4577f3cdb9ddc34dc33af05773b2efa2ee9c     Branch: step/step-29-frame-driver-r1     PR: opened by Chief Of Staff from the bundle
 Node: v22.23.3     npm: 10.9.9     rg: ripgrep 14.1.1 (rev 4649aa9700)
 
 ## Changed files
@@ -24,6 +24,7 @@ npm test: 548/0/0/0    typecheck: exit 0    lint: exit 0    deps: exit 0    chec
 - `makeCanvas` uses `OffscreenCanvas` when the env has one, otherwise `document.createElement("canvas")`. The observer asks for `device-pixel-content-box` and, if `observe` throws, observes with no box. Exact backing size comes from `devicePixelContentBoxSize`; otherwise it is css size times `devicePixelRatio`. Clear defaults to `#000000`. `buildsPerFrame` stays the backend's 2.
 - The r1–r3 prototypes (`6df65b1`, `4487e82`, `187ae98`) are not in this clone, so this was written from the step and the r3 review, not copied. The tests use a 24×16 map of 16 px tiles, a 160×96 view, ground colour `0x224466` and above `0x88aa44` on 64×16 rasters, and a scene object that stays the same across frames. Salt also moves the above tiles so a new scene zeroes every previous chunk canvas. Fake rgba is stored unsigned (`>>> 0`) so it matches a `Uint32Array` read.
 - 7 files, 263 insertions and 9 deletions (272 changed lines), each file within its cap. `npm test` is 548/0/0/0. `npm run sim` is the base's two lines. Pins are unchanged. `main` was not committed to.
+- Test-only fix, no `src` change. The hidden test runs 0.5 s before hiding, and `dispose` asserts the rAF queue is empty before the next second. `raf-driver.test.ts` stays 146 lines. Kit file sha256 `8b0b7ec5f6c9e9b724879f0c44896be63a535a91d09b6b5ddcdc5d3c838c6fb5` (`handoff/steps/step-29-frame-driver.md` on origin/main, not copied onto this branch).
 
 ## Next step (optional proposal)
 - Step 30 should keep one scene object between world revisions (a new object every frame bumps `rev` every frame) and move the step 28 water tile under an above hole so the chunk pixel test sees the animation.
