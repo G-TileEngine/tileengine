@@ -98,7 +98,7 @@ test("dispose removes every listener and stops the loop; canvas factory and sizi
   const sc = world(), box = rig({ scene: () => sc }); box.driver.start(); box.run(0.4, 60); await flush(); box.run(0.4, 60);
   assert.equal(box.boxes[0], "device-pixel-content-box"); box.resize(333, 201); box.fire(16); assert.equal(box.view.width, 333); assert.equal(box.view.height, 201);
   assert.ok(box.offs && box.made.every((c) => c.constructor !== FakeCanvas)); assert.equal(box.view.listeners, 2); assert.equal(box.docs(), 1);
-  const draws = box.driver.stats.draws; box.driver.dispose(); box.driver.dispose(); box.run(1, 60);
+  const draws = box.driver.stats.draws; box.driver.dispose(); box.driver.dispose(); assert.equal(box.queued(), 0); box.run(1, 60);
   assert.equal(box.view.listeners, 0); assert.equal(box.docs(), 0); assert.equal(box.queued(), 0); assert.equal(box.disconnects(), 1); assert.equal(box.driver.backend.stats.bytes, 0); assert.ok(box.made.every((c) => c.width === 0 && c.height === 0)); assert.equal(box.driver.stats.draws, draws);
   const bare = rig({ bare: true, dpr: 2, scene: () => sc }); bare.driver.start(); bare.run(0.2, 60); await flush(); bare.run(0.4, 60);
   assert.deepEqual(bare.boxes, [""]); assert.equal(bare.view.width, 320); assert.equal(bare.view.height, 192); assert.ok(bare.made.every((c) => c.constructor === FakeCanvas));
@@ -111,7 +111,7 @@ test("dispose removes every listener and stops the loop; canvas factory and sizi
   arm = true; heal.fire(16); assert.equal(heal.driver.stats.errors, 1); heal.run(1.1, 60); const back = heal.driver.stats.draws; heal.run(1, 60); assert.equal(heal.driver.stats.draws - back, per); assert.equal(heal.driver.stats.errors, 1); assert.equal(heal.driver.stats.rev, rev);
 });
 test("hidden cancels rAF and freezes the clock; showing again does not replay the gap (step 29)", () => {
-  const box = rig(); box.driver.start(); const t = box.clock.now(); box.hide(); assert.equal(box.queued(), 0); box.jump(60000); box.show(); box.run(0.5, 60); assert.ok(box.clock.now() - t <= 510);
+  const box = rig(); box.driver.start(); box.run(0.5, 60); const t = box.clock.now(); box.hide(); assert.equal(box.queued(), 0); box.jump(60000); box.show(); box.run(0.5, 60); assert.ok(box.clock.now() - t <= 510);
 });
 test("a rAF pile-up goes through one bulk clock.skip: no 100 ms clamp, timers fire in order (step 29)", () => {
   const box = rig(), log: number[] = []; const t0 = box.clock.now();
