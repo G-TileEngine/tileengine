@@ -25,3 +25,11 @@ test("crossed ends past 2^53 laps instead of spinning, and still fires a normal 
   assert.deepEqual(crossed([], 1e17 - 10, 1e17, { from: 0, lapMs: 1 }), []);
   assert.deepEqual(crossed([], 0, 250, { from: 0, lapMs: 100 }).map((e) => e.at), [100, 200]);
 });
+
+test("a step's strip animates from the step start: a 4-frame strip shows frame 2 at 250 ms in every return shape; no clip or 1 frame stays on 0 (step 33a, EA ruling on QA S-1)", () => {
+  const strip = { name: "s", frames: [0, 1, 2, 3], ms: [100, 100, 100, 100] }, one = { name: "o", frames: [0] };
+  const frameOf = (p: Partial<FxPiece>, unit: FxActor | null): number | undefined => placeStep({ at: 0, ms: 500, sheet: fxSheet, ...p }, 1000, 1250, 1100, () => unit, { x: 40, y: 48 }, 16, 16, 10)?.frame;
+  const shapes: [Partial<FxPiece>, FxActor | null][] = [[{ anchor_point: "tile", draw_layer: "air" }, null], [{ anchor_point: "hand", draw_layer: "air" }, actor()], [{ anchor_point: "hand", draw_layer: "front-unit" }, actor()], [{ anchor_point: "hand", draw_layer: "air" }, null]];
+  assert.deepEqual(shapes.map(([p, u]) => [frameOf({ ...p, clip: strip }, u), frameOf(p, u), frameOf({ ...p, clip: one }, u)]), shapes.map(() => [2, 0, 0]));
+  assert.equal(frameOf({ at: 100, anchor_point: "tile", clip: strip }, null), 1); // timed from the step start (effect 1000 + at 100), not the effect start
+});

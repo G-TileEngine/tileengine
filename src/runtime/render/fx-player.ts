@@ -1,6 +1,6 @@
 import { px } from "./camera.ts";
 import { anchorPx } from "./draw-list.ts";
-import { clipMs } from "./frames.ts";
+import { clipMs, frameAt } from "./frames.ts";
 import type { Clip, Overlay, Sheet, Standing } from "./types.ts";
 export const FX_PLAYER = { eventCap: 16, frameCap: 64, lagMaxMs: 500, gridMs: 30, liteGridMs: 60 } as const;
 export type FxNote = { readonly code: string; readonly message: string };
@@ -89,18 +89,18 @@ export const ownLight = (p: FxPiece): boolean => p.lit !== "scene";
 export function placeStep(p: FxPiece, effectStart: number, tMs: number, hitMs: number, unitAt: (tMs: number) => FxActor | null, tile: Pt, tileW: number, tileH: number, stepMs: number): Standing | Overlay | null {
   const start = effectStart + p.at;
   if (!(Number.isFinite(stepMs) && tMs >= start && tMs < start + p.ms) || stripNote(p.clip, p.sheet.id) !== null) return null;
-  const markFx = anchorPx(p.sheet), tileDraw = { x: tile.x - markFx.x, y: tile.y - markFx.y };
+  const markFx = anchorPx(p.sheet), tileDraw = { x: tile.x - markFx.x, y: tile.y - markFx.y }, frame = frameAt(p.clip, tMs - start, stepMs).frame;
   const layer = p.draw_layer, unitLayer = layer === "behind-unit" || layer === "front-unit";
   const band: Overlay["band"] = layer === "ground" ? "fxGround" : layer === "overlay" ? "flash" : "fxAir";
   const named = p.anchor_point === "hand" || p.anchor_point === "tip" || p.anchor_point === "head" || p.anchor_point === "centre" || p.anchor_point === "foot";
-  if (p.anchor === "screen" || !named) return { band: unitLayer ? "fxAir" : band, sheet: p.sheet, x: tileDraw.x, y: tileDraw.y, frame: 0 };
+  if (p.anchor === "screen" || !named) return { band: unitLayer ? "fxAir" : band, sheet: p.sheet, x: tileDraw.x, y: tileDraw.y, frame };
   const sample = p.attach === "follow" ? (p.detach === "hit" ? hitMs : tMs) : start;
   const unit = unitAt(sample) ?? (sample === start ? null : unitAt(start));
-  if (unit === null) return { band: unitLayer ? "fxAir" : band, sheet: p.sheet, x: tileDraw.x, y: tileDraw.y, frame: 0 };
+  if (unit === null) return { band: unitLayer ? "fxAir" : band, sheet: p.sheet, x: tileDraw.x, y: tileDraw.y, frame };
   const pt = p.anchor_point === "foot" ? anchorPx(unit.sheet) : pointAt(unit.points, p.anchor_point as PointName, unit.frame, unit.box, unit.sheet.fw, unit.flipX === true);
   const mark = anchorPx(unit.sheet);
   const ux = unit.c * tileW + px(tileW / 2) + (unit.dx ?? 0) - mark.x, uy = (unit.r + 1) * tileH + (unit.dy ?? 0) - mark.y;
-  if (!unitLayer) return { band, sheet: p.sheet, x: ux + pt.x - markFx.x, y: uy + pt.y - markFx.y, frame: 0 };
+  if (!unitLayer) return { band, sheet: p.sheet, x: ux + pt.x - markFx.x, y: uy + pt.y - markFx.y, frame };
   const ox = pt.x - mark.x, oy = pt.y - mark.y, faceSwap = layer === "front-unit" && p.depth_by_facing !== false && unit.facesAway === true;
-  return { kind: layer === "behind-unit" ? "fxBehind" : "fxFront", sheet: p.sheet, c: unit.c, r: unit.r, frame: 0, ...(unit.dx === undefined ? {} : { dx: unit.dx }), ...(unit.dy === undefined ? {} : { dy: unit.dy }), ...(ox === 0 ? {} : { ox }), ...(oy === 0 ? {} : { oy }), ...(faceSwap ? { faceSwap: true } : {}) };
+  return { kind: layer === "behind-unit" ? "fxBehind" : "fxFront", sheet: p.sheet, c: unit.c, r: unit.r, frame, ...(unit.dx === undefined ? {} : { dx: unit.dx }), ...(unit.dy === undefined ? {} : { dy: unit.dy }), ...(ox === 0 ? {} : { ox }), ...(oy === 0 ? {} : { oy }), ...(faceSwap ? { faceSwap: true } : {}) };
 }
