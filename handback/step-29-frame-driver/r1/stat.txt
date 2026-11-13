@@ -1,0 +1,8 @@
+ src/core/clock/clock.ts               |  16 ++++
+ src/core/clock/types.ts               |   2 +
+ src/runtime/canvas/canvas2d.ts        |  16 ++--
+ src/runtime/host/raf-driver.ts        |  86 ++++++++++++++++++++
+ tests/runtime/canvas/canvas2d.test.ts |   4 +-
+ tests/runtime/canvas/fake-canvas.ts   |   2 +
+ tests/runtime/host/raf-driver.test.ts | 146 ++++++++++++++++++++++++++++++++++
+ 7 files changed, 263 insertions(+), 9 deletions(-)

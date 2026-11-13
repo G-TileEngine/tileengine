@@ -117,13 +117,13 @@ test("a lost context skips drawing and a restored one rebuilds every chunk (step
   show(box, scene, fit, cam, 3); assert.equal(box.r.busy(), false); assert.equal(box.view.state.smoothing, false); assert.equal(box.view.width, fit.devW);
 });
 
-test("the canvas lives only in the backend file, which imports only the render core (step 28)", () => {
+test("the canvas lives only in the backend and the host driver; the backend imports only the render core (steps 28, 29)", () => {
   const root = fileURLToPath(new URL("../../../src/", import.meta.url));
   const walk = (dir: string): string[] => readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(join(dir, e.name)) : e.name.endsWith(".ts") ? [join(dir, e.name)] : []));
   const comments = (text: string): string => text.replace(/("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|`(?:\\.|[^`\\])*`)|\/\*[\s\S]*?\*\/|\/\/.*$/gm, "$1");
   const dom = /\b(getContext|addEventListener|imageSmoothingEnabled|globalCompositeOperation|OffscreenCanvas|HTMLCanvasElement|document|window|navigator)\b/;
   const banned = /\b(Date|performance|requestAnimationFrame|setTimeout|setInterval|setImmediate|queueMicrotask|globalThis|window|document|navigator|self|process|eval|Function|Intl|Temporal|global|require)\b|Math\.random|\bimport\s*\(/;
-  for (const file of walk(root)) assert.equal(dom.test(comments(readFileSync(file, "utf8")).replace(/("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|`(?:\\.|[^`\\])*`)/g, "")), file.endsWith("src/runtime/canvas/canvas2d.ts"), file);
+  for (const file of walk(root)) assert.equal(dom.test(comments(readFileSync(file, "utf8")).replace(/("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|`(?:\\.|[^`\\])*`)/g, "")), ["runtime/canvas/canvas2d.ts", "runtime/host/raf-driver.ts"].map((f) => join(root, f)).includes(file), file);
   for (const file of walk(join(root, "runtime/canvas"))) {
     const text = comments(readFileSync(file, "utf8")); assert.equal(banned.test(text), false, file); assert.equal(/\bimport\s*\(/.test(text), false, file);
     for (const hit of text.matchAll(/(?:from|import)\s*[`'"]([^`'"]+)[`'"]/g)) assert.match(hit[1] ?? "", /^(?:\.\.\/render\/index\.ts|\.\/[^/]+\.ts)$/, file);
