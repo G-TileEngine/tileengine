@@ -1,0 +1,7 @@
+M	src/core/clock/clock.ts
+M	src/core/clock/types.ts
+M	src/runtime/canvas/canvas2d.ts
+A	src/runtime/host/raf-driver.ts
+M	tests/runtime/canvas/canvas2d.test.ts
+M	tests/runtime/canvas/fake-canvas.ts
+A	tests/runtime/host/raf-driver.test.ts
