@@ -1,20 +1,20 @@
 # BUILD_GUIDE.md — TileEngine engine (read this first, every session)
 
-Owner: Engine Architect. Kit version: **kit-2 (2026-11-09)**. This file sits at the repo root. Re-read it every 5–7 steps. If a step file and this guide disagree, stop and say so in your Decisions note; the Architect answers with a Change Notice. Never resolve a conflict silently.
+Owner: Engine Architect. Guide version: **guide-3 (2026-11-13, CN-016)**. This file sits at the repo root and is the only copy; `handoff/BUILD_GUIDE.md` is a one-line pointer to it. Re-read it every 5–7 steps. If a step file and this guide disagree, stop and say so in your Decisions note; the Architect answers with a Change Notice. Never resolve a conflict silently.
 
 ## 0. Working style
 - Use all your available helper agents: in parallel for review, for tests and for cross-checks.
 - Take your time. Never rush.
 - Before every hand-back, review your own work against the step's **Acceptance** list and the QA checklist (`docs/qa/handback-checklist.md`).
 - Token and usage cost is not a constraint. Prefer thoroughness over speed.
-- The step size stays the same: step files are 150–400 lines, and 1–3 steps per session. Extra time goes into quality, not bigger steps.
+- The step size stays the same (§7), and 1–3 steps per session. Extra time goes into quality, not bigger steps.
 
 ## 1. Goal and priority
-TileEngine is an engine and editor for making grid games. You are building the **engine core spine**: pure TypeScript that runs headless (no DOM), then the runtime on top of it later.
+TileEngine is an engine and editor for making grid games. You are building the **engine**: the core spine (pure TypeScript that runs headless, no DOM; steps 00–26) and, since steps 27–29, the runtime on top of it (`src/runtime/render`, `canvas`, `host`, `scene`).
 Priority order (CEO, 2026-11-09), never reordered: **1. grid tactics** (Fire Emblem-style) → **2. idle RPG** (auto-combat on clock ticks) → **3. tower defence** (paths and waves). Menu turn RPG and RTS are **parked**. Build only what the current step asks. Code for a later mode is scope creep (REJECT), but nothing you build may block a later mode (§4, M1–M9).
 
 ## 2. Engine laws (non-negotiable; every step; QA checks them)
-1. **One clock.** All time comes from `src/core/clock`. **Sim time is integer milliseconds everywhere, never seconds or floats** (CN-001): `advance(dtMs)` takes an integer ≥ 0 and timers take integer ms. `setTimeout`, `setInterval`, `queueMicrotask`, `Date` (incl. `new Date`, `Date.now`) and `performance.now` are banned everywhere in `src/`. `requestAnimationFrame` / `cancelAnimationFrame` are banned in `src/` **except in the single file `src/runtime/host/raf-driver.ts`** (the host driver; owns the frame loop; not built yet; ESLint and `check:law` carry the same one-file exception). Every timer — the turn fuse (`FUSE_EXPIRE`), tower defence's `BUILD_TIMER_EXPIRE`, any other — is a sim-time timer on the one clock, never wall time. **Game speed x1/x2/x3** is the clock's `timeScale`: it runs more fixed steps per host frame and never changes the step size. Offline catch-up (later) is host-supplied elapsed ms, capped by a project setting; core never reads wall time.
+1. **One clock.** All time comes from `src/core/clock`. **Sim time is integer milliseconds everywhere, never seconds or floats** (CN-001): `advance(dtMs)` takes an integer ≥ 0 and timers take integer ms. `setTimeout`, `setInterval`, `queueMicrotask`, `Date` (incl. `new Date`, `Date.now`) and `performance.now` are banned everywhere in `src/`. `requestAnimationFrame` / `cancelAnimationFrame` are banned in `src/` **except in the single file `src/runtime/host/raf-driver.ts`** (the host driver, built in step 29; owns the frame loop; ESLint and `check:law` carry the same one-file exception). Every timer — the turn fuse (`FUSE_EXPIRE`), tower defence's `BUILD_TIMER_EXPIRE`, any other — is a sim-time timer on the one clock, never wall time. **Game speed x1/x2/x3** is the clock's `timeScale`: it runs more fixed steps per host frame and never changes the step size. Offline catch-up (later) is host-supplied elapsed ms, capped by a project setting; core never reads wall time.
 2. **One address: `{c, r}`.** `c` = column (0 = left, grows right), `r` = row (0 = top, **grows downward**). Stored cells are integers. Grids are row-major: `i = r * cols + c`. No other cell type in core (no `{lane, col}`, no `{col, rank}`); those are label adapters outside core.
 3. **UNIT and TILE are the only targeting pipes.** UNIT follows a living body; a dead target is never hit at its old cell. TILE picks a cell at cast; on arrival a living occupant is hit, an empty cell misses. No third pipe, no "blink" flags, no extra target modes.
 4. **No game rules in core.** `src/core` never names `hp`, `mana`, `cost`, `deck`, `damage`, `card` (lint + grep). Stats and resources are project data handled above core. So are game-rule values such as the turn fuse length (the BTF preset's 60000 ms) and the bot's opening formation (`unit-roster.opening_row`: `back` / `second` / `front`, DSK): presets and projects hold them; core takes them as inputs and has no defaults for them.
@@ -26,6 +26,7 @@ Priority order (CEO, 2026-11-09), never reordered: **1. grid tactics** (Fire Emb
 10. **Maximum user freedom: warn, don't block.** Where the data allows an alternative, the engine accepts it and returns a warning (`notices`), not an exception. Throw only where the game truly can't run (a hard error) or on a programming error.
 11. **Own entry and pack.** Engine code lives in this repo with its own entry (`src/index.ts`). No imports from game, editor or BTF code.
 12. **No silent defaults.** Every constant, timeout, size or ordering you choose that the step didn't give is named in the Decisions note with its value and reason.
+13. **Bounded runtime memory.** In `src/runtime/**` every cache or memo has a bound the step states (one slot, or an entry or byte cap), and nothing retained grows with frames or edits. Anything you replace or dispose is released: canvases shrunk to 0×0, buffers dropped, listeners removed. State the bound in the Decisions note. (Unbounded growth was a QA finding in s30 F-1, s31 F-2 and build A, and s32 F-1.)
 
 ### 2.1 Modes Designer constraints M1–M9 (MODES-v1; also engine law)
 - **M1 Scheduler supports turns and ticks.** The one clock drives both: turn-based logic advances on events; tick-based logic subscribes to fixed sim ticks. Tactics never owns the clock.
@@ -42,7 +43,7 @@ Priority order (CEO, 2026-11-09), never reordered: **1. grid tactics** (Fire Emb
 ## 3. Folder layout and layers
 One npm package for now (layers are folders; a later Change Notice may split them into workspace packages).
 ```
-BUILD_GUIDE.md          this file (root)
+BUILD_GUIDE.md          this file (root; the only copy, `handoff/BUILD_GUIDE.md` points here)
 docs/STATES.md          state tables (copied from the design repo; do not edit)
 src/index.ts            engine entry: ENGINE_NAME, ENGINE_VERSION
 src/types/core-types.ts Data & Save Keeper's core types — verbatim copy, never edited (sha256 pinned in tests/smoke.test.ts)
@@ -51,14 +52,22 @@ src/state/              *.table.ts, types.ts, xgo.ts                          �
 src/project/read/       read-only project reader (current-version docs only)  → may import: src/types, src/core/notice.ts (Notice type only; CN-005)
 src/rules/              (later) turn drivers, stats by name                   → may import: core, state, fx, types
 src/fx/                 effect-order reader, timeline and options (engine sequencing data, no game rules) → may import: src/types, src/core (CN-007)
+src/paint/              sprite recipes: reader, guard and caps (later: rasteriser, bank); integer maths only → may import: src/types, src/core/notice.ts (Notice type only); imported only by runtime, editor and btf-adapters (CN-008)
 src/runtime/input/      pure input intents + gesture mappers (plain pointer data, no DOM) → may import: src/types, src/core (CN-006)
+src/runtime/render/     pure render core, flat files (step 27)           → imports only `./<file>.ts` in its own folder; no DOM, wall time or globals (CN-016)
+src/runtime/canvas/     Canvas2D backend and chunk cache (step 28)       → imports only `../render/index.ts` and its own folder (CN-016)
+src/runtime/host/       `raf-driver.ts` only, the one frame loop (step 29) → imports only `../../core/clock/index.ts`, `../canvas/canvas2d.ts`, `../render/index.ts` (CN-016)
+src/runtime/scene/      world → scene link, `world-scene.ts` only (step 30) → imports only `../render/index.ts`, `../../core/notice.ts`; no game words (CN-016)
 src/sim/                headless sim harness (tests and tools only)           → may import: core, state, project, rules, runtime/input, types; nothing imports sim
 src/btf-adapters/       thin src/ wrappers (+ vendor/ only for a separately ruled helper, with PROVENANCE.md) → imported only by runtime/editor (later)
-scripts/                check-state.sh, check-law.sh, sim.ts (`npm run sim`: tools only, may import src/sim and tests/; not part of green; CN-006)
+scripts/                check-state.sh, check-law.sh (+ the src/paint ban list, CN-008), sim.ts (`npm run sim`: tools only, may import src/sim and tests/; not part of green; CN-006)
 tests/                  *.test.ts mirroring src/; tests/fixtures/ (excluded from tsc and lint)
-handback/<step-id>/r<N>/ your hand-back for that step (HAND-BACK.md); ignored by lint, excluded from the size cap
+handback/<step-id>/r<N>/ your hand-back for that step (`HANDBACK.md`; its shape is in `handoff/HAND-BACK.md`); ignored by lint, excluded from the size cap
+handoff/steps/tests/<step-id>/ the step's shipped tests, laid out at their repo paths (§8); copy them, never edit them
 README.md               owned by Chief Of Staff; never edit
 ```
+The four runtime folders have **no dependency-cruiser rule of their own**; only its global rules apply (`no-circular`, `nothing-imports-sim`, `no-tests-in-src`, and paint and btf-adapters may be imported only from runtime or editor). Their import lines above are enforced by four fence tests: `tests/runtime/render/render-core.test.ts` ("the render core stays pure…"), `tests/runtime/canvas/canvas2d.test.ts` ("the canvas lives only in the backend and the host driver…"), `tests/runtime/host/raf-driver.test.ts` ("the host folder holds only the driver…") and `tests/runtime/scene/scene-fence.test.ts`. Changing a fence needs a CN.
+
 Naming: files `kebab-case.ts`; state tables `src/state/<name>.table.ts`; tests `tests/<area>/<file>.test.ts` (step 00's root tests stay at `tests/*.test.ts`). Types and interfaces `PascalCase`, functions `camelCase`, event types `SCREAMING_SNAKE`. No default exports. Imports of local files use the `.ts` extension (`import { x } from "./x.ts"`), and type-only imports use `import type`. No `enum`, `namespace` or parameter properties (`erasableSyntaxOnly`).
 
 ## 4. Types: one source
@@ -96,17 +105,20 @@ Allowed dev dependencies (exact versions; anything else needs a Change Notice): 
 - Never edit `src/types/core-types.ts`, `docs/STATES.md`, `BUILD_GUIDE.md`, `scripts/check-state.sh`, or a vendored file — they change only by Change Notice.
 - Never loosen `tsconfig.json`, ESLint or dependency-cruiser rules; never add `// @ts-ignore`, `@ts-expect-error`, `any` casts, `eslint-disable` or `skipLibCheck`.
 - Never touch files outside the step's "Files to create or change" list. Never revert, delete or "simplify" something the step doesn't name (BTF BUILD_LAW 1, 4).
+- Inside a named file, follow the step's Interfaces and Rulings exactly. The step text wins over a contract you infer (for example "the host keeps identities stable"); name any difference in the Decisions note.
+- **Extend, don't rewrite.** Change an existing file in place: add to it and edit the lines the step names. Don't rewrite or restructure it unless the step says so.
 - Never treat a suggestion as a ticket. The optional "next step" in your hand-back is a proposal only.
 - Never invent a type the core-types file or the step already defines.
 - Never add a dependency, a network call, storage, a timer, a second clock, `Math.random`, or a game rule word in core.
-- Never exceed ~400 changed code lines in one step (QA cap: 400–500 needs a reason; > 500 is rejected). If a step would, stop and propose a split.
+- **Size and caps (the one rule).** A step is 150–400 changed lines (insertions plus deletions; `handback/` and the lockfile excluded; the shipped tests you copy in count). Up to 400 is normal; 400–500 needs a written reason (in Decisions); over 500 is rejected. Each file's cap is the proto's line count plus 4, written in the step's Files list. A re-based cap gives its reason in the step file. Never trim a test to fit.
 
-## 8. How a step works (details in the step file and HAND-BACK.md)
+## 8. How a step works (details in the step file and `handoff/HAND-BACK.md`)
 - **Repo:** https://github.com/G-TileEngine/tileengine (visibility is the CEO's call). `main` changes only by merged PR; never push to `main`.
 - **Base commit:** `main`'s SHA after the previous step was accepted (written in each step file; step 00's base is `main` @ the commit Chief Of Staff pushes with the kit).
-- **Branch:** `step/<step-id>-r<N>` from the base (`r1` first; a rework after a REJECT is `r2`, `r3`…). **Delivery (CN-003):** you read the repo but do not push. Finish with `git bundle create <step-id>-r<N>.bundle <base>..step/<step-id>-r<N>`, check it with `git bundle verify`, and upload the bundle plus a copy of `HAND-BACK.md` to the CEO's Drive. Chief Of Staff pushes the branch and opens the PR to `main`.
+- **Branch:** `step/<step-id>-r<N>` from the base (`r1` first; a rework after a REJECT is `r2`, `r3`…). **Delivery (CN-003):** you read the repo but do not push. Finish with `git bundle create <step-id>-r<N>.bundle <base>..step/<step-id>-r<N>`, check it with `git bundle verify`, and upload the bundle plus a copy of your `HANDBACK.md` to the CEO's Drive. Chief Of Staff pushes the branch and opens the PR to `main`.
 - **Hand-back:** `HANDBACK.md` and its files go **in the repo** at `handback/<step-id>/r<N>/` on that branch, as the branch's last commit.
-- Each step file has: Step id · Repo · Base commit · Branch · Hand-back location · Goal · Files to create or change · Interfaces to match (quoted exactly) · Tests that prove it is done · Do not touch · Acceptance. Hand back: the changed-file list, raw `npm test` and `npm run typecheck` output, the other green commands' output, a 5–10 line **Decisions & deviations** note, the head commit, and an optional next step.
+- **Shipped tests.** Each step ships the QA-reviewed proto test files verbatim under `handoff/steps/tests/<step-id>/`, at their repo paths (for example `handoff/steps/tests/step-33-x/tests/runtime/host/x.test.ts` → `tests/runtime/host/x.test.ts`), named with their sha256 in the step's Tests section. Take them from `origin/main` (the kit commit), copy them in unchanged, and make them pass. You may **add** tests, in new files or after the shipped ones. Never weaken, rename, skip or delete a shipped test or assertion. A weakened, renamed or deleted shipped test is a REJECT unless the step's 'Existing tests changed by ruling' names it; a failing shipped test is a must-fix. The hand-back lists each shipped file's sha256, unchanged.
+- Each step file has the sections in `handoff/STEP-TEMPLATE.md`. Hand back: the changed-file list, raw `npm test` and `npm run typecheck` output, the other green commands' output, a 5–10 line **Decisions & deviations** note, the head commit, and an optional next step.
 
 ## 9. Design docs (pointers; you don't need to read them to do a step)
-The step file quotes everything binding. For background only: `docs/STATES.md` (in this repo). Outside this repo, owned by other roles: `tileengine/docs/ARCHITECTURE-v0.md` (§0 laws, §1–2 layers, §2.3 clock, §7 BTF reuse, §12.8 walls, §12.10 effects), `tileengine/data/project-format.md` and `core-types.ts` (Data & Save Keeper), `tileengine/docs/core-spine-slices.md` (step plan), `tileengine-modes/MODES-v1.md` (M1–M9), `tileengine/docs/qa/handback-checklist.md` (how QA judges a hand-back). ARCHITECTURE package paths (`packages/core/...`) map to `src/<layer>/` in this single package until a Change Notice splits packages; `src/runtime/host/` maps to the future platform package.
+The step file quotes everything binding. For background only, in this repo: `docs/STATES.md`, `docs/core-spine-slices.md` (step plan) and `docs/qa/handback-checklist.md` (how QA judges a hand-back; QA owns it, this is a copy). Outside this repo, owned by other roles: `tileengine/docs/ARCHITECTURE-v0.md` (§0 laws, §1–2 layers, §2.3 clock, §7 BTF reuse, §12.8 walls, §12.10 effects), `tileengine/data/project-format.md` and `core-types.ts` (Data & Save Keeper), `tileengine-modes/MODES-v1.md` (M1–M9). ARCHITECTURE package paths (`packages/core/...`) map to `src/<layer>/` in this single package until a Change Notice splits packages; `src/runtime/host/` maps to the future platform package.

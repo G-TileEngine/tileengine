@@ -1,6 +1,6 @@
 # HAND-BACK.md — what Grok Build returns after every step
 
-Kit version kit-2 (2026-11-09). Matches QA & Build Guard's `docs/qa/handback-checklist.md` §0–§2. A hand-back missing any of items 1–4 below is **REJECT (incomplete)** without review.
+Guide version guide-3 (2026-11-13, CN-016). Matches QA & Build Guard's `docs/qa/handback-checklist.md` §0–§2. A hand-back missing any of items 1–4 below is **REJECT (incomplete)** without review.
 
 ## Where
 - **Repo:** https://github.com/G-TileEngine/tileengine (visibility is the CEO's call). Never push to `main`.
@@ -19,6 +19,7 @@ Kit version kit-2 (2026-11-09). Matches QA & Build Guard's `docs/qa/handback-che
 | 4 | `HANDBACK.md` § Decisions & deviations | 5–10 plain lines (rules below) | §0.4, G9 |
 | 5 | `HANDBACK.md` § Next step (optional) | a proposal, never a change | §0.5 |
 | 6 | `stat.txt` | `git diff --stat <base>..<head> -- . ':!package-lock.json' ':!handback'` | G7 |
+| 7 | `HANDBACK.md` § Shipped tests | `sha256sum` of every shipped test file as it sits in `tests/`; each must equal the sha256 in the step file (BUILD_GUIDE §8) | G1 |
 The bundle is the patch; once Chief Of Staff has pushed it, QA clones the branch for the clean checkout (§1) and reviews `<base>..<head>`. No `diff.patch` is needed. The PR line in HANDBACK.md reads `PR: opened by Chief Of Staff from the bundle` (never a guessed PR state).
 
 ## `HANDBACK.md` shape
@@ -34,6 +35,9 @@ Node: <node -v>     npm: <npm -v>     rg: <rg --version first line>
 ## Green
 npm test: <pass>/<fail>/<skipped>/<todo>    typecheck: exit <n>    lint: exit <n>    deps: exit <n>    check:state: exit <n>    check:law: exit <n>
 
+## Shipped tests (sha256, unchanged)
+<sha256sum output for each shipped file, at its tests/ path>
+
 ## Decisions & deviations (5–10 lines)
 - ...
 
@@ -45,11 +49,13 @@ npm test: <pass>/<fail>/<skipped>/<todo>    typecheck: exit <n>    lint: exit <n
 - 5–10 lines, plain words.
 - List **every** deviation from the step file: an extra file (named and justified), a changed signature, a skipped test, a new dependency (name, exact version, why — only those BUILD_GUIDE §6 allows), a default you chose.
 - **No silent defaults:** every value the step didn't give (a constant, a size, an ordering, a tie-break) is named with its value and reason.
+- **Bounds and size (BUILD_GUIDE law 13, §7):** state each runtime cache or memo's bound (nothing retained grows with frames or edits); a step over 400 changed lines gives its reason here (over 500 is rejected).
 - A decision may not override BUILD_GUIDE, a quoted interface or Do-not-touch. If one of those is wrong, stop and say so; the Architect issues a Change Notice.
 - The note must match the diff exactly.
+- A shipped test is never a deviation you may choose: copy it unchanged. If one looks wrong, stop and say so; a weakened, renamed or deleted shipped test is a REJECT, and a failing shipped test is a must-fix.
 
 ## Outcomes and rework
-- **ACCEPT** (QA writes `docs/qa/steps/<step-id>.md`) → RaiKynn accepts via Chief Of Staff → Architect merges and tags `accepted/<step-id>`. The next step's base is that tag.
+- **ACCEPT** (QA writes `docs/qa/step-<NN>-review.md`, and `docs/qa/step-<NN>-ab.md` when two builds are compared) → RaiKynn accepts via Chief Of Staff → the PR is merged. No tags: the merge commit on `main` is the record and the next step's base.
 - **ACCEPT WITH NOTES** → same, and the notes go into the next step's brief. The step is not reopened.
 - **REJECT** → QA's report lists each failure (file:line, command, expected vs actual, smallest fix). Fix it in the **same step**: branch `step/<step-id>-r<N+1>` from the `r<N>` head, hand back in `handback/<step-id>/r<N+1>/`, deliver a new bundle (Chief Of Staff opens the new PR and closes the old one). Touch only the failed items. Base commit stays the same.
 - **CHANGE NOTICE REQUIRED** → stop. The Architect issues a Change Notice; you re-run the step against it ("refactor, do not patch").
