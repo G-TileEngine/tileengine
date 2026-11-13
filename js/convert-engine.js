@@ -4,7 +4,7 @@
    - the study harness (study/convert-study.js re-exports it) runs it in Node.
    Default (CEO-approved 2026-11-12): "Combo A" = 2-pass OKLab downscale + k-means OKLab palette + one near-black outline,
    no clean-up, feature protection on, ≤16 colours incl. outline. Detail 20 / 24 = Combo A body + r66 head and weapon regions.
-   The background key, subject crop and placement are r66's own functions (passed in with initWith, or lifted from source in Node).
+   The background key, subject crop and placement are r66's own functions (passed in with initWith).
    Images are { w, h, d: Uint8Array RGBA }. Output sprites are { N, px: Array<[r,g,b]|null>, body: Uint8Array } (body = filled cells, px also has the outline). */
 (function () {
 "use strict";
