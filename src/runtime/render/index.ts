@@ -5,3 +5,5 @@ export { badMs, clipMs, frameAt, hash32, instanceOffset } from "./frames.ts";
 export { buildDrawList } from "./draw-list.ts";
 export { CHUNK, chunkId, chunkedList, isStatic } from "./chunk-plan.ts";
 export { needsDraw, present } from "./dirty.ts";
+export { openCell, visibleCells, createSight, type Blockers } from "./visibility.ts";
+export { BANDS_OF_LIGHT, DARK_CAP, STEPS, WASH_MAX, createLighting, createMoonlit, darkness, lightOps, type FillOp, type Light, type LightPlan, type LightWorld } from "./light.ts";
