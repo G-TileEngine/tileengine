@@ -1,9 +1,9 @@
 # Animated tiles and objects (post-H2; no build until H2 is done)
 
-CEO 2026-11-12 19:39: flowing rivers, swaying trees and bushes. He noticed the Night Ash preset already makes light sources (the blue crystal) glow and seems to animate the water.
+CEO 2026-11-12 19:39: flowing rivers, swaying trees and bushes. He noticed the moonlit preset (he first called it "Night Ash" by mistake) already makes light sources (the blue crystal) glow and seems to animate the water.
 
 ## How the night preset does it today (from the code)
-Source: `painter-proto/painter.js`, `scene.js`, `atmosphere.js`, `sprites.js`. "Night Ash" is the CEO's name for what he saw; in code the night look is the `btf-moonlit` paint style shown with the optional **Atmosphere** layer (`ATMO_DEFAULTS`, off by default). The day pair is `btf-ashroad`. Check the exact label in the build if it matters.
+Source: `painter-proto/painter.js`, `scene.js`, `atmosphere.js`, `sprites.js`. CEO confirmed 22:10: the name is **moonlit**. In code the night look is the `btf-moonlit` paint style shown with the optional **Atmosphere** layer (`ATMO_DEFAULTS`, off by default). The day pair is `btf-ashroad`.
 
 1. **Water really is animated, in two ways.**
    - Frame loop baked into the tile recipe: `water@2` has 8 frames (`water@1` had 7 and did not loop, which was a known seam bug). `animMs: 200` per frame, so a 1.6 s loop. Gloss streaks drift 1 px per frame, and the period of 8 closes the loop. Lava and murk also use 8 frames (lava at 160 ms, swamp at 260 ms).
@@ -34,3 +34,12 @@ CEO 2026-11-12 20:22: props around the outside of the playable grid (lamp posts,
 - Light-source props (lanterns, lamp posts) use the same "Gives light" toggle and tie into the glow layer above.
 - Decor is never part of the playable grid and can't block moves.
 - Reference: @Thelastnecro24's Day 51 devlog (a pixel lamp post with a lantern, made in Godot). Style reference only.
+
+## Renderer research (2026-11-13)
+CEO order 00:17 (results over usage): researched the "frame player feel" in RPG Maker MZ, Tiled, Aseprite, Godot, LDtk, Pixelorama, Pixel Composer, Unity 2D, and games (Celeste, Stardew, Eastward, Octopath/Triangle Strategy as contrast, Sea of Stars, Taiji, Blasphemous, Fire Emblem, Into the Breach), plus layers/y-sort, the handoff format, palette and light (CEO scope 00:20).
+- Crisp = whole-number zoom, whole-pixel positions, nearest-neighbour, soft pixels only on the overlay. Mush = bilinear, fractional zoom, sub-pixel motion, rotation, blur/bloom on base pixels, too many in-betweens.
+- RPG Maker water: 3 frames ping-pong at 500 ms, all tiles in sync. Keep our `water@2` (8 × 200 ms). Sync tiles that touch; stagger separate props (sway, torches, idle units).
+- Sway: frames or whole-pixel offsets on the canopy only (Taiji wind map, Godot cutoff row); rotation reads as sliding edges.
+- Moonlit stays palette swap + overlay. Found: Sprite Studio's night preview uses a multiply tint and its own 160 ms timer, so it doesn't match the game. Fix both with the one player.
+- Proposed handoff fields (frame ms/hold, loop, tags, anchor, phase, light) each need a CN (DSK); the 64-frame cap is settled.
+Full write-up: [../renderer-research-ux.md](../renderer-research-ux.md)
