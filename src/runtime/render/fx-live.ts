@@ -50,7 +50,7 @@ export function createFxLive(): FxLive {
         const lap = loop > 0 && pose >= start ? Math.floor((pose - start) / loop) : 0, prev = store.get(e.id), mem: Mem = prev !== undefined && prev.lap === lap ? prev : { lap, at: new Map() };
         if (mem !== prev) store.set(e.id, mem); if (!(pose >= start)) continue;
         const drawT = loop > 0 ? start + ((pose - start) % loop + loop) % loop : pose, target = e.target === undefined ? null : unitOf(e.target);
-        for (const p of e.pieces) {
+        for (const [i, p] of e.pieces.entries()) {
           if (!Number.isFinite(p.at) || !Number.isFinite(p.ms)) continue;
           const warn = p.clip === undefined ? null : stripNote(p.clip, p.sheet.id);
           if (warn !== null && p.clip !== undefined && !strips.has(p.clip)) { strips.add(p.clip); notes.push(warn); }
@@ -58,7 +58,7 @@ export function createFxLive(): FxLive {
           if (cell === null) continue;
           const placed = placeStep(p, start, drawT, hit, (sample) => {
             if (actor === null) return null;
-            const spawn = p.attach !== "follow", freeze = !spawn && p.detach === "hit", key = spawn ? `s${p.at}` : "h", got = mem.at.get(key);
+            const spawn = p.attach !== "follow", freeze = !spawn && p.detach === "hit", key = `${spawn ? "s" : "h"}${i}`, got = mem.at.get(key);
             if (got !== undefined && (spawn || freeze)) return got;
             if (freeze && !(pose >= hit && sample === hit)) return sample === hit ? null : actor;
             if (spawn || freeze) mem.at.set(key, actor);
