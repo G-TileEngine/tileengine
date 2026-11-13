@@ -1,0 +1,9 @@
+A	src/runtime/render/camera.ts
+A	src/runtime/render/dirty.ts
+A	src/runtime/render/draw-list.ts
+A	src/runtime/render/fit.ts
+A	src/runtime/render/frames.ts
+A	src/runtime/render/index.ts
+A	src/runtime/render/types.ts
+A	tests/runtime/render/fake-renderer.ts
+A	tests/runtime/render/render-core.test.ts
