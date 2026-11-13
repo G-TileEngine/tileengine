@@ -1,0 +1,6 @@
+M	src/fx/order/read.ts
+M	src/runtime/render/draw-list.ts
+A	src/runtime/render/fx-player.ts
+M	src/runtime/render/index.ts
+M	src/runtime/render/types.ts
+A	tests/runtime/render/fx-player.test.ts
