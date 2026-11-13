@@ -59,7 +59,7 @@ export function lightOps(plan: LightPlan, fit: Fit, cam: Cam, glow = "255,176,72
       flush(ix); from = colour === "" ? -1 : ix; ink = colour;
     }
   };
-  for (let y = 0; y < plan.h; y += 1) paint(y, (x) => { const k = plan.dark[y * plan.w + x] ?? 0; return k === 0 ? "" : `rgba(0,0,0,${k / STEPS})`; });
+  for (let y = 0; y < plan.h; y += 1) paint(y, (x) => { const k = plan.dark[y * plan.w + x] ?? 0; return k === 0 ? "" : `rgba(3,8,26,${k / STEPS})`; });
   for (let y = 0; y < plan.h; y += 1) paint(y, (x) => { const lv = plan.level[y * plan.w + x] ?? 0; return lv < 4 ? "" : `rgba(${glow},${((lv - 3) * 2) / STEPS})`; });
   return ops;
 }

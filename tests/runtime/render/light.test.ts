@@ -27,19 +27,19 @@ test("masks and plans are cached: recomputed only when the light changes cell, t
   const lights = [{ x: 80, y: 80, radius: 48 }], L = createLighting(), w = world(), plan = L.plan(w, lights, 1, 0, 8), held = L.stats.masks.computed;
   assert.equal(L.plan(w, lights, 1, 0, 8), plan); assert.equal(L.stats.plans, 1); L.plan(w, [{ x: 81, y: 80, radius: 48 }], 1, 0, 8); assert.equal(L.stats.masks.computed, held);
   L.plan(w, [{ x: 96, y: 80, radius: 48 }], 1, 0, 8); assert.equal(L.stats.masks.computed, held + 1); const at = L.stats.plans;
-  assert.notEqual(L.plan(w, lights, 1, 0.25, 8), plan); assert.notEqual(L.plan(w, lights, 0.5, 0, 8), plan); assert.notEqual(L.plan(w, lights, 1, 0, 4), plan);
-  assert.notEqual(L.plan(w, [{ x: 80, y: 80, radius: 48 }], 1, 0, 8), plan); assert.notEqual(L.plan(world(), lights, 1, 0, 8), plan); assert.equal(L.stats.plans, at + 5); });
+  for (const [ww, ll, wa, di, re] of [[w, lights, 1, 0.25, 8], [w, lights, 0.5, 0, 8], [w, lights, 1, 0, 4], [w, [{ x: 80, y: 80, radius: 48 }], 1, 0, 8], [world(), lights, 1, 0, 8]] as const) { const M = createLighting(), p = M.plan(w, lights, 1, 0, 8); assert.notEqual(M.plan(ww, ll, wa, di, re), p); assert.equal(M.stats.plans, 2); }
+  assert.equal(L.plan(w, lights, 1, 0.25, 8) === L.plan(w, lights, 1, 0.25, 8), true); assert.equal(L.stats.plans, at + 1); });
 test("six-step falloff: rings 6 down to 1 from the light, 0 past the radius and 0 behind a wall (step 31)", () => {
   const plan = createLighting().plan(world(), [{ x: 80, y: 80, radius: 48 }], 1, 0, 8);
   assert.deepEqual(row(plan.level, plan.w, 9), [0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 6, 5, 4, 3, 2, 1, 0, 0, 0, 0]);
   assert.deepEqual(row(plan.dark, plan.w, 9), [19, 19, 19, 19, 16, 13, 10, 6, 3, 0, 0, 3, 6, 10, 13, 16, 19, 19, 19, 19]); assert.deepEqual([...new Set(plan.level)].sort(), [0, 1, 2, 3, 4, 5, 6]);
-  const walled = createLighting().plan(world(10, 10, Array.from({ length: 10 }, (_, r) => [7, r])), [{ x: 80, y: 80, radius: 48 }], 1, 0, 8);
+  const walled = createLighting().plan(world(10, 10, Array.from({ length: 10 }, (_, r) => [7, r])), [{ x: 80, y: 80, radius: 80 }], 1, 0, 8);
   assert.ok((walled.level[9 * walled.w + 14] ?? 0) > 0); assert.deepEqual(row(walled.level, walled.w, 9).slice(16), [0, 0, 0, 0]); assert.deepEqual(row(walled.dark, walled.w, 9).slice(16), [19, 19, 19, 19]);
   const both = createLighting().plan(world(), [{ x: 40, y: 80, radius: 20 }, { x: 80, y: 80, radius: 80 }], 1, 0, 8); assert.ok((both.level[9 * both.w + 4] ?? 0) >= 5); });
 test("darkness: the night wash and stage dim share one overlay capped at 0.72, and every alpha the light ops use is a whole 32nd (step 31)", () => {
   assert.deepEqual([[0, 0], [1, 0], [1, 1], [0, 1], [0.5, 0.25], [-1, 2]].map(([w, d]) => darkness(w ?? 0, d ?? 0)), [0, 19, 23, 23, 15, 23]);
   const ops = lightOps(createLighting().plan(world(), [{ x: 80, y: 80, radius: 40 }], 1, 0.5, 4), fitView(320, 320, 1, 16, 16), snapCamera(0, 0, 1));
-  for (const op of ops) { const k = Number(op.colour.slice(op.colour.lastIndexOf(",") + 1, -1)) * 32; assert.equal(k, Math.round(k)); assert.ok(k >= 1 && k <= 23); } });
+  for (const op of ops) { const k = Number(op.colour.slice(op.colour.lastIndexOf(",") + 1, -1)) * 32; assert.equal(k, Math.round(k)); assert.ok(k >= 1 && k <= 23); if (!op.colour.startsWith("rgba(255,176,72,")) assert.equal(op.colour, `rgba(3,8,26,${k / 32})`); } assert.ok(ops.some((o) => o.colour === "rgba(3,8,26,0.59375)")); });
 test("stage dim: a torch keeps a half-size glow by default; a fullyDark light goes fully dark (step 31)", () => {
   const L = createLighting(), w = world(), far = (p: LightPlan): number => { let m = 0; const sx = Math.floor(80 / p.res); for (let iy = 0; iy < p.h; iy += 1) for (let ix = 0; ix < p.w; ix += 1) if ((p.level[iy * p.w + ix] ?? 0) > 0) m = Math.max(m, Math.abs(ix - sx), Math.abs(iy - sx)); return m; };
   const night = L.plan(w, [{ x: 80, y: 80, radius: 64 }], 1, 0, 8), dim = L.plan(w, [{ x: 80, y: 80, radius: 64 }], 1, 1, 8);
