@@ -15,7 +15,7 @@ export type DrawCmd = { readonly band: Band; readonly sheet: string; readonly sx
 /** A tile layer. `anims` is `tileProps.anim` resolved to clips: tile index → clip. Tiles share one offsetMs. */
 export type TileLayer = { readonly sheet: Sheet; readonly tiles: readonly (number | null)[]; readonly anims?: Readonly<Record<number, Clip>> };
 /** A unit or prop in the standing band. `dx`/`dy` are the art-px move offset; `flipX` comes from the clip fallback (slice 30, `noMirror`). */
-export type Standing = { readonly kind: "object" | "unit"; readonly sheet: Sheet; readonly c: number; readonly r: number; readonly dx?: number; readonly dy?: number; readonly z?: number; readonly frame?: number; readonly clip?: Clip; readonly flipX?: boolean };
+export type Standing = { readonly kind: "object" | "unit"; readonly sheet: Sheet; readonly c: number; readonly r: number; readonly dx?: number; readonly dy?: number; readonly z?: number; readonly frame?: number; readonly clip?: Clip; readonly flipX?: boolean; readonly key?: string };
 /** Anything drawn above the world: wash, effect air, glow or UI. `x`/`y` are top-left in world art px. */
 export type Overlay = { readonly band: Exclude<Band, "base">; readonly sheet: Sheet; readonly x: number; readonly y: number; readonly frame?: number; readonly clip?: Clip; readonly startMs?: number; readonly op?: DrawOp };
 export type RenderScene = { readonly cols: number; readonly rows: number; readonly tileW: number; readonly tileH: number; readonly mapSeed: number; readonly ground: readonly TileLayer[]; readonly above: readonly TileLayer[]; readonly standing: readonly Standing[]; readonly overlays: readonly Overlay[] };

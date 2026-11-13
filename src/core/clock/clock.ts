@@ -92,20 +92,17 @@ export function createClock(opts?: ClockOptions): Clock {
       render(dt);
     },
     skip(ms: number): void {
-      if (!Number.isInteger(ms) || ms < 0) throw new RangeError("advance: dtMs must be an integer >= 0");
+      if (!Number.isInteger(ms) || ms < 0) throw new RangeError("skip: ms must be an integer >= 0");
       if (paused) return;
       const end = tickN + Math.floor((ms * scaleQ) / stepQ);
-      const tell = (): void => {
-        const info: TickInfo = { tick: tickN, simMs: tickN * stepMs, stepMs };
-        for (const cb of tickSubs.slice()) { if (!tickSubs.includes(cb)) continue; try { cb(info); } catch (err) { report(err); } }
-      };
       while (tickN < end) {
         if (tickSubs.length > 0) { runTick(); continue; }
         let next = end;
         for (const t of timers) { if (t.dead) continue; const at = Math.max(tickN + 1, Math.ceil(t.dueMs / stepMs)); if (at < next) next = at; }
-        tickN = next; fireDue(tickN * stepMs); if (tickSubs.length > 0) tell();
+        tickN = next; fireDue(tickN * stepMs);
+        if (tickSubs.length > 0) { const info: TickInfo = { tick: tickN, simMs: tickN * stepMs, stepMs }; for (const cb of tickSubs.slice()) { if (!tickSubs.includes(cb)) continue; try { cb(info); } catch (err) { report(err); } } }
       }
-      render(ms);
+      render(ms); // step 30 ruling: render subscribers get the skipped host time as dtMs (not clamped to maxFrameMs)
     },
     step(): void { runTick(); render(0); },
     pause(): void { paused = true; accQ = 0; },

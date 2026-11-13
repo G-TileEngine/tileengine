@@ -19,7 +19,7 @@ const world = (salt = 0, anim = false): RenderScene => ({
 });
 type Load = (id: string) => Promise<object>;
 type Rig = { driver: ReturnType<typeof createDriver>; view: FakeCanvas; clock: Clock; made: FakeCanvas[]; boxes: string[]; offs: boolean; disconnects: () => number; docs: () => number; queued: () => number; run: (s: number, hz: number) => void; fire: (dt: number) => void; hide: () => void; show: () => void; resize: (w: number, h: number) => void; jump: (ms: number) => void };
-function rig(over: { bare?: boolean; dpr?: number; cap?: number; builds?: number; x?: () => number; scene?: () => RenderScene; load?: Load; boom?: () => boolean } = {}): Rig {
+function rig(over: { bare?: boolean; dpr?: number; cap?: number; builds?: number; x?: () => number; scene?: () => RenderScene; load?: Load; boom?: () => boolean; clock?: Clock } = {}): Rig {
   const made: FakeCanvas[] = [], queue = new Map<number, (ts: number) => void>(), docs: { t: string; fn: () => void }[] = [], boxes: string[] = [];
   let seq = 1, ts = 1000, vis = "visible", cuts = 0, onResize: ((es: readonly { devicePixelContentBoxSize?: readonly { inlineSize: number; blockSize: number }[] }[]) => void) | undefined;
   const view = Object.assign(new FakeCanvas(), { clientWidth: 160, clientHeight: 96 });
@@ -32,7 +32,7 @@ function rig(over: { bare?: boolean; dpr?: number; cap?: number; builds?: number
     ResizeObserver: Watch, ...(over.bare === true ? {} : { OffscreenCanvas: Off }),
   };
   const scene = over.scene ?? ((): RenderScene => world());
-  const clock = createClock();
+  const clock = over.clock ?? createClock();
   const driver = createDriver({
     env, canvas: view, clock, view: (): View => { if (over.boom?.() === true) throw new Error("view"); return { scene: scene(), x: over.x?.() ?? 0, y: 0, s: 1 }; },
     load: over.load ?? ((id) => { const img = bank.get(id); return img === undefined ? Promise.reject(new Error(id)) : Promise.resolve(img); }),
@@ -143,4 +143,10 @@ test("the host folder holds only the driver; it imports only the clock, backend 
   const check = (src: string): void => { assert.equal(banned.test(src), false); for (const hit of src.matchAll(/(?:from|import)\s*[`'"]([^`'"]+)[`'"]/g)) assert.match(hit[1] ?? "", ok); };
   const text = keep(readFileSync(`${dir}/raf-driver.ts`, "utf8")); check(text);
   for (const extra of ['const a = "//"; void globalThis;', 'const b = "//"; import "../input/index.ts";', "void new Intl.DateTimeFormat();"]) assert.throws(() => check(keep(`${text}\n${extra}`)));
+});
+test("step 30 driver and clock carries: no loop before start(), a backwards timestamp clears the view back-off, hide drops the sub-ms carry, skip reports its own dtMs and name", () => {
+  let n = 0, boom = true; const early = rig({ boom: () => { n += 1; return boom; } }); early.show(); assert.equal(early.queued(), 0);
+  early.driver.start(); early.fire(0); assert.equal(n, 1); boom = false; early.fire(-4984); assert.equal(n, 2);
+  const clock = createClock({ stepMs: 1 }), box = rig({ clock }); box.driver.start(); box.fire(0); box.fire(25.7); box.hide(); box.show(); box.fire(0); box.fire(25.4); assert.equal(clock.now(), 50);
+  const dts: number[] = []; clock.onRender((info) => { dts.push(info.dtMs); }); clock.skip(60000); assert.equal(dts.at(-1), 60000); assert.throws(() => clock.skip(-1), (err: unknown) => err instanceof RangeError && /skip:/.test(String(err)));
 });

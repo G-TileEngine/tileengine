@@ -1,0 +1,11 @@
+ src/core/clock/clock.ts                  |  11 +--
+ src/runtime/host/raf-driver.ts           |  10 +--
+ src/runtime/render/draw-list.ts          |   9 +-
+ src/runtime/render/frames.ts             |   6 +-
+ src/runtime/render/index.ts              |   2 +-
+ src/runtime/render/types.ts              |   2 +-
+ src/runtime/scene/world-scene.ts         |  88 ++++++++++++++++++++
+ tests/runtime/host/raf-driver.test.ts    |  10 ++-
+ tests/runtime/render/render-core.test.ts |   4 +-
+ tests/runtime/scene/world-scene.test.ts  | 136 +++++++++++++++++++++++++++++++
+ 10 files changed, 254 insertions(+), 24 deletions(-)
