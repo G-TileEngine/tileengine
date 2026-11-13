@@ -43,3 +43,28 @@ CEO order 00:17 (results over usage): researched the "frame player feel" in RPG 
 - Moonlit stays palette swap + overlay. Found: Sprite Studio's night preview uses a multiply tint and its own 160 ms timer, so it doesn't match the game. Fix both with the one player.
 - Proposed handoff fields (frame ms/hold, loop, tags, anchor, phase, light) each need a CN (DSK); the 64-frame cap is settled.
 Full write-up: [../renderer-research-ux.md](../renderer-research-ux.md)
+
+## SpriteCook tree wind and travelling waves (step 32 reference)
+CEO-approved art reference for step 32 ("subtle sway on everything leafy"), via CoS 2026-11-13. Sources: SpriteCook, [How to make pixel art trees move in the wind](https://www.spritecook.ai/blog/pixel-art-trees-wind-animation) (2026-11-10; full text at `/workspace/share/renderer-refs/spritecook-tree-wind.md`), and @asynkimo, ['traveling waves'](https://x.com/asynkimo/status/2121230694860890582) (clip at `/workspace/refs/asynkimo-traveling-waves.mp4`). Code licence unstated: **ideas only, no code copied.**
+
+**Art side (how the tree is authored)**
+- Three layers on the tree's own canvas: **leaf clumps** (one per bright mass of leaves; their oak has 14), a fixed **trunk** layer (wood, roots, anything that must not move), and a darker **inside** layer under the clumps, so a gap between two clumps shows shadowed tree, never the ground.
+- **Outline pixels belong to the neighbouring clump**, not the trunk, or the outline stays behind when the clump moves.
+- Pines split by branch tiers instead (8 on theirs); the narrowest leaf rows are the gaps between tiers.
+
+**Motion**
+- Each clump walks a **1 px loop** (up, right, down, back), whole pixels only, at **10 poses a second** even when the game runs at 60.
+- **Edge clumps loose, centre stiff** (centre moves about a third as far); in a light breeze only the outer clumps move.
+- Timing is a **travelling wave**: each clump is delayed by how far downwind it sits, in world position, so the wave carries from one tree to the next (their clip: 1.54 s per loop, crests 69 px apart, about 45 px/s).
+- **Gusts with still air between**: in a gust the loop widens to 2–3 px and the canopy leans downwind and springs back (oak about 2.2 s per swing, bush about 1 s); away from gusts the loop shrinks to zero.
+- Pitfalls they list: gaps that show the ground (inside layer missing), constant jitter (never-still loops), random timing, half-pixel offsets that blur or shimmer, and a new pose every frame (looks like sliding paper).
+
+**UX implication**
+Sprite Studio or the map editor needs a **"split canopy into clumps"** step. Basic: *Auto-split* with a **Clumps** slider (fewer/more), the trunk found automatically and the inside layer made for the maker. Advanced: **paint clumps** by hand (each clump a colour, like the body-map brush) and paint the trunk. Library trees and bushes come pre-split, so Basic adds zero taps.
+
+**Where this updates my earlier sway notes** (above, and [renderer-research-ux §3 and §7](../renderer-research-ux.md))
+- *2–4 baked frames at ~300 ms* → **per-clump 1 px loop at 100 ms (10 poses/s)**. Baked frames can't carry a wave that runs across trees or gusts, so this points to live whole-pixel offsets per clump. That is a renderer contract question for the Engine Architect (his §3 frame player; my earlier question 8 on baked sway vs the 64-frame cap). Until he decides, baked frames stay the fallback for tiny bushes.
+- *Canopy only* → still right, refined: the trunk layer is fixed and the canopy moves **in clumps**, edge more than centre.
+- *Seeded random offset per copy* → **timing by world position** (the travelling wave). A seed can still vary a tree's stiffness, but random timing is now a listed pitfall.
+- *"What moves" brush (Taiji wind map)* → becomes the **clump brush** in Advanced: painting clumps also marks what moves; unpainted = trunk.
+- *Subtle sway on everything, always* → **still air between gusts**. My earlier CEO question ("default sway: subtle everywhere, or only on trees?") now also asks whether gusts are on by default.

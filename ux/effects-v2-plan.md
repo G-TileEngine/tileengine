@@ -10,6 +10,7 @@
 **This mock:** `ui-shell/mock-effects-v2/` (standalone; links `../css/app.css` unchanged). Review shots: `ui-shell/screenshots/73e-*.png`.  
 **Addendum (2026-11-12, 14:27 Europe/London):** standing CEO direction that TileEngine stays a game maker first, but should also earn a reputation as a **2D asset tool** for people who only want assets. No 3D. Effects v2 should export usable sprites on their own. See §8.  
 **Feel tricks (2026-11-12, 15:37 Europe/London):** the CEO reacted 🔥 to the effect-tricks research (`/workspace/share/effects-tricks/effect-tricks-research.md`). The top seven are plan-only in **§17**, next to §16 Impact flash (§16 and §16.1 are unchanged). Screen shake stays **DEFERRED**.  
+**Effects ↔ sprites sync (2026-11-13, 18:2x London, CEO order 18:15):** for the step 33 player base, see [`effects-sprite-sync.md`](effects-sprite-sync.md). It covers frame events, `hitAt`, anchor points, behind/front-unit depth, effect lights, palette-safe tint, whole-pixel rules, a shake proposal, mobile budgets and the EA kit brief. It proposes revisions to §13.1 wording, §17 shake (DEFERRED → proposed) and the stock ×5 size. Nothing in this file is changed by it until the EA and CEO rule.
 **Architect rulings (2026-11-12, afternoon, Europe/London):** the eight Engine Architect answers to §12 are recorded in §13. The engine has **no effects renderer yet** (`src/fx/order` only reads and orders effect data). This work is a **new effects-player track**. The CEO’s 13:38 order is hardening **H1→H4 first**, with the sprite track paused, so effects-renderer steps **queue after H4** unless he reorders. See §9.
 
 The clip is the quality bar, not a sprite sheet to copy. The built-in preset would be a look-alike from our own pictures and motion. @mozza_dev’s units, tiles and VFX are not reused.
@@ -830,3 +831,4 @@ These are outside the ACCEPTED §2.10.1. A build needs CEO SEND, and L47 goes af
   - The normal layers-and-frames screen stays, as a preset graph underneath. Node mode evolves the current tool; it is not a new system.
   - Reference: Pixel Composer by @MakhamDev.
   - **No build now.**
+- **Step 33 sync base (2026-11-13):** see [`effects-sprite-sync.md`](effects-sprite-sync.md) §9, the EA kit brief.

@@ -5,6 +5,14 @@ Mockup: `/workspace/tileengine/ui-shell/mock-effects/` (its own `index.html`, `e
 Data: catalogue **rev 11** (behaviour `effect`, 30 knobs, 6 recipes). The mock reads the shared mirror `ui-shell/data/behaviours.json` (its old local copy is deleted). Formats: `data/project-format.md` r7 (§6.7 effect documents), `data/setup-format.md` (§2.10), art rules from `ux/art-upload.md`.
 Source studied: Before The Fall's SkillRig booth (`g-tile-engine/src/docs/SKILLRIG.md`, `chess/skillrig/SkillRig.tsx`, `spec.ts`, `paint.ts`, and `src/bootGate.tsx`, which shows the booth only on the workshop door, never in a shipped build).
 
+**Step 33 sync base (2026-11-13):** [`effects-sprite-sync.md`](effects-sprite-sync.md) proposes these:
+- an Advanced "Sync" card: Starts when / Comes from / Follows the unit;
+- a frame strip with "Hit here" under the scrubber;
+- the "Behind unit" and "In front of unit" Draw-on places;
+- project-ramp colour chips, with "Any colour" moving to Advanced.
+
+The 64-frame cap in §5 is unchanged; the EA is asked to name the steps and frames caps.
+
 ## 1. Purpose
 The Effect Designer is how you decide what an ability **looks like** when it plays: the picture, its colour and glow, where it starts, how it moves (up to 6 steps), the hit flash and the timing.
 - It never changes what an ability **does**. Damage, pushes and targets stay in the ability's rules.
