@@ -1,0 +1,8 @@
+A	src/runtime/canvas/canvas2d.ts
+A	src/runtime/render/chunk-plan.ts
+M	src/runtime/render/dirty.ts
+M	src/runtime/render/draw-list.ts
+M	src/runtime/render/index.ts
+A	tests/runtime/canvas/canvas2d.test.ts
+A	tests/runtime/canvas/fake-canvas.ts
+M	tests/runtime/render/render-core.test.ts
