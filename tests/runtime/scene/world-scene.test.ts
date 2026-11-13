@@ -3,136 +3,134 @@ import { test } from "node:test";
 import { createClock } from "../../../src/core/clock/index.ts";
 import { canvas2d } from "../../../src/runtime/canvas/canvas2d.ts";
 import { createDriver, type HostEnv } from "../../../src/runtime/host/raf-driver.ts";
-import { badMs, buildDrawList, chunkedList, clipMs, fitView, present, snapCamera, type Clip, type Overlay, type RenderScene, type Sheet } from "../../../src/runtime/render/index.ts";
-import { createSceneLink, pickClip, type SceneAsset, type SceneUnit, type SceneWorld } from "../../../src/runtime/scene/world-scene.ts";
+import { badMs, buildDrawList, chunkedList, clipMs, fitView, present, snapCamera, type Clip, type RenderScene, type Sheet } from "../../../src/runtime/render/index.ts";
+import { createSceneLink, pickClip, type SceneAsset, type SceneWorld } from "../../../src/runtime/scene/world-scene.ts";
 import { FakeCanvas, type Raster } from "../canvas/fake-canvas.ts";
-const sheet = (id: string, fw: number, fh: number, columns = 1): Sheet => ({ id, fw, fh, columns });
-const paint = (fw: number, fh: number, frames: number, columns: number, salt: number): Raster => {
-  const w = columns * fw, h = Math.ceil(frames / columns) * fh, px = new Uint32Array(w * h);
-  for (let f = 0; f < frames; f += 1) for (let y = 0; y < fh; y += 1) for (let x = 0; x < fw; x += 1) px[(Math.floor(f / columns) * fh + y) * w + (f % columns) * fw + x] = (0xff000000 | ((salt & 255) << 16) | ((f & 255) << 8) | ((x & 15) << 4) | (y & 15)) >>> 0;
+
+/** Every frame pixel is unique: colour = sheet salt + frame + position, so a wrong frame, offset or flip shows. */
+const art = (salt: number, fw: number, fh: number, n = 16): Raster => {
+  const w = fw * 4, h = fh * Math.ceil(n / 4), px = new Uint32Array(w * h);
+  for (let y = 0; y < h; y += 1) for (let x = 0; x < w; x += 1) px[y * w + x] = ((0xff << 24) | (salt << 16) | ((Math.floor(y / fh) * 4 + Math.floor(x / fw)) << 10) | ((y % fh) << 5) | (x % fw)) >>> 0;
   return { w, h, px };
 };
-const bank = new Map<string, Raster>();
-const remember = (id: string, fw: number, fh: number, frames = 1, columns = 1, salt = 1): Sheet => { bank.set(id, paint(fw, fh, frames, columns, salt)); return sheet(id, fw, fh, columns); };
-const grid = (cols: number, rows: number, at: (c: number, r: number) => number | null): (number | null)[] => Array.from({ length: cols * rows }, (_, i) => at(i % cols, Math.floor(i / cols)));
-const picture = (scene: RenderScene, t: number, chunked: boolean, x = 0, y = 0, w = 160, h = 160): FakeCanvas => {
-  const fit = fitView(w, h, 1, scene.tileW, scene.tileH), cam = snapCamera(x, y, 1), canvas = new FakeCanvas();
-  const r = canvas2d(canvas, { images: (id) => bank.get(id), makeCanvas: (cw, ch) => { const n = new FakeCanvas(); n.width = cw; n.height = ch; return n; }, buildsPerFrame: 99 });
-  r.world(scene, 1); present(r, fit, (chunked ? chunkedList : buildDrawList)(scene, fit, cam, t, 10), "#000000"); return canvas;
+const sheet = (id: string, fw = 16, fh = 16): Sheet => ({ id, fw, fh, columns: 4 });
+const water: Clip = { name: "water", frames: [8, 9], ms: [200, 200] };
+const map = (over: Partial<RenderScene>): RenderScene => ({ cols: 20, rows: 20, tileW: 16, tileH: 16, mapSeed: 3, ground: [], above: [], standing: [], overlays: [], ...over });
+const blank = (n: number): (number | null)[] => Array.from({ length: n }, () => null);
+const put = (cols: number, n: number, at: readonly [number, number, number][]): (number | null)[] => { const t = blank(n); for (const [c, r, v] of at) t[r * cols + c] = v; return t; };
+/** One picture: `chunked` goes through the chunk cache like the driver; otherwise every tile is drawn live. */
+const picture = (sc: RenderScene, bank: ReadonlyMap<string, Raster>, chunked: boolean, x = 0, y = 0, tMs = 0, w = 160, h = 96): { px: Uint32Array; w: number } => {
+  const host = Object.assign(new FakeCanvas(), {}); host.width = w; host.height = h;
+  const fit = fitView(w, h, 1, sc.tileW, sc.tileH), cam = snapCamera(x, y, 1), be = canvas2d(host, { images: (id) => bank.get(id), makeCanvas: (cw, ch) => Object.assign(new FakeCanvas(), { width: cw, height: ch }), buildsPerFrame: 100 });
+  be.world(sc, 1); present(be, fit, chunked ? chunkedList(sc, fit, cam, tMs, 10) : buildDrawList(sc, fit, cam, tMs, 10), "#000000");
+  return { px: host.px, w };
 };
-const same = (a: FakeCanvas, b: FakeCanvas): void => { assert.equal(`${a.width}x${a.height}`, `${b.width}x${b.height}`); let bad = -1; for (let i = 0; i < a.px.length; i += 1) if (a.px[i] !== b.px[i]) { bad = i; break; } assert.equal(bad, -1); };
-const pix = (c: FakeCanvas, x: number, y: number): number => c.px[y * c.width + x] ?? 0;
-const map = (over: Partial<RenderScene> = {}): RenderScene => ({ cols: 20, rows: 20, tileW: 16, tileH: 16, mapSeed: 1, ground: [], above: [], standing: [], overlays: [], ...over });
-const clip = (name: string, frames: readonly number[], extra: Partial<Clip> = {}): Clip => ({ name, frames, ...extra });
-const unit = (id: string, over: Partial<SceneUnit> = {}): SceneUnit => ({ id, sprite: "hero", at: { c: 1, r: 1 }, offset: null, facing: "S", alive: true, ...over });
-const world = (over: Partial<SceneWorld> = {}): SceneWorld => ({ cols: 20, rows: 20, tileW: 16, tileH: 16, mapSeed: 1, assets: {}, layers: [], units: [], objects: [], overlays: [], ...over });
-const layer = (tileset: string | null, aboveUnits: boolean, visible: boolean, tiles: readonly (number | null)[]) => ({ tileset, aboveUnits, visible, tiles });
+const at = (p: { px: Uint32Array; w: number }, x: number, y: number): number => p.px[y * p.w + x] ?? -1;
+const tileOf = (v: number): number => (v >> 10) & 63;
+const same = (a: { px: Uint32Array }, b: { px: Uint32Array }): void => { let n = a.px.length === b.px.length ? 0 : 1; for (let i = 0; i < a.px.length; i += 1) if (a.px[i] !== b.px[i]) n += 1; assert.equal(n, 0); };
+
 test("K2: animated tiles are never baked into chunks; uncovered water animates and matches the live picture (step 30)", () => {
-  const g = remember("g", 16, 16, 16, 4, 1), a = remember("a", 16, 16, 4, 2, 2), water = clip("water", [8, 9], { ms: [200, 200] });
-  const scene = map({ ground: [{ sheet: g, tiles: grid(20, 20, (c) => (c < 3 ? 8 : 1)), anims: { 8: water } }], above: [{ sheet: a, tiles: grid(20, 20, (c) => (c < 3 ? null : 1)) }] });
-  const z0 = picture(scene, 0, true), z1 = picture(scene, 200, true); same(z0, picture(scene, 0, false)); same(z1, picture(scene, 200, false));
-  assert.equal((pix(z0, 1, 1) >> 8) & 255, 8); assert.equal((pix(z1, 1, 1) >> 8) & 255, 9);
+  const bank = new Map([["g", art(1, 16, 16)], ["a", art(2, 16, 16)]]), n = 400;
+  const sc = map({ ground: [{ sheet: sheet("g"), tiles: Array.from({ length: n }, (_, i) => (i % 20 < 3 ? 8 : 1)), anims: { 8: water } }], above: [{ sheet: sheet("a"), tiles: put(20, n, [[0, 0, 2], [1, 1, 2]]) }] });
+  const t0 = picture(sc, bank, true, 0, 0, 0), t1 = picture(sc, bank, true, 0, 0, 200);
+  same(t0, picture(sc, bank, false, 0, 0, 0)); same(t1, picture(sc, bank, false, 0, 0, 200));
+  assert.equal(tileOf(at(t0, 40, 40)), 8); assert.equal(tileOf(at(t1, 40, 40)), 9); assert.equal(tileOf(at(t1, 3, 3)), 2);
 });
 test("r27: an off-size tile sits bottom-left on its cell at native size, unclipped, overflowing up and right (step 30)", () => {
-  const s = remember("big", 24, 32, 1, 1, 3), scene = map({ ground: [{ sheet: s, tiles: grid(20, 20, (c, r) => (c === 1 && r === 2 ? 0 : null)) }] });
-  const cmd = buildDrawList(scene, fitView(64, 64, 1, 16, 16), snapCamera(0, 0, 1), 0, 10).cmds[0], pic = picture(scene, 0, false, 0, 0, 64, 64), src = bank.get("big");
-  assert.deepEqual([cmd?.dx, cmd?.dy, cmd?.dw, cmd?.dh], [16, 16, 24, 32]); assert.equal(pix(pic, 39, 16), src?.px[23]); assert.equal(pix(pic, 16, 47), src?.px[31 * 24]);
+  const sc = map({ ground: [{ sheet: sheet("big", 24, 32), tiles: put(20, 400, [[1, 2, 5]]) }] });
+  const cmd = buildDrawList(sc, fitView(160, 96, 1, 16, 16), snapCamera(0, 0, 1), 0, 10).cmds[0];
+  assert.deepEqual(cmd && [cmd.dx, cmd.dy, cmd.dw, cmd.dh, cmd.sw, cmd.sh], [16, 16, 24, 32, 24, 32]);
+  const p = picture(sc, new Map([["big", art(3, 24, 32)]]), false); assert.equal(at(p, 39, 16) & 0x3ff, (0 << 5) | 23); assert.equal(at(p, 16, 47) & 0x3ff, (31 << 5) | 0);
 });
 test("r27: draw order is rows top to bottom then left to right, so a lower row covers an upper row's overflow (step 30)", () => {
-  const A = remember("A", 24, 32, 1, 1, 4), B = remember("B", 24, 32, 1, 1, 5), C = remember("C", 24, 32, 1, 1, 6);
-  const one = (sh: Sheet, c0: number, r0: number) => ({ sheet: sh, tiles: grid(20, 20, (c, r) => (c === c0 && r === r0 ? 0 : null)) });
-  const scene = map({ ground: [one(A, 1, 1), one(B, 1, 2), one(C, 2, 2)] }), pic = picture(scene, 0, false, 0, 0, 80, 80);
-  assert.deepEqual(buildDrawList(scene, fitView(80, 80, 1, 16, 16), snapCamera(0, 0, 1), 0, 10).cmds.map((c) => c.sheet), ["A", "B", "C"]);
-  assert.equal(pix(pic, 20, 20), bank.get("B")?.px[4 * 24 + 4]); assert.equal(pix(pic, 36, 20), bank.get("C")?.px[4 * 24 + 4]);
+  const sc = map({ ground: [{ sheet: sheet("big", 24, 32), tiles: put(20, 400, [[1, 1, 5], [1, 2, 6], [2, 2, 7]]) }] });
+  const cmds = buildDrawList(sc, fitView(160, 96, 1, 16, 16), snapCamera(0, 0, 1), 0, 10).cmds;
+  assert.deepEqual(cmds.map((c) => [c.dx, c.dy]), [[16, 0], [16, 16], [32, 16]]);
+  const p = picture(sc, new Map([["big", art(3, 24, 32)]]), false); assert.equal(tileOf(at(p, 20, 20)), 6); assert.equal(tileOf(at(p, 36, 20)), 7);
 });
 test("r27: culling widens to rows below and columns to the left, so offscreen tiles still draw their overflow (step 30)", () => {
-  const big = remember("cull", 40, 40, 1, 1, 7), scene = map({ ground: [{ sheet: big, tiles: grid(20, 20, (c, r) => (c === 0 && r === 8 ? 0 : null)) }] });
-  const view = picture(scene, 0, false, 32, 0, 96, 112); assert.notEqual(pix(view, 0, 104) & 0xffffff, 0); same(picture(scene, 0, true, 32, 0, 96, 112), view);
-  const wide = remember("w40", 40, 8, 1, 1, 8), tall = remember("h40", 8, 40, 1, 1, 9);
-  const both = map({ ground: [{ sheet: wide, tiles: grid(20, 20, (c, r) => (c === 2 && r === 1 ? 0 : null)) }, { sheet: tall, tiles: grid(20, 20, (c, r) => (c === 5 && r === 6 ? 0 : null)) }] });
-  const small = picture(both, 0, false, 64, 16, 40, 64), full = picture(both, 0, false, 0, 0, 320, 320);
-  for (let y = 0; y < 64; y += 1) for (let x = 0; x < 40; x += 1) assert.equal(pix(small, x, y), pix(full, 64 + x, 16 + y));
+  const sc = map({ ground: [{ sheet: sheet("big", 40, 40), tiles: put(20, 400, [[0, 8, 5], [3, 1, 6]]) }] });
+  const p = picture(sc, new Map([["big", art(3, 40, 40)]]), false, 32, 0, 0, 96, 112);
+  assert.equal(tileOf(at(p, 2, 104)), 5); assert.equal(tileOf(at(p, 30, 2)), 6);
+  same(p, picture(sc, new Map([["big", art(3, 40, 40)]]), true, 32, 0, 0, 96, 112));
+  for (const [fw, fh] of [[40, 8], [8, 40]] as const) { const s2 = map({ ground: [{ sheet: sheet("o", fw, fh), tiles: put(20, 400, [[2, 2, 5], [5, 6, 6]]) }] }), b2 = new Map([["o", art(3, fw, fh)]]), small = picture(s2, b2, false, 64, 16, 0, 40, 64), big = picture(s2, b2, false, 0, 0, 0, 320, 320); let n = 0; for (let y = 0; y < 64; y += 1) for (let x = 0; x < 40; x += 1) if (at(small, x, y) !== at(big, x + 64, y + 16)) n += 1; assert.equal(n, 0); }
 });
 test("r27: overflow crosses chunk edges because off-size layers are drawn live, never chunked (step 30)", () => {
-  const g = remember("ground", 16, 16, 1, 1, 10), over = remember("over", 24, 32, 1, 1, 11);
-  const scene = map({ ground: [{ sheet: g, tiles: grid(20, 20, () => 0) }, { sheet: over, tiles: grid(20, 20, (c, r) => (c === 15 && r === 16 ? 0 : null)) }] });
-  const chunked = picture(scene, 0, true, 160, 192, 128, 128); same(chunked, picture(scene, 0, false, 160, 192, 128, 128));
-  assert.equal(pix(chunked, 80, 50), bank.get("over")?.px[2 * 24]); assert.equal(pix(chunked, 80, 66), bank.get("over")?.px[18 * 24]);
-  for (const sh of [remember("tall", 16, 40, 1, 1, 12), remember("wide", 40, 16, 1, 1, 13)]) { const one = map({ ground: [{ sheet: sh, tiles: grid(20, 20, (c, r) => (c === 15 && r === 16 ? 0 : null)) }] }); same(picture(one, 0, true, 160, 192, 160, 160), picture(one, 0, false, 160, 192, 160, 160)); }
+  const bank = new Map([["big", art(3, 24, 32)], ["g", art(1, 16, 16)]]);
+  const sc = map({ ground: [{ sheet: sheet("g"), tiles: Array.from({ length: 400 }, () => 1) }, { sheet: sheet("big", 24, 32), tiles: put(20, 400, [[15, 16, 5]]) }] });
+  const live = picture(sc, bank, false, 160, 192, 0, 160, 96), cut = picture(sc, bank, true, 160, 192, 0, 160, 96);
+  same(cut, live); assert.equal(tileOf(at(cut, 90, 50)), 5); assert.equal(tileOf(at(cut, 82, 66)), 5);
+  for (const [fw, fh] of [[16, 40], [40, 16]] as const) { const b2 = new Map([["o", art(5, fw, fh)], ["g", art(1, 16, 16)]]), s2 = map({ ground: [sc.ground[0] as RenderScene["ground"][number], { sheet: sheet("o", fw, fh), tiles: put(20, 400, [[15, 16, 5]]) }] }); same(picture(s2, b2, true, 160, 192, 0, 160, 96), picture(s2, b2, false, 160, 192, 0, 160, 96)); }
 });
 test("odd sizes: the r27 bottom-left anchor is exact (no rounding); a sprite centred on an odd tile lands on a half art px that rounds up before scaling (step 30)", () => {
-  const odd = map({ cols: 8, rows: 8, tileW: 15, tileH: 15, ground: [{ sheet: remember("odd", 17, 21, 1, 1, 14), tiles: grid(8, 8, (c, r) => (c === 2 && r === 3 ? 0 : null)) }] });
-  const cmd = buildDrawList(odd, fitView(200, 200, 2, 15, 15), snapCamera(0, 0, 2), 0, 10).cmds[0]; assert.equal(cmd?.dx, 60); assert.equal(cmd?.dy, 78);
-  const hero = map({ cols: 4, rows: 4, tileW: 15, tileH: 15, standing: [{ kind: "unit", sheet: remember("spr", 15, 15, 1, 1, 15), c: 0, r: 0, frame: 0 }] });
-  assert.equal(buildDrawList(hero, fitView(80, 80, 2, 15, 15), snapCamera(0, 0, 2), 0, 10).cmds[0]?.dx, 2);
+  const sc = map({ tileW: 15, tileH: 15, ground: [{ sheet: sheet("big", 17, 21), tiles: put(20, 400, [[2, 3, 5]]) }], standing: [{ kind: "object", sheet: sheet("s", 15, 15), c: 0, r: 0 }] });
+  const cmds = buildDrawList(sc, fitView(150, 90, 2, 15, 15), snapCamera(0, 0, 2), 0, 10).cmds;
+  assert.deepEqual(cmds.map((c) => [c.dx, c.dy]), [[60, 78], [2, 0]]);
 });
 test("r26 clips: short ms[] pads with its last value, long ms[] is cut, empty ms[] means fps; fps may be fractional, a bad fps plays at 8 (step 30)", () => {
-  const ms = (c: Clip): number[] => clipMs(c, 10);
-  assert.deepEqual(ms(clip("a", [0, 1, 2], { ms: [100, 300] })), [100, 300, 300]); assert.deepEqual(ms(clip("a", [0, 1], { ms: [100, 200, 900] })), [100, 200]);
-  assert.deepEqual(ms(clip("a", [0, 1], { ms: [], fps: 4 })), [250, 250]); assert.deepEqual(ms(clip("a", [0], { fps: 2.5 })), [400]); assert.deepEqual(ms(clip("a", [0], { fps: 0.5 })), [2000]); assert.deepEqual(ms(clip("a", [0])), [130]);
-  for (const fps of [0, -2, Number.NaN, Number.POSITIVE_INFINITY, "8" as unknown as number]) assert.deepEqual(ms(clip("a", [0], { fps })), [130]);
+  assert.deepEqual(clipMs({ name: "a", frames: [0, 1, 2], ms: [100, 300] }, 10), [100, 300, 300]);
+  assert.deepEqual(clipMs({ name: "a", frames: [0, 1], ms: [100, 200, 900] }, 10), [100, 200]);
+  assert.deepEqual(clipMs({ name: "a", frames: [0, 1], ms: [], fps: 4 }, 10), [250, 250]);
+  assert.deepEqual(clipMs({ name: "a", frames: [0], fps: 2.5 }, 10), [400]); assert.deepEqual(clipMs({ name: "a", frames: [0], fps: 0.5 }, 10), [2000]); assert.deepEqual(clipMs({ name: "a", frames: [0] }, 10), [130]);
+  for (const fps of [0, -2, Number.NaN, Infinity, "8" as unknown as number]) assert.deepEqual(clipMs({ name: "a", frames: [0], fps }, 10), [130]);
 });
 test("r26 clips: a bad fps warns clipFpsInvalid once and never fails the load (ms[] length and ms-over-fps warn too); the stored clip is passed on unchanged (step 30)", () => {
-  const badFps = clip("bad", [0], { fps: 0 }), short = clip("short", [0, 1, 2], { ms: [100, 200] }), both = clip("both", [0, 1], { ms: [100, 100], fps: 8 });
-  const asset: SceneAsset = { sheet: remember("u", 16, 16), clips: [badFps, short, both, clip("empty", [0], { ms: [], fps: 4 }), clip("half", [0], { fps: 0.5 })] };
-  const link = createSceneLink(), layers: SceneWorld["layers"] = [], w = world({ assets: { u: asset }, layers, units: [unit("h", { sprite: "u", action: "bad" })] });
-  link.scene(w); link.scene(w); link.scene(world({ assets: { u: asset }, layers, units: [unit("h", { sprite: "u", action: "bad" })] }));
-  assert.deepEqual(link.notices.map((n) => n.code), ["clipFpsInvalid", "clipMsLength", "clipFpsIgnored"]); assert.equal(link.scene(w).standing[0]?.clip, badFps); assert.equal(badFps.fps, 0);
+  const bad: Clip = { name: "idle-down", frames: [0, 1], fps: 0 }, odd: Clip = { name: "run", frames: [0, 1], ms: [100] }, ok: Clip = { name: "x", frames: [0], fps: 2.5 }, both: Clip = { name: "walk", frames: [0], fps: 4, ms: [100] }, quiet: Clip[] = [{ name: "e", frames: [0, 1], ms: [], fps: 4 }, { name: "slow", frames: [0], fps: 0.5 }];
+  const assets = { hero: { sheet: sheet("h"), clips: [bad, odd, ok, both] }, calm: { sheet: sheet("c"), clips: quiet } }, link = createSceneLink(), w = world({ assets, units: [unit("u1")] });
+  const sc = link.scene(w); link.scene({ ...w, units: [unit("u1", 3)] }); link.scene({ ...w, assets: { ...assets, more: hero } });
+  assert.deepEqual(link.notices.map((n) => n.code), ["clipFpsInvalid", "clipMsLength", "clipFpsIgnored"]); assert.equal(sc.standing[0]?.clip, bad); assert.equal(bad.fps, 0);
 });
 test("r29 clips: an ms[] with any entry that is not a whole number >= 1 is ignored whole; clipMsInvalid once per clip, before clipMsLength and clipFpsIgnored (step 30)", () => {
-  for (const bad of [Number.NaN, 0, -5, 2.5, "9" as unknown as number, Number.POSITIVE_INFINITY]) { assert.equal(badMs([bad]), true); assert.deepEqual(clipMs(clip("x", [0, 1], { ms: [bad, 1], fps: 4 }), 10), [250, 250]); assert.deepEqual(clipMs(clip("y", [0], { ms: [bad] }), 10), [130]); }
-  const nan = clip("n", [0, 1], { ms: [Number.NaN, 10], fps: 4 }), zero = clip("z", [0], { ms: [0] }), neg = clip("m", [0], { ms: [-5] }), frac = clip("f", [0, 1], { ms: [2.5], fps: 8 }), inf = clip("i", [0], { ms: [Number.POSITIVE_INFINITY] });
-  const a: SceneAsset = { sheet: remember("ra", 16, 16), clips: [nan, zero, neg] }, b: SceneAsset = { sheet: remember("rb", 16, 16), clips: [frac, inf] }, share: SceneAsset = { sheet: remember("rc", 16, 16), clips: [nan] };
-  const link = createSceneLink(), layers: SceneWorld["layers"] = []; link.scene(world({ assets: { a, b }, layers })); link.scene(world({ assets: { a, b, share }, layers }));
-  assert.deepEqual(link.notices.map((n) => n.code), ["clipMsInvalid", "clipMsInvalid", "clipMsInvalid", "clipMsInvalid", "clipMsInvalid"]); assert.ok(Number.isNaN(nan.ms?.[0]));
+  for (const v of [Number.NaN, 0, -5, 2.5, "9" as unknown as number, Infinity]) { assert.deepEqual(clipMs({ name: "a", frames: [0, 1], ms: [100, v], fps: 4 }, 10), [250, 250]); assert.deepEqual(clipMs({ name: "a", frames: [0], ms: [v] }, 10), [130]); assert.equal(badMs([100, v]), true); }
+  const c1: Clip = { name: "a", frames: [0, 1, 2], ms: [100, Number.NaN], fps: 4 }, cs: Clip[] = [c1, ...[0, -5, 2.5, "9" as unknown as number].map((v, i) => ({ name: `b${i}`, frames: [0], ms: [v] }))], link = createSceneLink();
+  link.scene(world({ assets: { hero: { sheet: sheet("h"), clips: cs } } })); link.scene(world({ assets: { hero: { sheet: sheet("h"), clips: cs }, twin: { sheet: sheet("t"), clips: [c1] } } }));
+  assert.deepEqual(link.notices.map((n) => `${n.code}:${["a", "b0", "b1", "b2", "b3"].find((c) => new RegExp(`\\b${c}\\b`).test(n.message)) ?? ""}`), ["clipMsInvalid:a", "clipMsInvalid:b0", "clipMsInvalid:b1", "clipMsInvalid:b2", "clipMsInvalid:b3"]); assert.equal(Number.isNaN(c1.ms?.[1]), true);
 });
+const unit = (id: string, c = 2, over: Partial<SceneWorld["units"][number]> = {}): SceneWorld["units"][number] => ({ id, sprite: "hero", at: { c, r: 2 }, offset: null, facing: "S", alive: true, ...over });
+const hero: SceneAsset = { sheet: sheet("h"), clips: [{ name: "idle-down", frames: [0, 1, 2, 3], ms: [70, 90, 110, 130] }] };
+const world = (over: Partial<SceneWorld>): SceneWorld => ({ cols: 8, rows: 8, tileW: 16, tileH: 16, mapSeed: 9, assets: { hero }, layers: [], units: [], objects: [], overlays: [], ...over });
 test("the link maps layers, units, objects and overlays: aboveUnits goes above, hidden or tileset-less layers drop, tileProps.anim becomes anims (step 30)", () => {
-  const g = remember("g", 16, 16), ga = remember("ga", 16, 16), tree = remember("tree", 16, 16), hero = remember("lhero", 16, 16), water = clip("water", [8, 9], { ms: [200, 200] }), tiles = grid(20, 20, () => 8);
-  const assets: SceneWorld["assets"] = { g: { sheet: g, clips: [water], tileProps: { 8: { anim: "water" } } }, ga: { sheet: ga }, tree: { sheet: tree }, hero: { sheet: hero, clips: [clip("idle", [1])] } };
-  const overlays: Overlay[] = [{ band: "ui", sheet: g, x: 1, y: 2, frame: 0 }];
-  const scene = createSceneLink().scene(world({ assets, overlays, layers: [layer("g", false, true, tiles), layer("nope", false, true, tiles), layer(null, true, true, tiles), layer("ga", true, false, tiles), layer("ga", true, true, tiles)], units: [unit("h", { at: { c: 2, r: 3 }, offset: { dx: 0.5, dy: -0.25 }, facing: "E" }), unit("dead", { alive: false }), unit("dying", { alive: false, action: "die" }), unit("gone", { sprite: "missing" })], objects: [{ assetId: "tree", at: { c: 4, r: 5 }, z: 2 }, { assetId: "missing", at: { c: 0, r: 0 } }] }));
-  assert.deepEqual([scene.ground.map((l) => l.sheet.id), scene.above.map((l) => l.sheet.id)], [["g"], ["ga"]]); assert.equal(scene.ground[0]?.anims?.[8], water); assert.equal(scene.overlays, overlays);
-  assert.deepEqual(scene.standing.map((s) => `${s.kind}:${s.key ?? ""}:${s.sheet.id}`), ["object::tree", "unit:dying:lhero", "unit:h:lhero"]); assert.equal(scene.standing[0]?.z, 2); assert.equal(scene.standing[2]?.c, 2); assert.equal(scene.standing[2]?.dx, 8); assert.equal(scene.standing[2]?.dy, -4);
+  const t = blank(64), assets = { hero, g: { sheet: sheet("g"), clips: [water], tileProps: { 8: { anim: "water" } } }, ga: { sheet: sheet("ga") }, rock: { sheet: sheet("r") } };
+  const ov = [{ band: "ui" as const, sheet: sheet("r"), x: 1, y: 2 }];
+  const sc = createSceneLink().scene(world({ tileH: 8, assets, overlays: ov, objects: [{ assetId: "rock", at: { c: 4, r: 1 }, z: 2 }], units: [unit("b", 1, { offset: { dx: 0.5, dy: -0.25 } }), unit("a", 5), unit("dead", 3, { alive: false }), unit("dying", 6, { alive: false, action: "die" })],
+    layers: [{ tileset: "g", aboveUnits: false, visible: true, tiles: t }, { tileset: "ga", aboveUnits: true, visible: true, tiles: t }, { tileset: "g", aboveUnits: false, visible: false, tiles: t }, { tileset: null, aboveUnits: false, visible: true, tiles: t }] }));
+  assert.deepEqual([sc.ground.map((l) => l.sheet.id), sc.above.map((l) => l.sheet.id)], [["g"], ["ga"]]); assert.equal(sc.ground[0]?.anims?.[8], water); assert.equal(sc.overlays, ov);
+  assert.deepEqual(sc.standing.map((s) => [s.kind, s.key ?? "", s.c, s.dx ?? 0, s.dy ?? 0, s.z ?? 0]), [["object", "", 4, 0, 0, 2], ["unit", "a", 5, 0, 0, 0], ["unit", "b", 1, 8, -2, 0], ["unit", "dying", 6, 0, 0, 0]]);
 });
-test("a stable scene: the same world rebuilt each frame returns the same scene object, so a still picture settles to 0 draws a second (step 30)", async () => {
-  const g = remember("sg", 16, 16), hero = remember("sh", 16, 16), idle = clip("idle", [0]), move = clip("move", [1]);
-  const assets: SceneWorld["assets"] = { sg: { sheet: g }, hero: { sheet: hero, clips: [idle, move] } }, layers = [layer("sg", false, true, grid(20, 20, () => 0))], late = [layer("later", false, true, grid(20, 20, () => 0))];
-  const h = unit("h"), link = createSceneLink(), base = world({ assets, layers, units: [h] }), first = link.scene(base);
-  assert.equal(link.scene({ ...base, units: [{ ...h }] }), first); const moved = link.scene({ ...base, units: [{ ...h, at: { c: 3, r: 1 } }] }); assert.notEqual(moved, first); assert.equal(moved.ground, first.ground);
-  const again = createSceneLink(), settled = again.scene(base);
-  for (const next of [world({ assets, layers, units: [{ ...h, facing: "N" }] }), world({ assets, layers, units: [{ ...h, action: "move" }] }), world({ assets, layers, units: [{ ...h, offset: { dx: 1, dy: 0 } }] }), world({ assets, layers, units: [{ ...h, sprite: "sg" }] }), world({ assets, layers, units: [h], mapSeed: 2 }), world({ assets, layers, units: [h], cols: 19 }), world({ assets, layers, units: [h], tileW: 8 }), world({ assets, layers, units: [h], objects: [{ assetId: "sg", at: { c: 0, r: 0 } }] }), world({ assets, layers, units: [h], overlays: [{ band: "ui", sheet: g, x: 0, y: 0, frame: 0 }] })]) assert.notEqual(again.scene(next), settled);
-  const hold = createSceneLink(), kept = hold.scene(base); assert.equal(hold.scene({ ...base, objects: [], overlays: [] }), kept);
-  const a = unit("a", { sprite: "hero", at: { c: 2, r: 2 }, offset: { dx: 0, dy: 0 }, facing: "S", action: "idle" }), b = unit("b", { at: { c: 0, r: 0 }, facing: null });
-  assert.equal(hold.scene({ ...base, units: [b, a] }), hold.scene({ ...base, units: [a, b] })); assert.notEqual(hold.scene({ ...base, units: [a, b] }), hold.scene({ ...base, units: [unit("a|hero|2,2|0,0|S|idle;b", { at: { c: 0, r: 0 }, offset: { dx: 0, dy: 0 }, facing: null })] }));
-  const appear = createSceneLink(); assert.equal(appear.scene(world({ assets, layers: late })).ground.length, 0); assert.equal(appear.scene(world({ assets: { ...assets, later: { sheet: g } }, layers: late })).ground.length, 1);
-  const q = new Map<number, (t: number) => void>(); let seq = 1, ts = 0; const env = { requestAnimationFrame: (cb: (t: number) => void) => { const id = seq++; q.set(id, cb); return id; }, cancelAnimationFrame: (id: number) => { q.delete(id); }, devicePixelRatio: 1, document: { visibilityState: "visible", addEventListener() {}, removeEventListener() {}, createElement: () => new FakeCanvas() } } as HostEnv;
-  const live = createSceneLink(), driver = createDriver({ env, canvas: Object.assign(new FakeCanvas(), { clientWidth: 64, clientHeight: 64 }), clock: createClock(), view: () => ({ scene: live.scene({ ...base, units: [{ ...h }] }), x: 0, y: 0, s: 1 }), load: (id) => Promise.resolve(bank.get(id) ?? {}) });
-  driver.start(); const step = (): void => { const id = q.keys().next().value; if (id === undefined) return; const cb = q.get(id); q.delete(id); cb?.(ts); ts += 1000 / 60; };
-  for (let i = 0; i < 8; i += 1) step(); await new Promise((done) => { setImmediate(done); }); for (let i = 0; i < 90; i += 1) step(); const draws = driver.stats.draws; for (let i = 0; i < 60; i += 1) step(); assert.equal(driver.stats.draws, draws);
+test("a stable scene: the same world rebuilt each frame returns the same scene object, so a still picture settles to 0 draws a second (step 30)", () => {
+  const link = createSceneLink(), layers = [{ tileset: "g", aboveUnits: false, visible: true, tiles: Array.from({ length: 64 }, () => 1) }], assets = { hero: { sheet: sheet("h") }, g: { sheet: sheet("g") } }, objects: SceneWorld["objects"] = [], overlays: SceneWorld["overlays"] = [];
+  const frame = (c = 2): SceneWorld => world({ assets, layers, objects, overlays, units: [unit("u", c)] });
+  const a = link.scene(frame()); assert.equal(link.scene(frame()), a); const moved = link.scene(frame(3)); assert.notEqual(moved, a); assert.equal(moved.ground, a.ground);
+  const bumps = (w: SceneWorld): boolean => { const l = createSceneLink(), b = l.scene(frame(3)); return l.scene(frame(3)) === b && l.scene(w) !== b; }; for (const u of [{ facing: "E" as const }, { action: "move" }, { offset: { dx: 0.5, dy: 0 } }, { sprite: "g" }]) assert.ok(bumps(world({ assets, layers, objects, overlays, units: [unit("u", 3, u)] })));
+  for (const w of [{ mapSeed: 1 }, { cols: 9 }, { layers: [...layers] }, { tileW: 8 }, { objects: [{ assetId: "g", at: { c: 0, r: 0 } }] }, { overlays: [{ band: "ui" as const, sheet: sheet("g"), x: 0, y: 0 }] }]) assert.ok(bumps({ ...frame(3), ...w })); const late = createSceneLink(), lt = late.scene(world({ assets: { hero }, layers, objects, overlays })); assert.equal(late.scene(world({ assets: { ...assets }, layers, objects, overlays })).ground.length - lt.ground.length, 1);
+  const settled = link.scene(frame(3)); assert.equal(link.scene({ ...frame(3), objects: [], overlays: [] }), settled);
+  const ids = createSceneLink(), two = ids.scene(world({ assets, layers, units: [unit("a"), unit("b")] })); assert.equal(ids.scene(world({ assets, layers, units: [unit("b"), unit("a")] })), two); assert.notEqual(ids.scene(world({ assets, layers, units: [unit('a|hero|2,2|0,0|S|idle;b')] })), two);
+  const queue: ((ts: number) => void)[] = [], view = Object.assign(new FakeCanvas(), { clientWidth: 128, clientHeight: 128 });
+  const env: HostEnv = { requestAnimationFrame: (cb) => queue.push(cb), cancelAnimationFrame: () => {}, devicePixelRatio: 1, document: { visibilityState: "visible", addEventListener: () => {}, removeEventListener: () => {}, createElement: () => new FakeCanvas() } };
+  const bank = new Map([["h", art(4, 16, 16)], ["g", art(1, 16, 16)]]), driver = createDriver({ env, canvas: view, clock: createClock(), view: () => ({ scene: link.scene(frame(3)), x: 0, y: 0, s: 1 }), load: (id) => Promise.resolve(bank.get(id) ?? {}) });
+  let ts = 0; const run = (n: number): void => { for (let i = 0; i < n; i += 1) { const cb = queue.shift(); ts += 1000 / 60; cb?.(ts); } };
+  driver.start(); run(1); return new Promise<void>((done) => { setImmediate(done); }).then(() => { run(30); const d = driver.stats.draws; assert.ok(d >= 2); run(60); assert.equal(driver.stats.draws - d, 0); assert.equal(driver.stats.failed + driver.stats.errors, 0); });
 });
 test("standing order is stable: objects in document order then units by id; a walking unit keeps its animation phase across cells; dx does not break c ties (step 30)", () => {
-  const walk = clip("move", [0, 1, 2, 3], { ms: [100, 100, 100, 100] }), body = remember("body", 16, 16, 4, 4, 20);
-  const assets: SceneWorld["assets"] = { r: { sheet: remember("r", 16, 16) }, h: { sheet: remember("h", 16, 16) }, a: { sheet: remember("a", 16, 16, 4, 4, 21), clips: [walk] }, m: { sheet: remember("m", 16, 16, 4, 4, 22), clips: [walk] }, z: { sheet: remember("z", 16, 16, 4, 4, 23), clips: [walk] }, body: { sheet: body, clips: [walk] } };
-  const link = createSceneLink(), units = ["z", "a", "m"].map((id) => unit(id, { sprite: id, action: "move" }));
-  const scene = link.scene(world({ assets, objects: [{ assetId: "r", at: { c: 0, r: 0 } }, { assetId: "h", at: { c: 1, r: 0 } }], units }));
-  assert.deepEqual(scene.standing.map((s) => s.sheet.id), ["r", "h", "a", "m", "z"]);
-  const at = (c: number, t: number): number => buildDrawList(link.scene(world({ assets, units: [unit("w", { sprite: "body", at: { c, r: 0 }, action: "move" })] })), fitView(160, 64, 1, 16, 16), snapCamera(0, 0, 1), t, 10).cmds.find((cmd) => cmd.sheet === "body")?.sx ?? -1;
-  for (const t of [0, 50, 100, 150, 250, 350]) assert.equal(at(2, t), at(5, t));
-  const order = buildDrawList(map({ standing: [{ kind: "unit", sheet: body, c: 1, r: 0, dx: 20, frame: 0, key: "w" }, { kind: "object", sheet: remember("obj", 16, 16), c: 2, r: 0, frame: 0 }] }), fitView(96, 32, 1, 16, 16), snapCamera(0, 0, 1), 0, 10);
-  assert.deepEqual(order.cmds.map((c) => c.sheet), ["body", "obj"]);
+  const link = createSceneLink(), fit = fitView(128, 128, 1, 16, 16), cam = snapCamera(0, 0, 1);
+  const phase = (c: number, t: number): number => buildDrawList(link.scene(world({ units: [unit("u", c)] })), fit, cam, t, 10).cmds[0]?.sx ?? -1;
+  for (const t of [0, 70, 160, 290, 400, 777]) assert.equal(phase(2, t), phase(5, t));
+  const sc = map({ cols: 8, rows: 8, standing: [{ kind: "unit", sheet: sheet("h"), c: 1, r: 2, dx: 20, key: "u" }, { kind: "object", sheet: sheet("r"), c: 2, r: 2 }] });
+  assert.deepEqual(buildDrawList(sc, fit, cam, 0, 10).cmds.map((c) => c.sheet), ["h", "r"]);
+  const order = createSceneLink().scene(world({ assets: { hero, r: { sheet: sheet("r") } }, units: [unit("z"), unit("m"), unit("a")], objects: [{ assetId: "r", at: { c: 1, r: 1 } }, { assetId: "hero", at: { c: 0, r: 0 } }] }));
+  assert.deepEqual(order.standing.map((s) => s.key ?? s.sheet.id), ["r", "h", "a", "m", "z"]);
 });
 test("an overlay is not drawn before its startMs and wakes the frame loop at startMs (step 30)", () => {
-  const sh = remember("ov", 16, 16, 2, 2, 21), ov: Overlay = { band: "fxAir", sheet: sh, x: 0, y: 0, clip: clip("blink", [0, 1], { ms: [100, 100] }), startMs: 500 };
-  const at = (t: number, x = 0) => buildDrawList(map({ overlays: [{ ...ov, x }] }), fitView(64, 64, 1, 16, 16), snapCamera(0, 0, 1), t, 10);
-  const early = at(499), on = at(500); assert.equal(early.cmds.length, 0); assert.equal(early.dueMs, 500); assert.equal(on.cmds.length, 1); assert.equal(on.dueMs, 600); assert.equal(at(499, 900).dueMs, Infinity);
+  const sc = map({ overlays: [{ band: "fxAir", sheet: sheet("fx"), x: 0, y: 0, startMs: 500, clip: { name: "boom", frames: [0, 1], ms: [100, 100] } }] }), fit = fitView(64, 64, 1, 16, 16), cam = snapCamera(0, 0, 1);
+  const early = buildDrawList(sc, fit, cam, 499, 10); assert.equal(early.cmds.length, 0); assert.equal(early.dueMs, 500); assert.equal(buildDrawList(map({ overlays: [{ ...(sc.overlays[0] as RenderScene["overlays"][number]), x: 900 }] }), fit, cam, 499, 10).dueMs, Infinity);
+  const on = buildDrawList(sc, fit, cam, 500, 10); assert.equal(on.cmds.length, 1); assert.equal(on.dueMs, 600);
 });
 test("§7.3 clip fallback: exact, bare facing for move, mirror unless noMirror, down then bare then left/right/up, idle, die→hit→idle, first frame (step 30)", () => {
-  const names = (...xs: string[]): SceneAsset => ({ sheet: sheet("p", 16, 16), clips: xs.map((name, i) => clip(name, [i + 1])) });
-  const got = (asset: SceneAsset, action: string, facing: SceneUnit["facing"]): string => { const p = pickClip(asset, action, facing); return `${p.clip?.name ?? "-"}:${p.frame ?? "-"}:${p.flipX}`; };
-  assert.deepEqual([
-    got(names("move-right"), "move", "E"), got(names("right"), "move", "E"), got(names("move-left"), "move", "E"), got({ ...names("move-left"), noMirror: true }, "move", "E"),
-    got(names("idle-down", "idle"), "idle", "N"), got(names("attack"), "attack", "S"), got(names("attack-left"), "attack", "S"), got(names("attack-right"), "attack", "S"),
-    got(names("attack-up"), "attack", "S"), got(names("idle-down"), "dance", "S"), got(names("hit-down", "idle"), "die", "S"), got(names("idle"), "die", "W"),
-    got(names("zzz"), "dance", "N"), got(names(), "dance", null),
-  ], ["move-right:-:false", "right:-:false", "move-left:-:true", "move-left:-:false", "idle-down:-:false", "attack:-:false", "attack-left:-:false", "attack-right:-:false", "attack-up:-:false", "idle-down:-:false", "hit-down:-:false", "idle:-:false", "-:1:false", "-:0:false"]);
+  const c = (...names: string[]): SceneAsset => ({ sheet: sheet("x"), clips: names.map((name, i) => ({ name, frames: [i * 2 + 1] })) });
+  const name = (a: SceneAsset, act: string, f: "N" | "E" | "S" | "W" | null): string => { const p = pickClip(a, act, f); return `${p.clip?.name ?? `#${p.frame}`}${p.flipX ? "~" : ""}`; };
+  assert.equal(name(c("idle-down", "idle-left"), "idle", "W"), "idle-left"); assert.equal(name(c("idle-down", "left"), "move", "W"), "left");
+  assert.equal(name(c("idle-down", "idle-right"), "idle", "W"), "idle-right~"); assert.equal(name({ ...c("idle-up", "idle-right"), noMirror: true }, "idle", "W"), "idle-right");
+  assert.equal(name(c("idle-up", "idle"), "idle", "N"), "idle-up"); assert.equal(name(c("idle-up", "idle"), "idle", "E"), "idle"); assert.equal(name(c("idle-up", "idle-left"), "idle", "S"), "idle-left"); assert.equal(name(c("idle", "idle-down"), "idle", "N"), "idle-down");
+  assert.equal(name(c("idle-down", "attack-up"), "attack", "S"), "attack-up"); assert.equal(name(c("idle-down"), "cast", "S"), "idle-down");
+  assert.equal(name(c("idle-down", "hit-down"), "die", "S"), "hit-down"); assert.equal(name(c("idle-down"), "die", "S"), "idle-down"); assert.equal(name(c("walk"), "idle", "S"), "#1"); assert.equal(name(c(), "idle", null), "#0");
 });
