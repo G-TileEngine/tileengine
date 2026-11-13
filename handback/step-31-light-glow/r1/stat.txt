@@ -1,0 +1,9 @@
+ src/runtime/render/frames.ts            |  4 +-
+ src/runtime/render/index.ts             |  2 +
+ src/runtime/render/light.ts             | 80 +++++++++++++++++++++++++++++++++
+ src/runtime/render/visibility.ts        | 51 +++++++++++++++++++++
+ src/runtime/scene/world-scene.ts        |  2 +-
+ tests/runtime/host/raf-driver.test.ts   |  1 +
+ tests/runtime/render/light.test.ts      | 72 +++++++++++++++++++++++++++++
+ tests/runtime/scene/scene-fence.test.ts | 16 +++++++
+ 8 files changed, 225 insertions(+), 3 deletions(-)
