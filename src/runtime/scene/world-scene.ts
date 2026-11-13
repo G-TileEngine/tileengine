@@ -65,7 +65,7 @@ export function createSceneLink(): SceneLink {
     for (const clip of asset.clips ?? []) {
       const invalid = badMs(clip.ms);
       if (invalid && !bad.has(clip)) { bad.add(clip); notices.push({ code: "clipMsInvalid", message: clip.name }); }
-      if (!invalid && clip.ms !== undefined && clip.ms.length > 0) { if (clip.ms.length !== clip.frames.length) lenBad = true; if (clip.fps !== undefined) both = true; }
+      if (!invalid && Array.isArray(clip.ms) && clip.ms.length > 0) { if (clip.ms.length !== clip.frames.length) lenBad = true; if (clip.fps !== undefined) both = true; }
       if (clip.fps !== undefined && !(typeof clip.fps === "number" && Number.isFinite(clip.fps) && clip.fps > 0)) fpsBad = true;
     }
     if (fpsBad) notices.push({ code: "clipFpsInvalid", message: asset.sheet.id });

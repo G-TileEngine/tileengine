@@ -149,4 +149,5 @@ test("step 30 driver and clock carries: no loop before start(), a backwards time
   early.driver.start(); early.fire(0); assert.equal(n, 1); boom = false; early.fire(-4984); assert.equal(n, 2);
   const clock = createClock({ stepMs: 1 }), box = rig({ clock }); box.driver.start(); box.fire(0); box.fire(25.7); box.hide(); box.show(); box.fire(0); box.fire(25.4); assert.equal(clock.now(), 50);
   const dts: number[] = []; clock.onRender((info) => { dts.push(info.dtMs); }); clock.skip(60000); assert.equal(dts.at(-1), 60000); assert.throws(() => clock.skip(-1), (err: unknown) => err instanceof RangeError && /skip:/.test(String(err)));
+  const gone = rig(); gone.driver.dispose(); gone.driver.start(); gone.show(); assert.equal(gone.queued(), 0);
 });

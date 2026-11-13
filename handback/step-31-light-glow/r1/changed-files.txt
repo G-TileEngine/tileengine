@@ -1,0 +1,8 @@
+M	src/runtime/render/frames.ts
+M	src/runtime/render/index.ts
+A	src/runtime/render/light.ts
+A	src/runtime/render/visibility.ts
+M	src/runtime/scene/world-scene.ts
+M	tests/runtime/host/raf-driver.test.ts
+A	tests/runtime/render/light.test.ts
+A	tests/runtime/scene/scene-fence.test.ts
