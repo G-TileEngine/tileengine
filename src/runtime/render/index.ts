@@ -7,3 +7,7 @@ export { CHUNK, chunkId, chunkedList, isStatic } from "./chunk-plan.ts";
 export { needsDraw, present } from "./dirty.ts";
 export { openCell, visibleCells, createSight, type Blockers } from "./visibility.ts";
 export { BANDS_OF_LIGHT, DARK_CAP, STEPS, WASH_MAX, createLighting, createMoonlit, darkness, lightOps, type FillOp, type Light, type LightPlan, type LightWorld } from "./light.ts";
+export { SWAY_EDGE_PX, SWAY_LOOP, WIND_PX_PER_S, cycleFrames, scrollFrames, swayFrames, waveOffsetMs, type Pixels } from "./bakes.ts";
+export { FOAM_PX, SHALLOW_PX, SHORE_DEFAULTS, SHORE_MAX, WAVE_GAP, shoreDistance, shoreFrames, type ShoreColours, type ShoreOpts } from "./water.ts";
+export { SEE_THROUGH_DEFAULT, createSeeThrough } from "./canopy.ts";
+export { ANIM_HINT, MOTION_CAP, SHORE_MS, bakeMotion, motionCell, pickMotion, shoreSettings, type Motion, type MotionBake, type MotionCtx, type MotionPart, type Ramp, type ShoreNotice, type ShorePlan, type ShoreStyle } from "./motion.ts";

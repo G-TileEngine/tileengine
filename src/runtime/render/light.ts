@@ -4,11 +4,11 @@ import type { Cam, Fit, Overlay, RenderScene, Sheet, Standing, TileLayer } from 
 export type Light = { readonly x: number; readonly y: number; readonly radius: number; readonly fullyDark?: boolean };
 export type LightWorld = Blockers & { readonly tileW: number; readonly tileH: number };
 export type LightPlan = { readonly res: number; readonly w: number; readonly h: number; readonly dark: Uint8Array; readonly level: Uint8Array };
-export type FillOp = { readonly x: number; readonly y: number; readonly w: number; readonly h: number; readonly colour: string };
+export type FillOp = { readonly x: number; readonly y: number; readonly w: number; readonly h: number; readonly colour: string; readonly op?: "add" };
 export const BANDS_OF_LIGHT = 6, WASH_MAX = 0.62, DARK_CAP = 0.72, STEPS = 32;
 
 export function darkness(wash: number, dim: number): number {
-  const w = Math.min(1, Math.max(0, wash)), d = Math.min(1, Math.max(0, dim)), aWash = WASH_MAX * w, room = 1 - (1 - DARK_CAP) / (1 - aWash);
+  const w = Number.isFinite(wash) ? Math.min(1, Math.max(0, wash)) : 0, d = Number.isFinite(dim) ? Math.min(1, Math.max(0, dim)) : 0, aWash = WASH_MAX * w, room = 1 - (1 - DARK_CAP) / (1 - aWash);
   return Math.floor((1 - (1 - aWash) * (1 - Math.min(d, room))) * STEPS);
 }
 
@@ -18,12 +18,12 @@ export function createLighting(): { plan(world: LightWorld, lights: readonly Lig
   return {
     stats,
     plan(world, lights, wash, dim, res) {
-      if (prev !== undefined && prev.world === world && prev.lights === lights && prev.wash === wash && prev.dim === dim && prev.res === res) return prev.plan;
+      if (prev !== undefined && prev.world === world && prev.lights === lights && Object.is(prev.wash, wash) && Object.is(prev.dim, dim) && prev.res === res) return prev.plan;
       stats.plans += 1;
       const total = darkness(wash, dim), sw = Math.ceil(world.cols * world.tileW / res), sh = Math.ceil(world.rows * world.tileH / res);
-      const level = new Uint8Array(sw * sh), dark = new Uint8Array(sw * sh), span = Math.min(world.tileW, world.tileH);
+      const level = new Uint8Array(sw * sh), dark = new Uint8Array(sw * sh), span = Math.min(world.tileW, world.tileH), blind = !Number.isFinite(wash) || !Number.isFinite(dim);
       for (const light of lights) {
-        if (dim > 0 && light.fullyDark === true) continue;
+        if (blind || (dim > 0 && light.fullyDark === true)) continue;
         const radius = dim > 0 ? light.radius / 2 : light.radius;
         if (!(radius > 0)) continue;
         const cell = openCell(world, Math.floor(light.x / world.tileW), Math.floor(light.y / world.tileH));
@@ -50,17 +50,17 @@ export function lightOps(plan: LightPlan, fit: Fit, cam: Cam, glow = "255,176,72
   const ops: FillOp[] = [], s = fit.s, res = plan.res, ox = fit.padX - cam.devX, oy = fit.padY - cam.devY;
   const x0 = cam.devX / s, y0 = cam.devY / s, x1 = x0 + fit.artW + res, y1 = y0 + fit.artH + res;
   const on = (ix: number, iy: number): boolean => (ix + 1) * res > x0 && ix * res < x1 && (iy + 1) * res > y0 && iy * res < y1;
-  const paint = (iy: number, at: (ix: number) => string): void => {
+  const paint = (iy: number, at: (ix: number) => string, add: boolean): void => {
     let from = -1, ink = "";
-    const flush = (to: number): void => { if (from >= 0) ops.push({ x: from * res * s + ox, y: iy * res * s + oy, w: (to - from) * res * s, h: res * s, colour: ink }); };
+    const flush = (to: number): void => { if (from >= 0) ops.push(add ? { x: from * res * s + ox, y: iy * res * s + oy, w: (to - from) * res * s, h: res * s, colour: ink, op: "add" } : { x: from * res * s + ox, y: iy * res * s + oy, w: (to - from) * res * s, h: res * s, colour: ink }); };
     for (let ix = 0; ix <= plan.w; ix += 1) {
       const colour = ix < plan.w && on(ix, iy) ? at(ix) : "";
       if (colour === ink) continue;
       flush(ix); from = colour === "" ? -1 : ix; ink = colour;
     }
   };
-  for (let y = 0; y < plan.h; y += 1) paint(y, (x) => { const k = plan.dark[y * plan.w + x] ?? 0; return k === 0 ? "" : `rgba(3,8,26,${k / STEPS})`; });
-  for (let y = 0; y < plan.h; y += 1) paint(y, (x) => { const lv = plan.level[y * plan.w + x] ?? 0; return lv < 4 ? "" : `rgba(${glow},${((lv - 3) * 2) / STEPS})`; });
+  for (let y = 0; y < plan.h; y += 1) paint(y, (x) => { const k = plan.dark[y * plan.w + x] ?? 0; return k === 0 ? "" : `rgba(3,8,26,${k / STEPS})`; }, false);
+  for (let y = 0; y < plan.h; y += 1) paint(y, (x) => { const lv = plan.level[y * plan.w + x] ?? 0; return lv < 4 ? "" : `rgba(${glow},${((lv - 3) * 2) / STEPS})`; }, true);
   return ops;
 }
 

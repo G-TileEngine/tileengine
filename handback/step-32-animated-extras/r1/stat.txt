@@ -1,0 +1,11 @@
+ src/runtime/canvas/canvas2d.ts               | 33 ++++++++++--
+ src/runtime/render/bakes.ts                  | 76 ++++++++++++++++++++++++++++
+ src/runtime/render/canopy.ts                 | 23 +++++++++
+ src/runtime/render/index.ts                  |  4 ++
+ src/runtime/render/light.ts                  | 18 +++----
+ src/runtime/render/motion.ts                 | 71 ++++++++++++++++++++++++++
+ src/runtime/render/water.ts                  | 33 ++++++++++++
+ tests/runtime/canvas/light-canvas.test.ts    | 32 ++++++++++++
+ tests/runtime/render/animated-extras.test.ts | 62 +++++++++++++++++++++++
+ tests/runtime/render/motion.test.ts          | 48 ++++++++++++++++++
+ 10 files changed, 386 insertions(+), 14 deletions(-)

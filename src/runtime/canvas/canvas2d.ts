@@ -1,4 +1,4 @@
-import { CHUNK, isStatic, type DrawOp, type Fit, type RenderScene, type Renderer, type Sheet, type TileLayer } from "../render/index.ts";
+import { CHUNK, STEPS, isStatic, type Cam, type DrawOp, type Fit, type LightPlan, type RenderScene, type Renderer, type Sheet, type TileLayer } from "../render/index.ts";
 
 export type Ctx2D = {
   imageSmoothingEnabled: boolean; globalCompositeOperation: string; fillStyle: unknown;
@@ -8,15 +8,16 @@ export type Ctx2D = {
 };
 export type CanvasLike = { width: number; height: number; getContext(id: "2d"): Ctx2D | null; addEventListener?(type: string, fn: () => void): void; removeEventListener?(type: string, fn: () => void): void };
 export type Canvas2DOptions = { readonly images: (id: string) => object | undefined; readonly makeCanvas: (w: number, h: number) => CanvasLike; readonly buildsPerFrame?: number; readonly budgetBytes?: number };
-export type Canvas2D = Renderer & { world(scene: RenderScene, rev: number): void; busy(): boolean; dispose(): void; readonly stats: { builds: number; bytes: number; lost: boolean; missing: boolean; capped: boolean } };
+export type Canvas2D = Renderer & { world(scene: RenderScene, rev: number): void; lights(plan: LightPlan, fit: Fit, cam: Cam): void; busy(): boolean; dispose(): void; readonly stats: { builds: number; bytes: number; lost: boolean; missing: boolean; capped: boolean; lightBuilds: number } };
 type Entry = { id: string; canvas: CanvasLike; sig: string; img: object | undefined; frame: number; bytes: number; stale: boolean };
 type Box = { layer: TileLayer; c0: number; r0: number; cw: number; ch: number };
 
 export function canvas2d(canvas: CanvasLike, opts: Canvas2DOptions): Canvas2D {
   const ctx = canvas.getContext("2d");
   if (ctx === null) throw new Error("canvas2d: no 2d context");
-  const budget = opts.budgetBytes ?? 32 * 2 ** 20, limit = opts.buildsPerFrame ?? 2, stats = { builds: 0, bytes: 0, lost: false, missing: false, capped: false }, lru: Entry[] = [];
+  const budget = opts.budgetBytes ?? 32 * 2 ** 20, limit = opts.buildsPerFrame ?? 2, stats = { builds: 0, bytes: 0, lost: false, missing: false, capped: false, lightBuilds: 0 }, lru: Entry[] = [];
   let scene: RenderScene | null = null, rev = Number.NaN, frame = 0, built = 0, open = false, lost = false, missing = false, capped = false, hold = false;
+  let lightsKey: LightPlan | null = null, lightMiss: LightPlan | null = null, darkC: CanvasLike | null = null, glowC: CanvasLike | null = null, lightBytes = 0;
   const tileAt = (layer: TileLayer, c: number, r: number): number | null | undefined => layer.tiles[r * (scene?.cols ?? 0) + c];
   const sigOf = (layer: TileLayer, c0: number, r0: number, cw: number, ch: number): string => {
     let sig = `${layer.sheet.id}/${layer.sheet.columns}`;
@@ -58,7 +59,8 @@ export function canvas2d(canvas: CanvasLike, opts: Canvas2DOptions): Canvas2D {
     stats.builds += 1; stats.bytes += entry.bytes; built += 1; lru.push(entry);
     return entry;
   };
-  const onLost = (): void => { lost = true; stats.lost = true; }, onRestored = (): void => { lost = false; stats.lost = false; hold = true; stats.missing = false; for (const entry of [...lru]) drop(entry); };
+  const freeLights = (): void => { stats.bytes -= lightBytes; lightBytes = 0; lightsKey = null; if (darkC !== null) { darkC.width = 0; darkC.height = 0; } if (glowC !== null) { glowC.width = 0; glowC.height = 0; } darkC = null; glowC = null; };
+  const onLost = (): void => { lost = true; stats.lost = true; }, onRestored = (): void => { lost = false; stats.lost = false; hold = true; stats.missing = false; lightMiss = null; freeLights(); for (const entry of [...lru]) drop(entry); };
   canvas.addEventListener?.("contextlost", onLost); canvas.addEventListener?.("contextrestored", onRestored);
   return {
     stats,
@@ -73,7 +75,28 @@ export function canvas2d(canvas: CanvasLike, opts: Canvas2DOptions): Canvas2D {
       }
     },
     busy: () => !lost && (hold || missing || capped),
-    dispose() { canvas.removeEventListener?.("contextlost", onLost); canvas.removeEventListener?.("contextrestored", onRestored); for (const entry of [...lru]) drop(entry); scene = null; },
+    dispose() { canvas.removeEventListener?.("contextlost", onLost); canvas.removeEventListener?.("contextrestored", onRestored); for (const entry of [...lru]) drop(entry); freeLights(); lightMiss = null; scene = null; },
+    lights(plan, fit, cam) {
+      if (!open || lost) return;
+      if (lightMiss === plan) return;
+      if (lightsKey !== plan) {
+        const same = darkC !== null && glowC !== null && darkC.width === plan.w && darkC.height === plan.h;
+        if (!same) freeLights();
+        const dark = same && darkC !== null ? darkC : opts.makeCanvas(plan.w, plan.h), glow = same && glowC !== null ? glowC : opts.makeCanvas(plan.w, plan.h);
+        if (same) { dark.width = plan.w; glow.width = plan.w; }
+        const dctx = dark.getContext("2d"), gctx = glow.getContext("2d");
+        if (dctx === null || gctx === null) { dark.width = 0; dark.height = 0; glow.width = 0; glow.height = 0; freeLights(); lightMiss = plan; missing = true; return; }
+        const put = (onto: Ctx2D, colour: (i: number) => string): void => { onto.imageSmoothingEnabled = false; for (let i = 0; i < plan.w * plan.h; i += 1) { const c = colour(i); if (c === "") continue; onto.fillStyle = c; onto.fillRect(i % plan.w, (i / plan.w) | 0, 1, 1); } };
+        put(dctx, (i) => { const k = plan.dark[i] ?? 0; return k === 0 ? "" : `rgba(3,8,26,${k / STEPS})`; });
+        put(gctx, (i) => { const lv = plan.level[i] ?? 0; return lv < 4 ? "" : `rgba(255,176,72,${((lv - 3) * 2) / STEPS})`; });
+        if (!same) { lightBytes = plan.w * plan.h * 8; stats.bytes += lightBytes; darkC = dark; glowC = glow; }
+        lightsKey = plan; stats.lightBuilds += 1;
+      }
+      if (darkC === null || glowC === null) return;
+      const dx = fit.padX - cam.devX, dy = fit.padY - cam.devY, dw = plan.w * plan.res * fit.s, dh = plan.h * plan.res * fit.s;
+      ctx.imageSmoothingEnabled = false; ctx.drawImage(darkC, 0, 0, plan.w, plan.h, dx, dy, dw, dh);
+      ctx.globalCompositeOperation = "lighter"; ctx.drawImage(glowC, 0, 0, plan.w, plan.h, dx, dy, dw, dh); ctx.globalCompositeOperation = "source-over";
+    },
     beginFrame(fit: Fit, clear: string) {
       frame += 1; built = 0; missing = false; capped = false;
       if (open) { ctx.restore(); open = false; }
