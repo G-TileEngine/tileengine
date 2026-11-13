@@ -1,0 +1,5 @@
+A	src/runtime/render/fx-live.ts
+M	src/runtime/render/index.ts
+M	src/runtime/render/types.ts
+M	src/runtime/scene/world-scene.ts
+A	tests/runtime/scene/host-hookup.test.ts

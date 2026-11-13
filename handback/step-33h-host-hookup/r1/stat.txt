@@ -1,0 +1,6 @@
+ src/runtime/render/fx-live.ts           |  75 ++++++++++++++++++
+ src/runtime/render/index.ts             |   1 +
+ src/runtime/render/types.ts             |   2 +-
+ src/runtime/scene/world-scene.ts        |  39 ++++++---
+ tests/runtime/scene/host-hookup.test.ts | 136 ++++++++++++++++++++++++++++++++
+ 5 files changed, 240 insertions(+), 13 deletions(-)
