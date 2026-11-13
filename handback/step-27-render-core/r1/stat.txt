@@ -1,0 +1,10 @@
+ src/runtime/render/camera.ts             |  27 +++++++
+ src/runtime/render/dirty.ts              |  16 ++++
+ src/runtime/render/draw-list.ts          |  61 +++++++++++++++
+ src/runtime/render/fit.ts                |  26 +++++++
+ src/runtime/render/frames.ts             |  44 +++++++++++
+ src/runtime/render/index.ts              |   6 ++
+ src/runtime/render/types.ts              |  31 ++++++++
+ tests/runtime/render/fake-renderer.ts    |  34 +++++++++
+ tests/runtime/render/render-core.test.ts | 123 +++++++++++++++++++++++++++++++
+ 9 files changed, 368 insertions(+)
