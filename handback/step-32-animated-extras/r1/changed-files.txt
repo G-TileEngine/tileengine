@@ -1,0 +1,10 @@
+M	src/runtime/canvas/canvas2d.ts
+A	src/runtime/render/bakes.ts
+A	src/runtime/render/canopy.ts
+M	src/runtime/render/index.ts
+M	src/runtime/render/light.ts
+A	src/runtime/render/motion.ts
+A	src/runtime/render/water.ts
+A	tests/runtime/canvas/light-canvas.test.ts
+A	tests/runtime/render/animated-extras.test.ts
+A	tests/runtime/render/motion.test.ts
