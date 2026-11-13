@@ -7,5 +7,5 @@
  src/runtime/scene/world-scene.ts         |  88 ++++++++++++++++++++
  tests/runtime/host/raf-driver.test.ts    |  10 ++-
  tests/runtime/render/render-core.test.ts |   4 +-
- tests/runtime/scene/world-scene.test.ts  | 138 +++++++++++++++++++++++++++++++
- 10 files changed, 256 insertions(+), 24 deletions(-)
+ tests/runtime/scene/world-scene.test.ts  | 136 +++++++++++++++++++++++++++++++
+ 10 files changed, 254 insertions(+), 24 deletions(-)
