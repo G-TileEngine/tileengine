@@ -78,7 +78,7 @@ export function crossed(list: readonly FxEvent[], t1: number, t2: number, loop?:
   const hit = list.map((e, i) => ({ e, i, loop: 0 })).filter(({ e }) => t1 < e.at && e.at <= t2);
   const laps: { e: FxEvent; i: number; loop: number }[] = [];
   if (loop !== undefined && loop.lapMs > 0) {
-    for (let k = Math.max(1, Math.floor((t1 - loop.from) / loop.lapMs) + 1); k <= Math.floor((t2 - loop.from) / loop.lapMs); k += 1) laps.push({ e: { type: "fx:loop", at: loop.from + k * loop.lapMs }, i: k, loop: 1 });
+    for (let k = Math.max(1, Math.floor((t1 - loop.from) / loop.lapMs) + 1); k <= Math.floor((t2 - loop.from) / loop.lapMs) && k < 2 ** 53; k += 1) laps.push({ e: { type: "fx:loop", at: loop.from + k * loop.lapMs }, i: k, loop: 1 });
   }
   return [...hit, ...laps].sort((a, b) => a.e.at - b.e.at || a.loop - b.loop || a.i - b.i).map(({ e }) => e);
 }
@@ -97,8 +97,7 @@ export function placeStep(p: FxPiece, effectStart: number, tMs: number, hitMs: n
   const sample = p.attach === "follow" ? (p.detach === "hit" ? hitMs : tMs) : start;
   const unit = unitAt(sample) ?? (sample === start ? null : unitAt(start));
   if (unit === null) return { band: unitLayer ? "fxAir" : band, sheet: p.sheet, x: tileDraw.x, y: tileDraw.y, frame: 0 };
-  const raw = p.anchor_point === "foot" ? anchorPx(unit.sheet) : pointAt(unit.points, p.anchor_point as PointName, unit.frame, unit.box, unit.sheet.fw, unit.flipX === true);
-  const pt = p.anchor_point === "foot" && unit.flipX === true ? { x: unit.sheet.fw - 1 - raw.x, y: raw.y } : raw;
+  const pt = p.anchor_point === "foot" ? anchorPx(unit.sheet) : pointAt(unit.points, p.anchor_point as PointName, unit.frame, unit.box, unit.sheet.fw, unit.flipX === true);
   const mark = anchorPx(unit.sheet);
   const ux = unit.c * tileW + px(tileW / 2) + (unit.dx ?? 0) - mark.x, uy = (unit.r + 1) * tileH + (unit.dy ?? 0) - mark.y;
   if (!unitLayer) return { band, sheet: p.sheet, x: ux + pt.x - markFx.x, y: uy + pt.y - markFx.y, frame: 0 };
