@@ -77,7 +77,7 @@ export function readFxOrder(text: string, limits: FxReadLimits, opts?: { readonl
   let parsed: unknown;
   try { parsed = JSON.parse(block); } catch { return bad(); }
   if (!plain(parsed) || !Array.isArray(parsed.frames) || parsed.frames.length < 1) return bad();
-  if (parsed.frames.length > FX_FORMAT.maxFrames) return { order: null, notices: [note("fxTooManyFrames", "fxTooManyFrames")] };
+  if (parsed.frames.length > FX_FORMAT.maxFrames) return { order: null, notices: [note("fxTooManyFrames", `{subject: steps, count: ${parsed.frames.length}, limit: ${FX_FORMAT.maxFrames}}`)] };
   const notices: Notice[] = [];
   const all: FxStep[] = parsed.frames.map((frame) => {
     const row = plain(frame) ? frame : {};
