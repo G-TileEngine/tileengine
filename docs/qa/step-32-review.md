@@ -274,3 +274,9 @@ Plus my r1 sets: 12/16 with Q3, Q7 and Q13 N/A because their code was rewritten 
 
 ### Verdict
 **OK TO SEND.** No qfix needed. The carries are unchanged from r2: s33 host items and s34 perf items, both as listed in kit-3. Nits 9(a) and 9(b) are closed.
+
+## Post-OK kit edit check (2026-11-13 18:58 GMT)
+
+EA edited the kit after r3 OK TO SEND. I diffed it against scratch-ea/kit-backup-r32/r3-kit-preR35: only citations and status text changed (r34 0644c4a8 becomes r35 ce7e9f53, CN-012 16674615 becomes 6a10fc48, CN-013 8be75c03 becomes b4f812f6, "r35 pending" becomes done, and the README and spine current-status lines move to kit-3 fd1150ac). No rule, interface, cap, test or plant changed. The refiled handoff CNs (CN-012 6a10fc48, CN-013 b4f812f6) cite r35, and data/project-format.md is ce7e9f53. Kit shas: step-32 aacbb82c, handoff README 52c3edd8, spine 854a653f.
+
+**Verdict: the edited kit and the refiled CNs are OK TO SEND.**
