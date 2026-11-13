@@ -6,16 +6,16 @@ export type Ctx2D = {
   fillRect(x: number, y: number, w: number, h: number): void; translate(x: number, y: number): void; scale(x: number, y: number): void;
   drawImage(img: object, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw: number, dh: number): void;
 };
-export type CanvasLike = { width: number; height: number; getContext(id: "2d"): Ctx2D | null; addEventListener?(type: string, fn: () => void): void };
+export type CanvasLike = { width: number; height: number; getContext(id: "2d"): Ctx2D | null; addEventListener?(type: string, fn: () => void): void; removeEventListener?(type: string, fn: () => void): void };
 export type Canvas2DOptions = { readonly images: (id: string) => object | undefined; readonly makeCanvas: (w: number, h: number) => CanvasLike; readonly buildsPerFrame?: number; readonly budgetBytes?: number };
-export type Canvas2D = Renderer & { world(scene: RenderScene, rev: number): void; busy(): boolean; readonly stats: { builds: number; bytes: number; lost: boolean } };
+export type Canvas2D = Renderer & { world(scene: RenderScene, rev: number): void; busy(): boolean; dispose(): void; readonly stats: { builds: number; bytes: number; lost: boolean; missing: boolean; capped: boolean } };
 type Entry = { id: string; canvas: CanvasLike; sig: string; img: object | undefined; frame: number; bytes: number; stale: boolean };
 type Box = { layer: TileLayer; c0: number; r0: number; cw: number; ch: number };
 
 export function canvas2d(canvas: CanvasLike, opts: Canvas2DOptions): Canvas2D {
   const ctx = canvas.getContext("2d");
   if (ctx === null) throw new Error("canvas2d: no 2d context");
-  const budget = opts.budgetBytes ?? 32 * 2 ** 20, limit = opts.buildsPerFrame ?? 2, stats = { builds: 0, bytes: 0, lost: false }, lru: Entry[] = [];
+  const budget = opts.budgetBytes ?? 32 * 2 ** 20, limit = opts.buildsPerFrame ?? 2, stats = { builds: 0, bytes: 0, lost: false, missing: false, capped: false }, lru: Entry[] = [];
   let scene: RenderScene | null = null, rev = Number.NaN, frame = 0, built = 0, open = false, lost = false, missing = false, capped = false, hold = false;
   const tileAt = (layer: TileLayer, c: number, r: number): number | null | undefined => layer.tiles[r * (scene?.cols ?? 0) + c];
   const sigOf = (layer: TileLayer, c0: number, r0: number, cw: number, ch: number): string => {
@@ -58,8 +58,8 @@ export function canvas2d(canvas: CanvasLike, opts: Canvas2DOptions): Canvas2D {
     stats.builds += 1; stats.bytes += entry.bytes; built += 1; lru.push(entry);
     return entry;
   };
-  canvas.addEventListener?.("contextlost", () => { lost = true; stats.lost = true; });
-  canvas.addEventListener?.("contextrestored", () => { lost = false; stats.lost = false; hold = true; for (const entry of [...lru]) drop(entry); });
+  const onLost = (): void => { lost = true; stats.lost = true; }, onRestored = (): void => { lost = false; stats.lost = false; hold = true; stats.missing = false; for (const entry of [...lru]) drop(entry); };
+  canvas.addEventListener?.("contextlost", onLost); canvas.addEventListener?.("contextrestored", onRestored);
   return {
     stats,
     world(next, nextRev) {
@@ -72,7 +72,8 @@ export function canvas2d(canvas: CanvasLike, opts: Canvas2DOptions): Canvas2D {
         if (entry.sig !== sigOf(box.layer, box.c0, box.r0, box.cw, box.ch) || opts.images(box.layer.sheet.id) !== entry.img) entry.stale = true;
       }
     },
-    busy: () => hold || missing || capped,
+    busy: () => !lost && (hold || missing || capped),
+    dispose() { canvas.removeEventListener?.("contextlost", onLost); canvas.removeEventListener?.("contextrestored", onRestored); for (const entry of [...lru]) drop(entry); scene = null; },
     beginFrame(fit: Fit, clear: string) {
       frame += 1; built = 0; missing = false; capped = false;
       if (open) { ctx.restore(); open = false; }
@@ -94,15 +95,16 @@ export function canvas2d(canvas: CanvasLike, opts: Canvas2DOptions): Canvas2D {
       const hit = lru.find((entry) => entry.id === id);
       if (hit !== undefined && !hit.stale) { touch(hit); paint(hit.canvas, sx, sy, sw, sh, dx, dy, dw, dh, op, flipX); return; }
       if (built < limit) { if (hit !== undefined) drop(hit); const made = bake(id, box); if (made !== null) paint(made.canvas, sx, sy, sw, sh, dx, dy, dw, dh, op, flipX); return; }
-      capped = true;
       const img = opts.images(box.layer.sheet.id), scaleX = dw / (box.cw * map.tileW || 1), scaleY = dh / (box.ch * map.tileH || 1);
       if (img === undefined) { missing = true; return; }
+      capped = true;
       eachStatic(box, (tile, c, r) => tileBlit(ctx, img, box.layer.sheet, tile, dx + (c - box.c0) * map.tileW * scaleX, dy + (r - box.r0) * map.tileH * scaleY, box.layer.sheet.fw * scaleX, box.layer.sheet.fh * scaleY));
     },
     fillRect(x, y, w, h, colour) { if (lost) return; ctx.fillStyle = colour; ctx.fillRect(x, y, w, h); },
     endFrame() {
       if (open) { ctx.restore(); open = false; }
       if (!lost) while (stats.bytes > budget) { const oldest = lru[0]; if (oldest === undefined || oldest.frame === frame) break; drop(oldest); }
+      stats.missing = missing; stats.capped = capped;
       if (!lost && !missing && !capped) hold = false;
     },
   };

@@ -14,6 +14,8 @@ export class FakeCanvas {
   set height(v: number) { this.h = v; this.px = new Uint32Array(this.w * this.h); this.ctx.reset(); }
   getContext(id: "2d"): Ctx | null { return id === "2d" ? this.ctx : null; }
   addEventListener(type: string, fn: () => void): void { (this.on[type] ??= []).push(fn); }
+  removeEventListener(type: string, fn: () => void): void { this.on[type] = (this.on[type] ?? []).filter((f) => f !== fn); }
+  get listeners(): number { return Object.values(this.on).reduce((n, list) => n + list.length, 0); }
   fire(type: string): void { for (const fn of this.on[type] ?? []) fn(); }
   get state(): { smoothing: boolean; op: string } { return { smoothing: this.ctx.imageSmoothingEnabled, op: this.ctx.globalCompositeOperation }; }
 }

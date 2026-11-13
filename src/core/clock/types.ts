@@ -12,6 +12,8 @@ export type Unsubscribe = () => void;
 export interface Clock {
   advance(dtMs: number): void;
   step(): void;
+  /** Step 29: runs the ticks `ms` of host time is worth (timeScale applied) at once (rAF pile-up, tab return). With no tick subscriber it jumps straight between due timers; timers fire in the same order as advance. No-op while paused. */
+  skip(ms: number): void;
   pause(): void;
   resume(): void;
   readonly paused: boolean;
