@@ -12,3 +12,4 @@ export { FOAM_PX, SHALLOW_PX, SHORE_DEFAULTS, SHORE_MAX, WAVE_GAP, shoreDistance
 export { SEE_THROUGH_DEFAULT, createSeeThrough } from "./canopy.ts";
 export { ANIM_HINT, MOTION_CAP, SHORE_MS, bakeMotion, motionCell, pickMotion, shoreSettings, type Motion, type MotionBake, type MotionCtx, type MotionPart, type Ramp, type ShoreNotice, type ShorePlan, type ShoreStyle } from "./motion.ts";
 export { FX_PLAYER, clipEvents, clipPoints, crossed, frameStart, hitAt, nextChangeMs, ownLight, placeStep, pointAt, poseMs, startMs, stripNote, toTick, viewHitMs, type Box, type ClipEvent, type FxActor, type FxEvent, type FxNote, type FxPiece, type PointName, type PointTable, type Pt } from "./fx-player.ts";
+export { clipIndex, createFxLive, type FxLive, type LiveEvent, type LiveFx, type LiveGrid, type LiveOut, type LiveUnit } from "./fx-live.ts";

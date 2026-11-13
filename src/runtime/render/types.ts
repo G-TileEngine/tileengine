@@ -1,6 +1,6 @@
 /** Render core types (step 27). Pure data: the renderer reads these and never mutates engine state. */
 /** One clip, in the project-format §6.2 AssetMeta `clips[]` shape. */
-export type Clip = { readonly name: string; readonly frames: readonly number[]; readonly fps?: number; readonly ms?: readonly number[]; readonly loop?: boolean };
+export type Clip = { readonly name: string; readonly frames: readonly number[]; readonly fps?: number; readonly ms?: readonly number[]; readonly loop?: boolean; readonly events?: unknown; readonly points?: unknown };
 /** AssetMeta `anchor` (§6.2). Absent, or "auto" until slice 30 resolves it, means bottom-centre. */
 export type Anchor = { readonly x: number; readonly y: number; readonly units: "px" | "norm" } | "auto";
 /** A frame sheet: an asset id plus its grid. `fw`/`fh` are the frame (or tile) size in art px. */
