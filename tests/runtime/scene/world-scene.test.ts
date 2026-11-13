@@ -87,11 +87,11 @@ test("r29 clips: an ms[] with any entry that is not a whole number >= 1 is ignor
   assert.deepEqual(link.notices.map((n) => n.code), ["clipMsInvalid", "clipMsInvalid", "clipMsInvalid", "clipMsInvalid", "clipMsInvalid"]); assert.ok(Number.isNaN(nan.ms?.[0]));
 });
 test("the link maps layers, units, objects and overlays: aboveUnits goes above, hidden or tileset-less layers drop, tileProps.anim becomes anims (step 30)", () => {
-  const g = remember("lg", 16, 16), ga = remember("lga", 16, 16), tree = remember("tree", 16, 16), hero = remember("lhero", 16, 16), water = clip("water", [8, 9], { ms: [200, 200] }), tiles = grid(20, 20, () => 8);
+  const g = remember("g", 16, 16), ga = remember("ga", 16, 16), tree = remember("tree", 16, 16), hero = remember("lhero", 16, 16), water = clip("water", [8, 9], { ms: [200, 200] }), tiles = grid(20, 20, () => 8);
   const assets: SceneWorld["assets"] = { g: { sheet: g, clips: [water], tileProps: { 8: { anim: "water" } } }, ga: { sheet: ga }, tree: { sheet: tree }, hero: { sheet: hero, clips: [clip("idle", [1])] } };
   const overlays: Overlay[] = [{ band: "ui", sheet: g, x: 1, y: 2, frame: 0 }];
   const scene = createSceneLink().scene(world({ assets, overlays, layers: [layer("g", false, true, tiles), layer("nope", false, true, tiles), layer(null, true, true, tiles), layer("ga", true, false, tiles), layer("ga", true, true, tiles)], units: [unit("h", { at: { c: 2, r: 3 }, offset: { dx: 0.5, dy: -0.25 }, facing: "E" }), unit("dead", { alive: false }), unit("dying", { alive: false, action: "die" }), unit("gone", { sprite: "missing" })], objects: [{ assetId: "tree", at: { c: 4, r: 5 }, z: 2 }, { assetId: "missing", at: { c: 0, r: 0 } }] }));
-  assert.deepEqual([scene.ground.map((l) => l.sheet.id), scene.above.map((l) => l.sheet.id)], [["lg"], ["lga"]]); assert.equal(scene.ground[0]?.anims?.[8], water); assert.equal(scene.overlays, overlays);
+  assert.deepEqual([scene.ground.map((l) => l.sheet.id), scene.above.map((l) => l.sheet.id)], [["g"], ["ga"]]); assert.equal(scene.ground[0]?.anims?.[8], water); assert.equal(scene.overlays, overlays);
   assert.deepEqual(scene.standing.map((s) => `${s.kind}:${s.key ?? ""}:${s.sheet.id}`), ["object::tree", "unit:dying:lhero", "unit:h:lhero"]); assert.equal(scene.standing[0]?.z, 2); assert.equal(scene.standing[2]?.c, 2); assert.equal(scene.standing[2]?.dx, 8); assert.equal(scene.standing[2]?.dy, -4);
 });
 test("a stable scene: the same world rebuilt each frame returns the same scene object, so a still picture settles to 0 draws a second (step 30)", async () => {
