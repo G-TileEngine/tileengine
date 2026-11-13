@@ -7,15 +7,15 @@ export type Anchor = { readonly x: number; readonly y: number; readonly units: "
 export type Sheet = { readonly id: string; readonly columns: number; readonly fw: number; readonly fh: number; readonly anchor?: Anchor };
 export type Fit = { readonly s: number; readonly devW: number; readonly devH: number; readonly artW: number; readonly artH: number; readonly padX: number; readonly padY: number; readonly tilesW: number; readonly tilesH: number };
 export type Cam = { readonly x: number; readonly y: number; readonly devX: number; readonly devY: number };
-/** Fixed bands, drawn in this order. "wash" holds the night wash and stage dim (slice 31). */
-export const BANDS = ["base", "wash", "fxAir", "glow", "ui"] as const;
+/** Fixed bands, drawn in this order. `fxGround` sits on the ground; `flash` sits over the glow. "wash" holds the night wash and stage dim (slice 31). */
+export const BANDS = ["base", "fxGround", "wash", "fxAir", "glow", "flash", "ui"] as const;
 export type Band = (typeof BANDS)[number];
 export type DrawOp = "normal" | "add";
 export type DrawCmd = { readonly band: Band; readonly sheet: string; readonly sx: number; readonly sy: number; readonly sw: number; readonly sh: number; readonly dx: number; readonly dy: number; readonly dw: number; readonly dh: number; readonly op: DrawOp; readonly flipX: boolean };
 /** A tile layer. `anims` is `tileProps.anim` resolved to clips: tile index → clip. Tiles share one offsetMs. */
 export type TileLayer = { readonly sheet: Sheet; readonly tiles: readonly (number | null)[]; readonly anims?: Readonly<Record<number, Clip>> };
-/** A unit or prop in the standing band. `dx`/`dy` are the art-px move offset; `flipX` comes from the clip fallback (slice 30, `noMirror`). */
-export type Standing = { readonly kind: "object" | "unit"; readonly sheet: Sheet; readonly c: number; readonly r: number; readonly dx?: number; readonly dy?: number; readonly z?: number; readonly frame?: number; readonly clip?: Clip; readonly flipX?: boolean; readonly key?: string };
+/** A unit, prop, or effect anchored on a unit. `ox`/`oy` move the drawing, never the sort. `flipX` comes from the clip fallback (slice 30, `noMirror`). */
+export type Standing = { readonly kind: "object" | "unit" | "fxBehind" | "fxFront"; readonly sheet: Sheet; readonly c: number; readonly r: number; readonly dx?: number; readonly dy?: number; readonly ox?: number; readonly oy?: number; readonly z?: number; readonly frame?: number; readonly clip?: Clip; readonly flipX?: boolean; readonly faceSwap?: boolean; readonly key?: string };
 /** Anything drawn above the world: wash, effect air, glow or UI. `x`/`y` are top-left in world art px. */
 export type Overlay = { readonly band: Exclude<Band, "base">; readonly sheet: Sheet; readonly x: number; readonly y: number; readonly frame?: number; readonly clip?: Clip; readonly startMs?: number; readonly op?: DrawOp };
 export type RenderScene = { readonly cols: number; readonly rows: number; readonly tileW: number; readonly tileH: number; readonly mapSeed: number; readonly ground: readonly TileLayer[]; readonly above: readonly TileLayer[]; readonly standing: readonly Standing[]; readonly overlays: readonly Overlay[] };

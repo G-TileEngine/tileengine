@@ -1,0 +1,7 @@
+ src/fx/order/read.ts                   |   2 +-
+ src/runtime/render/draw-list.ts        |  31 +++++----
+ src/runtime/render/fx-player.ts        | 107 +++++++++++++++++++++++++++++++
+ src/runtime/render/index.ts            |   1 +
+ src/runtime/render/types.ts            |   8 +--
+ tests/runtime/render/fx-player.test.ts | 113 +++++++++++++++++++++++++++++++++
+ 6 files changed, 244 insertions(+), 18 deletions(-)
