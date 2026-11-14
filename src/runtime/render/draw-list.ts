@@ -1,5 +1,6 @@
 import { px, toDevice } from "./camera.ts";
-import { frameAt, instanceOffset } from "./frames.ts";
+import { frameAt, hash32, instanceOffset } from "./frames.ts";
+import { motionAt } from "./motion.ts";
 import { BANDS, type Cam, type DrawCmd, type DrawList, type DrawOp, type Fit, type Overlay, type RenderScene, type Sheet, type Standing, type TileLayer } from "./types.ts";
 
 const KIND = { object: 0, fxBehind: 1, unit: 2, fxFront: 3 } as const;
@@ -38,8 +39,8 @@ export function buildDrawList(scene: RenderScene, fit: Fit, cam: Cam, tMs: numbe
       for (let r = r0; r < r1; r += 1) for (let c = c0; c < c1; c += 1) {
         const tile = layer.tiles[r * scene.cols + c];
         if (tile === undefined || tile === null) continue;
-        const clip = layer.anims?.[tile];
-        push("base", layer.sheet, () => (clip ? frameAt(clip, tMs, stepMs) : { frame: tile, nextMs: Infinity }), c * scene.tileW, (r + 1) * scene.tileH - layer.sheet.fh, "normal", false);
+        const clip = layer.anims?.[tile], mot = layer.motion?.[tile], sheet = mot === undefined ? layer.sheet : { ...layer.sheet, id: `${layer.sheet.id}~m${tile}~${mot.key}`, columns: mot.n };
+        push("base", sheet, () => (mot !== undefined ? motionAt(mot.parts, tMs, 0, 0) : clip !== undefined ? frameAt(clip, tMs, stepMs) : { frame: tile, nextMs: Infinity }), c * scene.tileW, (r + 1) * scene.tileH - layer.sheet.fh, "normal", false);
       }
     }
   };
@@ -57,9 +58,9 @@ export function buildDrawList(scene: RenderScene, fit: Fit, cam: Cam, tMs: numbe
   paint(scene.overlays.filter((o) => o.band === "fxGround"));
   const order = scene.standing.map((st, i) => ({ st, i })).sort((a, b) => (a.st.r + 1) * scene.tileH + (a.st.dy ?? 0) - ((b.st.r + 1) * scene.tileH + (b.st.dy ?? 0)) || a.st.c - b.st.c || rank(a.st) - rank(b.st) || (a.st.z ?? 0) - (b.st.z ?? 0) || a.i - b.i);
   for (const { st } of order) {
-    const mark = anchorPx(st.sheet);
+    const mark = anchorPx(st.sheet), mot = st.motion, sheet = mot === undefined ? st.sheet : { ...st.sheet, id: `${st.sheet.id}~m0~${mot.key}`, columns: mot.n };
     const off = instanceOffset(st.clip, stepMs, scene.mapSeed, st.key === undefined ? st.sheet.id : `${st.sheet.id}#${st.key}`, st.key === undefined ? st.c : 0, st.key === undefined ? st.r : 0);
-    push("base", st.sheet, () => (st.clip ? frameAt(st.clip, tMs, stepMs, off) : { frame: st.frame ?? 0, nextMs: Infinity }), st.c * scene.tileW + px(scene.tileW / 2) + (st.dx ?? 0) - mark.x + (st.ox ?? 0), (st.r + 1) * scene.tileH + (st.dy ?? 0) - mark.y + (st.oy ?? 0), "normal", st.flipX === true);
+    push("base", sheet, () => (mot !== undefined ? motionAt(mot.parts, tMs, st.c * scene.tileW + (st.dx ?? 0), hash32(scene.mapSeed, st.sheet.id, st.c, st.r)) : st.clip ? frameAt(st.clip, tMs, stepMs, off) : { frame: st.frame ?? 0, nextMs: Infinity }), st.c * scene.tileW + px(scene.tileW / 2) + (st.dx ?? 0) - mark.x + (st.ox ?? 0), (st.r + 1) * scene.tileH + (st.dy ?? 0) - mark.y + (st.oy ?? 0), "normal", st.flipX === true);
   }
   cells(scene.above);
   paint(scene.overlays.filter((o) => o.band !== "fxGround"));

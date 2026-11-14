@@ -1,4 +1,4 @@
-import { cycleFrames, scrollFrames, swayFrames, type Pixels } from "./bakes.ts";
+import { cycleFrames, scrollFrames, swayFrames, waveOffsetMs, type Pixels } from "./bakes.ts";
 import { SHORE_DEFAULTS, type ShoreColours, type ShoreOpts } from "./water.ts";
 
 export type Ramp = readonly string[] | { readonly name: string; readonly steps: readonly number[] };
@@ -49,6 +49,13 @@ export function motionCell(parts: readonly MotionPart[], tMs: number, reduce = f
   let cell = 0, stride = 1;
   for (let i = parts.length - 1; i >= 0; i -= 1) { const part = parts[i]; if (part === undefined || !(part.ms > 0) || !(part.n > 0)) continue; const pose = ((Math.floor((tMs + (offsets?.[i] ?? 0)) / part.ms) % part.n) + part.n) % part.n; cell += pose * stride; stride *= part.n; }
   return cell;
+}
+
+export function motionAt(parts: readonly MotionPart[], tMs: number, xArt: number, hash: number): { frame: number; nextMs: number } {
+  if (!Number.isFinite(tMs)) return { frame: 0, nextMs: Infinity };
+  let frame = 0, stride = 1, nextMs = Infinity;
+  for (let i = parts.length - 1; i >= 0; i -= 1) { const part = parts[i]; if (part === undefined || !(part.ms > 0) || !(part.n > 0)) continue; const loop = part.n * part.ms, off = part.kind === "sway" ? waveOffsetMs(xArt, loop) : hash % loop, t = tMs + off, pose = ((Math.floor(t / part.ms) % part.n) + part.n) % part.n, into = ((t % part.ms) + part.ms) % part.ms, due = tMs + (into === 0 ? part.ms : part.ms - into); frame += pose * stride; stride *= part.n; if (due < nextMs) nextMs = due; }
+  return { frame, nextMs };
 }
 
 export type ShoreStyle = { readonly liquidEdge?: string; readonly shore?: unknown; readonly ramps?: Readonly<Record<string, readonly string[]>> };

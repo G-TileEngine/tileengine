@@ -19,7 +19,7 @@ export function clipIndex(clip: Clip, tMs: number, stepMs: number, offsetMs: num
   return n - 1;
 }
 export function createFxLive(): FxLive {
-  const tables = new WeakMap<Clip, PointTable>(), strips = new WeakSet<Clip>(), store = new Map<string, Mem>();
+  const tables = new WeakMap<Clip, PointTable>(), strips = new WeakMap<Clip, { ids: Set<string>; full: boolean }>(), store = new Map<string, Mem>();
   const table = (clip: Clip | undefined, fw: number, fh: number): PointTable => { if (clip === undefined || clip.frames.length < 1) return blank(); const hit = tables.get(clip); if (hit !== undefined) return hit; const made = clipPoints(clip.points, clip.frames.length, fw, fh).points; tables.set(clip, made); return made; };
   return {
     held: () => store.size,
@@ -52,7 +52,7 @@ export function createFxLive(): FxLive {
         for (const [i, p] of e.pieces.entries()) {
           if (!Number.isFinite(p.at) || !Number.isFinite(p.ms)) continue;
           const warn = p.clip === undefined ? null : stripNote(p.clip, p.sheet.id);
-          if (warn !== null && p.clip !== undefined && !strips.has(p.clip)) { strips.add(p.clip); notes.push(warn); }
+          if (warn !== null && p.clip !== undefined) { const box = strips.get(p.clip) ?? { ids: new Set<string>(), full: false }; strips.set(p.clip, box); if (!box.full && !box.ids.has(p.sheet.id)) { notes.push(warn); if (box.ids.size < 64) box.ids.add(p.sheet.id); else box.full = true; } }
           const aimed = (p.anchor ?? "caster") === "target" ? target : caster, cell = aimed !== null ? aimed.actor : e.at ?? null, actor = aimed === null ? null : aimed.actor;
           if (cell === null) continue;
           const placed = placeStep(p, start, drawT, hit, (sample) => {

@@ -4,7 +4,7 @@ import type { Cam, DrawCmd, DrawList, Fit, RenderScene, TileLayer } from "./type
 
 export const CHUNK = 16;
 export const chunkId = (above: boolean, layer: number, cx: number, cy: number): string => `chunk:${above ? "a" : "g"}${layer}:${cx},${cy}`;
-export const isStatic = (layer: TileLayer, tile: number | null | undefined): tile is number => tile !== null && tile !== undefined && layer.anims?.[tile] === undefined;
+export const isStatic = (layer: TileLayer, tile: number | null | undefined): tile is number => tile !== null && tile !== undefined && layer.anims?.[tile] === undefined && layer.motion?.[tile] === undefined;
 
 export function chunkedList(scene: RenderScene, fit: Fit, cam: Cam, tMs: number, stepMs: number): DrawList {
   const cmds: DrawCmd[] = [];
