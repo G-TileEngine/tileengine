@@ -1,0 +1,10 @@
+ src/runtime/host/raf-driver.ts            |   9 +-
+ src/runtime/render/draw-list.ts           |   5 +-
+ src/runtime/render/feel.ts                |  67 +++++++++++++++
+ src/runtime/render/fx-live.ts             |  27 +++---
+ src/runtime/render/index.ts               |   3 +-
+ src/runtime/render/types.ts               |   2 +-
+ src/runtime/scene/world-scene.ts          |  70 ++++++++-------
+ tests/runtime/scene/feel-shake-qa.test.ts |  33 ++++++++
+ tests/runtime/scene/feel-shake.test.ts    | 136 ++++++++++++++++++++++++++++++
+ 9 files changed, 303 insertions(+), 49 deletions(-)
