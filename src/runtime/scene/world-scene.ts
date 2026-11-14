@@ -60,12 +60,12 @@ function applyFeel(lags: Map<string, Lag>, base: readonly Standing[], world: Sce
   return base.map((st) => {
     if (st.kind !== "unit" || st.key === undefined) return st;
     const id = st.key, clip = st.clip; let rec = lags.get(id);
-    if (clip === undefined) { lags.delete(id); return st; }
+    if (clip === undefined) { lags.delete(id); const held = mergeHolds(bag.get(id) ?? []).find((h) => pose >= h.from && pose < h.to), ox = held !== undefined && victim.has(id) ? shiver(pose, held.from, grid) : 0; return ox === 0 && !squashy.has(id) ? st : { ...st, ...(ox === 0 ? {} : { ox }), ...(squashy.has(id) ? { squash: true } : {}) }; } // a clipless victim still shivers and squashes
     if (rec !== undefined && rec.clip !== clip) { lags.delete(id); rec = undefined; }
     const active = mergeHolds(bag.get(id) ?? []).find((h) => pose >= h.from && pose < h.to), off = instanceOffset(clip, step, world.mapSeed, `${st.sheet.id}#${id}`, 0, 0);
     if (active !== undefined) { const lag = rec === undefined ? 0 : rec.from === active.from ? rec.lag : rec.lag + rec.ms; lags.set(id, { clip, lag, from: active.from, ms: active.to - active.from }); const ox = victim.has(id) ? shiver(pose, active.from, grid) : 0; return bare(st, frameAt(clip, active.from - lag, step, off).frame, { ...(ox === 0 ? {} : { ox }), ...(squashy.has(id) ? { squash: true } : {}) }); }
     if (rec !== undefined && rec.ms > 0 && pose >= rec.from + rec.ms) { rec = { clip, lag: rec.lag + rec.ms, from: rec.from, ms: 0 }; lags.set(id, rec); }
-    if (squashy.has(id)) return bare(st, frameAt(clip, pose, step, off).frame, { squash: true, ...(rec !== undefined && rec.lag > 0 ? { lagMs: rec.lag } : {}) });
+    if (squashy.has(id)) return bare(st, frameAt(clip, pose - (rec?.lag ?? 0), step, off).frame, { squash: true, ...(rec !== undefined && rec.lag > 0 ? { lagMs: rec.lag } : {}) });
     return rec !== undefined && rec.lag > 0 ? { ...st, lagMs: rec.lag } : st;
   });
 }

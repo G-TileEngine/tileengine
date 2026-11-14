@@ -15,7 +15,7 @@ export function mergeHolds(rows: readonly Hold[]): Hold[] {
   const out: Hold[] = [];
   for (const h of rows.filter((row) => row.to > row.from).sort((a, b) => a.from - b.from || a.to - b.to)) {
     const last = out[out.length - 1];
-    if (last !== undefined && h.from <= last.to) out[out.length - 1] = { from: last.from, to: Math.min(Math.max(last.to, h.to), last.from + FEEL.stopMaxMs) };
+    if (last !== undefined && h.from < last.to) out[out.length - 1] = { from: last.from, to: Math.min(Math.max(last.to, h.to), last.from + FEEL.stopMaxMs) };
     else out.push({ from: h.from, to: Math.min(h.to, h.from + FEEL.stopMaxMs) });
   }
   return out;
@@ -49,7 +49,8 @@ export function shakeAt(kicks: readonly Kick[], tMs: number): Shake {
   if (best === undefined) return { x: 0, y: 0, nextMs: next };
   const mag = Math.min(FEEL.shakeMax, Math.round(Math.min(FEEL.shakeMax, best.amp))), won = best;
   const noise = (axis: number): number => (mag === 0 ? 0 : (hash32(won.kick.seed, "shake", won.step, axis) % (mag * 2 + 1)) - mag);
-  return { x: won.step === 0 ? Math.sign(won.kick.dx) * mag : noise(0), y: won.step === 0 ? Math.sign(won.kick.dy) * mag : noise(1), nextMs: next };
+  const kick = won.step === 0 && (won.kick.dx !== 0 || won.kick.dy !== 0); // ruling 4: "none" (or no aim) is noise from the first step
+  return { x: kick ? Math.sign(won.kick.dx) * mag : noise(0), y: kick ? Math.sign(won.kick.dy) * mag : noise(1), nextMs: next };
 }
 export const shakeCam = (cam: Cam, dx: number, dy: number, mapW: number, mapH: number, fit: Fit): Cam => {
   const axis = (dev: number, delta: number, map: number, art: number): number => { const moved = dev - delta, hi = Math.max((map - art) * fit.s, dev), lo = Math.min(0, dev); return Math.min(hi, Math.max(lo, moved)); };
