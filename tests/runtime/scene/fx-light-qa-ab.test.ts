@@ -27,7 +27,7 @@ test("QA 33b-2 A/B: a lit step whose anchor is missing still counts toward the 2
   assert.deepEqual([capped.lit.lights.length, capped.notices.some((n) => n.code === "fxLightsOverCap"), sets.size, bare.size, L.stats.plans, seen[1]?.lights.length, seen[0] === seen[2]], [1, true, 1, 1, 2, 1, true]); // one plan per mode
 });
 
-test("QA 33b-2 A/B: each plan cell keeps its brightest light's colour and a repeated colour keeps one index; light_radius outside 0.5–6 is flagged; a key after the winning ramp is never reported", () => {
+test("QA 33b-2 A/B: each plan cell keeps its brightest light's colour and a repeated colour keeps one index; light_radius outside 0.5–6 is flagged; a key after the winning ramp is never reported; an empty ramp counts as absent and falls to the next key", () => {
   const plan = createLighting().plan(lw, [{ x: 40, y: 40, radius: 48, colour: "#ff0000" }, { x: 40, y: 40, radius: 24, colour: "#00ff00" }, { x: 120, y: 40, radius: 16, colour: "#ff0000" }], 0.5, 0, 4), cell = 10 * plan.w + 13; // 12 px right of both centres: red level 5, green level 3
-  assert.deepEqual([plan.colours, plan.colours?.[(plan.tint?.[cell] ?? 0) - 1], [0.3, 6.2, 0.5, 6].map((v) => lightRadius(v).bad), rampOf(["a", "nope"], { a: ["#102030"] })], [["255,0,0", "0,255,0"], "255,0,0", [true, true, false, false], { ramp: ["#102030"], missing: [] }]);
+  assert.deepEqual([plan.colours, plan.colours?.[(plan.tint?.[cell] ?? 0) - 1], [0.3, 6.2, 0.5, 6].map((v) => lightRadius(v).bad), rampOf(["a", "nope"], { a: ["#102030"] }), rampOf(["e", "b"], { e: [], b: ["#405060"] })], [["255,0,0", "0,255,0"], "255,0,0", [true, true, false, false], { ramp: ["#102030"], missing: [] }, { ramp: ["#405060"], missing: ["e"] }]);
 });

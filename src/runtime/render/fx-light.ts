@@ -20,7 +20,7 @@ export const litTiles = (mode: LightMode, tiles: number, tMs: number, at: number
 };
 export function rampOf(keys: readonly (string | undefined)[], ramps: Ramps | undefined): { ramp: readonly string[] | null; missing: string[] } {
   const missing: string[] = []; let ramp: readonly string[] | null = null;
-  for (const key of keys) { if (key === undefined) continue; const got = ramps?.[key]; if (got === undefined) missing.push(key); else { ramp = got; break; } } // the first key the host has wins; later keys are never tried (Ruling 1)
+  for (const key of keys) { if (key === undefined) continue; const got = ramps?.[key]; if (got === undefined || got.length === 0) missing.push(key); else { ramp = got; break; } } // the first non-empty key wins; an empty one counts as absent (Ruling 1, Q1); later keys are never tried
   return { ramp, missing };
 }
 export const lightColour = (step: LitStep, fxRamp: string | undefined, ramps: Ramps | undefined): { colour: string; missing: string[] } => { const found = rampOf([step.light_ramp, step.tint_ramp, fxRamp], ramps), top = found.ramp?.[found.ramp.length - 1]; return { colour: top ?? FX_LIGHT.colour, missing: found.missing }; };
