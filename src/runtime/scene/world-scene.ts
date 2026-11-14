@@ -49,7 +49,7 @@ function layersOf(world: SceneWorld, wm: WorldMotion, reduce: boolean): { ground
 
 function standings(world: SceneWorld, wm: WorldMotion, reduce: boolean): Standing[] {
   const out: Standing[] = [];
-  for (const o of world.objects) { const asset = world.assets[o.assetId]; if (asset === undefined) continue; const chosen = reduce ? null : pickMotion(asset.motion, undefined, o.motion); const planned = chosen === null ? null : wm.plan(chosen, asset.styled === true ? world.style?.ramps : undefined, (asset.clips?.length ?? 0) > 0, asset.sheet.fw, asset.sheet.fh, asset.sheet.id); out.push({ kind: "object", sheet: asset.sheet, c: o.at.c, r: o.at.r, ...(o.z === undefined ? {} : { z: o.z }), ...(planned === null ? {} : { motion: planned }) }); }
+  for (const o of world.objects) { const asset = world.assets[o.assetId]; if (asset === undefined) continue; const chosen = reduce ? null : pickMotion(asset.motion, undefined, o.motion); const planned = chosen === null ? null : wm.plan(chosen, asset.styled === true ? world.style?.ramps : undefined, false /* EA 33i A/B ruling 2: objects never play a clip yet, so clips never block sway */, asset.sheet.fw, asset.sheet.fh, asset.sheet.id); out.push({ kind: "object", sheet: asset.sheet, c: o.at.c, r: o.at.r, ...(o.z === undefined ? {} : { z: o.z }), ...(planned === null ? {} : { motion: planned }) }); }
   for (const u of shown(world).sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))) {
     const asset = world.assets[u.sprite];
     if (asset === undefined) continue;
