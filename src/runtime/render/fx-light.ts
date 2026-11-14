@@ -1,8 +1,9 @@
 import type { Pixels } from "./bakes.ts";
+import type { FxLightMode, HitWhiteMode } from "../../types/core-types.ts";
 export const FX_LIGHT = { radiusMin: 0.5, radiusMax: 6, radiusDefault: 2, perEffect: 2, onScreen: 4, replanMs: 100, flashShare: 0.25, flashTilePx: 64, screenW: 390, screenH: 844, colour: "#ffb048" } as const;
 export type Ramps = Readonly<Record<string, readonly string[]>>;
-export type LightMode = "off" | "steady" | "pop";
-export type HitWhiteMode = "white" | "tint" | "black" | "bright";
+export type LightMode = FxLightMode;
+export type { HitWhiteMode };
 export type LitStep = { readonly at: number; readonly ms?: number; readonly light_mode?: string; readonly light?: string; readonly light_radius?: unknown; readonly light_ramp?: string; readonly tint_ramp?: string; readonly tint_snap?: string };
 const rgb = (hex: string): [number, number, number] | null => { const m = /^#([0-9a-f]{6})$/i.exec(hex); if (m === null || m[1] === undefined) return null; const n = Number.parseInt(m[1], 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
 const half = (v: number): number => Math.ceil(v * 2 - 1e-6) / 2;
@@ -33,7 +34,13 @@ export function snapToRamp(hex: string, step: LitStep, fxRamp: string | undefine
   return best;
 }
 export const hitWhiteMode = (stored: unknown): HitWhiteMode => (stored === "white" || stored === "tint" || stored === "black" || stored === "bright" ? stored : "white");
-export const cuesSuppressed = (hitWhiteMs: unknown): boolean => typeof hitWhiteMs === "number" && hitWhiteMs > 0;
+export const cuesSuppressed = (hitWhiteMs: unknown): boolean => typeof hitWhiteMs === "number" && hitWhiteMs > 0, HIT_WHITE = { min: 40, max: 200 } as const;
+export function hitWhiteMs(stored: unknown): { ms: number; bad: boolean } { if (typeof stored !== "number" || !Number.isFinite(stored) || stored <= 0) return { ms: 0, bad: stored !== undefined && stored !== 0 }; const ms = Math.min(HIT_WHITE.max, Math.max(HIT_WHITE.min, stored)); return { ms, bad: ms !== stored }; }
+export const hitWhiteArg = (fx: { readonly hit_white_ms?: unknown; readonly hit_white_mode?: string; readonly impact_colour?: string; readonly tint_ramp?: string }, hit: number, pose: number, ramps: Ramps | undefined): string | null => {
+  const span = hitWhiteMs(fx.hit_white_ms), mode = hitWhiteMode(fx.hit_white_mode); if (!(span.ms > 0) || pose < hit || pose >= hit + span.ms) return null; if (mode !== "tint") return mode;
+  const hex = rgb(fx.impact_colour ?? "") === null ? FX_LIGHT.colour : fx.impact_colour ?? FX_LIGHT.colour, row = fx.tint_ramp === undefined ? undefined : ramps?.[fx.tint_ramp];
+  return row === undefined || row.length === 0 || fx.tint_ramp === undefined ? hex : snapToRamp(hex, { at: 0, tint_snap: "ramp", tint_ramp: fx.tint_ramp }, undefined, ramps);
+};
 export function brightPixels(img: Pixels, ramps: Ramps | undefined): Pixels {
   const data = new Uint8ClampedArray(img.data);
   for (let i = 0; i < data.length; i += 4) {

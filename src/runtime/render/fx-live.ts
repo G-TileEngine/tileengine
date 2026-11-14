@@ -2,18 +2,21 @@ import { px } from "./camera.ts";
 import { anchorPx } from "./draw-list.ts";
 import { clipMs, hash32, instanceOffset } from "./frames.ts";
 import { playerPx, shakeAt, shakeLen, shakePx, stopMs, warp, type Kick, type ShakeSetting } from "./feel.ts";
-import { FX_LIGHT, lightColour, lightMode, lightRadius, litTiles, popIsFlash, type Ramps } from "./fx-light.ts";
+import { pieceLook } from "./fx-look.ts";
+import { FX_LIGHT, hitWhiteArg, hitWhiteMs, lightColour, lightMode, lightRadius, litTiles, popIsFlash, rampOf, type Ramps } from "./fx-light.ts";
+import { FX_BUDGET, PARTICLES, capCounts, particleAt, particleRead } from "./fx-particles.ts";
 import { clipEvents, clipPoints, frameStart, hitAt, nextChangeMs, ownLight, placeStep, poseMs, startMs, stripNote, viewHitMs, type Box, type FxActor, type FxEvent, type FxNote, type FxPiece, type PointTable } from "./fx-player.ts";
 import type { FxLit, Light } from "./light.ts";
-import type { Clip, Overlay, Standing } from "./types.ts";
-export type LiveFx = { readonly id: string; readonly castMs: number; readonly caster: string; readonly target?: string; readonly at?: { readonly c: number; readonly r: number }; readonly start_on?: string; readonly hitOffsetMs?: number; readonly lungePeakMs?: number; readonly loopMs?: number; readonly commitMs?: number; readonly pieces: readonly FxPiece[]; readonly hit_stop_ms?: number; readonly shake?: number; readonly shake_ms?: number; readonly shake_dir?: string; readonly squash?: boolean; readonly tint_ramp?: string };
+import type { Clip, Overlay, SceneDot, Standing } from "./types.ts";
+export type LiveFx = { readonly id: string; readonly castMs: number; readonly caster: string; readonly target?: string; readonly at?: { readonly c: number; readonly r: number }; readonly start_on?: string; readonly hitOffsetMs?: number; readonly lungePeakMs?: number; readonly loopMs?: number; readonly commitMs?: number; readonly pieces: readonly FxPiece[]; readonly hit_stop_ms?: number; readonly shake?: number; readonly shake_ms?: number; readonly shake_dir?: string; readonly squash?: boolean; readonly tint_ramp?: string; readonly pixel_scale?: unknown; readonly hit_white_ms?: unknown; readonly hit_white_target?: string; readonly hit_white_mode?: string; readonly impact_colour?: string };
 export type LiveUnit = { readonly actor: FxActor; readonly clip?: Clip };
 export type LiveEvent = FxEvent & { readonly fx: string };
 export type LiveGrid = { readonly tileW: number; readonly tileH: number; readonly stepMs: number; readonly lite?: boolean; readonly mapSeed: number; readonly reduce?: boolean; readonly flashes?: boolean; readonly shake?: ShakeSetting; readonly ramps?: Ramps };
 export type LiveHold = { readonly at: number; readonly ms: number; readonly ox: number; readonly squash: boolean };
-export type LiveOut = { readonly standing: Standing[]; readonly overlays: Overlay[]; readonly fired: LiveEvent[]; readonly views: Record<string, number>; readonly notes: FxNote[]; readonly dueMs: number; readonly holds: Readonly<Record<string, LiveHold>>; readonly shake: { readonly x: number; readonly y: number }; readonly lit: FxLit };
+export type LiveOut = { readonly standing: Standing[]; readonly overlays: Overlay[]; readonly fired: LiveEvent[]; readonly views: Record<string, number>; readonly notes: FxNote[]; readonly dueMs: number; readonly holds: Readonly<Record<string, LiveHold>>; readonly shake: { readonly x: number; readonly y: number }; readonly lit: FxLit; readonly dots: SceneDot[] };
 export type FxLive = { frame(list: readonly LiveFx[], unitOf: (id: string, tMs?: number) => LiveUnit | null, t1: number, t2: number, grid: LiveGrid): LiveOut; unit(st: Standing, facing: string | null, box: Box | undefined, tMs: number, grid: LiveGrid): LiveUnit; readonly held: () => number };
 const blank = (): PointTable => ({ hand: [], tip: [], head: [], centre: [] }), NO_LIT: FxLit = { lights: [] };
+const pixScale = (s: unknown): { k: number; bad: boolean } => { if (s === undefined || s === "match-sprite") return { k: 1, bad: false }; if (typeof s !== "number" || !Number.isFinite(s)) return { k: 1, bad: true }; const n = Math.round(s); return { k: Math.min(6, Math.max(1, n)), bad: n !== s || s < 1 || s > 6 }; };
 type Mem = { readonly lap: number; readonly at: Map<string, FxActor> };
 export function clipIndex(clip: Clip, tMs: number, stepMs: number, offsetMs: number): number {
   const n = clip.frames.length;
@@ -42,10 +45,11 @@ export function createFxLive(): FxLive {
       return clip === undefined ? { actor } : { actor, clip };
     },
     frame(list, unitOf, t1, t2, grid) {
-      const lite = grid.lite === true, pose = poseMs(t2, lite), standing: Standing[] = [], overlays: Overlay[] = [], fired: LiveEvent[] = [], views: Record<string, number> = {}, notes: FxNote[] = [], keep = new Set<string>(), kicks: Kick[] = [], holds: Record<string, LiveHold> = {}, want: Light[] = [];
+      const lite = grid.lite === true, pose = poseMs(t2, lite), standing: Standing[] = [], overlays: Overlay[] = [], fired: LiveEvent[] = [], views: Record<string, number> = {}, notes: FxNote[] = [], keep = new Set<string>(), kicks: Kick[] = [], holds: Record<string, LiveHold> = {}, want: Light[] = [], bag: { born: number; ei: number; si: number; pi: number; dot: SceneDot }[] = [], spent: number[] = [];
+      let fxDraws = 0;
       const see = (id: string, at: number, type: FxEvent["type"], name?: string): void => { if (t1 < at && at <= t2) fired.push(name === undefined ? { type, at, fx: id } : { type, at, name, fx: id }); };
       let playing = false;
-      for (const e of list) {
+      for (const [ei, e] of list.entries()) {
         if (!Number.isFinite(e.castMs)) continue; keep.add(e.id);
         const caster = unitOf(e.caster), clip = caster?.clip, n = clip?.frames.length ?? 0, ev = n >= 1 && clip !== undefined ? clipEvents(clip.events, n).events : [];
         const start = startMs(e.start_on, e.castMs, n >= 1 ? clip : undefined, ev, grid.stepMs);
@@ -67,7 +71,10 @@ export function createFxLive(): FxLive {
         const lap = loop > 0 && pose >= start ? Math.floor((pose - start) / loop) : 0, prev = store.get(e.id), mem: Mem = prev !== undefined && prev.lap === lap ? prev : { lap, at: new Map() };
         if (mem !== prev) store.set(e.id, mem); if (!(pose >= start)) continue;
         const clockT = warp(pose, stop > 0 ? { from: hit, to: hit + stop } : null), drawT = loop > 0 ? start + ((clockT - start) % loop + loop) % loop : clockT, target = aim;
-        let used = 0, warned = false, rampNoted = false;
+        let used = 0, warned = false, rampNoted = false, drew = 0;
+        const scale = pixScale(e.pixel_scale); if (scale.bad) notes.push({ code: "outOfRange", message: "pixel_scale" }); const white = hitWhiteMs(e.hit_white_ms); if (white.bad) notes.push({ code: "outOfRange", message: "hit_white_ms" });
+        const stamp = e.hit_white_target === "stamp" ? hitWhiteArg(e, hit, pose, grid.ramps) : null, reads = e.pieces.map((p) => (p.kind === "particles" ? particleRead(p) : null)), caps = capCounts(reads.map((r) => r?.count ?? 0)), seen = new Set<string>();
+        if (caps.over !== null) notes.push({ code: "fxParticlesOverCap", message: JSON.stringify({ count: caps.over, limit: PARTICLES.perEffect }) }); for (const r of reads) for (const f of r?.bad ?? []) if (!seen.has(f)) { seen.add(f); notes.push({ code: "outOfRange", message: f }); }
         for (const [i, p] of e.pieces.entries()) {
           if (!Number.isFinite(p.at) || !Number.isFinite(p.ms)) continue;
           const warn = p.clip === undefined ? null : stripNote(p.clip, p.sheet.id);
@@ -77,8 +84,9 @@ export function createFxLive(): FxLive {
           if (cell === null) { if (mode0 !== "off") { used += 1; if (used > (lite ? 1 : FX_LIGHT.perEffect) && !warned) { notes.push({ code: "fxLightsOverCap", message: e.id }); warned = true; } } continue; }
           slot.actor = actor; slot.mem = mem; slot.i = i; slot.spawn = p.attach !== "follow"; slot.freeze = !slot.spawn && p.detach === "hit"; slot.pose = pose; slot.hit = hit;
           const placed = placeStep(p, start, drawT, hit, atUnit, { x: cell.c * grid.tileW + Math.round(grid.tileW / 2), y: (cell.r + 1) * grid.tileH }, grid.tileW, grid.tileH, grid.stepMs);
-          if (placed !== null && "kind" in placed) standing.push(ownLight(p) ? placed : Object.assign(placed, { sceneLit: true }));
-          else if (placed !== null) overlays.push(ownLight(p) ? Object.assign(placed, { selfLit: true }) : placed);
+          const parts = reads[i];
+          if (parts != null && placed !== null) { const seed = hash32(grid.mapSeed, e.id, i, 0), ramp = rampOf([p.tint_ramp, e.tint_ramp], grid.ramps).ramp, ex = "kind" in placed ? placed.c * grid.tileW + px(grid.tileW / 2) + (placed.dx ?? 0) - anchorPx(placed.sheet).x + (placed.ox ?? 0) + placed.sheet.fw / 2 : placed.x + placed.sheet.fw / 2, ey = "kind" in placed ? (placed.r + 1) * grid.tileH + (placed.dy ?? 0) - anchorPx(placed.sheet).y + (placed.oy ?? 0) + placed.sheet.fh / 2 : placed.y + placed.sheet.fh / 2, band = "kind" in placed || placed.band === "ui" ? "fxAir" as const : placed.band; for (let n = 0; n < (caps.counts[i] ?? 0); n += 1) { const dot = particleAt(parts, n, seed, drawT - (start + p.at), ramp, grid.reduce === true); if (dot !== null) bag.push({ born: start + p.at, ei, si: i, pi: n, dot: { band, x: ex + dot.x * scale.k, y: ey + dot.y * scale.k, size: dot.size * scale.k, colour: dot.colour, alpha: dot.alpha } }); } }
+          else if (placed !== null && drew < FX_BUDGET.effect && fxDraws < FX_BUDGET.total) { drew += 1; fxDraws += 1; const look = pieceLook(p.sheet.fw, p.sheet.fh, p.outline, p.blend, p.angle, rampOf([p.tint_ramp, e.tint_ramp], grid.ramps).ramp, lite, p.kind === "stamp" ? stamp : null); const extra = { ...(look === undefined ? {} : { look }), ...(scale.k > 1 ? { scale: scale.k } : {}), ...(p.blend === "add" && !("kind" in placed) ? { op: "add" as const } : {}) }; if ("kind" in placed) standing.push(Object.assign(placed, ownLight(p) ? extra : { sceneLit: true as const, ...extra })); else overlays.push(Object.assign(placed, ownLight(p) ? { selfLit: true as const, ...extra } : extra)); }
           if (mode0 === "off") continue;
           used += 1; if (used > (lite ? 1 : FX_LIGHT.perEffect)) { if (!warned) { notes.push({ code: "fxLightsOverCap", message: e.id }); warned = true; } continue; }
           const rad = lightRadius(p.light_radius); if (rad.bad) notes.push({ code: "outOfRange", message: "light_radius" });
@@ -87,14 +95,20 @@ export function createFxLive(): FxLive {
           if (!(tiles > 0) || placed === null || want.length >= FX_LIGHT.onScreen) continue;
           want.push({ x: "kind" in placed ? placed.c * grid.tileW + px(grid.tileW / 2) + (placed.dx ?? 0) - anchorPx(placed.sheet).x + (placed.ox ?? 0) + placed.sheet.fw / 2 : placed.x + placed.sheet.fw / 2, y: "kind" in placed ? (placed.r + 1) * grid.tileH + (placed.dy ?? 0) - anchorPx(placed.sheet).y + (placed.oy ?? 0) + placed.sheet.fh / 2 : placed.y + placed.sheet.fh / 2, radius: tiles * grid.tileW, colour: col.colour, keepInDim: true });
         }
+        spent[ei] = drew;
       }
+      bag.sort((a, b) => a.born - b.born || a.ei - b.ei || a.si - b.si || a.pi - b.pi);
+      const kept = bag.length > PARTICLES.pool ? bag.slice(bag.length - PARTICLES.pool) : bag;
+      kept.sort((a, b) => a.ei - b.ei || a.si - b.si || a.pi - b.pi);
+      const dots: SceneDot[] = [];
+      for (const row of kept) { const n = spent[row.ei] ?? 0; if (n >= FX_BUDGET.effect || fxDraws >= FX_BUDGET.total) continue; spent[row.ei] = n + 1; fxDraws += 1; dots.push(row.dot); }
       for (const id of store.keys()) if (!keep.has(id)) store.delete(id);
       fired.sort((a, b) => a.at - b.at); // stable: ties keep effect order, then timeline order, laps last (ruling 5)
       const same = want.length === shown.lights.length && want.every((l, i) => { const o = shown.lights[i]; return o !== undefined && o.x === l.x && o.y === l.y && o.radius === l.radius && o.colour === l.colour && o.keepInDim === l.keepInDim; });
       let gateDue = Infinity;
       if (!same) { if (t2 < shownAt || t2 >= shownAt + FX_LIGHT.replanMs) { shown = want.length === 0 ? NO_LIT : { lights: want }; shownAt = t2; } else gateDue = shownAt + FX_LIGHT.replanMs; }
       const shake = shakeAt(kicks, t2);
-      return { standing, overlays, fired, views, notes, holds, lit: shown, shake: { x: shake.x, y: shake.y }, dueMs: Math.min(playing ? nextChangeMs(t2, lite) : Infinity, shake.nextMs, gateDue) };
+      return { standing, overlays, dots, fired, views, notes, holds, lit: shown, shake: { x: shake.x, y: shake.y }, dueMs: Math.min(playing ? nextChangeMs(t2, lite) : Infinity, shake.nextMs, gateDue) };
     },
   };
 }

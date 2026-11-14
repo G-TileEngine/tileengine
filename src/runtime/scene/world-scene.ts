@@ -1,5 +1,5 @@
 import type { Notice } from "../../core/notice.ts";
-import { badMs, clipEvents, clipPoints, createFxLive, createSeeThrough, createWorldMotion, FEEL, frameAt, frameStart, hitAt, instanceOffset, mergeHolds, pickMotion, poseMs, shiver, squashed, startMs, stopMs, type Box, type Clip, type FrameSource, type FxLit, type Hold, type LiveEvent, type LiveFx, type Motion, type Overlay, type Pixels, type RenderScene, type ShakeSetting, type Sheet, type ShoreStyle, type Standing, type TileLayer, type TileMotion, type WorldMotion } from "../render/index.ts";
+import { badMs, clipEvents, clipPoints, createFxLive, createSeeThrough, createWorldMotion, FEEL, frameAt, frameStart, hitAt, hitWhiteArg, instanceOffset, lookPixels, mergeHolds, pickMotion, poseMs, shiver, squashed, startMs, stopMs, type Box, type Clip, type FrameSource, type FxLit, type Hold, type LiveEvent, type LiveFx, type Motion, type Overlay, type Pixels, type RenderScene, type SceneDot, type ShakeSetting, type Sheet, type ShoreStyle, type Standing, type TileLayer, type TileMotion, type WorldMotion } from "../render/index.ts";
 
 export type SceneAsset = { readonly sheet: Sheet; readonly clips?: readonly Clip[]; readonly tileProps?: Readonly<Record<string, { readonly anim?: string; readonly motion?: Motion | null }>>; readonly noMirror?: boolean; readonly box?: Box; readonly motion?: Motion | null; readonly styled?: boolean };
 export type SceneLayer = { readonly tileset: string | null; readonly aboveUnits: boolean; readonly visible: boolean; readonly tiles: readonly (number | null)[] };
@@ -53,11 +53,12 @@ type Lag = { clip: Clip; lag: number; from: number; ms: number };
 const hitOf = (e: LiveFx, clip: Clip | undefined, step: number): number => { const n = clip?.frames.length ?? 0, ev = n >= 1 && clip !== undefined ? clipEvents(clip.events, n).events : [], start = startMs(e.start_on, e.castMs, n >= 1 ? clip : undefined, ev, step), contact = ev.find((row) => row.name === "contact"), off = e.hitOffsetMs, peak = e.lungePeakMs, contactMs = contact !== undefined && clip !== undefined ? e.castMs + frameStart(clip, contact.frame, step) : undefined; return hitAt(e.castMs, step, { ...(off !== undefined && Number.isFinite(off) ? { effectHitMs: start + off } : {}), ...(contactMs === undefined ? {} : { contactMs }), ...(peak === undefined ? {} : { lungePeakMs: peak }) }); };
 const bare = (st: Standing, frame: number, extra: Partial<Standing>): Standing => { const { clip, ...rest } = st; return clip === st.clip ? { ...rest, frame, ...extra } : { ...rest, frame, ...extra }; };
 function applyFeel(lags: Map<string, Lag>, base: readonly Standing[], world: SceneWorld, clock: SceneClock): Standing[] {
-  const effects = world.effects ?? [], pose = poseMs(clock.tMs, clock.lite === true), step = clock.stepMs, reduce = clock.reduce === true, grid = clock.lite === true ? 60 : 30, by = new Map<string, Standing>(), bag = new Map<string, Hold[]>(), squashy = new Map<string, number>(), victim = new Set<string>();
+  const effects = world.effects ?? [], pose = poseMs(clock.tMs, clock.lite === true), step = clock.stepMs, reduce = clock.reduce === true, grid = clock.lite === true ? 60 : 30, by = new Map<string, Standing>(), bag = new Map<string, Hold[]>(), squashy = new Map<string, number>(), victim = new Set<string>(), looks = new Map<string, string>();
   for (const st of base) if (st.kind === "unit" && st.key !== undefined) by.set(st.key, st);
   for (const id of [...lags.keys()]) if (!by.has(id)) lags.delete(id);
-  for (const e of effects) { if (!Number.isFinite(e.castMs)) continue; const hit = hitOf(e, by.get(e.caster)?.clip, step), stop = stopMs(e.hit_stop_ms, step, reduce, clock.reduceFlashes === true); if (stop > 0) for (const id of [e.caster, ...(e.target === undefined ? [] : [e.target])]) { if (!by.has(id)) continue; const list = bag.get(id) ?? []; list.push({ from: hit, to: hit + stop }); bag.set(id, list); if (id === e.target && pose >= hit && pose < hit + stop) victim.add(id); } if (e.squash === true && !reduce && e.target !== undefined && (by.get(e.target)?.sheet.fh ?? 0) > 2 && pose >= hit && pose < hit + FEEL.squashMs) squashy.set(e.target, Math.ceil(hit / grid) * grid); }
+  for (const e of effects) { if (!Number.isFinite(e.castMs)) continue; const hit = hitOf(e, by.get(e.caster)?.clip, step), stop = stopMs(e.hit_stop_ms, step, reduce, clock.reduceFlashes === true); if (stop > 0) for (const id of [e.caster, ...(e.target === undefined ? [] : [e.target])]) { if (!by.has(id)) continue; const list = bag.get(id) ?? []; list.push({ from: hit, to: hit + stop }); bag.set(id, list); if (id === e.target && pose >= hit && pose < hit + stop) victim.add(id); } if (e.squash === true && !reduce && e.target !== undefined && (by.get(e.target)?.sheet.fh ?? 0) > 2 && pose >= hit && pose < hit + FEEL.squashMs) squashy.set(e.target, Math.ceil(hit / grid) * grid); const who = e.hit_white_target === "caster" ? e.caster : e.hit_white_target === "stamp" ? undefined : e.target; if (who !== undefined) { const arg = hitWhiteArg(e, hit, pose, world.style?.ramps); if (arg !== null) looks.set(who, `hw:${arg}`); } }
   return base.map((st) => {
+    const next = ((): Standing => {
     if (st.kind !== "unit" || st.key === undefined) return st;
     const id = st.key, clip = st.clip; let rec = lags.get(id);
     if (clip === undefined) { lags.delete(id); const held = mergeHolds(bag.get(id) ?? []).find((h) => pose >= h.from && pose < h.to), ox = held !== undefined && victim.has(id) ? shiver(pose, held.from, grid) : 0; return ox === 0 && !squashy.has(id) ? st : { ...st, ...(ox === 0 ? {} : { ox }), ...(squashy.has(id) ? { squash: true } : {}) }; } // a clipless victim still shivers and squashes
@@ -67,6 +68,7 @@ function applyFeel(lags: Map<string, Lag>, base: readonly Standing[], world: Sce
     if (rec !== undefined && rec.ms > 0 && pose >= rec.from + rec.ms) { rec = { clip, lag: rec.lag + rec.ms, from: rec.from + rec.ms, ms: 0 }; lags.set(id, rec); }
     if (squashy.has(id)) return bare(st, frameAt(clip, Math.max(squashy.get(id) ?? pose, rec?.from ?? -Infinity) - (rec?.lag ?? 0), step, off).frame, { squash: true, ...(rec !== undefined && rec.lag > 0 ? { lagMs: rec.lag } : {}) });
     return rec !== undefined && rec.lag > 0 ? { ...st, lagMs: rec.lag } : st;
+    })(); const hw = st.key === undefined || next.squash === true ? undefined : looks.get(st.key); return hw === undefined ? next : { ...next, look: hw };
   });
 }
 
@@ -74,7 +76,7 @@ export function createSceneLink(source?: FrameSource): SceneLink {
   const notices: Notice[] = [], seen = new WeakSet<SceneAsset>(), bad = new WeakSet<Clip>(), prior = new Set<string>();
   const push = (row: Notice): void => { const k = `${row.code}\0${row.message}`; if (prior.has(k) || notices.length >= NOTICES_MAX) return; notices.push(row); };
   const live = createFxLive(), see = createSeeThrough(), frames = source ?? ((): undefined => undefined), wm = createWorldMotion(frames), lags = new Map<string, Lag>();
-  let fired: LiveEvent[] = [], views: Record<string, number> = {}, last = Number.NEGATIVE_INFINITY, copied = 0, shakeNow = { x: 0, y: 0 }, litNow = NO_LIT;
+  let fired: LiveEvent[] = [], views: Record<string, number> = {}, last = Number.NEGATIVE_INFINITY, copied = 0, shakeNow = { x: 0, y: 0 }, litNow = NO_LIT, rampNow: ShoreStyle["ramps"];
   let prev: { assets: SceneWorld["assets"]; layers: SceneWorld["layers"]; objects: readonly SceneObject[]; overlays: readonly Overlay[]; key: string; scene: RenderScene; reduce: boolean; style: SceneWorld["style"]; water: SceneWorld["waterTiles"] } | undefined;
   const take = (): void => { while (copied < wm.notes.length) { const n = wm.notes[copied]; copied += 1; if (n !== undefined) push(n); } for (const n of notices) prior.add(`${n.code}\0${n.message}`); };
   const note = (asset: SceneAsset): void => {
@@ -95,14 +97,15 @@ export function createSceneLink(source?: FrameSource): SceneLink {
     if (evBad) push({ code: "clipEventInvalid", message: asset.sheet.id }); if (ptBad) push({ code: "clipPointsInvalid", message: asset.sheet.id }); if (capBad) push({ code: "clipEventsOverCap", message: asset.sheet.id });
   };
   const link: SceneLink = {
-    notices, pixels: (id) => squashed(id, frames) ?? wm.pixels(id), get fired() { return fired; }, get views() { return views; }, get shake() { return shakeNow; }, get lit() { return litNow; }, lagged: () => lags.size,
+    notices, pixels: (id) => squashed(id, frames) ?? lookPixels(id, frames, rampNow) ?? wm.pixels(id), get fired() { return fired; }, get views() { return views; }, get shake() { return shakeNow; }, get lit() { return litNow; }, lagged: () => lags.size,
     scene(world, clock) {
+      rampNow = world.style?.ramps;
       const reduce = clock?.reduce === true, finite = clock !== undefined && Number.isFinite(clock.tMs), raw = standings(world, wm, reduce), base = finite && clock !== undefined ? applyFeel(lags, raw, world, clock) : raw;
-      let fxStanding: Standing[] = [], fxOverlays: Overlay[] = [];
+      let fxStanding: Standing[] = [], fxOverlays: Overlay[] = [], fxDots: SceneDot[] = [];
       if (finite && clock !== undefined) {
         const grid = { tileW: world.tileW, tileH: world.tileH, stepMs: clock.stepMs, mapSeed: world.mapSeed, ...(clock.lite === undefined ? {} : { lite: clock.lite }), ...(reduce ? { reduce: true } : {}), ...(clock.reduceFlashes === true ? { flashes: true } : {}), ...(clock.shake === undefined ? {} : { shake: clock.shake }), ...(world.style?.ramps === undefined ? {} : { ramps: world.style.ramps }) };
         const out = live.frame(world.effects ?? [], (id, tMs) => { const st = raw.find((s) => s.kind === "unit" && s.key === id); if (st === undefined) return null; const src = world.units.find((u) => u.id === id); const rec = lags.get(id), pose = poseMs(clock.tMs, clock.lite === true); const when = rec !== undefined && rec.ms > 0 && pose >= rec.from && pose < rec.from + rec.ms ? rec.from - rec.lag : (tMs ?? clock.tMs) - (rec?.lag ?? 0); return live.unit(st, src?.facing ?? null, src === undefined ? undefined : world.assets[src.sprite]?.box, when, grid); }, last, clock.tMs, grid);
-        fired = out.fired; views = out.views; fxStanding = out.standing; fxOverlays = out.overlays; shakeNow = out.shake; litNow = out.lit;
+        fired = out.fired; views = out.views; fxStanding = out.standing; fxOverlays = out.overlays; fxDots = out.dots; shakeNow = out.shake; litNow = out.lit;
         for (const row of out.notes) push(row); last = clock.tMs;
       } else { fired = []; views = {}; shakeNow = { x: 0, y: 0 }; litNow = NO_LIT; }
       const fxKey = finite && clock !== undefined && (world.effects?.length ?? 0) > 0 ? `${poseMs(clock.tMs, clock.lite === true)}:${clock.stepMs}:${clock.lite === true}:${clock.reduceFlashes === true}:${JSON.stringify(world.effects)}` : "";
@@ -114,7 +117,7 @@ export function createSceneLink(source?: FrameSource): SceneLink {
       const ids = name === null || world.waterTiles === undefined ? undefined : world.waterTiles[name], water = tiles !== undefined && ids !== undefined ? new Uint8Array(world.cols * world.rows) : null;
       if (water !== null && tiles !== undefined && ids !== undefined) { const wet = new Set(ids); for (let i = 0; i < water.length; i += 1) water[i] = wet.has(tiles[i] ?? -1) ? 1 : 0; }
       const foam = world.style === undefined ? [] : wm.shore(water === null ? null : { cols: world.cols, rows: world.rows, tileW: world.tileW, tileH: world.tileH, mapSeed: world.mapSeed, water }, world.style, reduce);
-      const scene: RenderScene = { cols: world.cols, rows: world.rows, tileW: world.tileW, tileH: world.tileH, mapSeed: world.mapSeed, ground: built.ground, above: built.above, standing: fxStanding.length > 0 ? [...base, ...fxStanding] : base, overlays: foam.length === 0 && fxOverlays.length === 0 ? world.overlays : [...foam, ...world.overlays, ...fxOverlays] };
+      const scene: RenderScene = { cols: world.cols, rows: world.rows, tileW: world.tileW, tileH: world.tileH, mapSeed: world.mapSeed, ground: built.ground, above: built.above, standing: fxStanding.length > 0 ? [...base, ...fxStanding] : base, overlays: foam.length === 0 && fxOverlays.length === 0 ? world.overlays : [...foam, ...world.overlays, ...fxOverlays], ...(fxDots.length > 0 ? { dots: fxDots } : {}) };
       prev = { assets: world.assets, layers: world.layers, objects, overlays, key, scene, reduce, style: world.style, water: world.waterTiles }; take(); return see(scene, world.seeThroughCanopy);
     },
   };

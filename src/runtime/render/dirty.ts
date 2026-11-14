@@ -11,7 +11,7 @@ export function needsDraw(prev: FrameStamp | null, prevDueMs: number, next: Fram
 
 export function present(renderer: Renderer, fit: Fit, list: DrawList, clear: string, after?: () => void): void {
   renderer.beginFrame(fit, clear);
-  const draw = (c: DrawCmd): void => { renderer.drawImage(c.sheet, c.sx, c.sy, c.sw, c.sh, c.dx, c.dy, c.dw, c.dh, c.op, c.flipX); };
+  const draw = (c: DrawCmd): void => { if (c.rects !== undefined) { const colour = c.colour ?? "#000000"; if (renderer.fillRects !== undefined) renderer.fillRects(c.rects, colour); else for (let i = 0; i < c.rects.length; i += 4) renderer.fillRect(c.rects[i] ?? 0, c.rects[i + 1] ?? 0, c.rects[i + 2] ?? 0, c.rects[i + 3] ?? 0, colour); return; } renderer.drawImage(c.sheet, c.sx, c.sy, c.sw, c.sh, c.dx, c.dy, c.dw, c.dh, c.op, c.flipX); };
   try {
     const held: DrawCmd[] = []; let i = 0;
     for (; i < list.cmds.length; i += 1) { const c = list.cmds[i]; if (c === undefined) continue; if (after !== undefined && c.band === "ui") break; if (after !== undefined && c.selfLit === true) held.push(c); else draw(c); }
