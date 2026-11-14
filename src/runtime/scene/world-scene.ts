@@ -14,7 +14,7 @@ export type SceneWorld = {
 export type SceneClock = { readonly tMs: number; readonly stepMs: number; readonly lite?: boolean; readonly reduce?: boolean; readonly shake?: ShakeSetting; readonly reduceFlashes?: boolean };
 export const NOTICES_MAX = 1024;
 export type SceneLink = { scene(world: SceneWorld, at?: SceneClock): RenderScene; readonly notices: readonly Notice[]; readonly fired: readonly LiveEvent[]; readonly views: Readonly<Record<string, number>>; pixels(id: string): Pixels | undefined; readonly shake: { readonly x: number; readonly y: number }; readonly lit: FxLit; readonly lagged: () => number };
-const NO_OBJECTS: readonly SceneObject[] = [], NO_OVERLAYS: readonly Overlay[] = [];
+const NO_OBJECTS: readonly SceneObject[] = [], NO_OVERLAYS: readonly Overlay[] = [], NO_LIT: FxLit = { lights: [] }; // one shared empty set, so a clockless frame keeps the plan cache (Ruling 6)
 
 export function pickClip(asset: SceneAsset, action: string, facing: SceneUnit["facing"]): { readonly clip?: Clip; readonly frame?: number; readonly flipX: boolean } {
   const dir = facing === "N" ? "up" : facing === "E" ? "right" : facing === "W" ? "left" : "down", mirror = dir === "left" ? "right" : dir === "right" ? "left" : "", find = (name: string): Clip | undefined => asset.clips?.find((c) => c.name === name);
@@ -74,7 +74,7 @@ export function createSceneLink(source?: FrameSource): SceneLink {
   const notices: Notice[] = [], seen = new WeakSet<SceneAsset>(), bad = new WeakSet<Clip>(), prior = new Set<string>();
   const push = (row: Notice): void => { const k = `${row.code}\0${row.message}`; if (prior.has(k) || notices.length >= NOTICES_MAX) return; notices.push(row); };
   const live = createFxLive(), see = createSeeThrough(), frames = source ?? ((): undefined => undefined), wm = createWorldMotion(frames), lags = new Map<string, Lag>();
-  let fired: LiveEvent[] = [], views: Record<string, number> = {}, last = Number.NEGATIVE_INFINITY, copied = 0, shakeNow = { x: 0, y: 0 }, litNow: FxLit = { lights: [] };
+  let fired: LiveEvent[] = [], views: Record<string, number> = {}, last = Number.NEGATIVE_INFINITY, copied = 0, shakeNow = { x: 0, y: 0 }, litNow = NO_LIT;
   let prev: { assets: SceneWorld["assets"]; layers: SceneWorld["layers"]; objects: readonly SceneObject[]; overlays: readonly Overlay[]; key: string; scene: RenderScene; reduce: boolean; style: SceneWorld["style"]; water: SceneWorld["waterTiles"] } | undefined;
   const take = (): void => { while (copied < wm.notes.length) { const n = wm.notes[copied]; copied += 1; if (n !== undefined) push(n); } for (const n of notices) prior.add(`${n.code}\0${n.message}`); };
   const note = (asset: SceneAsset): void => {
@@ -104,7 +104,7 @@ export function createSceneLink(source?: FrameSource): SceneLink {
         const out = live.frame(world.effects ?? [], (id, tMs) => { const st = raw.find((s) => s.kind === "unit" && s.key === id); if (st === undefined) return null; const src = world.units.find((u) => u.id === id); const rec = lags.get(id), pose = poseMs(clock.tMs, clock.lite === true); const when = rec !== undefined && rec.ms > 0 && pose >= rec.from && pose < rec.from + rec.ms ? rec.from - rec.lag : (tMs ?? clock.tMs) - (rec?.lag ?? 0); return live.unit(st, src?.facing ?? null, src === undefined ? undefined : world.assets[src.sprite]?.box, when, grid); }, last, clock.tMs, grid);
         fired = out.fired; views = out.views; fxStanding = out.standing; fxOverlays = out.overlays; shakeNow = out.shake; litNow = out.lit;
         for (const row of out.notes) push(row); last = clock.tMs;
-      } else { fired = []; views = {}; shakeNow = { x: 0, y: 0 }; litNow = { lights: [] }; }
+      } else { fired = []; views = {}; shakeNow = { x: 0, y: 0 }; litNow = NO_LIT; }
       const fxKey = finite && clock !== undefined && (world.effects?.length ?? 0) > 0 ? `${poseMs(clock.tMs, clock.lite === true)}:${clock.stepMs}:${clock.lite === true}:${clock.reduceFlashes === true}:${JSON.stringify(world.effects)}` : "";
       const key = unitKey(world) + fxKey + (reduce ? ":r" : ""), objects = world.objects.length === 0 ? NO_OBJECTS : world.objects, overlays = world.overlays.length === 0 ? NO_OVERLAYS : world.overlays, cached = prev;
       if (cached !== undefined && cached.assets === world.assets && cached.layers === world.layers && cached.objects === objects && cached.overlays === overlays && cached.key === key && cached.style === world.style && cached.water === world.waterTiles && cached.reduce === reduce) { take(); return see(cached.scene, world.seeThroughCanopy); }

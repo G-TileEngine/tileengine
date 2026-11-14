@@ -11,7 +11,7 @@ export function lightRadius(stored: unknown): { tiles: number; bad: boolean } {
   if (stored === undefined) return { tiles: FX_LIGHT.radiusDefault, bad: false };
   if (typeof stored !== "number" || !Number.isFinite(stored)) return { tiles: FX_LIGHT.radiusDefault, bad: true };
   const snapped = Math.round(stored * 2) / 2, tiles = Math.min(FX_LIGHT.radiusMax, Math.max(FX_LIGHT.radiusMin, snapped));
-  return { tiles, bad: tiles !== snapped };
+  return { tiles, bad: stored < FX_LIGHT.radiusMin || stored > FX_LIGHT.radiusMax }; // out of 0.5–6 is clamped and flagged (Ruling 4)
 }
 export const litTiles = (mode: LightMode, tiles: number, tMs: number, at: number, ms: number): number => {
   if (mode === "off" || !(ms > 0) || tMs < at || tMs >= at + ms) return 0;
@@ -20,7 +20,7 @@ export const litTiles = (mode: LightMode, tiles: number, tMs: number, at: number
 };
 export function rampOf(keys: readonly (string | undefined)[], ramps: Ramps | undefined): { ramp: readonly string[] | null; missing: string[] } {
   const missing: string[] = []; let ramp: readonly string[] | null = null;
-  for (const key of keys) { if (key === undefined) continue; const got = ramps?.[key]; if (got === undefined) missing.push(key); else if (ramp === null) ramp = got; }
+  for (const key of keys) { if (key === undefined) continue; const got = ramps?.[key]; if (got === undefined) missing.push(key); else { ramp = got; break; } } // the first key the host has wins; later keys are never tried (Ruling 1)
   return { ramp, missing };
 }
 export const lightColour = (step: LitStep, fxRamp: string | undefined, ramps: Ramps | undefined): { colour: string; missing: string[] } => { const found = rampOf([step.light_ramp, step.tint_ramp, fxRamp], ramps), top = found.ramp?.[found.ramp.length - 1]; return { colour: top ?? FX_LIGHT.colour, missing: found.missing }; };
