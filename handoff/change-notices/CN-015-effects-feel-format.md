@@ -1,6 +1,6 @@
 # CN-015 (33b): effect light, ramp colour, pixel size, outline and feel; player shake; te-flash@3 (format only, additive, render only; no pin moves)
 
-Filed by: Data & Save Format Keeper, 2026-11-13 18:4x London. Status: **ACCEPTED pending the EA's confirmation of the DSK rulings.** Sources: UX `ux/effects-sprite-sync.md` (`4e72b97e`) §9 fields, §10 EA answers 18:33; CEO 18:35 via the EA (Q1–Q4); DSK rulings. CN-011 stays reserved for scene-pin.
+Filed by: Data & Save Format Keeper, 2026-11-13 18:4x London. Status: **ACCEPTED (EA confirmed all 7 DSK rulings, 2026-11-14 02:2x London).** Sources: UX `ux/effects-sprite-sync.md` (`4e72b97e`) §9 fields, §10 EA answers 18:33; CEO 18:35 via the EA (Q1–Q4); DSK rulings. CN-011 stays reserved for scene-pin.
 Kind: format only, additive, render only. **core-types unchanged at `61fad786`**. No version bump, no migration: every field is optional and absent = today's behaviour.
 
 Docs: setup-format **r23** (`193e4075`) §2.10.3.2–2.10.3.4, project-format **r35** (`ce7e9f53`) §6.7 and §13, profile-format **r14** (`d700d891`) §3.3 and §9.0. Catalogue request **L48** (after L47).
@@ -20,19 +20,19 @@ Docs: setup-format **r23** (`193e4075`) §2.10.3.2–2.10.3.4, project-format **
 | `shake_dir` | effect knob | `"hit"\|"none"` | `"hit"` | unknown → `"hit"` |
 | `hit_white_mode` | effect knob (extends §2.10.2.7) | += `"bright"` (2 steps up its own ramp; off-ramp pixels draw as `white`) | `"white"` (unchanged) | old readers: unknown → `"white"` |
 | `squash` | effect knob | toggle | `false` (today) | — |
-| `screen_shake` | player profile, `btf-hud-settings@1` §3.3 `accessibility`, core | `"off"\|"low"\|"full"` | `"full"`; `low` = max(1, floor(px / 2)); forced off by `reduce_motion` or device reduced motion | — |
+| `screen_shake` | player profile, `btf-hud-settings@1` §3.3 `accessibility`, core | `"off"\|"low"\|"full"` | `"full"`; `low`: 0 stays 0, otherwise max(1, floor(px / 2)); forced off by `reduce_motion` or device reduced motion | — |
 | `graphics` (existing core key, reused) | player profile §3.3 | `low` = Lite, `mid` / `high` = Normal | `"high"` (unchanged) | aliases: `"lite"` → `low`, `"normal"` → `high` |
 
-Ramp keys resolve against `settings.paintStyleDefault` (absent → `btf-ashroad@2`), so Preview equals the game on every stage.
+Ramp keys resolve against `settings.paintStyleDefault` (absent → `btf-ashroad@2`), so Preview equals the game on every stage. The runtime takes resolved colour ramps from the host (the same way it takes shore colours), so no format change is needed for ramps (EA ruling, 2026-11-14 02:2x).
 
 ## Rulings where DSK departs from the EA/UX list
 1. **`light_mode`, not `light` or `glow`.** Bare `light` collides with the paint style's `light` (shading direction) next to AssetMeta `lightSource`; `glow` collides with the step's existing `glow_on` / `glow_from` / `glow_to` (the picture's glow look). `light_radius` and `light_ramp` keep UX's names (no clash). UX's draft `light` is read as an alias on effect steps.
 2. **`shake` is 0–3, not 0–4** (CEO Q1: 1–3 px). UX's Advanced 4 is dropped; a stored 4 plays as 3 with `outOfRange` and is never rewritten. The HUD, editor UI and Effect Designer controls never shake.
 3. **No `hit_stop_jitter` field.** CEO Q4 makes the shiver unconditional whenever hit-stop is on (±1 art px every 30 ms, victim only, off under reduced motion), so there's nothing to store. A stored `hit_stop_jitter` answer is kept in `orphans` and never read. EUX: please drop the "Target shivers" chip. An opt-out would need a later additive CN.
 4. **No new `graphics: normal | lite` key.** profile-format §3.3 already has the core `graphics` (`low` / `mid` / `high`); Lite = `low`. A second key would duplicate it.
-5. **`screen_shake` Low = max(1, floor(px / 2)).** UX's text had "floored, 1 px becomes 0"; the brief's minimum of 1 keeps Low distinct from Off.
+5. **`screen_shake` Low: 0 px stays 0, otherwise max(1, floor(px / 2)).** (Wording fixed 2026-11-14 03:2x after QA's 33b-1 review; the code already did this.) UX's text had "floored, 1 px becomes 0"; the brief's minimum of 1 keeps Low distinct from Off.
 6. **Rule N** for `pixel_scale`, `tint_snap` and `outline`: absent keeps today's look for old documents, and the editor writes the new default into new documents and steps. `"match-sprite"` with no anchor sprite falls back to today's `k` rule.
-7. **Ramp references are ramp keys resolved against `settings.paintStyleDefault`** (no ramp type, no colour field, no style pin on the effect). **EA to confirm** that reading `paintStyleDefault` for effect colours is acceptable (it stays unread when painting).
+7. **Ramp references are ramp keys resolved against `settings.paintStyleDefault`** (no ramp type, no colour field, no style pin on the effect). **Confirmed by the EA (2026-11-14 02:2x).** Reading `paintStyleDefault` for effect colours is acceptable (it stays unread when painting). The runtime takes those resolved ramps from the host, like shore colours, so there is no format change for ramps.
 
 ## Detector
 - **`te-flash@3`** = @2 plus one rule: a `light_mode: "pop"` step is one flash start at its pop when π(`light_radius` × T)² / (390 × 844) ≥ 25% (≈ 2.5 tiles at 64 px). Steady lights and shake never count; `bright` counts like `white`. Same result as @2 on every document without a pop light or `bright`. **`te-flash@2` and `@1` stay frozen** (pinned versions are never edited; ids never reused). It's derived and never stored, so nothing migrates. `flashRisk.detector` (project-format §6.7) and `flashCheck.detector` (profile-format §9.0) may be `te-flash@3`.
