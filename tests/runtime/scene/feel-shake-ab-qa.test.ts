@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { buildDrawList, fitView, frameAt, hash32, instanceOffset, mergeHolds, shakeAt, shakeCam, snapCamera, type Clip, type FxPiece, type LiveFx, type RenderScene, type Sheet } from "../../../src/runtime/render/index.ts";
+import { buildDrawList, fitView, frameAt, hash32, instanceOffset, mergeHolds, shakeAt, shakeCam, shakeLen, snapCamera, type Clip, type FxPiece, type LiveFx, type RenderScene, type Sheet } from "../../../src/runtime/render/index.ts";
 import { createSceneLink, type SceneAsset, type SceneClock, type SceneUnit, type SceneWorld } from "../../../src/runtime/scene/world-scene.ts";
 
 const sheet: Sheet = { id: "hero-sheet", columns: 4, fw: 16, fh: 16 }, slash: Sheet = { id: "slash", columns: 8, fw: 8, fh: 8 };
@@ -26,7 +26,7 @@ test("QA 33b-1 A/B: shake_dir none, or a hit with no aim, is seeded noise from t
   for (const [devW, s, x] of [[129, 2, 255], [130, 3, 276], [127, 2, 0]] as const) { const fit = fitView(devW, 128, s, 16, 16), cam = snapCamera(x, 0, s), far = (320 - fit.artW) * s, moved = shakeCam(cam, -3 * s, 0, 320, 320, fit).devX; assert.equal(moved % s, 0); assert.ok(moved <= far && (cam.devX + 3 * s > far ? moved === far : true)); }
 });
 
-test("QA 33b-1 A/B: only an effect's own target shivers, never a held attacker; a clipless victim shivers and squashes; a squash on a late unit draws its late cell; the draw list never squashes a sprite 2 px tall (step 33b-1 rulings 2, 3, 9)", () => {
+test("QA 33b-1 A/B: only an effect's own target shivers, never a held attacker; a clipless victim shivers and squashes; a squash holds one cell for its 60 ms, the late cell on a late unit; the draw list never squashes a sprite 2 px tall; a shake_ms that is not a number plays as absent (step 33b-1 rulings 2, 3, 4, 9; EA folds)", () => {
   const trade = world([fx({ hit_stop_ms: 100 }), fx({ id: "e2", castMs: 2000, caster: "b", target: "a", hit_stop_ms: 100 })], [unit("a", 2), unit("b", 5, { action: "atk" })]), T = createSceneLink();
   assert.deepEqual([1330, 2330].map((t) => { const sc = T.scene(trade, at(t)), f = (k: string) => sc.standing.find((s) => s.key === k)?.ox; return [f("a"), f("b")]; }), [[undefined, -1], [-1, undefined]]);
   const S = createSceneLink(), stone = world([fx({ hit_stop_ms: 100, squash: true })], [unit("a", 2), unit("b", 5, { sprite: "statue" })]), b = unitAt(S, stone, 1340, "b");
@@ -38,7 +38,9 @@ test("QA 33b-1 A/B: only an effect's own target shivers, never a held attacker; 
   assert.deepEqual([cmd?.sheet, cmd?.sw, cmd?.sh], ["statue~sq0~16x16", 18, 14]);
   const late = world([fx({ hit_stop_ms: 100 }), fx({ id: "e2", castMs: 2000, squash: true })]), G = createSceneLink(), off = instanceOffset(idle, 10, 3, "hero-sheet#b", 0, 0);
   for (const t of [1330, 1500]) G.scene(late, at(t));
-  const sq = unitAt(G, late, 2310, "b"); assert.deepEqual([sq?.squash, sq?.frame], [true, frameAt(idle, 2310 - 100, 10, off).frame]); // held 100 ms at 1300, so the squash cell is 100 ms late
+  assert.deepEqual([2310, 2340].map((t) => { const sq = unitAt(G, late, t, "b"); return [sq?.squash, sq?.frame]; }), [2310, 2310].map((t) => [true, frameAt(idle, t - 100, 10, off).frame])); // one cell for all 60 ms: the late cell at the squash start (EA fold)
+  const short = createSceneLink(); assert.deepEqual([1320, 1350].map((t) => short.scene(world([fx({ hit_stop_ms: 100, squash: true })]), at(t, { reduceFlashes: true })).standing.find((x) => x.key === "b")?.frame), [1300, 1300].map((t) => frameAt(idle, t, 10, off).frame)); // a 50 ms stop ends inside the squash: still the held cell
+  assert.deepEqual([shakeLen("x", 1), shakeLen(Number.NaN, 3)], [{ ms: 120, bad: true }, { ms: 300, bad: true }]); // EA fold Q4: not a number plays as absent, with outOfRange
   const tiny: RenderScene = { cols: 4, rows: 4, tileW: 16, tileH: 16, mapSeed: 1, ground: [], above: [], standing: [{ kind: "unit", sheet: { id: "flat", columns: 1, fw: 16, fh: 2 }, c: 1, r: 1, key: "f", frame: 0, squash: true }], overlays: [] };
   assert.deepEqual(buildDrawList(tiny, fitView(64, 64, 1, 16, 16), snapCamera(0, 0, 1), 0, 10).cmds.map((c) => [c.sheet, c.sh]), [["flat", 2]]);
 });

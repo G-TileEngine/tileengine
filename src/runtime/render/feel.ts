@@ -31,7 +31,7 @@ export function shakePx(stored: unknown): { px: number; bad: boolean } {
 export function shakeLen(stored: unknown, px: number): { ms: number; bad: boolean } {
   const fallback = FEEL.shakeMs[Math.min(FEEL.shakeMax, Math.max(0, Math.trunc(px)))] ?? 0;
   if (stored === undefined) return { ms: fallback, bad: false };
-  if (typeof stored !== "number" || !Number.isFinite(stored)) return { ms: FEEL.shakeMsMin, bad: true };
+  if (typeof stored !== "number" || !Number.isFinite(stored)) return { ms: fallback, bad: true }; // EA fold Q4: not a number plays as absent (the strength default), with outOfRange
   const whole = Math.trunc(stored), ms = Math.min(FEEL.shakeMsMax, Math.max(FEEL.shakeMsMin, whole));
   return { ms, bad: whole !== stored || whole !== ms };
 }
