@@ -89,7 +89,7 @@ export function canvas2d(canvas: CanvasLike, opts: Canvas2DOptions): Canvas2D {
         if (dctx === null || gctx === null) { dark.width = 0; dark.height = 0; glow.width = 0; glow.height = 0; freeLights(); lightMiss = plan; missing = true; return; }
         const put = (onto: Ctx2D, colour: (i: number) => string): void => { onto.imageSmoothingEnabled = false; for (let i = 0; i < plan.w * plan.h; i += 1) { const c = colour(i); if (c === "") continue; onto.fillStyle = c; onto.fillRect(i % plan.w, (i / plan.w) | 0, 1, 1); } };
         put(dctx, (i) => { const k = plan.dark[i] ?? 0; return k === 0 ? "" : `rgba(3,8,26,${k / STEPS})`; });
-        put(gctx, (i) => { const lv = plan.level[i] ?? 0; return lv < 4 ? "" : `rgba(255,176,72,${((lv - 3) * 2) / STEPS})`; });
+        put(gctx, (i) => { const lv = plan.level[i] ?? 0; if (lv < 4) return ""; const idx = plan.tint?.[i] ?? 0; const ink = idx > 0 ? plan.colours?.[idx - 1] ?? "255,176,72" : "255,176,72"; return `rgba(${ink},${((lv - 3) * 2) / STEPS})`; });
         if (!same) { lightBytes = plan.w * plan.h * 8; stats.bytes += lightBytes; darkC = dark; glowC = glow; }
         lightsKey = plan; stats.lightBuilds += 1;
       }

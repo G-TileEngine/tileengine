@@ -73,7 +73,7 @@ export function createDriver(o: DriverOptions): Driver {
     backend.world(current, stats.rev);
     const list = steadyUi(chunkedList(current, fit, cam, o.clock.now(), o.clock.stepMs), cam.devX - base.devX, cam.devY - base.devY);
     prev = stamp; due = list.dueMs; stats.draws += 1; lastDraw = ts;
-    present(backend, fit, list, clear, () => { if (view.lights !== undefined) backend.lights(view.lights, fit, cam); });
+    present(backend, fit, list, clear, view.lights === undefined ? undefined : () => { if (view.lights !== undefined) backend.lights(view.lights, fit, cam); });
   }
   return {
     stats, backend,

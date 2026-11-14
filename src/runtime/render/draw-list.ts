@@ -15,12 +15,9 @@ export const anchorPx = (sheet: Sheet): { x: number; y: number } => {
 export function buildDrawList(scene: RenderScene, fit: Fit, cam: Cam, tMs: number, stepMs: number): DrawList {
   const cmds: DrawCmd[] = [];
   let dueMs = Infinity;
-  const viewX0 = Math.floor(cam.devX / fit.s);
-  const viewY0 = Math.floor(cam.devY / fit.s);
-  const viewX1 = viewX0 + fit.artW + 1;
-  const viewY1 = viewY0 + fit.artH + 1;
+  const viewX0 = Math.floor(cam.devX / fit.s), viewY0 = Math.floor(cam.devY / fit.s), viewX1 = viewX0 + fit.artW + 1, viewY1 = viewY0 + fit.artH + 1;
   const hit = (x: number, y: number, w: number, h: number): boolean => x + w > viewX0 && x < viewX1 && y + h > viewY0 && y < viewY1;
-  const push = (band: DrawCmd["band"], sheet: Sheet, frameOf: () => { frame: number; nextMs: number }, x: number, y: number, op: DrawOp, flipX: boolean): void => {
+  const push = (band: DrawCmd["band"], sheet: Sheet, frameOf: () => { frame: number; nextMs: number }, x: number, y: number, op: DrawOp, flipX: boolean, pass = false): void => {
     if (!hit(x, y, sheet.fw, sheet.fh)) return;
     const fr = frameOf();
     if (fr.nextMs < dueMs) dueMs = fr.nextMs;
@@ -29,7 +26,7 @@ export function buildDrawList(scene: RenderScene, fit: Fit, cam: Cam, tMs: numbe
     cmds.push({
       band, sheet: sheet.id, op, flipX,
       sx: (fr.frame % cols) * sheet.fw, sy: Math.floor(fr.frame / cols) * sheet.fh, sw: sheet.fw, sh: sheet.fh,
-      dx: at.x, dy: at.y, dw: sheet.fw * fit.s, dh: sheet.fh * fit.s,
+      dx: at.x, dy: at.y, dw: sheet.fw * fit.s, dh: sheet.fh * fit.s, ...(pass ? { selfLit: true } : {}),
     });
   };
   const cells = (layers: readonly TileLayer[]): void => {
@@ -52,16 +49,24 @@ export function buildDrawList(scene: RenderScene, fit: Fit, cam: Cam, tMs: numbe
       push(o.band, o.sheet, () => {
         const fr = o.clip ? frameAt(o.clip, tMs - start, stepMs) : { frame: o.frame ?? 0, nextMs: Infinity };
         return { frame: fr.frame, nextMs: o.clip !== undefined && fr.nextMs !== Infinity ? start + fr.nextMs : fr.nextMs };
-      }, o.x, o.y, o.band === "glow" ? "add" : o.op ?? "normal", false);
+      }, o.x, o.y, o.band === "glow" ? "add" : o.op ?? "normal", false, o.selfLit === true && (o.band === "fxAir" || o.band === "glow" || o.band === "flash"));
     }
   };
   paint(scene.overlays.filter((o) => o.band === "fxGround"));
   const order = scene.standing.map((st, i) => ({ st, i })).sort((a, b) => (a.st.r + 1) * scene.tileH + (a.st.dy ?? 0) - ((b.st.r + 1) * scene.tileH + (b.st.dy ?? 0)) || a.st.c - b.st.c || rank(a.st) - rank(b.st) || (a.st.z ?? 0) - (b.st.z ?? 0) || a.i - b.i);
+  const from = cmds.length;
   for (const { st } of order) {
     const mot = st.motion, sq = st.squash === true && st.sheet.fh > 2, sheet = sq ? { ...st.sheet, id: `${st.sheet.id}~sq${st.frame ?? 0}~${st.sheet.fw}x${st.sheet.fh}`, fw: st.sheet.fw + 2, fh: st.sheet.fh - 2, columns: 1 } : mot === undefined ? st.sheet : { ...st.sheet, id: `${st.sheet.id}~m0~${mot.key}`, columns: mot.n };
     const mark = anchorPx(sheet);
     const off = instanceOffset(st.clip, stepMs, scene.mapSeed, st.key === undefined ? st.sheet.id : `${st.sheet.id}#${st.key}`, st.key === undefined ? st.c : 0, st.key === undefined ? st.r : 0) - (st.lagMs ?? 0);
-    push("base", sheet, () => (mot !== undefined ? motionAt(mot.parts, tMs, st.c * scene.tileW + (st.dx ?? 0), hash32(scene.mapSeed, st.sheet.id, st.c, st.r)) : st.clip ? frameAt(st.clip, tMs, stepMs, off) : { frame: st.frame ?? 0, nextMs: Infinity }), st.c * scene.tileW + px(scene.tileW / 2) + (st.dx ?? 0) - mark.x + (st.ox ?? 0), (st.r + 1) * scene.tileH + (st.dy ?? 0) - mark.y + (st.oy ?? 0), "normal", st.flipX === true);
+    push("base", sheet, () => (mot !== undefined ? motionAt(mot.parts, tMs, st.c * scene.tileW + (st.dx ?? 0), hash32(scene.mapSeed, st.sheet.id, st.c, st.r)) : st.clip ? frameAt(st.clip, tMs, stepMs, off) : { frame: st.frame ?? 0, nextMs: Infinity }), st.c * scene.tileW + px(scene.tileW / 2) + (st.dx ?? 0) - mark.x + (st.ox ?? 0), (st.r + 1) * scene.tileH + (st.dy ?? 0) - mark.y + (st.oy ?? 0), "normal", st.flipX === true, st.kind === "fxFront" && st.faceSwap !== true && st.sceneLit !== true);
+  }
+  for (let i = from; i < cmds.length; i += 1) {
+    const a = cmds[i]; if (a?.selfLit !== true) continue;
+    for (let j = i + 1; j < cmds.length; j += 1) {
+      const b = cmds[j]; if (b === undefined || b.selfLit === true || a.dx >= b.dx + b.dw || b.dx >= a.dx + a.dw || a.dy >= b.dy + b.dh || b.dy >= a.dy + a.dh) continue;
+      const { selfLit, ...rest } = a; cmds[i] = selfLit === true ? rest : a; break;
+    }
   }
   cells(scene.above);
   paint(scene.overlays.filter((o) => o.band !== "fxGround"));

@@ -11,7 +11,7 @@ export type PointName = "hand" | "tip" | "head" | "centre";
 export type PointTable = Readonly<Record<PointName, readonly (Pt | null)[]>>;
 export type FxEvent = { readonly type: "fx:start" | "fx:release" | "fx:hit" | "fx:end" | "fx:loop" | "clip:event"; readonly at: number; readonly name?: string };
 export type FxActor = { readonly c: number; readonly r: number; readonly dx?: number; readonly dy?: number; readonly sheet: Sheet; readonly frame: number; readonly flipX?: boolean; readonly facesAway?: boolean; readonly points: PointTable; readonly box: Box };
-export type FxPiece = { readonly at: number; readonly ms: number; readonly sheet: Sheet; readonly clip?: Clip; readonly anchor?: string; readonly anchor_point?: string; readonly attach?: string; readonly detach?: string; readonly draw_layer?: string; readonly depth_by_facing?: boolean; readonly lit?: string };
+export type FxPiece = { readonly at: number; readonly ms: number; readonly sheet: Sheet; readonly clip?: Clip; readonly anchor?: string; readonly anchor_point?: string; readonly attach?: string; readonly detach?: string; readonly draw_layer?: string; readonly depth_by_facing?: boolean; readonly lit?: string; readonly light_mode?: string; readonly light?: string; readonly light_radius?: unknown; readonly light_ramp?: string; readonly tint_ramp?: string; readonly tint_snap?: string };
 const note = (code: string): FxNote => ({ code, message: code });
 const NAMES = ["hand", "tip", "head", "centre"] as const;
 const centreOf = (box: Box): Pt => ({ x: box.x + Math.floor(box.w / 2), y: box.y + Math.floor(box.h / 2) });

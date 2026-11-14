@@ -1,0 +1,15 @@
+M	src/runtime/canvas/canvas2d.ts
+M	src/runtime/host/raf-driver.ts
+M	src/runtime/render/dirty.ts
+M	src/runtime/render/draw-list.ts
+A	src/runtime/render/fx-light.ts
+M	src/runtime/render/fx-live.ts
+M	src/runtime/render/fx-player.ts
+M	src/runtime/render/index.ts
+M	src/runtime/render/light.ts
+M	src/runtime/render/types.ts
+M	src/runtime/scene/world-scene.ts
+A	tests/perf/fx-light-budget.ts
+A	tests/runtime/scene/fx-light-qa-r4.test.ts
+A	tests/runtime/scene/fx-light-qa.test.ts
+A	tests/runtime/scene/fx-light.test.ts
