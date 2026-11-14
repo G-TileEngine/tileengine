@@ -1,4 +1,4 @@
-export { BANDS, type Anchor, type Band, type Cam, type Clip, type DrawCmd, type DrawList, type DrawOp, type Fit, type FrameStamp, type Overlay, type RenderScene, type Renderer, type Sheet, type Standing, type TileLayer } from "./types.ts";
+export { BANDS, type Anchor, type Band, type Cam, type Clip, type DrawCmd, type DrawList, type DrawOp, type Fit, type FrameStamp, type Overlay, type RenderScene, type Renderer, type Sheet, type Standing, type TileLayer, type TileMotion } from "./types.ts";
 export { backingSize, fitView, scaleRange, snapScale } from "./fit.ts";
 export { clampCamera, easeCamera, px, snapCamera, toDevice } from "./camera.ts";
 export { badMs, clipMs, frameAt, hash32, instanceOffset } from "./frames.ts";
@@ -10,6 +10,7 @@ export { BANDS_OF_LIGHT, DARK_CAP, STEPS, WASH_MAX, createLighting, createMoonli
 export { SWAY_EDGE_PX, SWAY_LOOP, WIND_PX_PER_S, cycleFrames, scrollFrames, swayFrames, waveOffsetMs, type Pixels } from "./bakes.ts";
 export { FOAM_PX, SHALLOW_PX, SHORE_DEFAULTS, SHORE_MAX, WAVE_GAP, shoreDistance, shoreFrames, type ShoreColours, type ShoreOpts } from "./water.ts";
 export { SEE_THROUGH_DEFAULT, createSeeThrough } from "./canopy.ts";
-export { ANIM_HINT, MOTION_CAP, SHORE_MS, bakeMotion, motionCell, pickMotion, shoreSettings, type Motion, type MotionBake, type MotionCtx, type MotionPart, type Ramp, type ShoreNotice, type ShorePlan, type ShoreStyle } from "./motion.ts";
+export { ANIM_HINT, MOTION_CAP, SHORE_MS, bakeMotion, motionAt, motionCell, pickMotion, shoreSettings, type Motion, type MotionBake, type MotionCtx, type MotionPart, type Ramp, type ShoreNotice, type ShorePlan, type ShoreStyle } from "./motion.ts";
+export { BAKE_BUDGET, PLANS_MAX, createWorldMotion, type FrameSource, type ShoreMap, type WorldMotion, type WorldNote } from "./world-motion.ts";
 export { FX_PLAYER, clipEvents, clipPoints, crossed, frameStart, hitAt, nextChangeMs, ownLight, placeStep, pointAt, poseMs, startMs, stripNote, toTick, viewHitMs, type Box, type ClipEvent, type FxActor, type FxEvent, type FxNote, type FxPiece, type PointName, type PointTable, type Pt } from "./fx-player.ts";
 export { clipIndex, createFxLive, type FxLive, type LiveEvent, type LiveFx, type LiveGrid, type LiveOut, type LiveUnit } from "./fx-live.ts";

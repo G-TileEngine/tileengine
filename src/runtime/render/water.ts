@@ -10,14 +10,14 @@ const noise = (x: number, y: number, seed: number): number => {
   return Math.round(h(gx, gy) * (1 - fx) * (1 - fy) + h(gx + 1, gy) * fx * (1 - fy) + h(gx, gy + 1) * (1 - fx) * fy + h(gx + 1, gy + 1) * fx * fy);
 };
 
-export function shoreDistance(land: ArrayLike<number | boolean>, w: number, h: number, seed = 0, max = SHORE_MAX, foamPx = FOAM_PX): Uint8Array {
+export function shoreDistance(land: ArrayLike<number | boolean>, w: number, h: number, seed = 0, max = SHORE_MAX, foamPx = FOAM_PX, ox = 0, oy = 0): Uint8Array {
   if (land.length !== w * h) throw new RangeError("shoreDistance: land length");
   const n = w * h, cap = Math.max(0, max | 0), lim = cap * 3, d = new Int32Array(n), at = (x: number, y: number): number => d[y * w + x] ?? lim;
   for (let i = 0; i < n; i += 1) d[i] = land[i] ? 0 : lim;
   for (let y = 0; y < h; y += 1) for (let x = 0; x < w; x += 1) { let v = at(x, y); if (x > 0) v = Math.min(v, at(x - 1, y) + 3); if (y > 0) v = Math.min(v, at(x, y - 1) + 3, x > 0 ? at(x - 1, y - 1) + 4 : v, x + 1 < w ? at(x + 1, y - 1) + 4 : v); d[y * w + x] = v; }
   for (let y = h - 1; y >= 0; y -= 1) for (let x = w - 1; x >= 0; x -= 1) { let v = at(x, y); if (x + 1 < w) v = Math.min(v, at(x + 1, y) + 3); if (y + 1 < h) v = Math.min(v, at(x, y + 1) + 3, x + 1 < w ? at(x + 1, y + 1) + 4 : v, x > 0 ? at(x - 1, y + 1) + 4 : v); d[y * w + x] = v; }
   const out = new Uint8Array(n);
-  for (let y = 0; y < h; y += 1) for (let x = 0; x < w; x += 1) { const i = y * w + x; let px = Math.min(cap, Math.round((d[i] ?? 0) / 3)); if (px > foamPx && px < cap) px = Math.min(cap, px + noise(x, y, seed | 0)); out[i] = px; }
+  for (let y = 0; y < h; y += 1) for (let x = 0; x < w; x += 1) { const i = y * w + x; let px = Math.min(cap, Math.round((d[i] ?? 0) / 3)); if (px > foamPx && px < cap) px = Math.min(cap, px + noise(x + ox, y + oy, seed | 0)); out[i] = px; }
   return out;
 }
 const ink = (n: number, data: Uint8ClampedArray, i: number): void => { data[i] = (n >> 16) & 255; data[i + 1] = (n >> 8) & 255; data[i + 2] = n & 255; data[i + 3] = 255; };

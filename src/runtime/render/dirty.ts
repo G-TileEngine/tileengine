@@ -9,9 +9,10 @@ export function needsDraw(prev: FrameStamp | null, prevDueMs: number, next: Fram
   return next.tMs >= prevDueMs;
 }
 
-export function present(renderer: Renderer, fit: Fit, list: DrawList, clear: string): void {
+export function present(renderer: Renderer, fit: Fit, list: DrawList, clear: string, after?: () => void): void {
   renderer.beginFrame(fit, clear);
   try {
     for (const cmd of list.cmds) renderer.drawImage(cmd.sheet, cmd.sx, cmd.sy, cmd.sw, cmd.sh, cmd.dx, cmd.dy, cmd.dw, cmd.dh, cmd.op, cmd.flipX);
+    after?.();
   } finally { renderer.endFrame(); }
 }
