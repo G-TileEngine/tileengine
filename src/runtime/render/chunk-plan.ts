@@ -11,7 +11,7 @@ export function chunkedList(scene: RenderScene, fit: Fit, cam: Cam, tMs: number,
   let dueMs = Infinity;
   const add = (list: DrawList): void => { for (const cmd of list.cmds) cmds.push(cmd); if (list.dueMs < dueMs) dueMs = list.dueMs; };
   const x0 = Math.floor(cam.devX / fit.s), y0 = Math.floor(cam.devY / fit.s), x1 = x0 + fit.artW + 1, y1 = y0 + fit.artH + 1;
-  const one = (layer: TileLayer, above: boolean): DrawList => buildDrawList({ ...scene, ground: above ? [] : [layer], above: above ? [layer] : [], standing: [], overlays: [] }, fit, cam, tMs, stepMs);
+  const one = (layer: TileLayer, above: boolean): DrawList => buildDrawList({ ...scene, ground: above ? [] : [layer], above: above ? [layer] : [], standing: [], overlays: [], dots: [] }, fit, cam, tMs, stepMs);
   const paint = (rows: readonly TileLayer[], above: boolean): void => {
     for (let li = 0; li < rows.length; li += 1) {
       const layer = rows[li];
@@ -31,7 +31,7 @@ export function chunkedList(scene: RenderScene, fit: Fit, cam: Cam, tMs: number,
     }
   };
   paint(scene.ground, false);
-  add(buildDrawList({ ...scene, ground: [], above: [], overlays: [] }, fit, cam, tMs, stepMs));
+  add(buildDrawList({ ...scene, ground: [], above: [], overlays: [], dots: [] }, fit, cam, tMs, stepMs));
   paint(scene.above, true);
   add(buildDrawList({ ...scene, ground: [], above: [], standing: [] }, fit, cam, tMs, stepMs));
   return { cmds, dueMs };

@@ -313,6 +313,93 @@ export type SaveHeader = { readonly projectHash: string; readonly engineVersion:
 /** `match-save` v1 (project-format §6.9.1, CN-009): the log is the truth, the snapshot a check value. MAY-MOVE. */
 export type MatchSave = { readonly kind: "match-save"; readonly formatVersion: 1; readonly header: SaveHeader; readonly log: string; readonly snapshot: unknown };
 
+// ================================================================ EFFECTS V2 TYPES (effect documents; render only)
+// Post-H2 batch CN-E1–E5 (setup-format r26 §2.10.1.9, §2.10.2.12, §2.10.3.4–5; CN-014, CN-015, CN-017). Additive only.
+// These are look fields, read only by the fx / Render layer and the flash detector. Core steps 00–07 never import them,
+// and nothing here imports CoreDeck or card types. Every stored field is optional; absent = today's behaviour.
+// Unknown picker values play as the default with a warning (they're never rejected), so readers widen at the edge.
+
+/** Effect step kind (setup-format §2.10.1.3): the 9 catalogue motion kinds (effect `steps.kind`, catalogue rev 22)
+ *  plus the v2 kinds dim / stamp / particles / flash (r17). MAY-MOVE. */
+export type StepKind =
+  | "straight" | "swerve" | "trace" | "row" | "orbit" | "cone" | "reel" | "bounce" | "scratch"
+  | "dim" | "stamp" | "particles" | "flash";
+
+/** `steps[].start_mode` (§2.10.1.2; "at-hit" §2.10.2.1). Absent = "after-last"; unknown → "after-last" + warning. MAY-MOVE. */
+export type StartMode = "after-last" | "with-last" | "at-time" | "at-hit";
+
+/** `steps[].draw_layer`, the v2 set (§2.10.1.3). Absent = "air". MAY-MOVE. */
+export type DrawLayer = "ground" | "air" | "overlay";
+/** `steps[].draw_layer` with the step 33a depth bands (§2.10.3.1, CN-014). MAY-MOVE. */
+export type FxDrawLayer = DrawLayer | "behind-unit" | "front-unit";
+
+/** `steps[].blend` (§2.10.1.3). Absent = "normal"; "add" = a `lighter` pass. MAY-MOVE. */
+export type Blend = "normal" | "add";
+
+/** `steps[].particle_motion` on `particles` steps (§2.10.1.3, §2.10.3.5, CN-017). Absent = "burst";
+ *  unknown → "burst" + outOfRange. MAY-MOVE. */
+export type ParticleMotion = "burst" | "attract" | "spiral-in" | "rise";
+
+/** `steps[].anchor`, the unit pick (catalogue `caster` | `target`; "screen" §2.10.2.2, read by `flash` only,
+ *  else plays as "caster" with anchorScreenIgnored). Absent = "caster". MAY-MOVE. */
+export type FxAnchor = "caster" | "target" | "screen";
+
+/** `steps[].flash_shape` on `flash` steps (§2.10.2.2). Absent = "screen". MAY-MOVE. */
+export type FlashShape = "screen" | "circle";
+
+/** `steps[].shine_style` on `stamp` steps (§2.10.2.8). Absent = "simple". MAY-MOVE. */
+export type ShineStyle = "simple" | "extra";
+
+/** Effect knob `hit_white_target` (§2.10.2.7). Absent = "target"; "stamp" = every stamp step drawing at the hit. MAY-MOVE. */
+export type FeelTarget = "stamp" | "target" | "caster";
+
+/** Effect knob `hit_white_mode` (§2.10.2.7; "bright" §2.10.3.2, CN-015). Absent = "white". MAY-MOVE. */
+export type HitWhiteMode = "white" | "tint" | "black" | "bright";
+
+/** `steps[].light_mode`, all kinds except `dim` (§2.10.3.2, CN-015). Absent = "off". Draft `light` is a reader alias. MAY-MOVE. */
+export type FxLightMode = "off" | "steady" | "pop";
+
+/** Effect knob `start_on` (§2.10.3.1, CN-014). Absent = "cast". MAY-MOVE. */
+export type StartOn = "cast" | "release" | "contact";
+
+/** `steps[].anchor_point`, all kinds except `dim` (§2.10.3.1, CN-014). Absent = "tile". "foot" = the sprite's
+ *  AssetMeta `anchor` (no stored foot point); hand / tip with no point on the frame fall back to "centre". MAY-MOVE. */
+export type AnchorPoint = "tile" | "foot" | "centre" | "head" | "hand" | "tip";
+
+/** `steps[].lit` (§2.10.3.1, CN-014). Absent = "self" (today). MAY-MOVE. */
+export type FxLit = "self" | "scene";
+
+/** Engine stock effect picture ids (§2.10.1, CEO E3; `blast-star` §2.10.2.9, CEO F1). CC0, frozen once shipped,
+ *  never reused. Not built-in library entries. MAY-MOVE. */
+export type FxPictureId = "rune-circle" | "orbit-rings" | "spark" | "ember" | "smoke" | "blast-star";
+/** `steps[].picture`: a stock id, "none" (CN-E5 amend), or an asset id (open string, like SideId). MAY-MOVE. */
+export type FxStepPicture = FxPictureId | "none" | (string & {});
+
+/** The `particles` step fields (§2.10.1.3, §2.10.3.5, CN-017). Kept and ignored silently on other kinds.
+ *  Ranges clamp at use with outOfRange (the stored value is kept). MAY-MOVE. */
+export type FxParticleStepFields = {
+  readonly particle_motion?: ParticleMotion;   // MAY-MOVE: absent = "burst"
+  readonly particle_count?: number;            // MAY-MOVE: int 0–48 per step, default 12. 48 is PER EFFECT, summed over
+                                               //   its particles steps: later steps are cut down at load, fxParticlesOverCap
+                                               //   {count, limit: 48} once. 32 is an editor note only, never a cap
+  readonly particle_life_ms?: number;          // MAY-MOVE: int ms 200–3000, default 800 (draft `particle_life` = reader alias)
+  readonly particle_pull?: number;             // MAY-MOVE: int per-mille 0–2000, default 1000, step 100 (UI 0–2);
+                                               //   read by attract / spiral-in only
+};
+
+/** Flash detector ids (setup-format §2.10.1.6, §2.10.2.10, §2.10.3.2; CN-015). Pinned versions are frozen, never
+ *  edited, ids never reused. MAY-MOVE. */
+export type FlashDetectorId = "te-flash@1" | "te-flash@2" | "te-flash@3";
+/** Detector reasons (§2.10.1.6). MAY-MOVE. */
+export type FlashReason = "tooMany" | "bigRed";
+/** The shared pure detector's output (§2.10.1.6; project-format §6.7 `index.effects[].flashRisk?`). DERIVED, never stored
+ *  in an effect document. MAY-MOVE. */
+export type FlashCheck = {
+  readonly flashRisk: boolean;                    // MAY-MOVE: true = the effect may trip the warning (project = OR over effects)
+  readonly reasons: ReadonlyArray<FlashReason>;   // MAY-MOVE
+  readonly worstWindowMs: number;                 // MAY-MOVE: int ms
+};
+
 // ---------------------------------------------------------------- GAPs
 // None. GAPs 1–6 resolved in project-format r13 (facing, seed, ResolvedPlacement, sides, wrapEdges ignored in v1,
 // footprint 1×1 only); GAP 7 closed in place (r13, 22:0x: water/lava/wall-block CONFIRMED).

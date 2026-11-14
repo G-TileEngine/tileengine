@@ -1,9 +1,9 @@
-import { CHUNK, STEPS, isStatic, type Cam, type DrawOp, type Fit, type LightPlan, type Pixels, type RenderScene, type Renderer, type Sheet, type TileLayer } from "../render/index.ts";
+import { CHUNK, LOOK, STEPS, isStatic, type Cam, type DrawOp, type Fit, type LightPlan, type Pixels, type RenderScene, type Renderer, type Sheet, type TileLayer } from "../render/index.ts";
 
 export type Ctx2D = {
   imageSmoothingEnabled: boolean; globalCompositeOperation: string; fillStyle: unknown;
   save(): void; restore(): void; beginPath(): void; rect(x: number, y: number, w: number, h: number): void; clip(): void;
-  fillRect(x: number, y: number, w: number, h: number): void; translate(x: number, y: number): void; scale(x: number, y: number): void;
+  fillRect(x: number, y: number, w: number, h: number): void; translate(x: number, y: number): void; scale(x: number, y: number): void; fill?(): void;
   drawImage(img: object, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw: number, dh: number): void; createImageData?(w: number, h: number): { data: Uint8ClampedArray }; putImageData?(data: { data: Uint8ClampedArray }, x: number, y: number): void; getImageData?(x: number, y: number, w: number, h: number): { data: Uint8ClampedArray };
 };
 export type CanvasLike = { width: number; height: number; getContext(id: "2d"): Ctx2D | null; addEventListener?(type: string, fn: () => void): void; removeEventListener?(type: string, fn: () => void): void };
@@ -17,7 +17,7 @@ export function canvas2d(canvas: CanvasLike, opts: Canvas2DOptions): Canvas2D {
   if (ctx === null) throw new Error("canvas2d: no 2d context");
   const budget = opts.budgetBytes ?? 32 * 2 ** 20, limit = opts.buildsPerFrame ?? 2, stats = { builds: 0, bytes: 0, lost: false, missing: false, capped: false, lightBuilds: 0 }, lru: Entry[] = [], gen = new Map<string, Entry>();
   let scene: RenderScene | null = null, rev = Number.NaN, frame = 0, built = 0, open = false, lost = false, missing = false, capped = false, hold = false;
-  let lightsKey: LightPlan | null = null, lightMiss: LightPlan | null = null, darkC: CanvasLike | null = null, glowC: CanvasLike | null = null, lightBytes = 0;
+  let lightsKey: LightPlan | null = null, lightMiss: LightPlan | null = null, darkC: CanvasLike | null = null, glowC: CanvasLike | null = null, lightBytes = 0, genBytes = 0;
   const tileAt = (layer: TileLayer, c: number, r: number): number | null | undefined => layer.tiles[r * (scene?.cols ?? 0) + c];
   const sigOf = (layer: TileLayer, c0: number, r0: number, cw: number, ch: number): string => {
     let sig = `${layer.sheet.id}/${layer.sheet.columns}`;
@@ -60,7 +60,7 @@ export function canvas2d(canvas: CanvasLike, opts: Canvas2DOptions): Canvas2D {
     return entry;
   };
   const freeLights = (): void => { stats.bytes -= lightBytes; lightBytes = 0; lightsKey = null; if (darkC !== null) { darkC.width = 0; darkC.height = 0; } if (glowC !== null) { glowC.width = 0; glowC.height = 0; } darkC = null; glowC = null; };
-  const dropGen = (entry: Entry): void => { gen.delete(entry.id); stats.bytes -= entry.bytes; entry.canvas.width = 0; entry.canvas.height = 0; };
+  const dropGen = (entry: Entry): void => { gen.delete(entry.id); stats.bytes -= entry.bytes; genBytes -= entry.bytes; entry.canvas.width = 0; entry.canvas.height = 0; };
   const onLost = (): void => { lost = true; stats.lost = true; }, onRestored = (): void => { lost = false; stats.lost = false; hold = true; stats.missing = false; lightMiss = null; freeLights(); for (const entry of [...lru]) drop(entry); for (const entry of [...gen.values()]) dropGen(entry); };
   canvas.addEventListener?.("contextlost", onLost); canvas.addEventListener?.("contextrestored", onRestored);
   return {
@@ -117,13 +117,13 @@ export function canvas2d(canvas: CanvasLike, opts: Canvas2DOptions): Canvas2D {
       if (lost) return;
       if (!id.startsWith("chunk:")) {
         const hit = gen.get(id);
-        if (hit !== undefined) { hit.frame = frame; paint(hit.canvas, sx, sy, sw, sh, dx, dy, dw, dh, op, flipX); return; }
+        if (hit !== undefined) { gen.delete(id); hit.frame = frame; gen.set(id, hit); paint(hit.canvas, sx, sy, sw, sh, dx, dy, dw, dh, op, flipX); return; }
         const px = opts.pixels?.(id);
         if (px !== undefined) {
           const made = opts.makeCanvas(px.w, px.h), bctx = made.getContext("2d");
           if (bctx?.createImageData === undefined || bctx.putImageData === undefined) { missing = true; return; }
           const image = bctx.createImageData(px.w, px.h); image.data.set(px.data); bctx.putImageData(image, 0, 0);
-          gen.set(id, { id, canvas: made, sig: "", img: undefined, frame, bytes: px.w * px.h * 4, stale: false }); stats.bytes += px.w * px.h * 4; paint(made, sx, sy, sw, sh, dx, dy, dw, dh, op, flipX); return;
+          gen.set(id, { id, canvas: made, sig: "", img: undefined, frame, bytes: px.w * px.h * 4, stale: false }); stats.bytes += px.w * px.h * 4; genBytes += px.w * px.h * 4; paint(made, sx, sy, sw, sh, dx, dy, dw, dh, op, flipX); return;
         }
         const img = opts.images(id);
         if (img === undefined) missing = true; else paint(img, sx, sy, sw, sh, dx, dy, dw, dh, op, flipX);
@@ -140,9 +140,10 @@ export function canvas2d(canvas: CanvasLike, opts: Canvas2DOptions): Canvas2D {
       eachStatic(box, (tile, c, r) => tileBlit(ctx, img, box.layer.sheet, tile, dx + (c - box.c0) * map.tileW * scaleX, dy + (r - box.r0) * map.tileH * scaleY, box.layer.sheet.fw * scaleX, box.layer.sheet.fh * scaleY));
     },
     fillRect(x, y, w, h, colour) { if (lost) return; ctx.fillStyle = colour; ctx.fillRect(x, y, w, h); },
+    fillRects(rects, colour) { if (lost) return; ctx.beginPath(); ctx.fillStyle = colour; for (let i = 0; i < rects.length; i += 4) ctx.rect(rects[i] ?? 0, rects[i + 1] ?? 0, rects[i + 2] ?? 0, rects[i + 3] ?? 0); ctx.fill?.(); },
     endFrame() {
       if (open) { ctx.restore(); open = false; }
-      if (!lost) { while (stats.bytes > budget) { const oldest = lru[0]; if (oldest === undefined || oldest.frame === frame) break; drop(oldest); } for (const entry of [...gen.values()]) if (frame - entry.frame >= 120) dropGen(entry); }
+      if (!lost) { while (genBytes + lightBytes > LOOK.cacheBytes) { const oldest = gen.values().next().value; if (oldest === undefined || oldest.frame === frame) break; dropGen(oldest); } while (stats.bytes > budget) { const oldest = lru[0]; if (oldest === undefined || oldest.frame === frame) break; drop(oldest); } for (const entry of [...gen.values()]) if (frame - entry.frame >= 120) dropGen(entry); }
       stats.missing = missing; stats.capped = capped;
       if (!lost && !missing && !capped) hold = false;
     },

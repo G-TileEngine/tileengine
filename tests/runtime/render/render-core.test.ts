@@ -120,6 +120,7 @@ test("the render core stays pure: no DOM, no wall time, no frame loop, imports o
   for (const entry of entries) {
     const text = readFileSync(new URL(entry.name, dir), "utf8").replace(/("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|`(?:\\.|[^`\\])*`)|\/\*[\s\S]*?\*\/|\/\/.*$/gm, "$1");
     assert.equal(banned.test(text), false, entry.name);
-    for (const hit of text.matchAll(spec)) assert.match(hit[1] ?? "", /^\.\/[^/]+\.ts$/, entry.name);
+    for (const hit of text.matchAll(spec)) assert.match(hit[1] ?? "", /^\.\/[^/]+\.ts$|^\.\.\/\.\.\/types\/core-types\.ts$/, entry.name);
+    for (const line of text.split("\n")) if (line.includes("types/core-types.ts")) assert.match(line, /^import type \{[^}]*\} from "\.\.\/\.\.\/types\/core-types\.ts";$/, entry.name); // 33b-3: type-only core-types imports (CN-018)
   }
 });

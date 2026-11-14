@@ -1,4 +1,4 @@
-export { BANDS, type Anchor, type Band, type Cam, type Clip, type DrawCmd, type DrawList, type DrawOp, type Fit, type FrameStamp, type Overlay, type RenderScene, type Renderer, type Sheet, type Standing, type TileLayer, type TileMotion } from "./types.ts";
+export { BANDS, type Anchor, type Band, type Cam, type Clip, type DrawCmd, type DrawList, type DrawOp, type Fit, type FrameStamp, type Overlay, type RenderScene, type Renderer, type SceneDot, type Sheet, type Standing, type TileLayer, type TileMotion } from "./types.ts";
 export { backingSize, fitView, scaleRange, snapScale } from "./fit.ts";
 export { clampCamera, easeCamera, px, snapCamera, toDevice } from "./camera.ts";
 export { badMs, clipMs, frameAt, hash32, instanceOffset } from "./frames.ts";
@@ -14,5 +14,7 @@ export { ANIM_HINT, MOTION_CAP, SHORE_MS, bakeMotion, motionAt, motionCell, pick
 export { BAKE_BUDGET, PLANS_MAX, createWorldMotion, type FrameSource, type ShoreMap, type WorldMotion, type WorldNote } from "./world-motion.ts";
 export { FX_PLAYER, clipEvents, clipPoints, crossed, frameStart, hitAt, nextChangeMs, ownLight, placeStep, pointAt, poseMs, startMs, stripNote, toTick, viewHitMs, type Box, type ClipEvent, type FxActor, type FxEvent, type FxNote, type FxPiece, type PointName, type PointTable, type Pt } from "./fx-player.ts";
 export { FEEL, mergeHolds, playerPx, shakeAt, shakeCam, shakeLen, shakePx, shiver, squashed, steadyUi, stopMs, warp, type Hold, type Kick, type Shake, type ShakeSetting } from "./feel.ts";
-export { FX_LIGHT, brightPixels, cuesSuppressed, hitWhiteMode, lightColour, lightMode, lightRadius, litTiles, popFlashStarts, popIsFlash, rampOf, snapToRamp, type HitWhiteMode, type LightMode, type LitStep, type Ramps } from "./fx-light.ts";
+export { FX_LIGHT, HIT_WHITE, brightPixels, cuesSuppressed, hitWhiteArg, hitWhiteMode, hitWhiteMs, lightColour, lightMode, lightRadius, litTiles, popFlashStarts, popIsFlash, rampOf, snapToRamp, type HitWhiteMode, type LightMode, type LitStep, type Ramps } from "./fx-light.ts";
+export { FX_BUDGET, FX_GROUND_ORDER, PARTICLES, capCounts, particleAt, particleRead, type Dot, type ParticleRead } from "./fx-particles.ts";
+export { LOOK, lookId, lookPixels, lookSize, recolour, turnTag } from "./fx-look.ts";
 export { clipIndex, createFxLive, type FxLive, type LiveEvent, type LiveFx, type LiveGrid, type LiveHold, type LiveOut, type LiveUnit } from "./fx-live.ts";
