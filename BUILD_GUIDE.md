@@ -3,7 +3,7 @@
 Owner: Engine Architect. Guide version: **guide-3 (2026-11-13, CN-016)**. This file sits at the repo root and is the only copy; `handoff/BUILD_GUIDE.md` is a one-line pointer to it. Re-read it every 5–7 steps. If a step file and this guide disagree, stop and say so in your Decisions note; the Architect answers with a Change Notice. Never resolve a conflict silently.
 
 ## 0. Working style
-- Use all your available helper agents: in parallel for review, for tests and for cross-checks.
+- **Required (CEO 2026-11-14):** use your helper agents on every step, in parallel, for review, for tests and for cross-checks. Working alone is not allowed. `HANDBACK.md` § Helpers & self-review lists each helper you used and what it reviewed, plus your own self-review against Acceptance and the QA checklist (`handoff/HAND-BACK.md` item 8). A hand-back without that section is **REJECT (incomplete)**.
 - Take your time. Never rush.
 - Before every hand-back, review your own work against the step's **Acceptance** list and the QA checklist (`docs/qa/handback-checklist.md`).
 - Token and usage cost is not a constraint. Prefer thoroughness over speed.

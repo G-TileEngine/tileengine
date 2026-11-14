@@ -16,7 +16,7 @@ Read first: BUILD_GUIDE.md §<n>; <QA reviews and format sections this step need
 Kit: r<N>, <date>. <Proto branch and head, tree, test count, plants result, bundle sha.>
 Carries: <CNs filed or none; pins unchanged or the CN that moves them>
 
-> Working style: use your helper agents, take your time, self-review against Acceptance + QA checklist before hand-back (see BUILD_GUIDE).
+> Working style (REQUIRED): use your helper agents for review, tests and cross-checks, take your time, and self-review against Acceptance + the QA checklist. HANDBACK.md must have § Helpers & self-review (each helper and what it reviewed, plus your self-review); without it the hand-back is REJECT (incomplete). See BUILD_GUIDE §0 and HAND-BACK item 8.
 
 ## Goal
 <2–5 sentences: what exists after this step that didn't before, and why.>

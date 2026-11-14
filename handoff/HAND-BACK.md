@@ -1,6 +1,6 @@
 # HAND-BACK.md — what Grok Build returns after every step
 
-Guide version guide-3 (2026-11-13, CN-016). Matches QA & Build Guard's `docs/qa/handback-checklist.md` §0–§2. A hand-back missing any of items 1–4 below is **REJECT (incomplete)** without review.
+Guide version guide-3 (2026-11-13, CN-016). Matches QA & Build Guard's `docs/qa/handback-checklist.md` §0–§2. A hand-back missing any of items 1–4 or 8 below is **REJECT (incomplete)** without review.
 
 ## Where
 - **Repo:** https://github.com/G-TileEngine/tileengine (visibility is the CEO's call). Never push to `main`.
@@ -20,6 +20,7 @@ Guide version guide-3 (2026-11-13, CN-016). Matches QA & Build Guard's `docs/qa/
 | 5 | `HANDBACK.md` § Next step (optional) | a proposal, never a change | §0.5 |
 | 6 | `stat.txt` | `git diff --stat <base>..<head> -- . ':!package-lock.json' ':!handback'` | G7 |
 | 7 | `HANDBACK.md` § Shipped tests | `sha256sum` of every shipped test file as it sits in `tests/`; each must equal the sha256 in the step file (BUILD_GUIDE §8) | G1 |
+| 8 | `HANDBACK.md` § Helpers & self-review | **Required** (CEO 2026-11-14, BUILD_GUIDE §0): one line per helper agent used (what it was asked to review or test, and what it found or changed), then your self-review against every Acceptance line and the QA checklist, each marked done | §0.6 |
 The bundle is the patch; once Chief Of Staff has pushed it, QA clones the branch for the clean checkout (§1) and reviews `<base>..<head>`. No `diff.patch` is needed. The PR line in HANDBACK.md reads `PR: opened by Chief Of Staff from the bundle` (never a guessed PR state).
 
 ## `HANDBACK.md` shape
@@ -37,6 +38,10 @@ npm test: <pass>/<fail>/<skipped>/<todo>    typecheck: exit <n>    lint: exit <n
 
 ## Shipped tests (sha256, unchanged)
 <sha256sum output for each shipped file, at its tests/ path>
+
+## Helpers & self-review (required)
+- Helper <n>: <what it reviewed or tested> → <what it found or changed>
+- Self-review: Acceptance <each line: done / fixed>; QA checklist G1–G10 <done / fixed>
 
 ## Decisions & deviations (5–10 lines)
 - ...

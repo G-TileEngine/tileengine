@@ -9,7 +9,8 @@ Applies to every step in `/workspace/tileengine/handoff/steps/`. Based on `hando
 3. Raw test output (`npm test`) and typecheck output (`npm run typecheck`).
 4. The 5–10 line **Decisions & deviations** note.
 5. Optional next step.
-Missing any of 1–4: **REJECT (incomplete)**, no further review.
+6. **Helpers & self-review** section (`HANDBACK.md`, HAND-BACK item 8; required from 33b-3, CEO 2026-11-14): each helper agent used and what it reviewed, plus the self-review against Acceptance and this checklist. Missing: **REJECT (incomplete)**. Thin or generic (no named helper, no per-line Acceptance check): flag it.
+Missing any of 1–4 or 6: **REJECT (incomplete)**, no further review.
 
 ## 1. Gates (all must pass; any FAIL = REJECT)
 Run from a fresh clone of https://github.com/G-TileEngine/tileengine, checked out at the step branch `step/<id>-r<N>` (the PR head), into `/workspace/qa-runs/<id>-r<N>/`. Never run on `main` or a working tree. Fresh `npm ci`. The diff base is `main` after the previous accepted step (for Step 00: `main @ CoS kit push`).
