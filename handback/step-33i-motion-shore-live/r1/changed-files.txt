@@ -1,0 +1,13 @@
+M	src/runtime/canvas/canvas2d.ts
+M	src/runtime/host/raf-driver.ts
+M	src/runtime/render/chunk-plan.ts
+M	src/runtime/render/dirty.ts
+M	src/runtime/render/draw-list.ts
+M	src/runtime/render/fx-live.ts
+M	src/runtime/render/index.ts
+M	src/runtime/render/motion.ts
+M	src/runtime/render/types.ts
+M	src/runtime/render/water.ts
+A	src/runtime/render/world-motion.ts
+M	src/runtime/scene/world-scene.ts
+A	tests/runtime/scene/motion-shore-live.test.ts

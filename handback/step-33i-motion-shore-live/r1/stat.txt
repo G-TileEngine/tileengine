@@ -1,0 +1,14 @@
+ src/runtime/canvas/canvas2d.ts                |  32 +++--
+ src/runtime/host/raf-driver.ts                |  12 +-
+ src/runtime/render/chunk-plan.ts              |   2 +-
+ src/runtime/render/dirty.ts                   |   3 +-
+ src/runtime/render/draw-list.ts               |  11 +-
+ src/runtime/render/fx-live.ts                 |   4 +-
+ src/runtime/render/index.ts                   |   5 +-
+ src/runtime/render/motion.ts                  |   9 +-
+ src/runtime/render/types.ts                   |   9 +-
+ src/runtime/render/water.ts                   |   4 +-
+ src/runtime/render/world-motion.ts            |  74 ++++++++++++
+ src/runtime/scene/world-scene.ts              |  71 ++++++-----
+ tests/runtime/scene/motion-shore-live.test.ts | 162 ++++++++++++++++++++++++++
+ 13 files changed, 338 insertions(+), 60 deletions(-)
