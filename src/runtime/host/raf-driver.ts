@@ -1,6 +1,6 @@
 import { type Clock } from "../../core/clock/index.ts";
 import { canvas2d, type Canvas2D, type CanvasLike } from "../canvas/canvas2d.ts";
-import { backingSize, chunkedList, fitView, needsDraw, present, snapCamera, type FrameStamp, type LightPlan, type Pixels, type RenderScene } from "../render/index.ts";
+import { backingSize, chunkedList, fitView, needsDraw, present, shakeCam, snapCamera, steadyUi, type FrameStamp, type LightPlan, type Pixels, type RenderScene } from "../render/index.ts";
 
 type Listen = { addEventListener(type: string, fn: () => void): void; removeEventListener(type: string, fn: () => void): void };
 type Resized = { readonly devicePixelContentBoxSize?: readonly { readonly inlineSize: number; readonly blockSize: number }[] };
@@ -13,7 +13,7 @@ export type HostEnv = {
   readonly OffscreenCanvas?: new (w: number, h: number) => CanvasLike;
   readonly ResizeObserver?: new (cb: (entries: readonly Resized[]) => void) => { observe(target: object, opts?: { box: string }): void; disconnect(): void };
 };
-export type View = { readonly scene: RenderScene; readonly x: number; readonly y: number; readonly s: number; readonly lights?: LightPlan };
+export type View = { readonly scene: RenderScene; readonly x: number; readonly y: number; readonly s: number; readonly lights?: LightPlan; readonly shake?: { readonly x: number; readonly y: number } };
 export type DriverOptions = {
   readonly env: HostEnv; readonly canvas: HostCanvas; readonly clock: Clock; readonly view: () => View;
   readonly load: (id: string) => Promise<object>;
@@ -66,11 +66,12 @@ export function createDriver(o: DriverOptions): Driver {
     if (view.scene !== scene || view.lights !== lit) { scene = view.scene; lit = view.lights; stats.rev += 1; }
     const current = scene; if (current === null) return;
     const dev = exact === undefined ? backingSize(o.canvas.clientWidth, o.canvas.clientHeight, o.env.devicePixelRatio) : backingSize(o.canvas.clientWidth, o.canvas.clientHeight, o.env.devicePixelRatio, exact);
-    const fit = fitView(dev.w, dev.h, view.s, current.tileW, current.tileH), cam = snapCamera(view.x, view.y, fit.s);
+    const fit = fitView(dev.w, dev.h, view.s, current.tileW, current.tileH), base = snapCamera(view.x, view.y, fit.s);
+    const cam = shakeCam(base, (view.shake?.x ?? 0) * fit.s, (view.shake?.y ?? 0) * fit.s, current.cols * current.tileW, current.rows * current.tileH, fit);
     const stamp: FrameStamp = { rev: stats.rev, tMs: o.clock.now(), s: fit.s, devW: fit.devW, devH: fit.devH, camDevX: cam.devX, camDevY: cam.devY };
     if (!needsDraw(prev, due, stamp) && !(backend.busy() && (!backend.stats.missing || backend.stats.capped))) return;
     backend.world(current, stats.rev);
-    const list = chunkedList(current, fit, cam, o.clock.now(), o.clock.stepMs);
+    const list = steadyUi(chunkedList(current, fit, cam, o.clock.now(), o.clock.stepMs), cam.devX - base.devX, cam.devY - base.devY);
     prev = stamp; due = list.dueMs; stats.draws += 1; lastDraw = ts;
     present(backend, fit, list, clear, () => { if (view.lights !== undefined) backend.lights(view.lights, fit, cam); });
   }

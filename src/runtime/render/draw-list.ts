@@ -58,8 +58,9 @@ export function buildDrawList(scene: RenderScene, fit: Fit, cam: Cam, tMs: numbe
   paint(scene.overlays.filter((o) => o.band === "fxGround"));
   const order = scene.standing.map((st, i) => ({ st, i })).sort((a, b) => (a.st.r + 1) * scene.tileH + (a.st.dy ?? 0) - ((b.st.r + 1) * scene.tileH + (b.st.dy ?? 0)) || a.st.c - b.st.c || rank(a.st) - rank(b.st) || (a.st.z ?? 0) - (b.st.z ?? 0) || a.i - b.i);
   for (const { st } of order) {
-    const mark = anchorPx(st.sheet), mot = st.motion, sheet = mot === undefined ? st.sheet : { ...st.sheet, id: `${st.sheet.id}~m0~${mot.key}`, columns: mot.n };
-    const off = instanceOffset(st.clip, stepMs, scene.mapSeed, st.key === undefined ? st.sheet.id : `${st.sheet.id}#${st.key}`, st.key === undefined ? st.c : 0, st.key === undefined ? st.r : 0);
+    const mot = st.motion, sq = st.squash === true && st.sheet.fh > 2, sheet = sq ? { ...st.sheet, id: `${st.sheet.id}~sq${st.frame ?? 0}~${st.sheet.fw}x${st.sheet.fh}`, fw: st.sheet.fw + 2, fh: st.sheet.fh - 2, columns: 1 } : mot === undefined ? st.sheet : { ...st.sheet, id: `${st.sheet.id}~m0~${mot.key}`, columns: mot.n };
+    const mark = anchorPx(sheet);
+    const off = instanceOffset(st.clip, stepMs, scene.mapSeed, st.key === undefined ? st.sheet.id : `${st.sheet.id}#${st.key}`, st.key === undefined ? st.c : 0, st.key === undefined ? st.r : 0) - (st.lagMs ?? 0);
     push("base", sheet, () => (mot !== undefined ? motionAt(mot.parts, tMs, st.c * scene.tileW + (st.dx ?? 0), hash32(scene.mapSeed, st.sheet.id, st.c, st.r)) : st.clip ? frameAt(st.clip, tMs, stepMs, off) : { frame: st.frame ?? 0, nextMs: Infinity }), st.c * scene.tileW + px(scene.tileW / 2) + (st.dx ?? 0) - mark.x + (st.ox ?? 0), (st.r + 1) * scene.tileH + (st.dy ?? 0) - mark.y + (st.oy ?? 0), "normal", st.flipX === true);
   }
   cells(scene.above);

@@ -1,12 +1,14 @@
-import { clipMs, instanceOffset } from "./frames.ts";
+import { clipMs, hash32, instanceOffset } from "./frames.ts";
+import { playerPx, shakeAt, shakeLen, shakePx, stopMs, warp, type Kick, type ShakeSetting } from "./feel.ts";
 import { clipEvents, clipPoints, crossed, frameStart, hitAt, nextChangeMs, placeStep, poseMs, startMs, stripNote, viewHitMs, type Box, type FxActor, type FxEvent, type FxNote, type FxPiece, type PointTable } from "./fx-player.ts";
 import type { Clip, Overlay, Standing } from "./types.ts";
-export type LiveFx = { readonly id: string; readonly castMs: number; readonly caster: string; readonly target?: string; readonly at?: { readonly c: number; readonly r: number }; readonly start_on?: string; readonly hitOffsetMs?: number; readonly lungePeakMs?: number; readonly loopMs?: number; readonly commitMs?: number; readonly pieces: readonly FxPiece[] };
+export type LiveFx = { readonly id: string; readonly castMs: number; readonly caster: string; readonly target?: string; readonly at?: { readonly c: number; readonly r: number }; readonly start_on?: string; readonly hitOffsetMs?: number; readonly lungePeakMs?: number; readonly loopMs?: number; readonly commitMs?: number; readonly pieces: readonly FxPiece[]; readonly hit_stop_ms?: number; readonly shake?: number; readonly shake_ms?: number; readonly shake_dir?: string; readonly squash?: boolean };
 export type LiveUnit = { readonly actor: FxActor; readonly clip?: Clip };
 export type LiveEvent = FxEvent & { readonly fx: string };
-export type LiveGrid = { readonly tileW: number; readonly tileH: number; readonly stepMs: number; readonly lite?: boolean; readonly mapSeed: number };
-export type LiveOut = { readonly standing: Standing[]; readonly overlays: Overlay[]; readonly fired: LiveEvent[]; readonly views: Record<string, number>; readonly notes: FxNote[]; readonly dueMs: number };
-export type FxLive = { frame(list: readonly LiveFx[], unitOf: (id: string) => LiveUnit | null, t1: number, t2: number, grid: LiveGrid): LiveOut; unit(st: Standing, facing: string | null, box: Box | undefined, tMs: number, grid: LiveGrid): LiveUnit; readonly held: () => number };
+export type LiveGrid = { readonly tileW: number; readonly tileH: number; readonly stepMs: number; readonly lite?: boolean; readonly mapSeed: number; readonly reduce?: boolean; readonly flashes?: boolean; readonly shake?: ShakeSetting };
+export type LiveHold = { readonly at: number; readonly ms: number; readonly ox: number; readonly squash: boolean };
+export type LiveOut = { readonly standing: Standing[]; readonly overlays: Overlay[]; readonly fired: LiveEvent[]; readonly views: Record<string, number>; readonly notes: FxNote[]; readonly dueMs: number; readonly holds: Readonly<Record<string, LiveHold>>; readonly shake: { readonly x: number; readonly y: number } };
+export type FxLive = { frame(list: readonly LiveFx[], unitOf: (id: string, tMs?: number) => LiveUnit | null, t1: number, t2: number, grid: LiveGrid): LiveOut; unit(st: Standing, facing: string | null, box: Box | undefined, tMs: number, grid: LiveGrid): LiveUnit; readonly held: () => number };
 const blank = (): PointTable => ({ hand: [], tip: [], head: [], centre: [] });
 type Mem = { readonly lap: number; readonly at: Map<string, FxActor> };
 export function clipIndex(clip: Clip, tMs: number, stepMs: number, offsetMs: number): number {
@@ -24,11 +26,11 @@ export function createFxLive(): FxLive {
   return {
     held: () => store.size,
     unit(st, facing, box, tMs, grid) {
-      const clip = st.clip, id = st.key === undefined ? st.sheet.id : `${st.sheet.id}#${st.key}`, actor: FxActor = { c: st.c, r: st.r, sheet: st.sheet, facesAway: facing === "N", points: table(clip, st.sheet.fw, st.sheet.fh), box: box ?? { x: 0, y: 0, w: st.sheet.fw, h: st.sheet.fh }, frame: clip === undefined ? 0 : clipIndex(clip, tMs, grid.stepMs, instanceOffset(clip, grid.stepMs, grid.mapSeed, id, st.key === undefined ? st.c : 0, st.key === undefined ? st.r : 0)), ...(st.dx === undefined ? {} : { dx: st.dx }), ...(st.dy === undefined ? {} : { dy: st.dy }), ...(st.flipX === true ? { flipX: true } : {}) };
+      const clip = st.clip, id = st.key === undefined ? st.sheet.id : `${st.sheet.id}#${st.key}`, actor: FxActor = { c: st.c, r: st.r, sheet: st.sheet, facesAway: facing === "N", points: table(clip, st.sheet.fw, st.sheet.fh), box: box ?? { x: 0, y: 0, w: st.sheet.fw, h: st.sheet.fh }, frame: clip === undefined ? st.frame ?? 0 : clipIndex(clip, tMs - (st.lagMs ?? 0), grid.stepMs, instanceOffset(clip, grid.stepMs, grid.mapSeed, id, st.key === undefined ? st.c : 0, st.key === undefined ? st.r : 0)), ...(st.dx === undefined ? {} : { dx: st.dx }), ...(st.dy === undefined ? {} : { dy: st.dy }), ...(st.flipX === true ? { flipX: true } : {}) };
       return clip === undefined ? { actor } : { actor, clip };
     },
     frame(list, unitOf, t1, t2, grid) {
-      const lite = grid.lite === true, pose = poseMs(t2, lite), standing: Standing[] = [], overlays: Overlay[] = [], fired: LiveEvent[] = [], views: Record<string, number> = {}, notes: FxNote[] = [], keep = new Set<string>();
+      const lite = grid.lite === true, pose = poseMs(t2, lite), standing: Standing[] = [], overlays: Overlay[] = [], fired: LiveEvent[] = [], views: Record<string, number> = {}, notes: FxNote[] = [], keep = new Set<string>(), kicks: Kick[] = [], holds: Record<string, LiveHold> = {};
       let playing = false;
       for (const e of list) {
         if (!Number.isFinite(e.castMs)) continue; keep.add(e.id);
@@ -37,6 +39,10 @@ export function createFxLive(): FxLive {
         const contact = ev.find((row) => row.name === "contact"), release = ev.find((row) => row.name === "release"), contactMs = contact !== undefined && clip !== undefined ? e.castMs + frameStart(clip, contact.frame, grid.stepMs) : undefined;
         const off = e.hitOffsetMs, peak = e.lungePeakMs, loopMs = e.loopMs, commit = e.commitMs;
         const hit = hitAt(e.castMs, grid.stepMs, { ...(off !== undefined && Number.isFinite(off) ? { effectHitMs: start + off } : {}), ...(contactMs === undefined ? {} : { contactMs }), ...(peak === undefined ? {} : { lungePeakMs: peak }) });
+        const stop = stopMs(e.hit_stop_ms, grid.stepMs, grid.reduce === true, grid.flashes === true), sp = shakePx(e.shake), sl = shakeLen(e.shake_ms, sp.px), aim = e.target === undefined ? null : unitOf(e.target);
+        if (sp.bad) notes.push({ code: "outOfRange", message: "shake" }); if (sl.bad) notes.push({ code: "outOfRange", message: "shake_ms" });
+        const pp = playerPx(sp.px, grid.shake, grid.reduce === true);
+        if (pp > 0) kicks.push({ at: hit, px: pp, ms: sl.ms, dx: e.shake_dir === "none" || caster === null || aim === null ? 0 : aim.actor.c - caster.actor.c, dy: e.shake_dir === "none" || caster === null || aim === null ? 0 : aim.actor.r - caster.actor.r, seed: hash32(grid.mapSeed, e.id, 0, 0) });
         let span = 0; for (const p of e.pieces) if (Number.isFinite(p.at) && Number.isFinite(p.ms) && p.at + p.ms > span) span = p.at + p.ms;
         const loop = loopMs !== undefined && Number.isFinite(loopMs) && loopMs > 0 ? loopMs : 0, end = start + span, line: FxEvent[] = [{ type: "fx:start", at: start }];
         if (clip !== undefined) for (const row of ev) line.push({ type: "clip:event", at: e.castMs + frameStart(clip, row.frame, grid.stepMs), name: row.name });
@@ -45,10 +51,10 @@ export function createFxLive(): FxLive {
         for (const row of crossed(line, t1, t2)) fired.push({ ...row, fx: e.id });
         if (loop > 0) { const k = Math.floor((t2 - start) / loop), at = start + k * loop; if (k >= 1 && Number.isFinite(at) && t1 < at && at <= t2) fired.push({ type: "fx:loop", at, fx: e.id }); }
         if (commit !== undefined && Number.isFinite(commit) && Number.isFinite(hit)) { const view = viewHitMs(commit, hit, span); if (Number.isFinite(view)) views[e.id] = view; }
-        if (loop > 0 ? t2 >= start : t2 >= start && t2 < end) playing = true;
+        if (loop > 0 ? t2 >= start : t2 >= start && t2 < end + stop) playing = true;
         const lap = loop > 0 && pose >= start ? Math.floor((pose - start) / loop) : 0, prev = store.get(e.id), mem: Mem = prev !== undefined && prev.lap === lap ? prev : { lap, at: new Map() };
         if (mem !== prev) store.set(e.id, mem); if (!(pose >= start)) continue;
-        const drawT = loop > 0 ? start + ((pose - start) % loop + loop) % loop : pose, target = e.target === undefined ? null : unitOf(e.target);
+        const clockT = warp(pose, stop > 0 ? { from: hit, to: hit + stop } : null), drawT = loop > 0 ? start + ((clockT - start) % loop + loop) % loop : clockT, target = aim;
         for (const [i, p] of e.pieces.entries()) {
           if (!Number.isFinite(p.at) || !Number.isFinite(p.ms)) continue;
           const warn = p.clip === undefined ? null : stripNote(p.clip, p.sheet.id);
@@ -68,7 +74,8 @@ export function createFxLive(): FxLive {
       }
       for (const id of store.keys()) if (!keep.has(id)) store.delete(id);
       fired.sort((a, b) => a.at - b.at); // stable: ties keep effect order, then timeline order, laps last (ruling 5)
-      return { standing, overlays, fired, views, notes, dueMs: playing ? nextChangeMs(t2, lite) : Infinity };
+      const shake = shakeAt(kicks, t2);
+      return { standing, overlays, fired, views, notes, holds, shake: { x: shake.x, y: shake.y }, dueMs: Math.min(playing ? nextChangeMs(t2, lite) : Infinity, shake.nextMs) };
     },
   };
 }
