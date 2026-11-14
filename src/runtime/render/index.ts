@@ -6,7 +6,7 @@ export { buildDrawList } from "./draw-list.ts";
 export { CHUNK, chunkId, chunkedList, isStatic } from "./chunk-plan.ts";
 export { needsDraw, present } from "./dirty.ts";
 export { openCell, visibleCells, createSight, type Blockers } from "./visibility.ts";
-export { BANDS_OF_LIGHT, DARK_CAP, STEPS, WASH_MAX, createLighting, createMoonlit, darkness, lightOps, type FillOp, type Light, type LightPlan, type LightWorld } from "./light.ts";
+export { BANDS_OF_LIGHT, DARK_CAP, STEPS, WASH_MAX, createLighting, createMoonlit, darkness, lightOps, type FillOp, type FxLit, type Light, type LightPlan, type LightWorld } from "./light.ts";
 export { SWAY_EDGE_PX, SWAY_LOOP, WIND_PX_PER_S, cycleFrames, scrollFrames, swayFrames, waveOffsetMs, type Pixels } from "./bakes.ts";
 export { FOAM_PX, SHALLOW_PX, SHORE_DEFAULTS, SHORE_MAX, WAVE_GAP, shoreDistance, shoreFrames, type ShoreColours, type ShoreOpts } from "./water.ts";
 export { SEE_THROUGH_DEFAULT, createSeeThrough } from "./canopy.ts";
@@ -14,4 +14,5 @@ export { ANIM_HINT, MOTION_CAP, SHORE_MS, bakeMotion, motionAt, motionCell, pick
 export { BAKE_BUDGET, PLANS_MAX, createWorldMotion, type FrameSource, type ShoreMap, type WorldMotion, type WorldNote } from "./world-motion.ts";
 export { FX_PLAYER, clipEvents, clipPoints, crossed, frameStart, hitAt, nextChangeMs, ownLight, placeStep, pointAt, poseMs, startMs, stripNote, toTick, viewHitMs, type Box, type ClipEvent, type FxActor, type FxEvent, type FxNote, type FxPiece, type PointName, type PointTable, type Pt } from "./fx-player.ts";
 export { FEEL, mergeHolds, playerPx, shakeAt, shakeCam, shakeLen, shakePx, shiver, squashed, steadyUi, stopMs, warp, type Hold, type Kick, type Shake, type ShakeSetting } from "./feel.ts";
+export { FX_LIGHT, brightPixels, cuesSuppressed, hitWhiteMode, lightColour, lightMode, lightRadius, litTiles, popFlashStarts, popIsFlash, rampOf, snapToRamp, type HitWhiteMode, type LightMode, type LitStep, type Ramps } from "./fx-light.ts";
 export { clipIndex, createFxLive, type FxLive, type LiveEvent, type LiveFx, type LiveGrid, type LiveHold, type LiveOut, type LiveUnit } from "./fx-live.ts";

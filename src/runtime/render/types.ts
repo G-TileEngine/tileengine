@@ -12,15 +12,15 @@ export type Cam = { readonly x: number; readonly y: number; readonly devX: numbe
 export const BANDS = ["base", "fxGround", "wash", "fxAir", "glow", "flash", "ui"] as const;
 export type Band = (typeof BANDS)[number];
 export type DrawOp = "normal" | "add";
-export type DrawCmd = { readonly band: Band; readonly sheet: string; readonly sx: number; readonly sy: number; readonly sw: number; readonly sh: number; readonly dx: number; readonly dy: number; readonly dw: number; readonly dh: number; readonly op: DrawOp; readonly flipX: boolean };
+export type DrawCmd = { readonly band: Band; readonly sheet: string; readonly sx: number; readonly sy: number; readonly sw: number; readonly sh: number; readonly dx: number; readonly dy: number; readonly dw: number; readonly dh: number; readonly op: DrawOp; readonly flipX: boolean; readonly selfLit?: boolean };
 /** A baked motion atlas: `n` poses in one row, shared by every tile of that index. */
 export type TileMotion = { readonly key: string; readonly n: number; readonly parts: readonly MotionPart[] };
 /** A tile layer. `anims` is `tileProps.anim` resolved to clips: tile index → clip. Tiles share one offsetMs. `motion` is the atlas plan per tile index. */
 export type TileLayer = { readonly sheet: Sheet; readonly tiles: readonly (number | null)[]; readonly anims?: Readonly<Record<number, Clip>>; readonly motion?: Readonly<Record<number, TileMotion>> };
 /** A unit, prop, or effect anchored on a unit. `ox`/`oy` move the drawing, never the sort. `flipX` comes from the clip fallback (slice 30, `noMirror`). */
-export type Standing = { readonly kind: "object" | "unit" | "fxBehind" | "fxFront"; readonly sheet: Sheet; readonly c: number; readonly r: number; readonly dx?: number; readonly dy?: number; readonly ox?: number; readonly oy?: number; readonly z?: number; readonly frame?: number; readonly clip?: Clip; readonly flipX?: boolean; readonly faceSwap?: boolean; readonly key?: string; readonly motion?: TileMotion; readonly squash?: boolean; readonly lagMs?: number };
+export type Standing = { readonly kind: "object" | "unit" | "fxBehind" | "fxFront"; readonly sheet: Sheet; readonly c: number; readonly r: number; readonly dx?: number; readonly dy?: number; readonly ox?: number; readonly oy?: number; readonly z?: number; readonly frame?: number; readonly clip?: Clip; readonly flipX?: boolean; readonly faceSwap?: boolean; readonly key?: string; readonly motion?: TileMotion; readonly squash?: boolean; readonly lagMs?: number; readonly sceneLit?: boolean };
 /** Anything drawn above the world: wash, effect air, glow or UI. `x`/`y` are top-left in world art px. */
-export type Overlay = { readonly band: Exclude<Band, "base">; readonly sheet: Sheet; readonly x: number; readonly y: number; readonly frame?: number; readonly clip?: Clip; readonly startMs?: number; readonly op?: DrawOp };
+export type Overlay = { readonly band: Exclude<Band, "base">; readonly sheet: Sheet; readonly x: number; readonly y: number; readonly frame?: number; readonly clip?: Clip; readonly startMs?: number; readonly op?: DrawOp; readonly selfLit?: boolean };
 export type RenderScene = { readonly cols: number; readonly rows: number; readonly tileW: number; readonly tileH: number; readonly mapSeed: number; readonly ground: readonly TileLayer[]; readonly above: readonly TileLayer[]; readonly standing: readonly Standing[]; readonly overlays: readonly Overlay[] };
 export type DrawList = { readonly cmds: readonly DrawCmd[]; readonly dueMs: number };
 /** The draw adapter (ARCH §12.4). Canvas2D (step 28) and WebGL2 (later) implement it; the test backend lives in tests/. */

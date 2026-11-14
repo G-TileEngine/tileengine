@@ -1,5 +1,5 @@
 import type { Notice } from "../../core/notice.ts";
-import { badMs, clipEvents, clipPoints, createFxLive, createSeeThrough, createWorldMotion, FEEL, frameAt, frameStart, hitAt, instanceOffset, mergeHolds, pickMotion, poseMs, shiver, squashed, startMs, stopMs, type Box, type Clip, type FrameSource, type Hold, type LiveEvent, type LiveFx, type Motion, type Overlay, type Pixels, type RenderScene, type ShakeSetting, type Sheet, type ShoreStyle, type Standing, type TileLayer, type TileMotion, type WorldMotion } from "../render/index.ts";
+import { badMs, clipEvents, clipPoints, createFxLive, createSeeThrough, createWorldMotion, FEEL, frameAt, frameStart, hitAt, instanceOffset, mergeHolds, pickMotion, poseMs, shiver, squashed, startMs, stopMs, type Box, type Clip, type FrameSource, type FxLit, type Hold, type LiveEvent, type LiveFx, type Motion, type Overlay, type Pixels, type RenderScene, type ShakeSetting, type Sheet, type ShoreStyle, type Standing, type TileLayer, type TileMotion, type WorldMotion } from "../render/index.ts";
 
 export type SceneAsset = { readonly sheet: Sheet; readonly clips?: readonly Clip[]; readonly tileProps?: Readonly<Record<string, { readonly anim?: string; readonly motion?: Motion | null }>>; readonly noMirror?: boolean; readonly box?: Box; readonly motion?: Motion | null; readonly styled?: boolean };
 export type SceneLayer = { readonly tileset: string | null; readonly aboveUnits: boolean; readonly visible: boolean; readonly tiles: readonly (number | null)[] };
@@ -13,7 +13,7 @@ export type SceneWorld = {
 };
 export type SceneClock = { readonly tMs: number; readonly stepMs: number; readonly lite?: boolean; readonly reduce?: boolean; readonly shake?: ShakeSetting; readonly reduceFlashes?: boolean };
 export const NOTICES_MAX = 1024;
-export type SceneLink = { scene(world: SceneWorld, at?: SceneClock): RenderScene; readonly notices: readonly Notice[]; readonly fired: readonly LiveEvent[]; readonly views: Readonly<Record<string, number>>; pixels(id: string): Pixels | undefined; readonly shake: { readonly x: number; readonly y: number }; readonly lagged: () => number };
+export type SceneLink = { scene(world: SceneWorld, at?: SceneClock): RenderScene; readonly notices: readonly Notice[]; readonly fired: readonly LiveEvent[]; readonly views: Readonly<Record<string, number>>; pixels(id: string): Pixels | undefined; readonly shake: { readonly x: number; readonly y: number }; readonly lit: FxLit; readonly lagged: () => number };
 const NO_OBJECTS: readonly SceneObject[] = [], NO_OVERLAYS: readonly Overlay[] = [];
 
 export function pickClip(asset: SceneAsset, action: string, facing: SceneUnit["facing"]): { readonly clip?: Clip; readonly frame?: number; readonly flipX: boolean } {
@@ -74,7 +74,7 @@ export function createSceneLink(source?: FrameSource): SceneLink {
   const notices: Notice[] = [], seen = new WeakSet<SceneAsset>(), bad = new WeakSet<Clip>(), prior = new Set<string>();
   const push = (row: Notice): void => { const k = `${row.code}\0${row.message}`; if (prior.has(k) || notices.length >= NOTICES_MAX) return; notices.push(row); };
   const live = createFxLive(), see = createSeeThrough(), frames = source ?? ((): undefined => undefined), wm = createWorldMotion(frames), lags = new Map<string, Lag>();
-  let fired: LiveEvent[] = [], views: Record<string, number> = {}, last = Number.NEGATIVE_INFINITY, copied = 0, shakeNow = { x: 0, y: 0 };
+  let fired: LiveEvent[] = [], views: Record<string, number> = {}, last = Number.NEGATIVE_INFINITY, copied = 0, shakeNow = { x: 0, y: 0 }, litNow: FxLit = { lights: [] };
   let prev: { assets: SceneWorld["assets"]; layers: SceneWorld["layers"]; objects: readonly SceneObject[]; overlays: readonly Overlay[]; key: string; scene: RenderScene; reduce: boolean; style: SceneWorld["style"]; water: SceneWorld["waterTiles"] } | undefined;
   const take = (): void => { while (copied < wm.notes.length) { const n = wm.notes[copied]; copied += 1; if (n !== undefined) push(n); } for (const n of notices) prior.add(`${n.code}\0${n.message}`); };
   const note = (asset: SceneAsset): void => {
@@ -95,25 +95,25 @@ export function createSceneLink(source?: FrameSource): SceneLink {
     if (evBad) push({ code: "clipEventInvalid", message: asset.sheet.id }); if (ptBad) push({ code: "clipPointsInvalid", message: asset.sheet.id }); if (capBad) push({ code: "clipEventsOverCap", message: asset.sheet.id });
   };
   const link: SceneLink = {
-    notices, pixels: (id) => squashed(id, frames) ?? wm.pixels(id), get fired() { return fired; }, get views() { return views; }, get shake() { return shakeNow; }, lagged: () => lags.size,
+    notices, pixels: (id) => squashed(id, frames) ?? wm.pixels(id), get fired() { return fired; }, get views() { return views; }, get shake() { return shakeNow; }, get lit() { return litNow; }, lagged: () => lags.size,
     scene(world, clock) {
       const reduce = clock?.reduce === true, finite = clock !== undefined && Number.isFinite(clock.tMs), raw = standings(world, wm, reduce), base = finite && clock !== undefined ? applyFeel(lags, raw, world, clock) : raw;
       let fxStanding: Standing[] = [], fxOverlays: Overlay[] = [];
       if (finite && clock !== undefined) {
-        const grid = { tileW: world.tileW, tileH: world.tileH, stepMs: clock.stepMs, mapSeed: world.mapSeed, ...(clock.lite === undefined ? {} : { lite: clock.lite }), ...(reduce ? { reduce: true } : {}), ...(clock.reduceFlashes === true ? { flashes: true } : {}), ...(clock.shake === undefined ? {} : { shake: clock.shake }) };
+        const grid = { tileW: world.tileW, tileH: world.tileH, stepMs: clock.stepMs, mapSeed: world.mapSeed, ...(clock.lite === undefined ? {} : { lite: clock.lite }), ...(reduce ? { reduce: true } : {}), ...(clock.reduceFlashes === true ? { flashes: true } : {}), ...(clock.shake === undefined ? {} : { shake: clock.shake }), ...(world.style?.ramps === undefined ? {} : { ramps: world.style.ramps }) };
         const out = live.frame(world.effects ?? [], (id, tMs) => { const st = raw.find((s) => s.kind === "unit" && s.key === id); if (st === undefined) return null; const src = world.units.find((u) => u.id === id); const rec = lags.get(id), pose = poseMs(clock.tMs, clock.lite === true); const when = rec !== undefined && rec.ms > 0 && pose >= rec.from && pose < rec.from + rec.ms ? rec.from - rec.lag : (tMs ?? clock.tMs) - (rec?.lag ?? 0); return live.unit(st, src?.facing ?? null, src === undefined ? undefined : world.assets[src.sprite]?.box, when, grid); }, last, clock.tMs, grid);
-        fired = out.fired; views = out.views; fxStanding = out.standing; fxOverlays = out.overlays; shakeNow = out.shake;
+        fired = out.fired; views = out.views; fxStanding = out.standing; fxOverlays = out.overlays; shakeNow = out.shake; litNow = out.lit;
         for (const row of out.notes) push(row); last = clock.tMs;
-      } else { fired = []; views = {}; shakeNow = { x: 0, y: 0 }; }
+      } else { fired = []; views = {}; shakeNow = { x: 0, y: 0 }; litNow = { lights: [] }; }
       const fxKey = finite && clock !== undefined && (world.effects?.length ?? 0) > 0 ? `${poseMs(clock.tMs, clock.lite === true)}:${clock.stepMs}:${clock.lite === true}:${clock.reduceFlashes === true}:${JSON.stringify(world.effects)}` : "";
       const key = unitKey(world) + fxKey + (reduce ? ":r" : ""), objects = world.objects.length === 0 ? NO_OBJECTS : world.objects, overlays = world.overlays.length === 0 ? NO_OVERLAYS : world.overlays, cached = prev;
       if (cached !== undefined && cached.assets === world.assets && cached.layers === world.layers && cached.objects === objects && cached.overlays === overlays && cached.key === key && cached.style === world.style && cached.water === world.waterTiles && cached.reduce === reduce) { take(); return see(cached.scene, world.seeThroughCanopy); }
       const reuse = cached !== undefined && cached.assets === world.assets && cached.layers === world.layers && cached.style === world.style && cached.reduce === reduce; if (!reuse) for (const asset of Object.values(world.assets)) note(asset);
       const built = reuse && cached !== undefined ? { ground: cached.scene.ground, above: cached.scene.above } : layersOf(world, wm, reduce);
       let tiles: readonly (number | null)[] | undefined, name: string | null = null; for (const layer of world.layers) if (layer.visible && !layer.aboveUnits && layer.tileset !== null) { tiles = layer.tiles; name = layer.tileset; }
-      const ids = name === null || world.waterTiles === undefined ? undefined : world.waterTiles[name], water = new Uint8Array(world.cols * world.rows);
-      if (tiles !== undefined && ids !== undefined) { const wet = new Set(ids); for (let i = 0; i < water.length; i += 1) water[i] = wet.has(tiles[i] ?? -1) ? 1 : 0; }
-      const foam = world.style === undefined ? [] : wm.shore(tiles === undefined || ids === undefined ? null : { cols: world.cols, rows: world.rows, tileW: world.tileW, tileH: world.tileH, mapSeed: world.mapSeed, water }, world.style, reduce);
+      const ids = name === null || world.waterTiles === undefined ? undefined : world.waterTiles[name], water = tiles !== undefined && ids !== undefined ? new Uint8Array(world.cols * world.rows) : null;
+      if (water !== null && tiles !== undefined && ids !== undefined) { const wet = new Set(ids); for (let i = 0; i < water.length; i += 1) water[i] = wet.has(tiles[i] ?? -1) ? 1 : 0; }
+      const foam = world.style === undefined ? [] : wm.shore(water === null ? null : { cols: world.cols, rows: world.rows, tileW: world.tileW, tileH: world.tileH, mapSeed: world.mapSeed, water }, world.style, reduce);
       const scene: RenderScene = { cols: world.cols, rows: world.rows, tileW: world.tileW, tileH: world.tileH, mapSeed: world.mapSeed, ground: built.ground, above: built.above, standing: fxStanding.length > 0 ? [...base, ...fxStanding] : base, overlays: foam.length === 0 && fxOverlays.length === 0 ? world.overlays : [...foam, ...world.overlays, ...fxOverlays] };
       prev = { assets: world.assets, layers: world.layers, objects, overlays, key, scene, reduce, style: world.style, water: world.waterTiles }; take(); return see(scene, world.seeThroughCanopy);
     },

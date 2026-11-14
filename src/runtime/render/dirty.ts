@@ -1,4 +1,4 @@
-import type { DrawList, Fit, FrameStamp, Renderer } from "./types.ts";
+import type { DrawCmd, DrawList, Fit, FrameStamp, Renderer } from "./types.ts";
 
 export function needsDraw(prev: FrameStamp | null, prevDueMs: number, next: FrameStamp): boolean {
   if (prev === null) return true;
@@ -11,8 +11,11 @@ export function needsDraw(prev: FrameStamp | null, prevDueMs: number, next: Fram
 
 export function present(renderer: Renderer, fit: Fit, list: DrawList, clear: string, after?: () => void): void {
   renderer.beginFrame(fit, clear);
+  const draw = (c: DrawCmd): void => { renderer.drawImage(c.sheet, c.sx, c.sy, c.sw, c.sh, c.dx, c.dy, c.dw, c.dh, c.op, c.flipX); };
   try {
-    for (const cmd of list.cmds) renderer.drawImage(cmd.sheet, cmd.sx, cmd.sy, cmd.sw, cmd.sh, cmd.dx, cmd.dy, cmd.dw, cmd.dh, cmd.op, cmd.flipX);
+    const held: DrawCmd[] = []; let i = 0;
+    for (; i < list.cmds.length; i += 1) { const c = list.cmds[i]; if (c === undefined) continue; if (after !== undefined && c.band === "ui") break; if (after !== undefined && c.selfLit === true) held.push(c); else draw(c); }
     after?.();
+    if (after !== undefined) { for (const c of held) draw(c); for (; i < list.cmds.length; i += 1) { const c = list.cmds[i]; if (c !== undefined) draw(c); } }
   } finally { renderer.endFrame(); }
 }
