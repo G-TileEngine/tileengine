@@ -19,7 +19,7 @@ const world = (salt = 0, anim = false): RenderScene => ({
 });
 type Load = (id: string) => Promise<object>;
 type Rig = { driver: ReturnType<typeof createDriver>; view: FakeCanvas; clock: Clock; made: FakeCanvas[]; boxes: string[]; offs: boolean; disconnects: () => number; docs: () => number; queued: () => number; run: (s: number, hz: number) => void; fire: (dt: number) => void; hide: () => void; show: () => void; resize: (w: number, h: number) => void; jump: (ms: number) => void };
-function rig(over: { bare?: boolean; dpr?: number; cap?: number; builds?: number; x?: () => number; scene?: () => RenderScene; load?: Load; boom?: () => boolean; clock?: Clock } = {}): Rig {
+function rig(over: { bare?: boolean; dpr?: number; cap?: number; builds?: number; x?: () => number; scene?: () => RenderScene; load?: Load; boom?: () => boolean; clock?: Clock; max?: number } = {}): Rig {
   const made: FakeCanvas[] = [], queue = new Map<number, (ts: number) => void>(), docs: { t: string; fn: () => void }[] = [], boxes: string[] = [];
   let seq = 1, ts = 1000, vis = "visible", cuts = 0, onResize: ((es: readonly { devicePixelContentBoxSize?: readonly { inlineSize: number; blockSize: number }[] }[]) => void) | undefined;
   const view = Object.assign(new FakeCanvas(), { clientWidth: 160, clientHeight: 96 });
@@ -36,7 +36,7 @@ function rig(over: { bare?: boolean; dpr?: number; cap?: number; builds?: number
   const driver = createDriver({
     env, canvas: view, clock, view: (): View => { if (over.boom?.() === true) throw new Error("view"); return { scene: scene(), x: over.x?.() ?? 0, y: 0, s: 1 }; },
     load: over.load ?? ((id) => { const img = bank.get(id); return img === undefined ? Promise.reject(new Error(id)) : Promise.resolve(img); }),
-    ...(over.cap === undefined ? {} : { capFps: over.cap }), ...(over.builds === undefined ? {} : { buildsPerFrame: over.builds }),
+    ...(over.cap === undefined ? {} : { capFps: over.cap }), ...(over.builds === undefined ? {} : { buildsPerFrame: over.builds }), ...(over.max === undefined ? {} : { imagesMax: over.max }),
   });
   const fire = (dt: number): boolean => { const id = queue.keys().next().value; if (id === undefined) return false; const cb = queue.get(id); queue.delete(id); if (cb === undefined) return false; ts += dt; cb(ts); return true; };
   const run = (s: number, hz: number): void => { const step = 1000 / hz, end = ts + s * 1000; while (ts + step <= end + 1e-6) { if (!fire(step)) break; } };
@@ -150,4 +150,37 @@ test("step 30 driver and clock carries: no loop before start(), a backwards time
   const clock = createClock({ stepMs: 1 }), box = rig({ clock }); box.driver.start(); box.fire(0); box.fire(25.7); box.hide(); box.show(); box.fire(0); box.fire(25.4); assert.equal(clock.now(), 50);
   const dts: number[] = []; clock.onRender((info) => { dts.push(info.dtMs); }); clock.skip(60000); assert.equal(dts.at(-1), 60000); assert.throws(() => clock.skip(-1), (err: unknown) => err instanceof RangeError && /skip:/.test(String(err)));
   const gone = rig(); gone.driver.dispose(); gone.driver.start(); gone.show(); assert.equal(gone.queued(), 0);
+});
+test("the image map is capped: an old sheet drops and reloads when asked again, a sheet the scene still names never drops, a load landing after its drop is not kept (step 34a)", async () => {
+  const loads = new Map<string, number>(), held: (() => void)[] = []; let id = "s0", salt = 0, far = 1, last: RenderScene | undefined, lastId = "";
+  const sheet = (k: string): { id: string; fw: number; fh: number; columns: number } => ({ id: k, fw: 16, fh: 16, columns: 4 });
+  const sc = (): RenderScene => { box.driver.backend.frame("src", 0, 16, 16); if (last === undefined || lastId !== `${id}${salt}`) { lastId = `${id}${salt}`; last = { ...world(salt), standing: ["keep0", "keep1", "keep2", id, "far"].map((k, c) => ({ kind: "object" as const, sheet: sheet(k), c: k === "far" ? far : c, r: k === "far" ? 5 : 0 })) }; } return last; };
+  const load: Load = (k) => { loads.set(k, (loads.get(k) ?? 0) + 1); const img = solid(0x336699); return k === "late" ? new Promise((done) => { held.push(() => done(img)); }) : Promise.resolve(img); };
+  const box = rig({ scene: sc, load, max: 4 }); box.driver.start();
+  const show = async (k: string): Promise<void> => { id = k; box.fire(16); await flush(); box.fire(16); await flush(); };
+  await show("s0"); far = 20; for (let f = 1; f < 10; f += 1) await show(`s${f}`);
+  for (const k of ["g", "a", "keep0", "keep1", "keep2", "s0"]) assert.equal(loads.get(k), 1, k);
+  await show("s0"); assert.equal(loads.get("s0"), 2);
+  await show("late"); for (let f = 20; f < 26; f += 1) await show(`s${f}`); for (const go of held) go(); await flush();
+  await show("late"); assert.equal(loads.get("late"), 2); salt = 1; far = 1; await show("late"); for (const k of ["g", "a", "keep0", "keep1", "keep2", "src", "far"]) assert.equal(loads.get(k), 1, k); // src: read this frame by the scene's pixel source, not named by the scene
+  box.driver.dispose();
+  const loose = rig({ scene: sc, load }); loose.driver.start(); for (let f = 0; f < 300; f += 1) { id = `d${f}`; loose.fire(16); loose.fire(16); } await flush(); id = "d0"; loose.fire(16); await flush(); assert.equal(loads.get("d0"), 2, "default cap 256"); loose.driver.dispose();
+  let cur: string[] = [], ov = 0; const lru = rig({ load, max: 5, scene: () => ({ ...world(), standing: cur.map((k, c) => ({ kind: "object" as const, sheet: sheet(k), c, r: 0 })), overlays: [{ band: "ui" as const, sheet: sheet("lov"), x: ov, y: 0 }] }) }), go = async (ks: string[], o: number): Promise<void> => { cur = ks; ov = o; lru.fire(16); await flush(); lru.fire(16); await flush(); }; lru.driver.start(); for (const [ks, o] of [[[], 0], [["lx"], 4000], [["ly"], 4000], [["lx"], 4000], [["lz"], 4000], [["lx"], 4000]] as const) await go([...ks], o); assert.equal(loads.get("lx"), 1, "LRU, down to the cap"); await go([], 0); assert.equal(loads.get("lov"), 1, "overlay sheet"); await go(["ly"], 4000); assert.equal(loads.get("ly"), 2); lru.driver.dispose(); // QA 34a: least recent first, only down to the cap; a named overlay sheet stays
+});
+test("lite: two slow 60-frame windows switch it on; 16 ms frames switch it off only after a 10 s hold that doubles; 20 ms frames and gaps never flip it either way; an override is never fought (step 34a)", () => {
+  const box = rig(), run = (n: number, ms: number): void => { for (let i = 0; i < n; i += 1) box.fire(ms); }, lite = (): boolean => box.driver.stats.lite;
+  box.driver.start(); box.fire(16); run(240, 20); run(5, 2000); assert.equal(lite(), false);
+  run(60, 40); assert.equal(lite(), false); run(60, 40); assert.equal(lite(), true);
+  run(600, 16); assert.equal(lite(), true); run(60, 16); assert.equal(lite(), false);
+  run(120, 40); assert.equal(lite(), true); run(1200, 16); assert.equal(lite(), true); run(120, 20); assert.equal(lite(), true); run(60, 16); assert.equal(lite(), false);
+  box.driver.lite("off"); run(240, 40); assert.equal(lite(), false); box.driver.lite("auto"); assert.equal(lite(), true);
+  box.driver.lite("on"); run(6000, 16); assert.equal(lite(), true); box.driver.lite("auto"); assert.equal(lite(), false); box.driver.dispose();
+});
+test("a lite flip, by override or by auto, requests one draw of an idle scene; setting the same mode again does not (step 34a)", async () => {
+  const sc = world(), box = rig({ scene: () => sc }), draws = (): number => box.driver.stats.draws; box.driver.start(); box.run(0.5, 60); await flush(); box.run(0.5, 60);
+  const idle = draws(); box.run(0.5, 60); assert.equal(draws(), idle); box.driver.lite("on"); box.fire(16); assert.equal(draws(), idle + 1); box.driver.lite("on"); box.run(0.5, 60); assert.equal(draws(), idle + 1);
+  box.driver.lite("auto"); box.fire(16); assert.equal(draws(), idle + 2); for (let i = 0; i < 120; i += 1) box.fire(40); assert.equal(box.driver.stats.lite, true); assert.equal(draws(), idle + 3); box.driver.dispose();
+});
+test("lite (QA 34a): only back-to-back slow windows switch it on; a window's p95 ignores three spikes; gaps never count toward the hold; the hold doubles up to its 5 min cap", () => {
+  const box = rig(), run = (n: number, ms: number): void => { for (let i = 0; i < n; i += 1) box.fire(ms); }, lite = (): boolean => box.driver.stats.lite; box.driver.start(); box.fire(16); run(60, 40); run(60, 16); run(60, 40); assert.equal(lite(), false, "a fast window between"); for (let w = 0; w < 2; w += 1) { run(57, 16); run(3, 100); } assert.equal(lite(), false, "p95, not max"); run(120, 40); assert.equal(lite(), true); run(5, 2000); run(600, 16); assert.equal(lite(), true, "gaps are not frames"); run(60, 16); assert.equal(lite(), false); for (const h of [20, 40, 80, 160, 300, 300]) { run(120, 40); run((Math.ceil((h * 1000) / 960) - 1) * 60, 16); assert.equal(lite(), true, `hold ${h} s`); run(60, 16); assert.equal(lite(), false, `hold ${h} s`); } box.driver.dispose();
 });

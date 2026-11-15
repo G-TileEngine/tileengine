@@ -87,7 +87,7 @@ export function canvas2d(canvas: CanvasLike, opts: Canvas2DOptions): Canvas2D {
         if (same) { dark.width = plan.w; glow.width = plan.w; }
         const dctx = dark.getContext("2d"), gctx = glow.getContext("2d");
         if (dctx === null || gctx === null) { dark.width = 0; dark.height = 0; glow.width = 0; glow.height = 0; freeLights(); lightMiss = plan; missing = true; return; }
-        const put = (onto: Ctx2D, colour: (i: number) => string): void => { onto.imageSmoothingEnabled = false; for (let i = 0; i < plan.w * plan.h; i += 1) { const c = colour(i); if (c === "") continue; onto.fillStyle = c; onto.fillRect(i % plan.w, (i / plan.w) | 0, 1, 1); } };
+        const put = (onto: Ctx2D, colour: (i: number) => string): void => { onto.imageSmoothingEnabled = false; for (let y = 0; y < plan.h; y += 1) { let from = -1, ink = ""; for (let x = 0; x <= plan.w; x += 1) { const c = x < plan.w ? colour(y * plan.w + x) : ""; if (c === ink) continue; if (from >= 0) { onto.fillStyle = ink; onto.fillRect(from, y, x - from, 1); } from = c === "" ? -1 : x; ink = c; } } };
         put(dctx, (i) => { const k = plan.dark[i] ?? 0; return k === 0 ? "" : `rgba(3,8,26,${k / STEPS})`; });
         put(gctx, (i) => { const lv = plan.level[i] ?? 0; if (lv < 4) return ""; const idx = plan.tint?.[i] ?? 0; const ink = idx > 0 ? plan.colours?.[idx - 1] ?? "255,176,72" : "255,176,72"; return `rgba(${ink},${((lv - 3) * 2) / STEPS})`; });
         if (!same) { lightBytes = plan.w * plan.h * 8; stats.bytes += lightBytes; darkC = dark; glowC = glow; }
