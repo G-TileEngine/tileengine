@@ -51,7 +51,7 @@ src/core/               clock, grid, unit, targeting, events, log, rng       →
 src/state/              *.table.ts, types.ts, xgo.ts                          → may import: src/types
 src/project/read/       read-only project reader (current-version docs only)  → may import: src/types, src/core/notice.ts (Notice type only; CN-005)
 src/rules/              (later) turn drivers, stats by name                   → may import: core, state, fx, types
-src/fx/                 effect-order reader, timeline and options (engine sequencing data, no game rules) → may import: src/types, src/core (CN-007)
+src/fx/                 effect-order reader, timeline and options: kept as BTF hit-timing rules only (CEO Q1; read by btf-adapters/src/fx-preset.ts; live effects are runtime/render/fx-live.ts) → may import: src/types, src/core (CN-007)
 src/paint/              sprite recipes: reader, guard and caps (later: rasteriser, bank); integer maths only → may import: src/types, src/core/notice.ts (Notice type only); imported only by runtime, editor and btf-adapters (CN-008)
 src/runtime/input/      pure input intents + gesture mappers (plain pointer data, no DOM) → may import: src/types, src/core (CN-006)
 src/runtime/render/     pure render core, flat files (step 27)           → imports only `./<file>.ts` in its own folder; no DOM, wall time or globals (CN-016)
@@ -61,7 +61,7 @@ src/runtime/scene/      world → scene link, `world-scene.ts` only (step 30) �
 src/sim/                headless sim harness (tests and tools only)           → may import: core, state, project, rules, runtime/input, types; nothing imports sim
 src/btf-adapters/       thin src/ wrappers (+ vendor/ only for a separately ruled helper, with PROVENANCE.md) → imported only by runtime/editor (later)
 scripts/                check-state.sh, check-law.sh (+ the src/paint ban list, CN-008), sim.ts (`npm run sim`: tools only, may import src/sim and tests/; not part of green; CN-006)
-tools/                  pixel-suite/, device-page/, serve.ts: hand-run tools, never shipped (src never imports tools/; package.json exposes none). Green touches only these: lint covers all of tools/; tsc covers pixel-suite/fixture.ts (perf-34b.test.ts imports it) and serve.ts plus device-page/build.ts and check.ts (tests/tools/phone-no-computer.test.ts and qa-35g5a.test.ts run them); perf-34b.test.ts reads device-page/index.html. npm test never runs the pixel suite or the phone page (steps 34b, 35g5a)
+tools/                  pixel-suite/, device-page/, host-example/, serve.ts: hand-run tools, never shipped (src never imports tools/; package.json exposes none). Green touches only these: lint covers all of tools/; tsc covers pixel-suite/fixture.ts (perf-34b.test.ts imports it) and serve.ts plus device-page/build.ts and check.ts (tests/tools/phone-no-computer.test.ts and qa-35g5a.test.ts run them); tsc also covers host-example/*.ts (hand-run only); perf-34b.test.ts reads device-page/index.html. npm test never runs the pixel suite, the phone page or the host example (steps 34b, 35g5a, D3)
 tests/                  *.test.ts mirroring src/; tests/fixtures/ (excluded from tsc and lint)
 handback/<step-id>/r<N>/ your hand-back for that step (`HANDBACK.md`; its shape is in `handoff/HAND-BACK.md`); ignored by lint, excluded from the size cap
 handoff/steps/tests/<step-id>/ the step's shipped tests, laid out at their repo paths (§8); copy them, never edit them
