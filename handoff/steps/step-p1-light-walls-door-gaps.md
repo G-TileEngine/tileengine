@@ -42,6 +42,7 @@ Size: 150–400 changed lines in total. The proto changes 201 lines (+179/−22)
 | `src/sim/run.ts` | 114 → 125 / 40 | 9, 10 |
 | `tests/runtime/render/light-walls.test.ts` | 0 → 48 (shipped) | 1–4 |
 | `tests/sim/door-gaps.test.ts` | 0 → 67 (shipped) | 5–10 |
+| `tests/runtime/render/light-walls-qa.test.ts` | 0 → 31 (G6-adopted from QA A/B, M2) | 1–4 |
 
 `core/log/log.ts` is outside the plan's G4b file list (`sim/{run,actions}.ts`, `core/clock/clock.ts`): the effects cap belongs in the reader so `parseLog` and `submit` agree. Do not touch `core-types`; `SaveRefusal` lives in `sim/run.ts`.
 
@@ -72,6 +73,7 @@ Shipped files (copy verbatim from `origin/main`; never weaken, rename, skip or d
 |---|---|---|
 | `tests/runtime/render/light-walls.test.ts` | `tests/runtime/render/light-walls.test.ts` | `7fc41d977f7b95a07b847fe1122db6d88c61d855475a0b83575d5d20529c7b6f` |
 | `tests/sim/door-gaps.test.ts` | `tests/sim/door-gaps.test.ts` | `6f23cb22440d0b50bfb5e146d001b033c6c5382c4c5965e5817ceaf8bc2147ce` |
+| `tests/runtime/render/light-walls-qa.test.ts` | `tests/runtime/render/light-walls-qa.test.ts` | `322e3c025447a4376e39fafe3f305c9c5f974630e7ec38d32d46dca98199ff90` |
 
 Titles (exact):
 - `light-walls` — "a torch beside a thin wall lights none of the far side (P1 G3)": a 12×12 room, a full-height east wall beside the torch's cell; no lit square right of it, the near side lit; a one-sided wall list also stops light.
@@ -114,7 +116,7 @@ Light (proto, res 8, a 12×12 room of 16 px tiles, torch at (88, 88) radius 64):
 `src/types/core-types.ts`; `src/state/**`; `package.json`; the lock; `.dependency-cruiser.cjs`; `scripts/check-law.sh`; `tsconfig.json`; `eslint.config.*`; `BUILD_GUIDE.md`; `STATES.md`; `scripts/check-state.sh`; `tools/**`; every existing test file; `locked/`; `data/*.md`; plus BUILD_GUIDE §7's never-edit list.
 
 ## Acceptance
-- [ ] `npm ci && npm run green` exits 0 with at least 702 tests passing (692 + the 10 shipped) and none failing, cancelled, skipped or todo; typecheck, lint, deps, check:law and check:state each exit 0.
+- [ ] `npm ci && npm run green` exits 0 with at least 703 tests passing (692 + the 10 shipped + QA's M2 test) and none failing, cancelled, skipped or todo; typecheck, lint, deps, check:law and check:state each exit 0.
 - [ ] The two shipped files are byte-identical to the sha256s above.
 - [ ] Sims, the 21 smoke lines (heap line report-only) and every pin unchanged; `git diff d867161c --stat -- package.json package-lock.json BUILD_GUIDE.md src/types src/state tools` is empty.
 - [ ] Each file within its cap; 150–400 changed lines in total (the proto is 201).
@@ -138,13 +140,15 @@ All under `/workspace/tileengine`, full sha256 in `/workspace/share/polish-1/pus
 - the two shipped files under `handoff/steps/tests/step-p1-light-walls-door-gaps/` (table above)
 
 ## Rulings (no open questions)
+
+- G6 (merge time, QA A/B M2): a wall bit on only one side of a north/south edge leaked light and the kit tests missed it (M1 covered east/west only). QA's `tests/runtime/render/light-walls-qa.test.ts` (322e3c02, 31 lines) checks a one-sided bit on both sides for N, S, E and W; adopted, floor raised to 703. "Either side stops light" now holds on all four edges.
 - Carry (QA N1): an oversized action costs ~93 MB of temporary heap because the plain copy runs before the effects cap; not fixed here.
 - QA r1 (cf2097b5) M1 adopted: the one-sided wall test checks both sides of the edge (QA's q2-fix c8cea818).
 - EA ruling (light-walls default): the host passes `lightWalls: wallsFrom(grid)` (D3 says so); absent stays no walls, byte-equal. A later scene builder may fill it in; no code for that now.
 - EA ruling: `saveSnapshotPhasesInvalid` needs no format word; `SaveRefusal` codes are runtime results, never saved data.
 
 ## Delivery footer (must hold at hand-back)
-- `npm ci && npm run green` exits 0 with **at least 702 passing and 0 failing**. Paste the summary line into HANDBACK.md.
+- `npm ci && npm run green` exits 0 with **at least 703 passing and 0 failing**. Paste the summary line into HANDBACK.md.
 - The two shipped files are **byte-identical** to the sha256s above; list each in HANDBACK.md, and paste the stress L line.
 - The bundle is `<Base d867161c>..step/step-p1-light-walls-door-gaps-r<N>` and passes `git bundle verify`. Each file stays within its cap, and the total (insertions + deletions) is 150–400 changed lines (the proto is 201). Every pin unchanged.
 
