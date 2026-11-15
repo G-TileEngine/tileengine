@@ -55,7 +55,7 @@ export function createLighting(): { plan(world: LightWorld, lights: readonly Lig
 export function lightOps(plan: LightPlan, fit: Fit, cam: Cam, glow = "255,176,72"): FillOp[] {
   const ops: FillOp[] = [], s = fit.s, res = plan.res, w = plan.w, h = plan.h, ox = fit.padX - cam.devX, oy = fit.padY - cam.devY;
   const x0 = cam.devX / s, y0 = cam.devY / s, x1 = x0 + fit.artW + res, y1 = y0 + fit.artH + res;
-  const ix0 = Math.max(0, Math.ceil(x0 / res) - 1), iy0 = Math.max(0, Math.ceil(y0 / res) - 1), ix1 = Math.min(w, Math.floor(x1 / res) + 1), iy1 = Math.min(h, Math.floor(y1 / res) + 1);
+  const ix0 = Math.max(0, Math.floor(x0 / res) - 1), iy0 = Math.max(0, Math.floor(y0 / res) - 1), ix1 = Math.min(w, Math.ceil(x1 / res) + 1), iy1 = Math.min(h, Math.ceil(y1 / res) + 1);
   const on = (ix: number, iy: number): boolean => (ix + 1) * res > x0 && ix * res < x1 && (iy + 1) * res > y0 && iy * res < y1;
   const paint = (iy: number, at: (ix: number) => string, add: boolean): void => {
     let from = -1, ink = "";
