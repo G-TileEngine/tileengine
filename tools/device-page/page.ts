@@ -32,7 +32,7 @@ const boot = (reset: boolean): void => {
   const live = createDriver({ env, canvas: canvas as unknown as HostCanvas, clock, clear: VIEW.clear, load, ...(cap ? { capFps: 60 } : {}), view: () => {
     if (sFix !== undefined) return { scene: SCENE, x: cam[0], y: cam[1], s: cam[2] };
     const t = Math.min(60_000, performance.now() - t0), s = Math.min(4, 1 + Math.floor(t / 15_000));
-    return { scene: link.scene({ ...world, units: units0.map((u, i) => ({ ...u, offset: { dx: ((t / 180 + i) % 16) / 16 - 0.5, dy: 0 } })) }, { tMs: clock.now(), stepMs: clock.stepMs }), x: (t / 40) % 480, y: 64, s };
+    return { scene: link.scene({ ...world, units: units0.map((u, i) => ({ ...u, offset: { dx: ((t / 180 + i) % 16) / 16 - 0.5, dy: 0 } })) }, { tMs: clock.now(), stepMs: clock.stepMs, lite: driver?.stats.lite === true }), x: (t / 40) % 480, y: 64, s };
   } });
   driver = live; live.lite(mode); prevLite = live.stats.lite; show(); requestAnimationFrame(() => { if (driver === live) live.start(); });
 };
