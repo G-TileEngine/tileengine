@@ -1,4 +1,5 @@
 import type { Clock, ClockOptions, RenderInfo, SimTimer, TickInfo, Unsubscribe } from "./types.ts";
+import { INT_MAX } from "../limits.ts";
 import { isRecord, plainCopy } from "../plain.ts";
 
 const DEFAULT_STEP_MS = 10;
@@ -22,6 +23,7 @@ export function createClock(opts?: ClockOptions): Clock {
   let paused = false;
   let nextId = 1;
   let dead = false;
+  let ticking = false;
   const timers: LiveTimer[] = [];
   const tickSubs: ((t: TickInfo) => void)[] = [];
   const renderSubs: ((r: RenderInfo) => void)[] = [];
@@ -33,6 +35,7 @@ export function createClock(opts?: ClockOptions): Clock {
       try { cb(err); } catch { /* an onError throw is not reported again */ }
     }
   }
+  const busy = (name: string): boolean => { if (!ticking) return false; report(new RangeError(`${name}: called inside a tick; ignored`)); return true; };
 
   function listen<T>(list: T[], cb: T): Unsubscribe {
     if (dead) return () => {};
@@ -58,12 +61,15 @@ export function createClock(opts?: ClockOptions): Clock {
   function runTick(): void {
     tickN += 1;
     const simMs = tickN * stepMs;
-    fireDue(simMs);
-    const info: TickInfo = { tick: tickN, simMs, stepMs };
-    for (const cb of tickSubs.slice()) {
-      if (!tickSubs.includes(cb)) continue;
-      try { cb(info); } catch (err) { report(err); }
-    }
+    ticking = true;
+    try {
+      fireDue(simMs);
+      const info: TickInfo = { tick: tickN, simMs, stepMs };
+      for (const cb of tickSubs.slice()) {
+        if (!tickSubs.includes(cb)) continue;
+        try { cb(info); } catch (err) { report(err); }
+      }
+    } finally { ticking = false; }
   }
 
   function render(dtMs: number): void {
@@ -84,6 +90,7 @@ export function createClock(opts?: ClockOptions): Clock {
   return {
     advance(dtMs: number): void {
       if (!Number.isInteger(dtMs) || dtMs < 0) throw new RangeError("advance: dtMs must be an integer >= 0");
+      if (busy("advance")) return;
       const dt = dtMs < maxFrameMs ? dtMs : maxFrameMs;
       if (!paused) {
         accQ += dt * scaleQ;
@@ -93,18 +100,23 @@ export function createClock(opts?: ClockOptions): Clock {
     },
     skip(ms: number): void {
       if (!Number.isInteger(ms) || ms < 0) throw new RangeError("skip: ms must be an integer >= 0");
+      if (busy("skip")) return;
       if (paused) return;
       const end = tickN + Math.floor((ms * scaleQ) / stepQ);
       while (tickN < end) {
         if (tickSubs.length > 0) { runTick(); continue; }
         let next = end;
         for (const t of timers) { if (t.dead) continue; const at = Math.max(tickN + 1, Math.ceil(t.dueMs / stepMs)); if (at < next) next = at; }
-        tickN = next; fireDue(tickN * stepMs);
-        if (tickSubs.length > 0) { const info: TickInfo = { tick: tickN, simMs: tickN * stepMs, stepMs }; for (const cb of tickSubs.slice()) { if (!tickSubs.includes(cb)) continue; try { cb(info); } catch (err) { report(err); } } }
+        tickN = next;
+        ticking = true;
+        try {
+          fireDue(tickN * stepMs);
+          if (tickSubs.length > 0) { const info: TickInfo = { tick: tickN, simMs: tickN * stepMs, stepMs }; for (const cb of tickSubs.slice()) { if (!tickSubs.includes(cb)) continue; try { cb(info); } catch (err) { report(err); } } }
+        } finally { ticking = false; }
       }
       render(ms); // step 30 ruling: render subscribers get the skipped host time as dtMs (not clamped to maxFrameMs)
     },
-    step(): void { runTick(); render(0); },
+    step(): void { if (busy("step")) return; runTick(); render(0); },
     pause(): void { paused = true; accQ = 0; },
     resume(): void { paused = false; },
     get paused(): boolean { return paused; },
@@ -116,7 +128,7 @@ export function createClock(opts?: ClockOptions): Clock {
     onTick(cb): Unsubscribe { return listen(tickSubs, cb); },
     onRender(cb): Unsubscribe { return listen(renderSubs, cb); },
     after(ms: number, cb: () => void): SimTimer {
-      if (!Number.isInteger(ms) || ms < 0 || typeof cb !== "function") {
+      if (!Number.isInteger(ms) || ms < 0 || ms > INT_MAX || typeof cb !== "function") {
         report(new RangeError("after: ms must be an integer >= 0 and cb a function"));
         return { id: 0, dueMs: -1, cancel() {} };
       }

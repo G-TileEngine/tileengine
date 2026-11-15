@@ -1,9 +1,10 @@
-import { DEFAULT_MATCH_LIMITS, PLAIN_DEPTH, TEXT_BYTES, textBytes, textOver, withinCeilings } from "../core/limits.ts";
-import { parseLog, type CommandLog } from "../core/log/index.ts";
+import { DEFAULT_MATCH_LIMITS, MATCH_CEILINGS, PLAIN_DEPTH, TEXT_BYTES, textBytes, textOver, withinCeilings } from "../core/limits.ts";
+import { parseLog, type CommandLog, type LogEntry } from "../core/log/index.ts";
 import type { Notice } from "../core/notice.ts";
 import { NOT_PLAIN, isRecord, plainCopy } from "../core/plain.ts";
 import { SAVE_FORMAT, SAVE_MIGRATIONS, migrateSave, type SaveChains } from "./migrations/save/index.ts";
 import type { SimInput, SimSnapshot, SimWorld } from "./types.ts";
+import { ALL_PHASES } from "../state/index.ts";
 import { submit } from "./actions.ts";
 import { createWorld } from "./world.ts";
 
@@ -38,6 +39,9 @@ export function snapshot(world: SimWorld): SimSnapshot {
   };
 }
 export function replay(input: SimInput, log: CommandLog, untilTick: number): SimWorld {
+  return replayList(input, log, log.entries(), untilTick);
+}
+function replayList(input: SimInput, log: CommandLog, entries: readonly LogEntry[], untilTick: number): SimWorld {
   const src = plainCopy(input, PLAIN_DEPTH);
   if (src === NOT_PLAIN || !isRecord(src)) throw new Error("replay: input is not plain data");
   const lim = (src as SimInput).limits === undefined ? DEFAULT_MATCH_LIMITS : (src as SimInput).limits;
@@ -45,7 +49,7 @@ export function replay(input: SimInput, log: CommandLog, untilTick: number): Sim
   const world = createWorld({ ...(src as SimInput), hostSeed: log.header.seed });
   if (world.seed !== log.header.seed) throw new Error(`replay: world seed ${world.seed} is not the log seed ${log.header.seed}`);
   let at = 0;
-  for (const entry of log.entries()) {
+  for (const entry of entries) {
     if (entry.tick > untilTick) break;
     replayTicks(world, entry.tick - at);
     submit(world, entry.action);
@@ -54,18 +58,29 @@ export function replay(input: SimInput, log: CommandLog, untilTick: number): Sim
   replayTicks(world, untilTick - at);
   return world;
 }
+function logRows(log: CommandLog): LogEntry[] {
+  try {
+    const list = log.entries(), n = list.length, out: LogEntry[] = [];
+    if (!Number.isInteger(n) || n < 0 || n > MATCH_CEILINGS.entries) throw new Error("len");
+    for (let i = 0; i < n; i += 1) { const e = list[i]; if (!isRecord(e) || !Number.isInteger(e.tick) || !isRecord(e.action)) throw new Error("row"); out.push(e); }
+    return out;
+  } catch { throw new Error("restore: the log is not plain data"); }
+}
 export function restore(input: SimInput, log: CommandLog, snap: SimSnapshot): SimWorld {
   const shot = plainCopy(snap, 5);
   if (shot === NOT_PLAIN || !isRecord(shot) || !isRecord(shot.phases)) throw new Error("restore: snapshot is not plain data");
-  const tick = shot.tick, ms = shot.clockMs, n = typeof tick === "number" && Number.isInteger(tick) && tick >= 0 ? log.entries().filter((e) => e.tick <= tick).length : -1;
+  const rows = logRows(log);
+  const tick = shot.tick, ms = shot.clockMs, n = typeof tick === "number" && Number.isInteger(tick) && tick >= 0 ? rows.filter((e) => e.tick <= tick).length : -1;
   const badClock = tick === 0 ? ms !== 0 : typeof ms !== "number" || !Number.isInteger(ms) || ms < (tick as number) || ms % (tick as number) !== 0;
   if (n < 0 || shot.logSeq !== n || badClock) throw new Error("restore: snapshot does not match the log");
-  const world = replay(input, log, tick as number);
-  world.phases = { ...(shot.phases as SimSnapshot["phases"]) };
+  const world = replayList(input, log, rows, tick as number);
+  const phases = shot.phases as Record<string, unknown>, keys = Object.keys(phases), have = Object.keys(world.phases);
+  if (keys.length !== have.length || keys.some((k) => !have.includes(k) || !(ALL_PHASES as readonly unknown[]).includes(phases[k]))) throw new Error("restore: snapshot phases are not this world's");
+  world.phases = { ...(phases as SimSnapshot["phases"]) };
   if (JSON.stringify(snapshot(world)) !== JSON.stringify(shot)) throw new Error("restore: snapshot does not match the log");
   return world;
 }
-export type SaveRefusal = { readonly ok: false; readonly code: "saveEngineMismatch" | "saveProjectMismatch" | "saveFormatNewer" | "saveFormatOlder" | "saveMigrationFailed" | "saveTooLarge" | "saveTooDeep" | "saveSnapshotTickInvalid"; readonly needsMigration: boolean };
+export type SaveRefusal = { readonly ok: false; readonly code: "saveEngineMismatch" | "saveProjectMismatch" | "saveFormatNewer" | "saveFormatOlder" | "saveMigrationFailed" | "saveTooLarge" | "saveTooDeep" | "saveSnapshotTickInvalid" | "saveSnapshotPhasesInvalid"; readonly needsMigration: boolean };
 export type SaveLoad = { readonly ok: true; readonly world: SimWorld; readonly notices: readonly Notice[] } | SaveRefusal;
 export type LoadOptions = { readonly allowProjectMismatch?: boolean; readonly allowEngineMismatch?: boolean };
 export function saveMatch(world: SimWorld, meta: { readonly projectId: string; readonly savedAt: string }): string {
@@ -110,5 +125,6 @@ export function loadSave(input: SimInput, text: unknown, opts?: LoadOptions, cha
     if (tick < 0) return { ok: false, code: "saveSnapshotTickInvalid", needsMigration: false };
     return { ok: true, world: replay(src, parsed.log, tick), notices };
   }
-  return { ok: true, world: restore(src, parsed.log, doc.snapshot as SimSnapshot), notices };
+  try { return { ok: true, world: restore(src, parsed.log, doc.snapshot as SimSnapshot), notices }; }
+  catch (e) { if (e instanceof Error && e.message === "restore: snapshot phases are not this world's") return { ok: false, code: "saveSnapshotPhasesInvalid", needsMigration: false }; throw e; }
 }
