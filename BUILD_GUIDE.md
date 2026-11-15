@@ -61,7 +61,7 @@ src/runtime/scene/      world → scene link, `world-scene.ts` only (step 30) �
 src/sim/                headless sim harness (tests and tools only)           → may import: core, state, project, rules, runtime/input, types; nothing imports sim
 src/btf-adapters/       thin src/ wrappers (+ vendor/ only for a separately ruled helper, with PROVENANCE.md) → imported only by runtime/editor (later)
 scripts/                check-state.sh, check-law.sh (+ the src/paint ban list, CN-008), sim.ts (`npm run sim`: tools only, may import src/sim and tests/; not part of green; CN-006)
-tools/                  pixel-suite/, device-page/, serve.ts: run by hand only, outside the green gate (`npm test` runs none of it; green only lints it, and perf-34b.test.ts reads the pixel fixture); src never imports tools/ (step 34b)
+tools/                  pixel-suite/, device-page/, serve.ts: hand-run tools, never shipped (src never imports tools/; package.json exposes none). Green touches only these: lint covers all of tools/; tsc covers pixel-suite/fixture.ts (perf-34b.test.ts imports it) and serve.ts plus device-page/build.ts and check.ts (tests/tools/phone-no-computer.test.ts and qa-35g5a.test.ts run them); perf-34b.test.ts reads device-page/index.html. npm test never runs the pixel suite or the phone page (steps 34b, 35g5a)
 tests/                  *.test.ts mirroring src/; tests/fixtures/ (excluded from tsc and lint)
 handback/<step-id>/r<N>/ your hand-back for that step (`HANDBACK.md`; its shape is in `handoff/HAND-BACK.md`); ignored by lint, excluded from the size cap
 handoff/steps/tests/<step-id>/ the step's shipped tests, laid out at their repo paths (§8); copy them, never edit them
