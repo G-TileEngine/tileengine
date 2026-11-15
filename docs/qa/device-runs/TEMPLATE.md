@@ -50,10 +50,10 @@ Set both buttons first, then tap "run again" if the run already started, and wai
 | 5 Power saving on (Android: Settings, Battery, Power saving) | off | auto | | | | | | | | | | |
 
 **What good looks like** (QA's budgets; numbers marked [E] are estimates that this log checks):
-- p95 at or under 16.7 ms with the 60 cap. The renderer's own share should stay at or under 4 ms [E].
+- p95 at or under 1.1 × the screen refresh interval (18.3 ms at 60 Hz) with the 60 cap. Reason: a vsync-locked phone puts p95 just above one interval (S21 Ultra: p50 16.7, p95 17.8), so "at or under 16.7 ms" could never be met. The renderer's own share should stay at or under 4 ms [E].
 - Dropped frames at or under 1 % of all frames, and no frame over 50 ms [E].
 - Row 4's p95 at most 1.25 times row 1's p95 [E].
-- Canvas MB at or under 160 [E].
+- Canvas MB at or under 160 [E] (from step 35g5b it counts the main canvas too).
 - With Power saving on, 30 fps is expected. The picture must still be correct.
 
 **Questions.**

@@ -5,12 +5,12 @@ import { CAMS, L1, RASTERS, SCENE, VIEW } from "../pixel-suite/fixture.ts";
 import { l2 } from "../pixel-suite/l2.ts";
 const canvas = document.querySelector<HTMLCanvasElement>("#view"), read = document.querySelector<HTMLElement>("#read");
 if (canvas === null || read === null) throw new Error("phone page");
-const fix = new URLSearchParams(location.search).get("fixture"), sFix = fix === null ? undefined : Number(fix);
+const q = new URLSearchParams(location.search), fix = q.get("fixture"), ps = Number(q.get("ps") ?? 1), sFix = fix === null ? undefined : Number(fix);
 const cam = CAMS.find((c) => c[2] === sFix) ?? ([0, 0, sFix ?? 1] as const);
 const link = createSceneLink(), clock = createClock(), hero = { id: "a", fw: 16, fh: 16, columns: 4 }, sheet = { id: "g", fw: 16, fh: 16, columns: 4 };
 const clip = { name: "move-right", frames: [0, 1, 2, 3], ms: [80, 80, 80, 80] }, piece = { at: 0, ms: 480, sheet: hero, clip, anchor: "target" as const };
 const units0: SceneUnit[] = Array.from({ length: 40 }, (_, i) => ({ id: `u${i}`, sprite: "hero", at: { c: 2 + (i % 10) * 5, r: 2 + Math.floor(i / 10) * 8 }, offset: null, facing: "E", alive: true, action: "move" }));
-const effects = [0, 1, 2, 3].map((i) => ({ id: `e${i}`, castMs: 0, loopMs: 480, caster: `u${i}`, target: `u${i + 10}`, pieces: [piece] }));
+const effects = [0, 1, 2, 3].map((i) => ({ id: `e${i}`, castMs: 0, loopMs: 480, caster: `u${i}`, target: `u${i + 10}`, pieces: [piece], ...(ps > 1 ? { pixel_scale: ps } : {}) })); // ?ps=2..6: pixel_scale case (G5b)
 const tiles = Array.from({ length: 64 * 64 }, (_, i) => i % 4), world = { cols: 64, rows: 64, tileW: 16, tileH: 16, mapSeed: 1, overlays: [], objects: [], assets: { g: { sheet }, hero: { sheet: hero, clips: [clip, { name: "idle-down", frames: [0, 1], ms: [120, 120] }] } }, layers: [{ tileset: "g", aboveUnits: false, visible: true, tiles }], effects };
 const made = new Map<string, HTMLCanvasElement>();
 const load = (id: string): Promise<HTMLCanvasElement> => { const hit = made.get(id); if (hit !== undefined) return Promise.resolve(hit); const r = RASTERS[id]; if (r === undefined) return Promise.reject(new Error(id)); const c = document.createElement("canvas"); c.width = r.w; c.height = r.h; const g = c.getContext("2d"); if (g === null) return Promise.reject(new Error(id)); const d = g.createImageData(r.w, r.h); r.px.forEach((p, i) => d.data.set([(p >>> 16) & 255, (p >>> 8) & 255, p & 255, 255], i * 4)); g.putImageData(d, 0, 0); made.set(id, c); return Promise.resolve(c); };
@@ -22,7 +22,7 @@ const show = (): void => { if (lock !== "") { read.textContent = lock.replace(/p
   let slow = 0, bad = 0; for (const v of list) { if (v > 25) slow += 1; if (v > 50) bad += 1; }
   const lit = driver?.stats.lite === true; if (driver !== undefined && lit !== prevLite) { switches += 1; prevLite = lit; }
   if (sFix === undefined && el >= 60_000) done = true;
-  const side = sFix === undefined && !done && el >= 38_000 && el < 45_000, mb = ((driver?.backend.stats.bytes ?? 0) / 1048576).toFixed(1);
+  const side = sFix === undefined && !done && el >= 38_000 && el < 45_000, mb = (((driver?.backend.stats.bytes ?? 0) + canvas.width * canvas.height * 4) / 1048576).toFixed(1); // offscreen layers + the main canvas
   read.textContent = `${done ? "DONE\n" : ""}${side ? "TURN THE PHONE SIDEWAYS NOW\n" : ""}frame ms p50 ${at(0.5).toFixed(1)} p95 ${at(0.95).toFixed(1)} max ${(s[s.length - 1] ?? 0).toFixed(1)} / dropped (>25 ms) ${slow} over 50 ms ${bad} of ${list.length} / draws ${driver?.stats.draws ?? 0} canvas MB ${mb} pixels ${pix} / lite ${lit ? "on" : "off"} (${mode}, ${switches} switches)`; if (done) lock = read.textContent;
 };
 const note = (): void => { const t = performance.now(); if (prevAt === 0) { prevAt = t; show(); return; } const g = t - prevAt; prevAt = t; if (sFix !== undefined) { ring[rw] = g; rw = (rw + 1) % 3600; if (rn < 3600) rn += 1; } else if (t - t0 < 60_000) gaps.push(g); show(); };

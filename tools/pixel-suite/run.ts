@@ -9,6 +9,8 @@ import { FakeCanvas } from "../../tests/runtime/canvas/fake-canvas.ts";
 import { fitView } from "../../src/runtime/render/index.ts";
 import { serve } from "../serve.ts";
 import { frames, RASTERS, VIEW } from "./fixture.ts";
+// The canvas's colour set and the widths of #f8f058 runs (a sheet colour that sits in 1 px diagonals, so a run is one scaled sheet pixel).
+const PS = `(() => { const v = document.getElementById("view"), c = document.createElement("canvas"); c.width = v.width; c.height = v.height; const x = c.getContext("2d"); x.drawImage(v, 0, 0); const d = x.getImageData(0, 0, c.width, c.height).data, set = new Set(), runs = new Set(); let n = 0; for (let i = 0; i < d.length; i += 4) { const k = "#" + [d[i], d[i + 1], d[i + 2]].map((v) => v.toString(16).padStart(2, "0")).join(""); set.add(k); if (k === "#f8f058") n += 1; else if (n > 0) { runs.add(n); n = 0; } } return { colours: [...set].sort(), runs: [...runs].sort() }; })()`;
 const fake = new FakeCanvas(), L1 = frames(fake, (w, h) => { const c = new FakeCanvas(); c.width = w; c.height = h; return c; }, (id) => RASTERS[id], () => fake.px);
 const { url, server } = await serve(0), fails: string[] = [], skipped: string[] = [], partial: string[] = [];
 const check = (what: string, ok: boolean, got: unknown): void => { console.log(`${ok ? "ok  " : "FAIL"} ${what}${ok ? "" : ` (got ${JSON.stringify(got)})`}`); if (!ok) fails.push(what); };
@@ -37,6 +39,11 @@ for (const [name, type] of [["chromium", chromium], ["firefox", firefox], ["webk
     const fit = fitView(l3.backingW, l3.backingH, 2, 16, 16), spots = [[l3.backingW - 1, l3.backingH - 1], ...(fit.padY > 0 ? [[Math.floor(l3.backingW / 2), 0]] : []), ...(fit.padX > 0 ? [[0, Math.floor(l3.backingH / 2)]] : [])]; // below the 192 px fixture map, and any letterbox bar
     const px = await p.evaluate(`(() => { const c = document.createElement("canvas"), v = document.getElementById("view"); c.width = v.width; c.height = v.height; const x = c.getContext("2d"); x.drawImage(v, 0, 0); return ${JSON.stringify(spots)}.map(([sx, sy]) => "#" + Array.from(x.getImageData(sx, sy, 1, 1).data.slice(0, 3), (n) => n.toString(16).padStart(2, "0")).join("")); })()`) as string[];
     check(`${at} letterbox is the clear colour`, px.every((c) => c === VIEW.clear), px);
+    if (name === "chromium" && dpr === 2.625) { // G5b: pixel_scale > 1 at a fractional DPR, units at fractional offsets: effect pixels stay whole k×k blocks, and no blended (smeared) colour appears
+      const look = async (ps: number): Promise<{ colours: string[]; runs: number[] }> => { await p.goto(`${url}/tools/device-page/index.html?ps=${ps}`); await p.addStyleTag({ content: "#dev{display:none}" }); await p.waitForTimeout(1500); let best = { colours: [] as string[], runs: [] as number[] }; for (let k = 0; k < 16 && !best.runs.includes(ps); k += 1) { await p.waitForTimeout(60); best = await p.evaluate(PS) as typeof best; } return best; };
+      const one = await look(1), two = await look(2), extra = two.colours.filter((c) => !one.colours.includes(c));
+      check(`${at} pixel_scale 2: effect pixels are 2 px blocks, no smear`, two.runs.includes(2) && two.runs.every((n) => n <= 2) && extra.length === 0, { runs: two.runs, extra });
+    }
     await b.close();
   }
 }
