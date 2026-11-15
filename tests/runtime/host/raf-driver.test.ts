@@ -120,7 +120,7 @@ test("a rAF pile-up goes through one bulk clock.skip: no 100 ms clamp, timers fi
   const mid = box.clock.now(); box.driver.catchUp(1000); assert.equal(box.clock.now() - mid, 1000);
   const a = box.clock.now(); box.fire(150); assert.ok(Math.abs(box.clock.now() - a - 150) < 10); const b = box.clock.now(); box.fire(200); assert.ok(Math.abs(box.clock.now() - b - 200) < 10);
 });
-test("clock.skip matches stepping tick for tick, honours timeScale and pause, and jumps big gaps fast (step 29)", () => {
+test("clock.skip matches stepping tick for tick, honours timeScale and pause, and jumps big gaps fast up to the skip cap (step 29; G4 R1)", () => {
   const trace = (run: (c: Clock) => void): string[] => {
     const c = createClock(), log: string[] = [];
     c.after(35, () => log.push(`a@${c.now()}`));
@@ -131,7 +131,7 @@ test("clock.skip matches stepping tick for tick, honours timeScale and pause, an
   assert.deepEqual(trace((c) => c.skip(2000)), trace((c) => { for (let i = 0; i < 200; i += 1) c.step(); }));
   const slow = createClock(); slow.setTimeScale(0.5); slow.skip(2000); assert.equal(slow.now(), 1000);
   const held = createClock(); held.pause(); held.skip(2000); assert.equal(held.now(), 0);
-  const big = createClock(); let at = -1; big.after(5e8, () => { at = big.now(); }); const began = Date.now(); big.skip(1e9); assert.ok(Date.now() - began < 250); assert.equal(at, 5e8); assert.equal(big.now(), 1e9);
+  const big = createClock({ maxSkipMs: 86_400_000 }); let at = -1; big.after(5e7, () => { at = big.now(); }); const began = Date.now(); big.skip(1e8); assert.ok(Date.now() - began < 250); assert.equal(at, 5e7); assert.equal(big.now(), 86_400_000); // G4 R1: was after(5e8), skip(1e9) -> now 1e9 (no cap)
   const bad = createClock(); assert.throws(() => bad.skip(-1), RangeError); assert.throws(() => bad.skip(1.5), RangeError);
 });
 test("the host folder holds only the driver; it imports only the clock, backend and render index, and reads no wall time or globals (step 29)", () => {
