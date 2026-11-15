@@ -23,6 +23,7 @@ function apply(world: SimWorld, action: Action): void {
 export function submit(world: SimWorld, action: Action): void {
   if (isDisposed(world)) return;
   const copy = plainCopy(action, 3), own = readAction(copy, world.limits);
+  if (isDisposed(world)) return;
   if (world.log.lastSeq() >= world.limits.entries) { note(world, { code: "logFull", message: "log full" }); return; }
   if (world.clock.tick() > world.limits.ticks) { note(world, { code: "timeLimit", message: "time limit" }); return; }
   if (own === null) { note(world, isRecord(copy) && copy.kind === "unlock" ? { code: "unlockFailed", message: "unlock failed" } : { code: "actionRefused", message: "action refused" }); return; }

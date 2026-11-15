@@ -1,0 +1,8 @@
+M	src/core/clock/clock.ts
+M	src/core/log/log.ts
+M	src/runtime/render/index.ts
+M	src/runtime/render/visibility.ts
+M	src/sim/actions.ts
+M	src/sim/run.ts
+A	tests/runtime/render/light-walls.test.ts
+A	tests/sim/door-gaps.test.ts

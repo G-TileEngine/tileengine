@@ -37,7 +37,7 @@ function packAction(a: Action): Action {
 }
 function tooLong(a: Action, n: number): boolean {
   const t = a.target, v = a.via, aim = t === null || (t.pipe === "unit" ? t.unitId.length <= n : t.edge === undefined || t.edge.length <= n);
-  return a.id.length > n || a.kind.length > n || a.actor.length > n || a.effects.some((s) => s.length > n) || !aim || (v !== undefined && (v.presentation.length > n || (v.ref !== undefined && v.ref.length > n)));
+  return a.id.length > n || a.kind.length > n || a.actor.length > n || a.effects.length > n || a.effects.some((s) => s.length > n) || !aim || (v !== undefined && (v.presentation.length > n || (v.ref !== undefined && v.ref.length > n)));
 }
 const ownLimits = (v: unknown): MatchLimits | null => { const own = v === DEFAULT_MATCH_LIMITS ? v : plainCopy(v, 1); return withinCeilings(own) ? own : null; };
 export function readAction(v: unknown, limits: MatchLimits = DEFAULT_MATCH_LIMITS): Action | null {
