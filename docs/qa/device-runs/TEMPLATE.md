@@ -1,11 +1,13 @@
 # Phone test log (copy this file for each phone and each run, named `YYYY-MM-DD-<phone>.md`)
 
-**Before you start (once).** The computer needs Node. To check, open a terminal (Mac: press Cmd+Space, type Terminal, press Enter. Windows: press the Windows key, type PowerShell, press Enter), type `node -v` and press Enter. A version such as `v24.11.0` means Node is installed. If it says "not found", ask for Node to be installed first.
+**Before you start (once).** The computer needs Node. To check, open a terminal (Mac: press Cmd+Space, type Terminal, press Enter. Windows: press the Windows key, type PowerShell, press Enter), type `node -v` and press Enter. You need version v22.18 or newer: `v22.18.0`, `v23.5.0` or `v24.11.0` are all fine. If it says "not found", or shows a lower number such as `v20.11.0` or `v22.17.1`, ask for Node to be installed or updated first.
 
 **How to run it.**
 1. Put the computer and the phone on the same Wi-Fi.
 2. Open a terminal in the engine folder. Mac: open Terminal, type `cd ` (with a space after it), drag the engine folder from Finder into the Terminal window, and press Enter. Windows: open the folder, click the address bar, type `powershell` and press Enter.
 3. Type `node tools/serve.ts` and press Enter. If the computer asks whether to allow incoming connections, choose Allow.
+   - A line that mentions "ExperimentalWarning" may appear. That is normal; you can ignore it.
+   - If it says "EADDRINUSE", the page is already running somewhere else on this computer (the port is in use). Close the other terminal window that is running the page (or restart the computer), then type the command again.
 4. It prints a link that starts with `http://` and ends with `/tools/device-page/`. Type that exact link into the phone's browser. (If it prints more than one, try the first; if it does not open, try the next.) Leave the terminal open. Press Ctrl+C there when you are done.
 5. Hold the phone upright and do not touch the screen. When the page says TURN THE PHONE SIDEWAYS NOW (about 40 s in), turn it.
 6. At 60 s the box at the top left says DONE. Copy its numbers into the table, or take a screenshot of it.
