@@ -25,11 +25,11 @@ test("live canopy: seeThroughCanopy cuts the above layer at each unit's cell and
   for (const flag of [false, undefined]) assert.equal(createSceneLink().scene(world({ layers, ...(flag === undefined ? {} : { seeThroughCanopy: flag }) })).above[0]?.tiles.every((t) => t === 5), true);
 });
 
-test("loader: stored clip events and points warn once per asset per code, named by the sheet id; absent ones never warn; a rebuilt world does not repeat them (step 33h)", () => {
+test("loader: stored clip events and points warn once per asset per code, named by the asset id and the sheet id that differs (G1 R5); absent ones never warn; a rebuilt world does not repeat them (step 33h)", () => {
   const bad: SceneAsset = { sheet: { ...unitSheet, id: "bad-sheet" }, clips: [{ name: "a", frames: [0, 1], events: [{ frame: 9, name: "x" }, { frame: 0, name: "" }], points: { foot: [[1, 1]], hand: [[99, 0]] } }, { name: "b", frames: [0], events: "contact" }] };
   const link = createSceneLink(), all = { hero, bad }, w = world({ assets: all });
   link.scene(w); link.scene({ ...w, units: [] });
-  assert.deepEqual(link.notices.map((n) => `${n.code}:${n.message}`), ["clipEventInvalid:bad-sheet", "clipPointsInvalid:bad-sheet"]);
+  assert.deepEqual(link.notices.map((n) => `${n.code}:${n.message}`), ["clipEventInvalid:bad (sheet bad-sheet)", "clipPointsInvalid:bad (sheet bad-sheet)"]);
   assert.deepEqual(createSceneLink().notices, []);
   const fresh = createSceneLink(); fresh.scene(world()); assert.deepEqual(fresh.notices, []); const over = createSceneLink(); over.scene(world({ assets: { hero, o: { sheet: { ...unitSheet, id: "o" }, clips: [{ name: "a", frames: [0], events: Array.from({ length: 17 }, (_, i) => ({ frame: 0, name: `e${i}` })) }] } } })); assert.deepEqual(over.notices.map((n) => `${n.code}:${n.message}`), ["clipEventsOverCap:o"]);
 });

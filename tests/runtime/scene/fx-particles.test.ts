@@ -137,5 +137,5 @@ test("16 MB cache: generated bakes (looks, turns, squash) share one LRU with the
 
 test("budget counts (in the suite; the 4 ms p95 wall clock runs alone in tests/perf/fx-particles-budget.ts): 12 looping effects with 48 particles and 2 outlined, turned pieces each draw 120 fx draws (24 pieces, 96 particles), at most 300 a frame, and one fill per particle colour (step 33b-3)", () => {
   const rig = particleRig(); for (let t = 0; t <= 600; t += 16) rig.frame(t); rig.frame(600);
-  assert.deepEqual(rig.counts(), [131, 36, 96, 2]); assert.ok((rig.counts()[0] ?? Infinity) <= FX_BUDGET.frame);
+  assert.deepEqual(rig.counts(), [132, 36, 97, 2]); assert.ok((rig.counts()[0] ?? Infinity) <= FX_BUDGET.frame); // G1 R7: one edge dot now stays until fully off screen (was 131, 96)
 });

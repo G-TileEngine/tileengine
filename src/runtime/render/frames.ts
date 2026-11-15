@@ -1,6 +1,8 @@
 import { px } from "./camera.ts";
 import type { Clip } from "./types.ts";
 
+export const footAt = (c: number, r: number, tileW: number, tileH: number, dx = 0, dy = 0): { x: number; y: number } => ({ x: c * tileW + px(tileW / 2) + dx, y: (r + 1) * tileH + dy });
+
 export const badMs = (ms: unknown): boolean => Array.isArray(ms) ? ms.some((v) => !(Number.isInteger(v) && (v as number) >= 1)) : ms != null;
 
 export function clipMs(clip: Clip, stepMs: number): number[] {

@@ -1,0 +1,12 @@
+M	src/runtime/render/draw-list.ts
+M	src/runtime/render/frames.ts
+M	src/runtime/render/fx-live.ts
+M	src/runtime/render/fx-look.ts
+M	src/runtime/render/fx-player.ts
+M	src/runtime/render/index.ts
+M	src/runtime/render/types.ts
+M	src/runtime/render/world-motion.ts
+M	src/runtime/scene/world-scene.ts
+A	tests/runtime/render/render-tidy.test.ts
+M	tests/runtime/scene/fx-particles.test.ts
+M	tests/runtime/scene/host-hookup.test.ts

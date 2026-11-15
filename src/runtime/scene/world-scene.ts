@@ -1,5 +1,5 @@
 import type { Notice } from "../../core/notice.ts";
-import { badMs, clipEvents, clipPoints, createFxLive, createSeeThrough, createWorldMotion, FEEL, frameAt, frameStart, hitAt, hitWhiteArg, instanceOffset, lookPixels, mergeHolds, pickMotion, poseMs, shiver, squashed, startMs, stopMs, type Box, type Clip, type FrameSource, type FxLit, type Hold, type LiveEvent, type LiveFx, type Motion, type Overlay, type Pixels, type RenderScene, type SceneDot, type ShakeSetting, type Sheet, type ShoreStyle, type Standing, type TileLayer, type TileMotion, type WorldMotion } from "../render/index.ts";
+import { badMs, clipEvents, clipPoints, createFxLive, createSeeThrough, createWorldMotion, FEEL, FX_PLAYER, frameAt, frameStart, hitAt, hitWhiteArg, hitWhiteMs, instanceOffset, lookPixels, mergeHolds, pickMotion, poseMs, shiver, squashed, startMs, stopMs, type Box, type Clip, type FrameSource, type FxLit, type Hold, type LiveEvent, type LiveFx, type Motion, type Overlay, type Pixels, type RenderScene, type SceneDot, type ShakeSetting, type Sheet, type ShoreStyle, type Standing, type TileLayer, type TileMotion, type WorldMotion } from "../render/index.ts";
 
 export type SceneAsset = { readonly sheet: Sheet; readonly clips?: readonly Clip[]; readonly tileProps?: Readonly<Record<string, { readonly anim?: string; readonly motion?: Motion | null }>>; readonly noMirror?: boolean; readonly box?: Box; readonly motion?: Motion | null; readonly styled?: boolean };
 export type SceneLayer = { readonly tileset: string | null; readonly aboveUnits: boolean; readonly visible: boolean; readonly tiles: readonly (number | null)[] };
@@ -27,6 +27,7 @@ export function pickClip(asset: SceneAsset, action: string, facing: SceneUnit["f
   return { frame: asset.clips?.[0]?.frames[0] ?? 0, flipX: false };
 }
 const shown = (world: SceneWorld): SceneUnit[] => world.units.filter((u) => (u.alive || u.action === "die") && world.assets[u.sprite] !== undefined);
+const who = (id: string, sheet: string, tile?: number): string => { const base = tile === undefined ? id : `${id}#${tile}`; return sheet === id ? base : `${base} (sheet ${sheet})`; };
 const unitKey = (world: SceneWorld): string => JSON.stringify([world.cols, world.rows, world.tileW, world.tileH, world.mapSeed, shown(world).sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)).map((u) => JSON.stringify([u.id, u.sprite, u.at.c, u.at.r, u.offset?.dx ?? null, u.offset?.dy ?? null, u.facing, u.action ?? null]))]);
 
 function layersOf(world: SceneWorld, wm: WorldMotion, reduce: boolean): { ground: TileLayer[]; above: TileLayer[] } {
@@ -36,7 +37,7 @@ function layersOf(world: SceneWorld, wm: WorldMotion, reduce: boolean): { ground
     const asset = world.assets[layer.tileset]; if (asset === undefined) continue;
     const anims: Record<number, Clip> = {}, motion: Record<number, TileMotion> = {}, props = asset.tileProps ?? {};
     for (const [id, prop] of Object.entries(props)) { const clip = prop.anim === undefined ? undefined : asset.clips?.find((c) => c.name === prop.anim); if (clip !== undefined) anims[Number(id)] = clip; }
-    if (!reduce) { const ids = new Set<number>(layer.tiles.filter((t): t is number => typeof t === "number")); for (const id of Object.keys(props)) ids.add(Number(id)); for (const tile of ids) { const chosen = pickMotion(asset.motion, props[String(tile)]?.motion, undefined); const planned = chosen === null ? null : wm.plan(chosen, asset.styled === true ? world.style?.ramps : undefined, anims[tile] !== undefined, asset.sheet.fw, asset.sheet.fh, asset.sheet.id); if (planned !== null) motion[tile] = planned; } }
+    if (!reduce) { const ids = new Set<number>(layer.tiles.filter((t): t is number => typeof t === "number")); for (const id of Object.keys(props)) ids.add(Number(id)); for (const tile of ids) { const prop = props[String(tile)], chosen = pickMotion(asset.motion, prop?.motion, undefined), own = prop !== undefined && (prop.motion !== undefined || prop.anim !== undefined); const planned = chosen === null || layer.tileset === null ? null : wm.plan(chosen, asset.styled === true ? world.style?.ramps : undefined, anims[tile] !== undefined, asset.sheet.fw, asset.sheet.fh, who(layer.tileset, asset.sheet.id, own ? tile : undefined)); if (planned !== null) motion[tile] = planned; } }
     const row: TileLayer = { sheet: asset.sheet, tiles: layer.tiles, ...(Object.keys(anims).length > 0 ? { anims } : {}), ...(Object.keys(motion).length > 0 ? { motion } : {}) };
     (layer.aboveUnits ? above : ground).push(row);
   }
@@ -45,7 +46,7 @@ function layersOf(world: SceneWorld, wm: WorldMotion, reduce: boolean): { ground
 
 function standings(world: SceneWorld, wm: WorldMotion, reduce: boolean): Standing[] {
   const out: Standing[] = [];
-  for (const o of world.objects) { const asset = world.assets[o.assetId]; if (asset === undefined) continue; const chosen = reduce ? null : pickMotion(asset.motion, undefined, o.motion); const planned = chosen === null ? null : wm.plan(chosen, asset.styled === true ? world.style?.ramps : undefined, false /* EA 33i A/B ruling 2: objects never play a clip yet, so clips never block sway */, asset.sheet.fw, asset.sheet.fh, asset.sheet.id); out.push({ kind: "object", sheet: asset.sheet, c: o.at.c, r: o.at.r, ...(o.z === undefined ? {} : { z: o.z }), ...(planned === null ? {} : { motion: planned }) }); }
+  for (const o of world.objects) { const asset = world.assets[o.assetId]; if (asset === undefined) continue; const chosen = reduce ? null : pickMotion(asset.motion, undefined, o.motion); const planned = chosen === null ? null : wm.plan(chosen, asset.styled === true ? world.style?.ramps : undefined, false /* EA 33i A/B ruling 2: objects never play a clip yet, so clips never block sway */, asset.sheet.fw, asset.sheet.fh, who(o.assetId, asset.sheet.id)); out.push({ kind: "object", sheet: asset.sheet, c: o.at.c, r: o.at.r, ...(o.z === undefined ? {} : { z: o.z }), ...(planned === null ? {} : { motion: planned }) }); }
   for (const u of shown(world).sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))) { const asset = world.assets[u.sprite]; if (asset === undefined) continue; const pick = pickClip(asset, u.action ?? "idle", u.facing); out.push({ kind: "unit", sheet: asset.sheet, c: u.at.c, r: u.at.r, key: u.id, ...(u.offset === null ? {} : { dx: u.offset.dx * world.tileW, dy: u.offset.dy * world.tileH }), ...(pick.clip === undefined ? {} : { clip: pick.clip }), ...(pick.frame === undefined ? {} : { frame: pick.frame }), ...(pick.flipX ? { flipX: true } : {}) }); }
   return out;
 }
@@ -76,11 +77,11 @@ export function createSceneLink(source?: FrameSource): SceneLink {
   const notices: Notice[] = [], seen = new WeakSet<SceneAsset>(), bad = new WeakSet<Clip>(), prior = new Set<string>();
   const push = (row: Notice): void => { const k = `${row.code}\0${row.message}`; if (prior.has(k) || notices.length >= NOTICES_MAX) return; notices.push(row); };
   const live = createFxLive(), see = createSeeThrough(), frames = source ?? ((): undefined => undefined), wm = createWorldMotion(frames), lags = new Map<string, Lag>();
-  let fired: LiveEvent[] = [], views: Record<string, number> = {}, last = Number.NEGATIVE_INFINITY, copied = 0, shakeNow = { x: 0, y: 0 }, litNow = NO_LIT, rampNow: ShoreStyle["ramps"];
+  let fired: LiveEvent[] = [], views: Record<string, number> = {}, last = Number.NEGATIVE_INFINITY, copied = 0, shakeNow = { x: 0, y: 0 }, litNow = NO_LIT, rampNow: ShoreStyle["ramps"], due = Infinity;
   let prev: { assets: SceneWorld["assets"]; layers: SceneWorld["layers"]; objects: readonly SceneObject[]; overlays: readonly Overlay[]; key: string; scene: RenderScene; reduce: boolean; style: SceneWorld["style"]; water: SceneWorld["waterTiles"] } | undefined;
   let fxRev = 0, fxList: readonly LiveFx[] | undefined, shore: { tiles: readonly (number | null)[] | undefined; ids: readonly number[] | undefined; style: SceneWorld["style"]; cols: number; rows: number; tileW: number; tileH: number; seed: number; reduce: boolean; foam: Overlay[] } | undefined;
   const take = (): void => { while (copied < wm.notes.length) { const n = wm.notes[copied]; copied += 1; if (n !== undefined) push(n); } for (const n of notices) prior.add(`${n.code}\0${n.message}`); };
-  const note = (asset: SceneAsset): void => {
+  const note = (id: string, asset: SceneAsset): void => {
     if (seen.has(asset)) return;
     seen.add(asset);
     let fpsBad = false, lenBad = false, both = false, evBad = false, ptBad = false, capBad = false;
@@ -92,10 +93,10 @@ export function createSceneLink(source?: FrameSource): SceneLink {
       if (clip.frames.length >= 1 && clip.events != null) for (const row of clipEvents(clip.events, clip.frames.length).notes) { if (row.code === "clipEventInvalid") evBad = true; else if (row.code === "clipEventsOverCap") capBad = true; }
       if (clip.frames.length >= 1 && clip.points != null && clipPoints(clip.points, clip.frames.length, asset.sheet.fw, asset.sheet.fh).notes.length > 0) ptBad = true;
     }
-    if (fpsBad) push({ code: "clipFpsInvalid", message: asset.sheet.id });
-    if (lenBad) push({ code: "clipMsLength", message: asset.sheet.id });
-    if (both) push({ code: "clipFpsIgnored", message: asset.sheet.id });
-    if (evBad) push({ code: "clipEventInvalid", message: asset.sheet.id }); if (ptBad) push({ code: "clipPointsInvalid", message: asset.sheet.id }); if (capBad) push({ code: "clipEventsOverCap", message: asset.sheet.id });
+    if (fpsBad) push({ code: "clipFpsInvalid", message: who(id, asset.sheet.id) });
+    if (lenBad) push({ code: "clipMsLength", message: who(id, asset.sheet.id) });
+    if (both) push({ code: "clipFpsIgnored", message: who(id, asset.sheet.id) });
+    if (evBad) push({ code: "clipEventInvalid", message: who(id, asset.sheet.id) }); if (ptBad) push({ code: "clipPointsInvalid", message: who(id, asset.sheet.id) }); if (capBad) push({ code: "clipEventsOverCap", message: who(id, asset.sheet.id) });
   };
   const link: SceneLink = {
     notices, pixels: (id) => squashed(id, frames) ?? lookPixels(id, frames, rampNow) ?? wm.pixels(id), get fired() { return fired; }, get views() { return views; }, get shake() { return shakeNow; }, get lit() { return litNow; }, lagged: () => lags.size,
@@ -109,19 +110,21 @@ export function createSceneLink(source?: FrameSource): SceneLink {
         for (const s of raw) if (s.kind === "unit" && s.key !== undefined && !stand.has(s.key)) stand.set(s.key, s);
         for (const u of world.units) if (!byId.has(u.id)) byId.set(u.id, u);
         const out = live.frame(world.effects ?? [], (id, tMs) => { const st = stand.get(id); if (st === undefined) return null; const src = byId.get(id); const rec = lags.get(id), pose = poseMs(clock.tMs, clock.lite === true); const when = rec !== undefined && rec.ms > 0 && pose >= rec.from && pose < rec.from + rec.ms ? rec.from - rec.lag : (tMs ?? clock.tMs) - (rec?.lag ?? 0); return live.unit(st, src?.facing ?? null, src === undefined ? undefined : world.assets[src.sprite]?.box, when, grid); }, last, clock.tMs, grid);
-        fired = out.fired; views = out.views; fxStanding = out.standing; fxOverlays = out.overlays; fxDots = out.dots; shakeNow = out.shake; litNow = out.lit;
+        fired = out.fired; views = out.views; fxStanding = out.standing; fxOverlays = out.overlays; fxDots = out.dots; shakeNow = out.shake; litNow = out.lit; due = out.dueMs;
+        const g = clock.lite === true ? FX_PLAYER.liteGridMs : FX_PLAYER.gridMs, pose = poseMs(clock.tMs, clock.lite === true);
+        for (const e of world.effects ?? []) { const span = hitWhiteMs(e.hit_white_ms).ms; if (!(span > 0) || !Number.isFinite(e.castMs)) continue; const hit = hitOf(e, stand.get(e.caster)?.clip, clock.stepMs), edge = pose < hit ? hit : pose < hit + span ? hit + span : Infinity; if (Number.isFinite(edge)) { const at = Math.ceil(edge / g) * g; if (at < due) due = at; } }
         for (const row of out.notes) push(row); last = clock.tMs;
-      } else { fired = []; views = {}; shakeNow = { x: 0, y: 0 }; litNow = NO_LIT; }
+      } else { fired = []; views = {}; shakeNow = { x: 0, y: 0 }; litNow = NO_LIT; due = Infinity; }
       const effects = world.effects; if (!(effects === fxList || (fxList !== undefined && effects !== undefined && effects.length === fxList.length && effects.every((e, i) => e === fxList?.[i])))) fxRev += 1; fxList = effects;
       const fxKey = finite && clock !== undefined && (effects?.length ?? 0) > 0 ? `${poseMs(clock.tMs, clock.lite === true)}:${clock.stepMs}:${clock.lite === true}:${clock.reduceFlashes === true}:${fxRev}` : "";
-      const key = unitKey(world) + fxKey + (reduce ? ":r" : ""), objects = world.objects.length === 0 ? NO_OBJECTS : world.objects, overlays = world.overlays.length === 0 ? NO_OVERLAYS : world.overlays, cached = prev;
-      if (cached !== undefined && cached.assets === world.assets && cached.layers === world.layers && cached.objects === objects && cached.overlays === overlays && cached.key === key && cached.style === world.style && cached.water === world.waterTiles && cached.reduce === reduce) { take(); return see(cached.scene, world.seeThroughCanopy); }
-      const reuse = cached !== undefined && cached.assets === world.assets && cached.layers === world.layers && cached.style === world.style && cached.reduce === reduce; if (!reuse) for (const asset of Object.values(world.assets)) note(asset);
+      const key = unitKey(world) + fxKey + (reduce ? ":r" : ""), objects = world.objects.length === 0 ? NO_OBJECTS : world.objects, overlays = world.overlays.length === 0 ? NO_OVERLAYS : world.overlays, wake = Number.isFinite(due) ? due : undefined, cached = prev, stale = cached !== undefined && cached.scene.dueMs !== undefined && finite && cached.scene.dueMs <= (clock?.tMs ?? Infinity);
+      if (cached !== undefined && !stale && cached.scene.dueMs === wake && cached.assets === world.assets && cached.layers === world.layers && cached.objects === objects && cached.overlays === overlays && cached.key === key && cached.style === world.style && cached.water === world.waterTiles && cached.reduce === reduce) { take(); return see(cached.scene, world.seeThroughCanopy); }
+      const reuse = cached !== undefined && cached.assets === world.assets && cached.layers === world.layers && cached.style === world.style && cached.reduce === reduce; if (!reuse) for (const [id, asset] of Object.entries(world.assets)) note(id, asset);
       const built = reuse && cached !== undefined ? { ground: cached.scene.ground, above: cached.scene.above } : layersOf(world, wm, reduce);
       let tiles: readonly (number | null)[] | undefined, name: string | null = null; for (const layer of world.layers) if (layer.visible && !layer.aboveUnits && layer.tileset !== null) { tiles = layer.tiles; name = layer.tileset; }
       const ids = name === null || world.waterTiles === undefined ? undefined : world.waterTiles[name], kept = shore !== undefined && shore.tiles === tiles && shore.ids === ids && shore.style === world.style && shore.cols === world.cols && shore.rows === world.rows && shore.tileW === world.tileW && shore.tileH === world.tileH && shore.seed === world.mapSeed && shore.reduce === reduce ? shore.foam : undefined;
       const foam = kept ?? ((): Overlay[] => { const water = tiles !== undefined && ids !== undefined ? new Uint8Array(world.cols * world.rows) : null; if (water !== null && tiles !== undefined && ids !== undefined) { const wet = new Set(ids); for (let i = 0; i < water.length; i += 1) water[i] = wet.has(tiles[i] ?? -1) ? 1 : 0; } const next = world.style === undefined ? [] : wm.shore(water === null ? null : { cols: world.cols, rows: world.rows, tileW: world.tileW, tileH: world.tileH, mapSeed: world.mapSeed, water }, world.style, reduce); shore = { tiles, ids, style: world.style, cols: world.cols, rows: world.rows, tileW: world.tileW, tileH: world.tileH, seed: world.mapSeed, reduce, foam: next }; return next; })();
-      const scene: RenderScene = { cols: world.cols, rows: world.rows, tileW: world.tileW, tileH: world.tileH, mapSeed: world.mapSeed, ground: built.ground, above: built.above, standing: fxStanding.length > 0 ? [...base, ...fxStanding] : base, overlays: foam.length === 0 && fxOverlays.length === 0 ? world.overlays : [...foam, ...world.overlays, ...fxOverlays], ...(fxDots.length > 0 ? { dots: fxDots } : {}) };
+      const scene: RenderScene = { cols: world.cols, rows: world.rows, tileW: world.tileW, tileH: world.tileH, mapSeed: world.mapSeed, ground: built.ground, above: built.above, standing: fxStanding.length > 0 ? [...base, ...fxStanding] : base, overlays: foam.length === 0 && fxOverlays.length === 0 ? world.overlays : [...foam, ...world.overlays, ...fxOverlays], ...(fxDots.length > 0 ? { dots: fxDots } : {}), ...(wake !== undefined ? { dueMs: wake } : {}) };
       prev = { assets: world.assets, layers: world.layers, objects, overlays, key, scene, reduce, style: world.style, water: world.waterTiles }; take(); return see(scene, world.seeThroughCanopy);
     },
   };

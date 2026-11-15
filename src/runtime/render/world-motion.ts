@@ -10,7 +10,7 @@ export type FrameSource = (sheetId: string, frame: number, fw: number, fh: numbe
 export type WorldNote = { readonly code: string; readonly message: string };
 export type ShoreMap = { readonly cols: number; readonly rows: number; readonly tileW: number; readonly tileH: number; readonly mapSeed: number; readonly water: Uint8Array };
 export type WorldMotion = { plan(m: Motion | null, ramps: ShoreStyle["ramps"], animated: boolean, fw: number, fh: number, owner: string): TileMotion | null; shore(map: ShoreMap | null, style: ShoreStyle | undefined, reduce: boolean): Overlay[]; pixels(id: string): Pixels | undefined; readonly notes: WorldNote[]; readonly bytes: () => number };
-type Plan = { readonly tile: TileMotion; readonly m: Motion; readonly ramps: ShoreStyle["ramps"]; readonly fw: number; readonly fh: number };
+type Plan = { readonly tile: TileMotion; readonly m: Motion; readonly ramps: ShoreStyle["ramps"]; readonly fw: number; readonly fh: number; readonly notes: readonly { readonly code: "motionInvalid" | "motionTooLarge"; readonly hint?: string }[] };
 const pack = (frames: readonly Pixels[]): Pixels => {
   const fw = frames[0]?.w ?? 0, fh = frames[0]?.h ?? 0, n = frames.length, data = new Uint8ClampedArray(fw * n * fh * 4);
   for (let f = 0; f < n; f += 1) { const src = frames[f]?.data; if (src === undefined) continue; for (let y = 0; y < fh; y += 1) data.set(src.subarray(y * fw * 4, (y + 1) * fw * 4), (y * fw * n + f * fw) * 4); }
@@ -20,6 +20,7 @@ export function createWorldMotion(source: FrameSource): WorldMotion {
   const notes: WorldNote[] = [], warned = new Set<string>(), plans = new Map<string, Plan>(), pics = new Map<string, { px: Pixels; bytes: number }>();
   let used = 0, rev = 0, shoreMap: ShoreMap | null = null, shoreKey = "", shoreOn: ReturnType<typeof shoreSettings>["on"] = null;
   const warn = (owner: string, code: string, message: string): void => { if (notes.length >= PLANS_MAX) return; const k = `${owner}\0${code}\0${message}`; if (warned.has(k)) return; warned.add(k); notes.push({ code, message }); };
+  const tell = (owner: string, rows: Plan["notes"]): void => { for (const n of rows) warn(owner, n.code, n.hint === undefined ? owner : `${owner}: ${n.hint}`); };
   const touch = <T,>(map: Map<string, T>, key: string): T | undefined => { const got = map.get(key); if (got === undefined) return undefined; map.delete(key); map.set(key, got); return got; };
   const keep = (id: string, px: Pixels): Pixels => {
     const prev = pics.get(id); if (prev !== undefined) { used -= prev.bytes; pics.delete(id); }
@@ -27,13 +28,13 @@ export function createWorldMotion(source: FrameSource): WorldMotion {
     return px;
   };
   const plan: WorldMotion["plan"] = (m, ramps, animated, fw, fh, owner) => {
-    if (m === null) return null; if (animated) { warn(owner, "motionInvalid", ANIM_HINT); return null; }
+    if (m === null) return null; if (animated) { tell(owner, [{ code: "motionInvalid", hint: ANIM_HINT }]); return null; }
     const key = `${hash32(0, JSON.stringify([m, ramps ?? null]), 0, 0)}s${fw}x${fh}`, got = touch(plans, key);
-    if (got !== undefined) return got.tile;
+    if (got !== undefined) { tell(owner, got.notes); return got.tile; }
     const baked = bakeMotion({ w: fw, h: fh, data: new Uint8ClampedArray(fw * fh * 4) }, m, ramps === undefined ? { animated } : { ramps, animated });
-    for (const code of baked.notices) warn(owner, code, code === "motionInvalid" && baked.message !== undefined ? baked.message : code);
-    if (baked.parts.length === 0) return null;
-    const row: Plan = { tile: { key, n: baked.frames.length, parts: baked.parts }, m, ramps, fw, fh };
+    const rows = baked.notices.map((code): Plan["notes"][number] => ({ code, ...(code === "motionInvalid" && baked.message !== undefined ? { hint: baked.message } : {}) }));
+    tell(owner, rows); if (baked.parts.length === 0) return null;
+    const row: Plan = { tile: { key, n: baked.frames.length, parts: baked.parts }, m, ramps, fw, fh, notes: rows };
     plans.set(key, row); while (plans.size > PLANS_MAX) { const k = plans.keys().next().value; if (k === undefined) break; plans.delete(k); }
     return row.tile;
   };
