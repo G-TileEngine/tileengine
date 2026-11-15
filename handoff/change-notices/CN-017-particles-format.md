@@ -35,3 +35,5 @@ These live on `particles` steps only (te-flash@3 recipes). On any other kind the
 
 ## Readers
 - The step 33b-3 player reads these from the effect document. QA: no core-types sha change, so no add-only check. Please check the 48 sum cap (later steps cut down, one `fxParticlesOverCap`), per-step `outOfRange`, unknown `particle_motion` → `"burst"`, `particle_pull` ignored on `burst` / `rise`, the 96 pool (oldest dropped; 128 unreachable), clock-based seeded positions, and `reduce_motion` start/end stills. Documents with every field absent stay byte-identical.
+
+**Note 2026-11-15 (DSK, D1):** the `particles` kind and `ParticleMotion` were later typed in CN-018 (core-types `d6d08696`, ACCEPTED 2026-11-14), which lands with 33b-3. The "core-types unchanged at `61fad786`" line above was true when this CN was filed and is left as written. This CN's text is otherwise unchanged. Docs now refer to it as CN-017 (setup-format r27, project-format r37).
