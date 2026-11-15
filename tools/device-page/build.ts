@@ -35,7 +35,7 @@ export function build(out: string, commit: string, root: string = ROOT): string 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const out = process.argv[2], asked = process.argv[3];
   if (out === undefined) { console.error("usage: node tools/device-page/build.ts <out folder> [commit, which must be HEAD]"); process.exit(1); }
-  const head = String(execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" })).trim(), dirty = String(execFileSync("git", ["status", "--porcelain", "--untracked-files=no"], { encoding: "utf8" })), why = refuse(head, asked, dirty);
+  const head = String(execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8", cwd: ROOT })).trim(), dirty = String(execFileSync("git", ["status", "--porcelain", "--untracked-files=no"], { encoding: "utf8", cwd: ROOT })), why = refuse(head, asked, dirty);
   if (why !== null) { console.error(why); process.exit(1); }
   build(out, asked ?? head);
 }

@@ -26,7 +26,7 @@ export function check(out: string, root: string = ROOT): string[] {
 }
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const out = process.argv[2]; if (out === undefined) { console.error("usage: node tools/device-page/check.ts <out folder>"); process.exit(1); }
-  const head = String(execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" })).trim(), dirty = String(execFileSync("git", ["status", "--porcelain", "--untracked-files=no"], { encoding: "utf8" }));
+  const head = String(execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8", cwd: ROOT })).trim(), dirty = String(execFileSync("git", ["status", "--porcelain", "--untracked-files=no"], { encoding: "utf8", cwd: ROOT }));
   const asked = (JSON.parse(readFileSync(join(out, "build.json"), "utf8")) as { commit: string }).commit, why = refuse(head, asked, dirty);
   if (why !== null) { console.log(`check: ${why.replace(/^build: /, "")}`); process.exit(1); }
   const problems = check(out); console.log(problems.length === 0 ? "check ok" : problems.join("\n")); process.exit(problems.length === 0 ? 0 : 1);
