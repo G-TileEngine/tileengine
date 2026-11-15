@@ -1,0 +1,8 @@
+{
+  "name": "tileengine-pixel-suite",
+  "private": true,
+  "description": "Step 34b L2/L3 picture checks in real browsers (outside green; run before a release): npm i && node run.ts",
+  "type": "module",
+  "scripts": { "pixels": "node run.ts" },
+  "dependencies": { "playwright-core": "1.65.1" }
+}

@@ -46,7 +46,8 @@ test("shore: the water grid and foam are kept while tiles, water ids, style and 
   const dug = wet.map((t, i) => (i === 3 ? 0 : t)), c = link.scene(world({ layers: [{ ...layers[0], tiles: dug }] as SceneWorld["layers"] }), at); assert.notEqual(c.overlays[0]?.sheet.id, b.overlays[0]?.sheet.id);
   const d = link.scene(world({ layers: [{ ...layers[0], tiles: dug }] as SceneWorld["layers"], style: { ramps: { water: ["#000000", "#111111", "#222222", "#333333"] } } }), at); assert.notEqual(d.overlays[0], c.overlays[0]);
   const dugged = [{ ...layers[0], tiles: dug }] as SceneWorld["layers"], e = link.scene(world({ layers: dugged }), at), g = link.scene(world({ layers: dugged, mapSeed: 4 }), at), f = link.scene(world({ layers: dugged, mapSeed: 4 }), { ...at, reduce: true });
-  assert.notDeepEqual(f.overlays[0], g.overlays[0], "reduce"); assert.notDeepEqual(g.overlays[0], e.overlays[0], "size or seed");
+  assert.notDeepEqual(f.overlays[0], g.overlays[0], "reduce"); assert.notDeepEqual(g.overlays[0], e.overlays[0], "seed");
+  const g3 = link.scene(world({ layers: dugged, mapSeed: 4 }), at), k = link.scene(world({ layers: dugged, mapSeed: 4, tileW: 8 }), at), g4 = link.scene(world({ layers: dugged, mapSeed: 4 }), at), k2 = link.scene(world({ layers: dugged, mapSeed: 4, tileH: 8 }), at); assert.notDeepEqual(k.overlays[0], g3.overlays[0], "a tile width change rebuilds (QA S3, step 34b)"); assert.notDeepEqual(k2.overlays[0], g4.overlays[0], "a tile height change rebuilds (QA 34b)");
   const g2 = link.scene(world({ layers: dugged, mapSeed: 4 }), at), h = link.scene(world({ layers: dugged, mapSeed: 4, waterTiles: { river: [1, 0] } }), at); assert.notDeepEqual(h.overlays[0], g2.overlays[0], "new water ids rebuild (QA 34a)");
 });
 test("effects: the cache key never stringifies world.effects, an equal effects list keeps the cached scene, new effects at the same pose redraw (step 34a)", () => {

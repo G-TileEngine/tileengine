@@ -6,7 +6,7 @@ import { chunkedList, createLighting, fitView, lightOps, present, snapCamera, ty
 import { createSceneLink, type SceneAsset, type SceneUnit, type SceneWorld } from "../../src/runtime/scene/world-scene.ts";
 import { PERF, judge } from "./fx-light-budget.ts";
 
-/** Step 34a stress: 200 units (20 walking), a river with shore, 100 effects (hit-stop, squash, hit-white, outline + turn, 12 particles) and a moving torch at res 4. One frame = scene, chunked list, present on a counting canvas, light plan and ops. The suite checks counts and the draw-list hash; the 4 ms p95 runs alone: `node tests/perf/stress-budget.ts`. */
+/** Step 34a stress: 200 units (20 walking), a river with shore, 100 effects (hit-stop, squash, hit-white, outline + turn, 12 particles) and a moving torch at res 4. One frame = scene, chunked list, present on a counting canvas, light plan and ops. The suite checks counts and the draw-list hash; the p95 budget (4 ms, light alone 2 ms) runs alone after one warm-up lap: `node tests/perf/stress-budget.ts`. */
 export type Stress = { readonly size: number; readonly water: boolean; readonly moving: number; readonly effects: number; readonly res?: number };
 export const STRESS: Readonly<Record<string, Stress>> = { A: { size: 64, water: false, moving: 0, effects: 0 }, B: { size: 64, water: true, moving: 20, effects: 0 }, C: { size: 64, water: true, moving: 20, effects: 100 }, E: { size: 128, water: true, moving: 20, effects: 100 }, L: { size: 128, water: false, moving: 0, effects: 0, res: 4 } };
 const source = (_id: string, _f: number, fw: number, fh: number): Pixels => ({ w: fw, h: fh, data: new Uint8ClampedArray(fw * fh * 4).map((_, i) => ((i & 3) === 3 ? 255 : ((i >> 2) % fw) * 9)) });
@@ -34,11 +34,16 @@ export function stressRig(o: Stress, hashing = false): { frame: (f: number) => v
     hash: () => sha.copy().digest("hex"),
   };
 }
+export const LIMIT_MS: Readonly<Record<string, number>> = { L: 2 }; // s34b: light alone (merged p95 ~1.3-1.6 ms); the rest PERF.limitMs
+/** s34b N8: one warm-up lap (first-run compile and caches; not judged), then PERF.laps judged laps against the scene's budget. */
+export function runStress(name: string, o: Stress, now = (): number => performance.now(), lapMs: number = PERF.lapMs): { got: ReturnType<typeof judge>; rig: ReturnType<typeof stressRig>; limit: number } {
+  const rig = stressRig(o), limit = LIMIT_MS[name] ?? PERF.limitMs, laps: number[][] = Array.from({ length: PERF.laps }, () => []);
+  for (let f = 0, t = -lapMs; t < PERF.laps * lapMs; f += 1, t += PERF.frameMs) { const t0 = now(); rig.frame(f); const ms = now() - t0; if (t >= 0) laps[Math.floor(t / lapMs)]?.push(ms); }
+  return { got: judge(laps, limit), rig, limit };
+}
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   for (const [name, o] of Object.entries(STRESS)) {
-    const rig = stressRig(o), laps: number[][] = Array.from({ length: PERF.laps }, () => []);
-    for (let f = 0, t = 0; t < PERF.laps * PERF.lapMs; f += 1, t += PERF.frameMs) { const t0 = performance.now(); rig.frame(f); if (f > 0) laps[Math.floor(t / PERF.lapMs)]?.push(performance.now() - t0); }
-    const got = judge(laps); console.log(`stress ${name} (${JSON.stringify(o)}): ${got.stats.map((s, i) => `lap ${i + 1} p50 ${s[0]?.toFixed(2)} p95 ${s[1]?.toFixed(2)} ms`).join("; ")}; counts ${rig.counts().join("/")}`);
-    assert.ok((rig.counts()[0] ?? Infinity) <= 300); assert.ok(got.ok, `${name}: p95 over ${PERF.limitMs} ms`);
+    const { got, rig, limit } = runStress(name, o); console.log(`stress ${name} (${JSON.stringify(o)}): ${got.stats.map((s, i) => `lap ${i + 1} p50 ${s[0]?.toFixed(2)} p95 ${s[1]?.toFixed(2)} ms`).join("; ")}; counts ${rig.counts().join("/")}`);
+    assert.ok((rig.counts()[0] ?? Infinity) <= 300); assert.ok(got.ok, `${name}: p95 over ${limit} ms`);
   }
 }
