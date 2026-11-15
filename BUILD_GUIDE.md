@@ -51,7 +51,7 @@ src/core/               clock, grid, unit, targeting, events, log, rng       →
 src/state/              *.table.ts, types.ts, xgo.ts                          → may import: src/types
 src/project/read/       read-only project reader (current-version docs only)  → may import: src/types, src/core/notice.ts (Notice type only; CN-005)
 src/rules/              (later) turn drivers, stats by name                   → may import: core, state, fx, types
-src/fx/                 effect-order reader, timeline and options: kept as BTF hit-timing rules only (CEO Q1; read by btf-adapters/src/fx-preset.ts; live effects are runtime/render/fx-live.ts) → may import: src/types, src/core (CN-007)
+src/fx/                 effect-order reader, timeline and options: kept as BTF hit-timing rules only (CEO Q1; read by src/btf-adapters/src/fx-preset.ts; live effects are runtime/render/fx-live.ts) → may import: src/types, src/core (CN-007)
 src/paint/              sprite recipes: reader, guard and caps (later: rasteriser, bank); integer maths only → may import: src/types, src/core/notice.ts (Notice type only); imported only by runtime, editor and btf-adapters (CN-008)
 src/runtime/input/      pure input intents + gesture mappers (plain pointer data, no DOM) → may import: src/types, src/core (CN-006)
 src/runtime/render/     pure render core, flat files (step 27)           → imports only `./<file>.ts` in its own folder; no DOM, wall time or globals (CN-016)

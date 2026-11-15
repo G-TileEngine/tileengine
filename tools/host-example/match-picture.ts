@@ -27,6 +27,7 @@ export function sceneFromMatch(snap: { readonly units: readonly PlainUnit[] }, a
 }
 
 /** Example host: play a match, keep only its log, replay it fresh, snapshot, copy as plain data, draw. */
+// A real host plays the match its own way (seats, input, network); runMatch here only makes a log to replay.
 export function demo(seed = 1): { units: number; standing: number; cmds: number; tick: number } {
   const src: SimInput = seedless(input("stage-fixed", seed)), sides = ["player", "wolves"] as const, played = createWorld(src);
   runMatch(played, { sides: [...sides], victory: reachFarRow, fuse: 60000, maxRounds: 40, maxSimMs: 600000, seats: seatAll(played, sides, bot(seed), 200) });
