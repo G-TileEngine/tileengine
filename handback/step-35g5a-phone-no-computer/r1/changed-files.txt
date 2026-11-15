@@ -1,0 +1,6 @@
+M	docs/qa/device-runs/TEMPLATE.md
+A	tests/tools/phone-no-computer.test.ts
+A	tests/tools/qa-35g5a.test.ts
+A	tools/device-page/build.ts
+A	tools/device-page/check.ts
+M	tools/serve.ts
