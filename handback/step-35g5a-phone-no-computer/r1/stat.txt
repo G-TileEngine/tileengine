@@ -1,0 +1,7 @@
+ docs/qa/device-runs/TEMPLATE.md       | 29 ++++++++++---
+ tests/tools/phone-no-computer.test.ts | 80 +++++++++++++++++++++++++++++++++++
+ tests/tools/qa-35g5a.test.ts          | 34 +++++++++++++++
+ tools/device-page/build.ts            | 41 ++++++++++++++++++
+ tools/device-page/check.ts            | 33 +++++++++++++++
+ tools/serve.ts                        | 24 ++++++++---
+ 6 files changed, 228 insertions(+), 13 deletions(-)
