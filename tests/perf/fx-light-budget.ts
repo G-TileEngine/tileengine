@@ -7,9 +7,9 @@ import { createSceneLink, type SceneWorld } from "../../src/runtime/scene/world-
 /** Step 33b-2 budget (user ruling on QA M-C, option a): the suite checks the rig's counts and `judge`; the 4 ms p95 wall clock runs alone, never in `npm test`: `node tests/perf/fx-light-budget.ts`. */
 export const PERF = { limitMs: 4, laps: 3, lapMs: 3000, frameMs: 16 } as const;
 /** Every lap's p95 (sorted[floor(n * 0.95)]) must be at or under the limit; per lap [p50, p95, max]. */
-export const judge = (laps: readonly (readonly number[])[]): { stats: number[][]; p95: number[]; ok: boolean } => {
+export const judge = (laps: readonly (readonly number[])[], limitMs: number = PERF.limitMs): { stats: number[][]; p95: number[]; ok: boolean } => {
   const stats = laps.map((lap) => { const s = [...lap].sort((a, b) => a - b); return [s[Math.floor(s.length * 0.5)] ?? Infinity, s[Math.floor(s.length * 0.95)] ?? Infinity, s[s.length - 1] ?? Infinity]; }), p95 = stats.map((s) => s[1] ?? Infinity);
-  return { stats, p95, ok: p95.length > 0 && p95.every((v) => v <= PERF.limitMs) };
+  return { stats, p95, ok: p95.length > 0 && p95.every((v) => v <= limitMs) };
 };
 /** 128×128 map at res 4, 16 torches, 80 units, 40 looping effects: a steady lamp on each caster (4 lights after the cap) and a self-lit piece following each target, which moves every frame; one frame = scene, plan, draw list, present and the light canvases on a counting canvas. */
 export function budgetRig(): { frame: (n: number, t: number) => void; counts: () => number[] } {

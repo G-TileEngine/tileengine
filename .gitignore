@@ -3,3 +3,5 @@ dist/
 coverage/
 *.log
 .DS_Store
+tools/pixel-suite/node_modules
+tools/pixel-suite/package-lock.json

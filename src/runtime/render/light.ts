@@ -13,8 +13,8 @@ export function darkness(wash: number, dim: number): number {
   return Math.floor((1 - (1 - aWash) * (1 - Math.min(d, room))) * STEPS);
 }
 
-export function createLighting(): { plan(world: LightWorld, lights: readonly Light[], wash: number, dim: number, res: number, fx?: FxLit, allDark?: boolean): LightPlan; readonly stats: { plans: number; masks: { computed: number } } } {
-  const sight = createSight(), stats = { plans: 0, masks: sight.stats };
+export function createLighting(): { plan(world: LightWorld, lights: readonly Light[], wash: number, dim: number, res: number, fx?: FxLit, allDark?: boolean): LightPlan; readonly stats: { plans: number; squares: number; masks: { computed: number } } } { // squares (s34b R-d): squares the light boxes visit, for the bound test
+  const sight = createSight(), stats = { plans: 0, squares: 0, masks: sight.stats };
   let prev: { world: LightWorld; lights: readonly Light[]; wash: number; dim: number; res: number; fx?: FxLit; allDark: boolean; plan: LightPlan } | undefined;
   const rgb = (hex: string | undefined): string => { const m = hex === undefined ? null : /^#([0-9a-f]{6})$/i.exec(hex); if (m === null || m[1] === undefined) return ""; const n = Number.parseInt(m[1], 16); return `${(n >> 16) & 255},${(n >> 8) & 255},${n & 255}`; };
   return {
@@ -37,6 +37,7 @@ export function createLighting(): { plan(world: LightWorld, lights: readonly Lig
         const mask = sight.mask(world, cell.c, cell.r, Math.ceil(radius / span) + 1), ink = tone(light.colour);
         const x0 = Math.max(0, Math.floor((light.x - radius) / res)), x1 = Math.min(sw, Math.ceil((light.x + radius) / res)), y0 = Math.max(0, Math.floor((light.y - radius) / res)), y1 = Math.min(sh, Math.ceil((light.y + radius) / res));
         for (let y = y0; y < y1; y += 1) for (let x = x0; x < x1; x += 1) {
+          stats.squares += 1;
           const cx = x * res + res / 2, cy = y * res + res / 2, sc = Math.floor(cx / world.tileW), sr = Math.floor(cy / world.tileH);
           if (sc < 0 || sr < 0 || sc >= world.cols || sr >= world.rows || mask[sr * world.cols + sc] !== 1) continue;
           const dx = cx - light.x, dy = cy - light.y, dist = Math.sqrt(dx * dx + dy * dy);
@@ -52,7 +53,7 @@ export function createLighting(): { plan(world: LightWorld, lights: readonly Lig
   };
 }
 
-export function lightOps(plan: LightPlan, fit: Fit, cam: Cam, glow = "255,176,72"): FillOp[] {
+export function lightOps(plan: LightPlan, fit: Fit, cam: Cam, glow = "255,176,72", walked?: { squares: number }): FillOp[] { // walked (s34b R-d): squares the walk visits, for the bound test
   const ops: FillOp[] = [], s = fit.s, res = plan.res, w = plan.w, h = plan.h, ox = fit.padX - cam.devX, oy = fit.padY - cam.devY;
   const x0 = cam.devX / s, y0 = cam.devY / s, x1 = x0 + fit.artW + res, y1 = y0 + fit.artH + res;
   const ix0 = Math.max(0, Math.floor(x0 / res) - 1), iy0 = Math.max(0, Math.floor(y0 / res) - 1), ix1 = Math.min(w, Math.ceil(x1 / res) + 1), iy1 = Math.min(h, Math.ceil(y1 / res) + 1);
@@ -60,7 +61,7 @@ export function lightOps(plan: LightPlan, fit: Fit, cam: Cam, glow = "255,176,72
   const paint = (iy: number, at: (ix: number) => string, add: boolean): void => {
     let from = -1, ink = "";
     const flush = (to: number): void => { if (from >= 0) ops.push(add ? { x: from * res * s + ox, y: iy * res * s + oy, w: (to - from) * res * s, h: res * s, colour: ink, op: "add" } : { x: from * res * s + ox, y: iy * res * s + oy, w: (to - from) * res * s, h: res * s, colour: ink }); };
-    for (let ix = ix0; ix <= ix1; ix += 1) {
+    for (let ix = ix0; ix <= ix1; ix += 1) { if (walked !== undefined) walked.squares += 1;
       const colour = ix < ix1 && on(ix, iy) ? at(ix) : "";
       if (colour === ink) continue;
       flush(ix); from = colour === "" ? -1 : ix; ink = colour;
