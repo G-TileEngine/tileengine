@@ -16,6 +16,8 @@ Carries: none filed. `package.json` (`1e5dd82c…`), the lock (`d7f64a09…`), `
 Tidy the render and scene joins found in the post-34 diagnosis, with no new feature. Today the tile-foot point is worked out in four files, the look box in two, `LiveOut.holds` is always `{}`, a `#f00` colour turns white, clip and motion warnings name the sheet (so two assets on one sheet share one warning), the effect wake time never reaches the host, and a particle dot vanishes a few px before it leaves the screen. After this step each has one home, warnings name the asset, `RenderScene.dueMs` carries the wake, and edge dots stay until fully off screen. Three depth cases and the phone page's file list get pins.
 
 ## Rulings
+
+- G6 (merge time, QA A/B E4): item 8's hinted motion message (`name: hint`) was not pinned; both builds missed it. QA's `tests/runtime/render/render-tidy-qa.test.ts` (1cd5105b, 19 lines) pins `motionInvalid:grass#2: ${ANIM_HINT}`; adopted, floor raised to 713.
 All rulings are EA (this kit) on the post-34 plan v2 (every teammate agreed; QA `docs/qa/post34-answers.md` §(b), §(c)). Every one is pinned. Draw lists stay byte-equal for scenes that use no changed field: the stress rigs and light raster (`s34a-equal.ts`) and the pixel suite (`tools/pixel-suite/run.ts`) give the Base's output.
 1. **One foot** (item 4, seam 6): `footAt(c, r, tileW, tileH, dx = 0, dy = 0)` in `frames.ts` returns `{ x: c * tileW + px(tileW / 2) + dx, y: (r + 1) * tileH + dy }`, the only copy of that maths in `src/runtime`. Its users: the draw list (a standing thing's place, its depth key, computed once per thing before the sort, and a tile row's top), `placeStep`, and `fx-live` (the at-cell point, and one `mid()` helper for a piece's centre used by particles and lights). `fx-live`'s `Math.round(tileW / 2)` becomes `px`, which equals it for any tile width ≥ 0. Pinned by: "item 4: the tile-foot maths lives only in footAt (frames.ts); px rounds the half tile (G1)".
 2. **One look box** (item 5, seam 32): `lookBox(fw, fh, look)` in `fx-look.ts` returns `{ w, h, ox, oy }` (`ox = (w − fw) / 2`, `oy = (h − fh) / 2`); the draw list takes its box from it and builds the look id with `lookId`. `lookSize` stays (a wrapper; its pin is unchanged). Pinned by: "item 5: lookBox is the one reader of look geometry; the draw list's box and look id come from it (G1)".
@@ -43,6 +45,7 @@ Size: 150–400 changed lines in total. The proto changes 215 lines (+158/−57)
 | `src/runtime/scene/world-scene.ts` | 129 → 131 / 50 | 5, 6 |
 | `src/runtime/render/fx-particles.ts` | unchanged / 0 | — |
 | `tests/runtime/render/render-tidy.test.ts` | 0 → 93 (shipped; +9 QA M1 fix adopted) | 1–9 |
+| `tests/runtime/render/render-tidy-qa.test.ts` | 0 → 19 (G6-adopted from QA A/B, E4) | 8 |
 | `tests/runtime/scene/host-hookup.test.ts` | 2 lines (shipped; Ruling 5 pin move) | 5 |
 | `tests/runtime/scene/fx-particles.test.ts` | 1 line (shipped; Ruling 7 pin move) | 7 |
 
@@ -78,6 +81,7 @@ Shipped files (copy verbatim from `origin/main`; never weaken, rename, skip or d
 | `tests/runtime/render/render-tidy.test.ts` | `tests/runtime/render/render-tidy.test.ts` | `151e87eff3acf47101759f0e41bec52d182658b504c329565606c95e1c4c62e1` |
 | `tests/runtime/scene/host-hookup.test.ts` | `tests/runtime/scene/host-hookup.test.ts` (replaces it) | `28657f7adffd09fe2a973a94e7fb6d82686b66a38f65d496ad07e6f9783be13a` |
 | `tests/runtime/scene/fx-particles.test.ts` | `tests/runtime/scene/fx-particles.test.ts` (replaces it) | `9b934bc902d05f9e23e44ee240907f16f000d4912cfa2b74db40164f14bbc421` |
+| `tests/runtime/render/render-tidy-qa.test.ts` | `tests/runtime/render/render-tidy-qa.test.ts` | `1cd5105bf160cc483b6f42ec047723347ae20fa841dba3b96ebd741f256270f1` |
 
 Titles (exact), all in `render-tidy`:
 - "item 4: the tile-foot maths lives only in footAt (frames.ts); px rounds the half tile (G1)": a fence over `src/runtime` for `tileW / 2` and `r + 1) *`; three `footAt` values, one with an odd tile.
@@ -112,7 +116,7 @@ Expected: **21/21 caught; on the Base the shipped file fails to load (no `footAt
 `src/types/core-types.ts`; `src/state/**`; `src/core/**`; `src/sim/**`; `package.json`; the lock; `.dependency-cruiser.cjs`; `scripts/check-law.sh`; `tsconfig.json`; `eslint.config.*`; `BUILD_GUIDE.md`; `STATES.md`; `scripts/check-state.sh`; `tools/**`; every existing test file except the two shipped above; `locked/`; `data/*.md`; plus BUILD_GUIDE §7's never-edit list.
 
 ## Acceptance
-- [ ] `npm ci && npm run green` exits 0 with at least 712 tests passing (703 + the 9 shipped) and none failing, cancelled, skipped or todo; typecheck, lint, deps, check:law and check:state each exit 0.
+- [ ] `npm ci && npm run green` exits 0 with at least 713 tests passing (703 + the 9 shipped + QA's E4 test) and none failing, cancelled, skipped or todo; typecheck, lint, deps, check:law and check:state each exit 0.
 - [ ] The three shipped files are byte-identical to the sha256s above.
 - [ ] Sims, the 21 smoke lines (heap line report-only) and every pin other than the two listed moves unchanged; `git diff e9b8056b --stat -- package.json package-lock.json BUILD_GUIDE.md src/types src/state src/core src/sim tools` is empty.
 - [ ] `node tools/pixel-suite/smoke.ts` prints `smoke: 0 failed`; `node tools/pixel-suite/run.ts` prints the Base's lines.
@@ -141,7 +145,7 @@ All under `/workspace/tileengine`, full sha256 in `/workspace/share/g1/push-sha2
 - EA ruling (scope): `world-motion.ts` joins the file list for Ruling 5; `fx-particles.ts` from the plan's list needs no change.
 
 ## Delivery footer (must hold at hand-back)
-- `npm ci && npm run green` exits 0 with **at least 712 passing and 0 failing**. Paste the summary line into HANDBACK.md.
+- `npm ci && npm run green` exits 0 with **at least 713 passing and 0 failing**. Paste the summary line into HANDBACK.md.
 - The three shipped files are **byte-identical** to the sha256s above; list each in HANDBACK.md, and paste the stress lines and the `smoke: 0 failed` line.
 - The bundle is `<Base e9b8056b>..step/step-g1-render-tidy-r<N>` and passes `git bundle verify`. Each file stays within its cap, and the total (insertions + deletions) is 150–400 changed lines (the proto is 215). Every pin unchanged.
 
