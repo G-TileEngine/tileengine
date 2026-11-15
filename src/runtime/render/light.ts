@@ -25,6 +25,7 @@ export function createLighting(): { plan(world: LightWorld, lights: readonly Lig
       stats.plans += 1;
       const total = darkness(wash, dim), sw = Math.ceil(world.cols * world.tileW / res), sh = Math.ceil(world.rows * world.tileH / res);
       const level = new Uint8Array(sw * sh), dark = new Uint8Array(sw * sh), span = Math.min(world.tileW, world.tileH), blind = !Number.isFinite(wash) || !Number.isFinite(dim);
+      dark.fill(Math.round((total * BANDS_OF_LIGHT) / BANDS_OF_LIGHT));
       const all = fx === undefined ? lights : [...lights, ...fx.lights], names: string[] = [], tint = all.some((l) => rgb(l.colour) !== "") ? new Uint8Array(sw * sh) : undefined;
       const tone = (colour: string | undefined): number => { const key = rgb(colour); if (key === "") return 0; let i = names.indexOf(key); if (i < 0) { names.push(key); i = names.length - 1; } return i + 1; };
       for (const light of all) {
@@ -41,10 +42,9 @@ export function createLighting(): { plan(world: LightWorld, lights: readonly Lig
           const dx = cx - light.x, dy = cy - light.y, dist = Math.sqrt(dx * dx + dy * dy);
           if (dist >= radius) continue;
           const lv = BANDS_OF_LIGHT - Math.floor((BANDS_OF_LIGHT * dist) / radius), i = y * sw + x;
-          if (lv > (level[i] ?? 0)) { level[i] = lv; if (tint !== undefined) tint[i] = ink; }
+          if (lv > (level[i] ?? 0)) { level[i] = lv; dark[i] = Math.round((total * (BANDS_OF_LIGHT - lv)) / BANDS_OF_LIGHT); if (tint !== undefined) tint[i] = ink; }
         }
       }
-      for (let i = 0; i < dark.length; i += 1) dark[i] = Math.round((total * (BANDS_OF_LIGHT - (level[i] ?? 0))) / BANDS_OF_LIGHT);
       const plan: LightPlan = tint === undefined ? { res, w: sw, h: sh, dark, level } : { res, w: sw, h: sh, dark, level, tint, colours: names };
       prev = { world, lights, wash, dim, res, ...(fx === undefined ? {} : { fx }), allDark: darken, plan };
       return plan;
@@ -53,20 +53,21 @@ export function createLighting(): { plan(world: LightWorld, lights: readonly Lig
 }
 
 export function lightOps(plan: LightPlan, fit: Fit, cam: Cam, glow = "255,176,72"): FillOp[] {
-  const ops: FillOp[] = [], s = fit.s, res = plan.res, ox = fit.padX - cam.devX, oy = fit.padY - cam.devY;
+  const ops: FillOp[] = [], s = fit.s, res = plan.res, w = plan.w, h = plan.h, ox = fit.padX - cam.devX, oy = fit.padY - cam.devY;
   const x0 = cam.devX / s, y0 = cam.devY / s, x1 = x0 + fit.artW + res, y1 = y0 + fit.artH + res;
+  const ix0 = Math.max(0, Math.floor(x0 / res) - 1), iy0 = Math.max(0, Math.floor(y0 / res) - 1), ix1 = Math.min(w, Math.ceil(x1 / res) + 1), iy1 = Math.min(h, Math.ceil(y1 / res) + 1);
   const on = (ix: number, iy: number): boolean => (ix + 1) * res > x0 && ix * res < x1 && (iy + 1) * res > y0 && iy * res < y1;
   const paint = (iy: number, at: (ix: number) => string, add: boolean): void => {
     let from = -1, ink = "";
     const flush = (to: number): void => { if (from >= 0) ops.push(add ? { x: from * res * s + ox, y: iy * res * s + oy, w: (to - from) * res * s, h: res * s, colour: ink, op: "add" } : { x: from * res * s + ox, y: iy * res * s + oy, w: (to - from) * res * s, h: res * s, colour: ink }); };
-    for (let ix = 0; ix <= plan.w; ix += 1) {
-      const colour = ix < plan.w && on(ix, iy) ? at(ix) : "";
+    for (let ix = ix0; ix <= ix1; ix += 1) {
+      const colour = ix < ix1 && on(ix, iy) ? at(ix) : "";
       if (colour === ink) continue;
       flush(ix); from = colour === "" ? -1 : ix; ink = colour;
     }
   };
-  for (let y = 0; y < plan.h; y += 1) paint(y, (x) => { const k = plan.dark[y * plan.w + x] ?? 0; return k === 0 ? "" : `rgba(3,8,26,${k / STEPS})`; }, false);
-  for (let y = 0; y < plan.h; y += 1) paint(y, (x) => { const lv = plan.level[y * plan.w + x] ?? 0; if (lv < 4) return ""; const idx = plan.tint?.[y * plan.w + x] ?? 0; const ink = idx > 0 ? plan.colours?.[idx - 1] ?? glow : glow; return `rgba(${ink},${((lv - 3) * 2) / STEPS})`; }, true);
+  for (let y = iy0; y < iy1; y += 1) paint(y, (x) => { const k = plan.dark[y * w + x] ?? 0; return k === 0 ? "" : `rgba(3,8,26,${k / STEPS})`; }, false);
+  for (let y = iy0; y < iy1; y += 1) paint(y, (x) => { const lv = plan.level[y * w + x] ?? 0; if (lv < 4) return ""; const idx = plan.tint?.[y * w + x] ?? 0; const ink = idx > 0 ? plan.colours?.[idx - 1] ?? glow : glow; return `rgba(${ink},${((lv - 3) * 2) / STEPS})`; }, true);
   return ops;
 }
 

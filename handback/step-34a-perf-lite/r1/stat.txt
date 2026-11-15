@@ -1,0 +1,8 @@
+ src/runtime/canvas/canvas2d.ts        |  2 +-
+ src/runtime/host/raf-driver.ts        | 30 +++++++++++-----
+ src/runtime/render/light.ts           | 15 ++++----
+ src/runtime/scene/world-scene.ts      | 16 +++++----
+ tests/perf/stress-budget.ts           | 44 ++++++++++++++++++++++++
+ tests/runtime/host/raf-driver.test.ts | 37 ++++++++++++++++++--
+ tests/runtime/scene/perf-34a.test.ts  | 64 +++++++++++++++++++++++++++++++++++
+ 7 files changed, 184 insertions(+), 24 deletions(-)
