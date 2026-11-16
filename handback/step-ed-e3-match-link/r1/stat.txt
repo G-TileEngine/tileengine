@@ -1,0 +1,10 @@
+ docs/host-guide.md                         |  2 +-
+ src/runtime/scene/match-link.ts            | 68 ++++++++++++++++++++++++++++++
+ src/runtime/scene/world-scene.ts           |  8 ++--
+ tests/runtime/scene/match-link-qa.test.ts  | 33 +++++++++++++++
+ tests/runtime/scene/match-link.test.ts     | 61 +++++++++++++++++++++++++++
+ tests/runtime/scene/match-patch.test.ts    | 49 +++++++++++++++++++++
+ tests/runtime/scene/scene-fence-qa.test.ts | 15 +++++++
+ tests/runtime/scene/scene-fence.test.ts    | 13 +++---
+ tools/host-example/match-picture.ts        | 25 +++--------
+ 9 files changed, 243 insertions(+), 31 deletions(-)
