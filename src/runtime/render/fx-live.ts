@@ -4,6 +4,7 @@ import { playerPx, shakeAt, shakeLen, shakePx, stopMs, warp, type Kick, type Sha
 import { pieceLook } from "./fx-look.ts";
 import { FX_LIGHT, hitWhiteArg, hitWhiteMs, lightColour, lightMode, lightRadius, litTiles, popIsFlash, rampOf, type Ramps } from "./fx-light.ts";
 import { FX_BUDGET, PARTICLES, capCounts, particleAt, particleRead, variantSeed } from "./fx-particles.ts";
+import { isTravel, pathAt } from "./fx-path.ts";
 import { clipEvents, clipPoints, frameStart, hitAt, nextChangeMs, ownLight, placeStep, poseMs, startMs, stripNote, viewHitMs, type Box, type FxActor, type FxEvent, type FxNote, type FxPiece, type PointTable } from "./fx-player.ts";
 import type { FxLit, Light } from "./light.ts";
 import type { Clip, Overlay, SceneDot, Standing } from "./types.ts";
@@ -88,10 +89,16 @@ export function createFxLive(): FxLive {
           const mode0 = lightMode(p);
           if (cell === null) { if (mode0 !== "off") { used += 1; if (used > (lite ? 1 : FX_LIGHT.perEffect) && !warned) { notes.push({ code: "fxLightsOverCap", message: e.id }); warned = true; } } continue; }
           slot.actor = actor; slot.mem = mem; slot.i = i; slot.spawn = p.attach !== "follow"; slot.freeze = !slot.spawn && p.detach === "hit"; slot.pose = pose; slot.hit = hit;
-          const placed = placeStep(p, start, drawT, hit, atUnit, footAt(cell.c, cell.r, grid.tileW, grid.tileH), grid.tileW, grid.tileH, grid.stepMs);
+          let placed = placeStep(p, start, drawT, hit, atUnit, footAt(cell.c, cell.r, grid.tileW, grid.tileH), grid.tileW, grid.tileH, grid.stepMs);
+          let ang = p.angle; const ac = caster?.actor ?? e.at, bc = target?.actor ?? e.at;
+          if (placed !== null && p.path !== undefined && ac !== undefined && bc !== undefined) {
+            const A = footAt(ac.c, ac.r, grid.tileW, grid.tileH), B = footAt(bc.c, bc.r, grid.tileW, grid.tileH), H = footAt(cell.c, cell.r, grid.tileW, grid.tileH), spot = pathAt(p.path, drawT - start, A, B, grid.tileW, grid.tileH), dx = spot.x - H.x, dy = spot.y - H.y;
+            if ("kind" in placed) placed = { ...placed, ...(dx === 0 ? {} : { ox: (placed.ox ?? 0) + dx }), ...(dy === 0 ? {} : { oy: (placed.oy ?? 0) + dy }) }; else placed = { ...placed, x: placed.x + dx, y: placed.y + dy };
+            if (isTravel(p.kind) && spot.deg !== null) ang = (p.angle ?? 0) + spot.deg;
+          }
           const parts = reads[i];
           if (parts != null && placed !== null) { const seed = hash32(grid.mapSeed, e.id, i, seeded.seed), ramp = rampOf([p.tint_ramp, e.tint_ramp], grid.ramps).ramp, centre = mid(placed, grid.tileW, grid.tileH), band = "kind" in placed ? "fxAir" as const : placed.band === "ui" ? "flash" as const : placed.band; for (let n = 0, nCap = caps.counts[i] ?? 0; n < (lite ? Math.ceil(nCap / 2) : nCap); n += 1) { const dot = particleAt(parts, n, seed, drawT - (start + p.at), ramp, grid.reduce === true, grid.tileW); if (dot !== null) bag.push({ born: start + p.at, ei, si: i, pi: n, dot: { band, x: centre.x + dot.x * scale.k, y: centre.y + dot.y * scale.k, size: dot.size * scale.k, colour: dot.colour, alpha: dot.alpha } }); } }
-          else if (placed !== null && drew < FX_BUDGET.effect && fxDraws < FX_BUDGET.total) { drew += 1; fxDraws += 1; const look = pieceLook(p.sheet.fw, p.sheet.fh, p.outline, p.blend, p.angle, rampOf([p.tint_ramp, e.tint_ramp], grid.ramps).ramp, lite, p.kind === "stamp" ? stamp : null); const extra = { ...(look === undefined ? {} : { look }), ...(scale.k > 1 ? { scale: scale.k } : {}), ...(p.blend === "add" ? { op: "add" as const } : {}) }; if ("kind" in placed) standing.push(Object.assign(placed, ownLight(p) ? extra : { sceneLit: true as const, ...extra })); else overlays.push(Object.assign(placed, ownLight(p) ? { selfLit: true as const, ...extra } : extra)); }
+          else if (placed !== null && drew < FX_BUDGET.effect && fxDraws < FX_BUDGET.total) { drew += 1; fxDraws += 1; const look = pieceLook(p.sheet.fw, p.sheet.fh, p.outline, p.blend, ang, rampOf([p.tint_ramp, e.tint_ramp], grid.ramps).ramp, lite, p.kind === "stamp" ? stamp : null); const extra = { ...(look === undefined ? {} : { look }), ...(scale.k > 1 ? { scale: scale.k } : {}), ...(p.blend === "add" ? { op: "add" as const } : {}) }; if ("kind" in placed) standing.push(Object.assign(placed, ownLight(p) ? extra : { sceneLit: true as const, ...extra })); else overlays.push(Object.assign(placed, ownLight(p) ? { selfLit: true as const, ...extra } : extra)); }
           if (mode0 === "off") continue;
           used += 1; if (used > (lite ? 1 : FX_LIGHT.perEffect)) { if (!warned) { notes.push({ code: "fxLightsOverCap", message: e.id }); warned = true; } continue; }
           const rad = lightRadius(p.light_radius); if (rad.bad) notes.push({ code: "outOfRange", message: "light_radius" });

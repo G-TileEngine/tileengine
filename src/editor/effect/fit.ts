@@ -51,11 +51,14 @@ export function flatten(a: Source, b: Source, o: { base: "a" | "b"; mix: number;
   const hit = baseSteps[bt.hitIndex], hitId = hit?.["id"];
   const baseParts = Array.isArray(base.doc["parts"]) ? base.doc["parts"] : [], map = new Map<string, string>();
   const movedParts = (Array.isArray(other.doc["parts"]) ? other.doc["parts"] : []).map((item) => { const p = rec(item) ?? {}; const id = o.mint("p-"); if (typeof p["id"] === "string") map.set(p["id"], id); return { ...p, id, from: { effect: other.id, rev: other.rev } }; });
+  const ids = otherSteps.map(() => o.mint("s-")), rideOf = new Map<string, string>();
+  otherSteps.forEach((s, i) => { const id = s["id"]; if (typeof id === "string" && id !== "" && !rideOf.has(id)) rideOf.set(id, ids[i] ?? id); });
   const moved = otherSteps.map((s, i) => {
     let at = bt.hitMs + ((ot.starts[i] ?? 0) - ot.hitMs);
     if (at < 0) { messages.push(`${other.id} step ${i + 1} starts before 0: moved to 0`); at = 0; } else if (at > DOC.msMax) at = DOC.msMax;
-    const copy: Record<string, unknown> = { ...s, id: o.mint("s-"), start_mode: "at-time", start_at_ms: at };
+    const copy: Record<string, unknown> = { ...s, id: ids[i], start_mode: "at-time", start_at_ms: at };
     if (typeof copy["part"] === "string" && map.has(copy["part"])) copy["part"] = map.get(copy["part"]);
+    if ("ride" in copy) { const ride = copy["ride"], next = typeof ride === "string" && ride !== "" ? rideOf.get(ride) : undefined; if (next === undefined) delete copy["ride"]; else copy["ride"] = next; }
     return copy;
   });
   const doc: Record<string, unknown> = { ...base.doc, parts: [...baseParts, ...movedParts], steps: [...baseSteps, ...moved], ...(typeof hitId === "string" ? { connect_step: hitId } : {}) };
