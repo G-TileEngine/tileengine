@@ -29,12 +29,13 @@ Play never reads `parts`, `part`, `from` or `nudge_ms`. There is no UI in E1.
 1. **Effective values in.** The converter reads already-resolved values (`effective()`, §2.4). It does not read the catalogue. Absent keys get the r29 defaults (seconds 0.48, connect 0.92), and an absent field means today's behaviour.
 2. **Timing (r29 §2.10.1.2).**
    - `len = round(seconds × 1000)`; seconds are clamped to 0.15–3, out of range gives `outOfRange`.
-   - The first step starts at 0.
+   - A first `after-last` or `with-last` step starts at 0. A first `at-time` step starts at `start_at_ms` (r29; ruling 13 R-a). A first `at-hit` step is at or before the hit, so it falls back to after-last and starts at 0.
    - `after-last` starts at the previous start + len + `hold_ms`.
    - `with-last` starts at the previous start. `at-time` starts at `start_at_ms`. `at-hit` starts at hit + `start_at_ms`.
    - An `at-hit` step at or before the hit step falls back to `after-last` and warns `atHitBeforeHit`.
    - An unknown `start_mode` gives `outOfRange` and is treated as after-last.
    - `fade_out_ms` counts for `dim` and `stamp` only. It extends the piece but never delays the chain.
+   - `hold_ms` clamps to 0–20000. **A piece lasts len + `hold_ms` + `fade_out_ms`** (= `ends − starts`; ruling 13 M1).
    - A disabled step keeps its slot in the chain but draws nothing.
    - Steps 13+ give `overCap` "Steps 13+ are saved but won't play".
 3. **Hit (§2.10.1.5).**
@@ -64,6 +65,7 @@ Play never reads `parts`, `part`, `from` or `nudge_ms`. There is no UI in E1.
    - The other side's first 12 steps become `at-time` steps re-timed so its hit lands on the base hit: `start_at_ms = baseHit + (otherStart − otherHit)`, clamped to 0…20000. A start below 0 gives a message.
    - Moved steps get fresh step ids (`mint("s-")`). The other side's parts get fresh ids (`mint("p-")`) and `from: {effect: other.id, rev: other.rev}`, and each step `part` is remapped to the new id.
    - Mix feeds only the seed in E1.
+   - **`flatten` runs Fit and honours `preset`** (scope §4 rule 4: budgets are enforced while you merge). It ends with `fit(doc, sides, {preset})` (base steps `base`, moved steps `other`; preset → 32 sparks) and returns Fit's lines after the retime lines (ruling 13 R-b). The signature keeps `preset?`.
 10. **Fit (merge rule 4).**
     - Particles scale pro rata (floored) to ≤ 48, or ≤ 32 for presets.
     - The 2 largest lights (by `light_radius`, default 2) stay lit. On ties the base side wins, then list order. The others get `light_mode: "off"`, and the `light` alias is removed.
@@ -75,6 +77,17 @@ Play never reads `parts`, `part`, `from` or `nudge_ms`. There is no UI in E1.
     - Every trim returns one line: `Scaled sparks X → Y to fit C`, `Kept the 2 largest lights; turned off n`, `Trimmed n <class> step(s) to fit`, `Still N steps: steps 13+ are saved but won't play`.
 11. **Layering.** `fx-doc.ts` lives in `src/runtime/render/`, because the scene folder fence (step 31) allows only `world-scene.ts` and the render fence (step 27) allows same-folder imports only. It uses `FxNote`, not `core/notice.ts`. `variantSeed` lives in `fx-particles.ts`, so `fx-live` does not import `fx-doc` (no cycle). The editor model is in `src/editor/effect/` and imports render and `core/notice.ts` type only. No game rules.
 12. **G6 (QA E1 review `9f5f1c69…`).** QA's `tests/editor/effect-e1-qa2.test.ts` (fix ref `refs/cmp/sede1-qa2-fix-a` `e50e98a0`, parent `927df645`, noreply; 35 lines, cap 37; 2 tests) is adopted verbatim and shipped. It pins: seed 0 clean and NaN/Infinity `outOfRange`; the seed reaching every particle piece; one seed note per effect; every `noPicture` noted and skipped; the converter leaving its input untouched; spread needing a value above 0; a multi-beat part using list position. QA plants went 12/20 → 20/20 with it (misses were Q1, Q2, Q8, Q9, Q12, Q13c, Q15, Q16); EA plants stay 27/27. Floor raised 751 → 753. QA agreed rulings (a)–(g); the nits and carries are in § Carries.
+
+## Rulings (added at merge, QA builds A/B `docs/qa/step-ed-e1-builds.md` e4d015f6)
+13. **Pick and G6 adopt (merge time).** QA picks **ChatA-2** (tip `0853f228`, `0853f22841ec9316a019976f88e9eecbfde172cc`, tree `85779ba3`, on Base `3c969024`; 3 commits `dbb5ed1`, `eaa7656` the shared-source cycle fix, handback) with must-fixes. The PR head is the EA fix commit **`d60e12a7`** (`d60e12a7fc39efae27d9e8191d64ed0c6ef11725`, tree `263c67d2`, parent QA's fix ref `refs/cmp/ede1b-qa3-fix-a` `c5287120`, `c5287120987ab87e161f4776f1d95b576cab1b89`, which is `0853f228` + QA's test; all G-TileEngine noreply).
+    - **G6:** QA's `tests/editor/effect-e1-qa3.test.ts` (33 lines, sha256 `97673196…`, 3 tests) is adopted with **one EA line** pinning R-a (an `at-time` first step at 250 gives starts `[250, 550]`) and that clause added to test 13's title: 34 lines, cap 37, sha256 `445dddd29f43d874774166139b77de76bbe16a0414e1cf9893e7493b54c2e8b3`. It pins: a shared or diamond acyclic source is `current`, a loop back and a self-loop are `cycle`; a piece lasts len + hold + fade; an out-of-range `connect` is noted; `hold_ms` clamps to 0; an `at-time` first step starts at `start_at_ms`; `blendSeed` reads seeds through `variantSeed`; `flatten` runs Fit (12 steps, sparks 320 → 48 with both lines; preset 20+20 → 16/16). **Floor raised 753 → 756.**
+    - **Fix commit `d60e12a7`** (3 files, +7/−6, no line growth in src): QA's patch `a2-src-proposal.diff` (sha256 `7cb02e84…`) as is: M1 piece `ms = ends − starts` (len + hold + fade), `hold_ms` clamped 0–20000, M2 `flatten` ends with `fit()` and passes `preset`. Plus R-a: `fx-doc.ts` starts a first step at 0 unless it is `at-time`. `fx-doc.ts` 56/60, `fit.ts` 65/65.
+    - **R-a (EA, final):** an `at-time` first step starts at `start_at_ms`, as r29 and the proto do. Ruling 2's old line "The first step starts at 0" was a wording error; A2 followed it literally. Ruling 2 is reworded above.
+    - **R-b (EA, final):** `flatten` runs Fit and honours `preset`. Ruling 9 and the signature stay; ruling 9 now says so.
+    - **Build B rejected** (tip `05939021`): a **false provenance cycle** on a shared acyclic source (and a deep-shared one); its pieces **drop both `hold_ms` and `fade_out_ms`** (ruling 2); its `blendSeed` uses **raw seeds** (−1 and 2.5 not read as 0, ruling 5) and it does not note an out-of-range `connect`. Its tests also miss Q11 and Q21.
+    - **HANDBACK §0.6 thin** (flagged, not a reject): A2 has 1 of 3 helpers silent (the "editor" helper was stopped after about 12 minutes; the builder's probe stands in); B has 2 of 3 silent.
+    - Evidence: A2 + fix + QA3 green **756/0** (typecheck, lint, deps 110/352, check:state, check:law exit 0); smoke 0 failed; sim `afc89d56…` / `b8007292…`; stress unchanged; 5 pins unchanged; EA plants 28/28 and QA plants 27/27 (`qa-ede1b-plants.py` A2s); QA3 3/3 (the R-a line fails on the unfixed start, passes on the proto `5db8cea9`). **348 changed lines** excluding `handback/` (A2 314 + QA3 34). Merge-tree of `d60e12a7` onto main `649fbc89` is clean (tree `b23d08e3`).
+    - Ruling 7 does not order `changed` vs `cycle` when both hold (A2 and proto say cycle, B says changed). Not pinned → E3 badge carry.
 
 ## CN ambiguities resolved (for DSK; report-only)
 - CN-020/021 cite scope r4 `e77b396e`, but the brief names `cb3cba1e`. E1 follows the CNs plus the DSK choices in the brief. No conflict was found in §4/§7/§8.
@@ -94,7 +107,8 @@ Play never reads `parts`, `part`, `from` or `nudge_ms`. There is no UI in E1.
 | `tests/runtime/render/fx-doc.test.ts` | new, shipped (3 tests) | 40 | 33 |
 | `tests/editor/effect-e1.test.ts` | new, shipped (6 tests) | 70 | 62 |
 | `tests/editor/effect-e1-qa2.test.ts` | new, shipped (2 tests; QA, G6, verbatim) | 37 | 35 |
-Total ≤ 400 changed lines (proto 284).
+| `tests/editor/effect-e1-qa3.test.ts` | 0 → 34 / 37 (G6-adopted from QA builds A/B + the EA R-a line, sha256 `445dddd29f43d874774166139b77de76bbe16a0414e1cf9893e7493b54c2e8b3`; 3 tests) | 13 |
+Total ≤ 400 changed lines (proto 284). Merged A2 + fix + QA3 (ruling 13): 348.
 
 ## Interfaces to match (quoted exactly; bodies elided)
 ```ts
@@ -150,6 +164,11 @@ export function flatten(a: Source, b: Source, o: { base: "a" | "b"; mix: number;
 10. Seed 0 is clean, NaN/Infinity are `outOfRange`; the seed reaches every particle piece; one note per bad effect.
 11. Every missing picture is noted and skipped; the converter leaves its input untouched; spread needs a value above 0; a multi-beat part uses timing (that is, list position; ruling 10).
 
+`tests/editor/effect-e1-qa3.test.ts` (QA builds A/B, G6 at merge, ruling 13):
+12. Provenance: shared and diamond sources are `current`; a loop back to self and a self-loop are `cycle`.
+13. Converter: piece `ms` = len + hold + fade (fade on dim/stamp only); out-of-range `connect` is noted; `hold_ms` clamps to 0; an `at-time` first step starts at `start_at_ms`.
+14. Merge: `blendSeed` reads seeds through `variantSeed`; `flatten` runs Fit, including the preset cap and its lines.
+
 ## How a planted bug is caught (EA plants 27/27, `ede1-plants.py`; QA plants 20/20 with tests 10–11, review `9f5f1c69…`)
 | # | Plant | Caught by |
 |---|---|---|
@@ -182,7 +201,7 @@ export function flatten(a: Source, b: Source, o: { base: "a" | "b"; mix: number;
 | 27 | base hit not pinned | test 9 |
 
 ## Gates (Acceptance)
-- [ ] `npm ci && npm run green` exits 0 with **at least 753 passing** (742 + 11) and none failing, cancelled, skipped or todo. Typecheck, lint, deps, check:state and check:law each exit 0. (Proto: 753/0; deps 110 modules / 352 deps; `check:law OK (src)`.)
+- [ ] `npm ci && npm run green` exits 0 with **at least 756 passing** (742 + 11 + QA3's 3, ruling 13) and none failing, cancelled, skipped or todo. Typecheck, lint, deps, check:state and check:law each exit 0. (Proto: 753/0; A2 + fix + QA3: 756/0; deps 110 modules / 352 deps; `check:law OK (src)`.)
 - [ ] `node tools/pixel-suite/smoke.ts` prints `smoke: 0 failed`.
 - [ ] `npm run -s sim` prints stage-fixed 48/2 `afc89d56…` and stage-weighted 22/28 `b8007292…`.
 - [ ] `node tests/perf/stress-budget.ts` counts 27/0/0, 113/0/0, 181/0/0, 181/0/0, 27/373/0. Effects without `variant_seed` are byte-identical.
@@ -228,7 +247,7 @@ fe03968e117398ed6bb87b9a1e554b669e8be056f9b2d878f00318dbc3a879d6  tests/editor/e
 ```
 
 ## Delivery footer (must hold at hand-back)
-- `npm ci && npm run green` exits 0 with **at least 753 passing and 0 failing**. Paste the summary line, the smoke line, and the sim and stress lines into HANDBACK.md.
+- `npm ci && npm run green` exits 0 with **at least 756 passing and 0 failing** (ruling 13). Paste the summary line, the smoke line, and the sim and stress lines into HANDBACK.md.
 - All three shipped test files are **byte-identical** to the sha256s above.
 - The bundle is `3c969024..step/step-ed-e1-converter-seed-r<N>` and passes `git bundle verify`. Total changed lines ≤ 400. Every pin unchanged. Commits are `G-TileEngine <G-TileEngine@users.noreply.github.com>` (author and committer).
 
