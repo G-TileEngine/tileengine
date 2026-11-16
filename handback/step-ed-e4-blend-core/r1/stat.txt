@@ -1,0 +1,10 @@
+ src/editor/effect/fit.ts               | 37 ++++++++++++------
+ src/editor/effect/merge.ts             | 69 +++++++++++++++++++++++++++++++++
+ tests/editor/effect-e4-carries.test.ts | 45 +++++++++++++++++++++
+ tests/editor/effect-e4-qa.test.ts      | 35 +++++++++++++++++
+ tests/editor/effect-e4-qa2.test.ts     | 22 +++++++++++
+ tests/editor/effect-e4-qa3.test.ts     | 11 ++++++
+ tests/editor/effect-e4-r2.test.ts      | 35 +++++++++++++++++
+ tests/editor/effect-e4-r3.test.ts      | 19 +++++++++
+ tests/editor/effect-e4.test.ts         | 71 ++++++++++++++++++++++++++++++++++
+ 9 files changed, 332 insertions(+), 12 deletions(-)
