@@ -62,3 +62,17 @@ Set both buttons first, then tap "run again" if the run already started, and wai
 - Did anything look wrong? For example: blurry or soft pixels, bars at the edges in a different colour from the background, stutter when you turned the phone, or flicker.
 - Screenshots (file names):
 - Anything else:
+
+## Effect Designer S0: 2-minute A/B card (one idea per visit; step ed-s0)
+Date: · phone: · page link and build (short sha): · printed DPR and backing size: · picture note:
+Budget (every idea, on the S21 Ultra): shared p95 under 18.3 ms, page peak under 160 MB, no frame over 50 ms, dropped frames 1% or less, plus that idea's own on-minus-off p95 line shown on screen.
+Before scoring: press "60 fps cap: on" and "lite: off" first. Until then the card says NOT SCORED.
+What S0 does not prove (stubs; the real slices are tested later): tiers and react can read near zero on-minus-off, which is not a cost pass. Living is a different frame labelled VISUAL ONLY, not its own colours. Caster colour is a seeded stand-in. Export bakes one 13-tile cell at DPR 3 (about 23.4 MB), so do not use it as the export heap budget. React shows text only. The page cannot force DPR 3, so write down the DPR and backing size it prints.
+Open the page with `?bold=<token>&seed=<n>` (for example `?bold=breed&seed=7`; `?bold=off` is the baseline). Tokens in order: caster, breed, rhythm, export, tiers, path, linger6, react, fusion, living. A typo shows NOTICE and stays off.
+Set "60 fps cap: on" and "lite: off" (the card says NOT SCORED otherwise), then tap "run again". Hold the phone upright and do not turn it. The box shows OFF/ON, the block number and the seconds left: OFF 0–20 s, ON 20–40, OFF, ON, OFF, ON. At 120 s it says DONE and stops changing (the hash check runs then; a short pause is normal).
+S21 Ultra first, then the Red Magic 9 Pro. To check the page itself: `?bold=off`, then `export`, `living`, `fusion`, `path`.
+Send back a screenshot of the DONE box (it has no device identifiers), whether the budget line was RED, and anything that looked wrong (blur, stutter, flicker, a hitch when a block changes). Write the phone name on the "phone:" line and a few words on the "picture note:" line.
+
+| Phone | token | seed | cap / lite | off p95 | on p95 | delta | off / on dropped | max on | canvas peak | heap peak | hash | budget | notes |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| | | | | | | | | | | | | | |
