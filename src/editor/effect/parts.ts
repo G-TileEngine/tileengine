@@ -36,7 +36,17 @@ export function checkParts(doc: FxDocValues): Notice[] {
 export type Source = { readonly rev: number; readonly doc: FxDocValues } | null;
 export type FromState = "current" | "changed" | "removed" | "cycle";
 export function fromInfo(selfId: string, doc: FxDocValues, look: (effect: string) => Source): { part: string; state: FromState }[] {
-  const cyc = (start: string): boolean => { const seen = new Set<string>(), stack = [start]; while (stack.length > 0) { const id = stack.pop(); if (id === undefined) continue; if (id === selfId || seen.has(id)) return true; seen.add(id); const src = look(id); if (src === null) continue; for (const p of partsOf(src.doc)) if (p.from !== undefined) stack.push(p.from.effect); } return false; };
+  const cyc = (start: string): boolean => {
+    const gray = new Set<string>(), done = new Set<string>(), walk = (id: string): boolean => {
+      if (id === selfId || gray.has(id)) return true;
+      if (done.has(id)) return false;
+      const src = look(id); if (src === null) return false;
+      gray.add(id);
+      const hit = partsOf(src.doc).some((p) => p.from !== undefined && walk(p.from.effect));
+      gray.delete(id); if (!hit) done.add(id); return hit;
+    };
+    return walk(start);
+  };
   return partsOf(doc).flatMap((p) => { const from = p.from; if (from === undefined) return []; const src = look(from.effect); const state: FromState = src === null && from.effect !== selfId ? "removed" : cyc(from.effect) ? "cycle" : src !== null && src.rev === from.rev ? "current" : "changed"; return [{ part: p.id, state }]; });
 }
 export const exportClean = (doc: FxDocValues): FxDocValues => (!Array.isArray(doc["parts"]) ? doc : { ...doc, parts: doc["parts"].map((item) => { const o = rec(item); if (o === null) return item; const copy = { ...o }; delete copy["from"]; return copy; }) });
