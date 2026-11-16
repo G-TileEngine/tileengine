@@ -1,6 +1,7 @@
 import type { Clip, Sheet } from "./types.ts";
 import type { FxNote, FxPiece } from "./fx-player.ts";
 import type { LiveFx } from "./fx-live.ts";
+import { PATH, readPath } from "./fx-path.ts";
 export type DocStep = Readonly<Record<string, unknown>>;
 export type FxDocValues = Readonly<Record<string, unknown>>;
 export type DocHost = { readonly id: string; readonly castMs: number; readonly caster: string; readonly target?: string; readonly at?: { readonly c: number; readonly r: number }; readonly loopMs?: number; readonly sheetOf: (step: DocStep, i: number) => Sheet | null; readonly clipOf?: (step: DocStep, i: number) => Clip | undefined };
@@ -41,13 +42,22 @@ export function stepTimes(doc: FxDocValues): Timing {
   return { starts, lens, ends, hitIndex, hitMs, endMs: ends.reduce((m, e) => (e > m ? e : m), 0), notes };
 }
 export function docToLiveFx(doc: FxDocValues, host: DocHost): { fx: LiveFx; notes: FxNote[] } {
-  const timing = stepTimes(doc), steps = stepsOf(doc).slice(0, DOC.steps), notes = [...timing.notes], pieces: FxPiece[] = [];
+  const timing = stepTimes(doc), all = stepsOf(doc), steps = all.slice(0, DOC.steps), notes = [...timing.notes], pieces: FxPiece[] = [];
   for (let i = 0; i < steps.length; i += 1) {
     const s = steps[i] ?? {}; if (s["enabled"] === false) continue;
     const sheet = host.sheetOf(s, i); if (sheet === null) { notes.push({ code: "noPicture", message: `steps[${i}]` }); continue; }
     const clip = host.clipOf?.(s, i);
     const piece: Record<string, unknown> = { at: timing.starts[i] ?? 0, ms: (timing.ends[i] ?? 0) - (timing.starts[i] ?? 0), sheet, ...(clip === undefined ? {} : { clip }) };
     for (const k of STEP_KEYS) if (s[k] !== undefined) piece[k] = s[k];
+    const got = readPath(s, timing.starts[i] ?? 0, timing.lens[i] ?? 0); for (const b of got.bad) notes.push({ code: b.code, message: `steps[${i}].${b.field}` });
+    let path = got.path; const ride = s["ride"], can = (PATH.riders as readonly unknown[]).includes(s["kind"]) && (s["kind"] !== "flash" || s["flash_shape"] === "circle");
+    if (path === null && can && "ride" in s) {
+      const j = typeof ride === "string" && ride !== "" ? all.findIndex((t) => t["id"] === ride) : -1, t = j >= 0 ? all[j] : undefined;
+      if (typeof ride !== "string") notes.push({ code: "invalidValue", message: `steps[${i}].ride` });
+      else if (t === undefined || j >= DOC.steps || j === i || t["enabled"] === false || !(PATH.kinds as readonly unknown[]).includes(t["kind"])) notes.push({ code: "unknownRef", message: `steps[${i}].ride` });
+      else path = readPath(t, timing.starts[j] ?? 0, timing.lens[j] ?? 0).path;
+    }
+    if (path !== null) piece["path"] = path;
     pieces.push(piece as FxPiece);
   }
   const knobs: Record<string, unknown> = {}; for (const k of KNOBS) if (doc[k] !== undefined) knobs[k] = doc[k];
