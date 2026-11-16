@@ -1,0 +1,9 @@
+ src/editor/effect/fit.ts            | 65 +++++++++++++++++++++++++++++++++++++
+ src/editor/effect/parts.ts          | 55 +++++++++++++++++++++++++++++++
+ src/runtime/render/fx-doc.ts        | 56 ++++++++++++++++++++++++++++++++
+ src/runtime/render/fx-live.ts       |  7 ++--
+ src/runtime/render/fx-particles.ts  |  1 +
+ tests/editor/effect-e1-qa2.test.ts  | 35 ++++++++++++++++++++
+ tests/editor/effect-e1.test.ts      | 62 +++++++++++++++++++++++++++++++++++
+ tests/runtime/render/fx-doc.test.ts | 33 +++++++++++++++++++
+ 8 files changed, 311 insertions(+), 3 deletions(-)
