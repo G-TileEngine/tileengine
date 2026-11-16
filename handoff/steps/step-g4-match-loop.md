@@ -16,6 +16,8 @@ Carries: none filed. `package.json` (`1e5dd82c…`), the lock (`d7f64a09…`), `
 Make the tactics match loop solid before the modes build on it. Today `Clock.skip(ms)` runs every tick that `ms` is worth, with no limit (QA item 32: with a tick subscriber, `skip(MAX_SAFE_INTEGER)` never returns), and it drops the sub-tick remainder. A live host also has no shared way to hold a fuse that fires mid-move, to wait to save until the board is settled, or to keep UNDO_MOVE working across save and load. After this step, skip runs at most a capped amount of sim time per call and hands back the rest with a notice. An opt-in turn holder (`createTurn`) does the Modes flow, and saves carry its small state. The overlay, CLOSE and strict1 behaviour Modes asked for is pinned. `runMatch`, `runTicks`, the player and the chaos tools are not changed: sims and snapshots without a turn holder stay byte-equal.
 
 ## Rulings
+
+- G6 (merge time, QA A/B): a held MOVE_DONE must write sideEnd even when no `onFuse` is passed (build B broke this in cc9e63e2, then fixed it). QA's `tests/sim/save-continue-qa.test.ts` (f7ec0ebe, 22 lines) pins it; adopted, floor raised to 726.
 All rulings are EA (this kit) on the post-34 plan v2 (items 32, 34, 35, 36), Modes' rulings (`post34-consolidation.md`, Modes 06:07) and QA `docs/qa/post34-answers.md` row 11. Every one is pinned. Engine law (BUILD_GUIDE §2): the skip cap is a clock setting; offline estimates (offlineMode) are the modes layer's job and phone chunking is the host's; no game rule enters `src/core`.
 1. **Skip cap** (item 32): `ClockOptions.maxSkipMs`: an integer 1–86400000 (24 h). Anything else (absent, 0, negative, fractional, a string, null, over 24 h) gives the default 28800000 (8 h); out-of-range values are not clamped. The `maxSkipMs` getter reads it. `skip(ms)` returns `SkipResult = { remainderMs, notice? }`. The cap is sim time: the host ms one call may use are `max(1, floor(max(1, floor(maxSkipMs / stepMs)) · stepQ / scaleQ))` (stepQ = 4·stepMs, scaleQ = 4·timeScale). That rounds down, so a call never runs more than `floor(maxSkipMs / stepMs)` ticks beyond the kept quarter-ms remainder. A cap under one step still runs one step, so a remainder chain always gets through. `remainderMs` = `ms` − used (host ms). When it is above 0 the result has `notice: { code: "skipCapped", message: JSON {"capMs","remainderMs"} }`; otherwise there is no `notice` key. With timeScale 0 the call uses all of `ms` (no ticks, remainder 0). While paused, or inside a tick (P1's guard reports it), skip runs nothing and returns `{ remainderMs: 0 }` (time is dropped, as with paused `advance`). The quarter-ms remainder is kept in `accQ` as in `advance`, so `skip(a)` + `advance(b)` lands where `advance(a + b)` would (for `b ≤ maxFrameMs`), and a chain of remainders ends exactly where one uncapped skip ends. Render subscribers get the host ms that ran (`ms − remainderMs`; step 30's "not clamped to maxFrameMs" stands). World clocks keep the default (no `SimInput` field). `raf-driver`'s `catchUp`/stall path drops the remainder (not changed; see Not in this step). Pinned by the seven "G4 R1" titles and the moved pin below.
 2. **Overlays are host state** (save matrix): `snapshot()` writes `phases` without any key whose value starts with `overlay.`. So a save made with saveLoad or settings open (the host's overlay stack, STATES §2) holds only `battle`, and a load lands with no overlay: the host's stack starts at `overlay.none`. Clock pause is not saved either (a loaded clock runs). Other extra keys are still saved, and load still refuses them (`saveSnapshotPhasesInvalid`, as on the Base). Pinned by: "G4 R2 overlays are host state: an open saveLoad or settings overlay is not saved, and load lands in overlay.none with the clock running".
@@ -41,6 +43,7 @@ Size: at most 400 changed lines in total. The proto changes 371 lines (+358/−1
 | `src/sim/index.ts` | export `createTurn` and its types / 4 | 4–7 |
 | `tests/core/clock-skip.test.ts` | 0 → 65 (shipped) | 1 |
 | `tests/sim/save-continue.test.ts` | 0 → 138 (shipped) | 2, 4–8 |
+| `tests/sim/save-continue-qa.test.ts` | 0 → 22 (G6-adopted from QA A/B) | 4 |
 | `tests/state/flow-pins.test.ts` | 0 → 25 (shipped) | 3, 4 |
 | `tests/core/strict1.test.ts` | 0 → 45 (shipped) | 9 |
 | `tests/runtime/host/raf-driver.test.ts` | 2 lines (shipped; Ruling 1 pin move) | 1 |
@@ -77,6 +80,7 @@ Shipped files (copy verbatim from `origin/main`; never weaken, rename, skip or d
 |---|---|---|
 | `tests/core/clock-skip.test.ts` | `tests/core/clock-skip.test.ts` | `2ad0ca348728fff41176d4b965ebe6506ccafdef42f0c06a00e3bf0e3e7b083f` |
 | `tests/sim/save-continue.test.ts` | `tests/sim/save-continue.test.ts` | `7ea68e6c3ff12c18550c3a302e90794139d8f783baa877d64f0510c3e1f0b01f` |
+| `tests/sim/save-continue-qa.test.ts` | `tests/sim/save-continue-qa.test.ts` | `f7ec0ebeea079bdd858ba6b08c64578c3085d020cdee7f67c504b2b35369868e` |
 | `tests/state/flow-pins.test.ts` | `tests/state/flow-pins.test.ts` | `612003ab7a5f0e75a0ee4d74f6d455ada43dd8257a31795740fe667d3df7762a` |
 | `tests/core/strict1.test.ts` | `tests/core/strict1.test.ts` | `47e5d4b6dc3f0b5c7ad95e9db4b453070c5456906e173222282d8a77f31bada1` |
 | `tests/runtime/host/raf-driver.test.ts` | `tests/runtime/host/raf-driver.test.ts` (replaces it) | `bd68c9edb9482c02435cb3bd4860d07ae10454d34369fe02c60a479e3c3ad28c` |
@@ -107,7 +111,7 @@ Expected: **45/45 caught. On the Base the seven R1 tests fail and the save-conti
 `src/types/core-types.ts`; `src/state/**`; `src/core/**` except `src/core/clock/**`; `src/rules/**`; `src/runtime/**`; `src/sim/**` except `turn.ts`, `run.ts`, `types.ts`, `index.ts`; `package.json`; the lock; `.dependency-cruiser.cjs`; `scripts/check-law.sh`; `tsconfig.json`; `eslint.config.*`; `BUILD_GUIDE.md`; `STATES.md` and `docs/STATES.md`; `scripts/check-state.sh`; `tools/**`; every existing test file except `raf-driver.test.ts` shipped above; `locked/`; `data/*.md`; plus BUILD_GUIDE §7's never-edit list.
 
 ## Acceptance
-- [ ] `npm ci && npm run green` exits 0 with at least 725 tests passing (703 + the 22 new) and none failing, cancelled, skipped or todo; typecheck, lint, deps, check:law and check:state each exit 0.
+- [ ] `npm ci && npm run green` exits 0 with at least 726 tests passing (703 + the 22 new + QA's guard test) and none failing, cancelled, skipped or todo; typecheck, lint, deps, check:law and check:state each exit 0.
 - [ ] The five shipped files are byte-identical to the sha256s above.
 - [ ] `npm run -s sim` prints stage-fixed 48/2 `afc89d56…` and stage-weighted 22/28 `b8007292…`; the 21 smoke lines match the Base (heap line report-only); every pin other than the one listed move unchanged; `git diff e9b8056b --stat -- package.json package-lock.json BUILD_GUIDE.md src/types src/state src/rules src/runtime tools` is empty.
 - [ ] `node tools/pixel-suite/smoke.ts` prints `smoke: 0 failed`; `node tests/perf/stress-budget.ts` prints the Base's counts (27/0/0, 113/0/0, 181/0/0, 181/0/0, 27/373/0) and stress L p95 under 2 ms.
@@ -138,7 +142,7 @@ All under `/workspace/tileengine`, full sha256 in `/workspace/share/g4/push-sha2
 - EA ruling (scope): no overlap with G1/G2b files; one existing pin moves (raf-driver step 29).
 
 ## Delivery footer (must hold at hand-back)
-- `npm ci && npm run green` exits 0 with **at least 725 passing and 0 failing**. Paste the summary line into HANDBACK.md.
+- `npm ci && npm run green` exits 0 with **at least 726 passing and 0 failing**. Paste the summary line into HANDBACK.md.
 - The five shipped files are **byte-identical** to the sha256s above; list each in HANDBACK.md, and paste the sim lines, the stress lines and the `smoke: 0 failed` line.
 - The bundle is `<Base e9b8056b>..step/step-g4-match-loop-r<N>` and passes `git bundle verify`. Each file stays within its cap, and the total (insertions + deletions) is at most 400 changed lines (the proto is 371). Every pin other than the one listed move unchanged.
 
