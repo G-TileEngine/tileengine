@@ -1,0 +1,9 @@
+M	src/runtime/render/draw-list.ts
+M	src/runtime/render/fx-live.ts
+M	src/runtime/render/fx-particles.ts
+M	src/runtime/render/fx-player.ts
+M	src/runtime/render/types.ts
+M	src/runtime/scene/world-scene.ts
+A	tests/runtime/render/effect-pieces.test.ts
+M	tests/runtime/scene/fx-particles-qa.test.ts
+M	tests/runtime/scene/perf-34a.test.ts

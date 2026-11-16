@@ -1,0 +1,10 @@
+ src/runtime/render/draw-list.ts             |  2 +-
+ src/runtime/render/fx-live.ts               |  9 ++--
+ src/runtime/render/fx-particles.ts          | 20 +++++----
+ src/runtime/render/fx-player.ts             |  2 +-
+ src/runtime/render/types.ts                 |  2 +-
+ src/runtime/scene/world-scene.ts            |  4 +-
+ tests/runtime/render/effect-pieces.test.ts  | 69 +++++++++++++++++++++++++++++
+ tests/runtime/scene/fx-particles-qa.test.ts |  4 +-
+ tests/runtime/scene/perf-34a.test.ts        |  4 +-
+ 9 files changed, 95 insertions(+), 21 deletions(-)
