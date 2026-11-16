@@ -12,10 +12,10 @@ const world = (effects: LiveFx[]): SceneWorld => ({ cols: 10, rows: 6, tileW: 16
 const at = (w: SceneWorld, t: number): RenderScene => createSceneLink().scene(w, { tMs: t, stepMs: 10 });
 const tally = (s: RenderScene): Record<string, number> => (s.dots ?? []).reduce<Record<string, number>>((m, d) => ({ ...m, [d.colour]: (m[d.colour] ?? 0) + 1 }), {});
 
-test("QA 33b-3: a tint hit-white with no or a bad impact_colour paints #ffb048; a squashed unit keeps its squash and drops the recolour (Ruling 10)", () => {
+test("QA 33b-3: a tint hit-white with no or a bad impact_colour paints #ffb048; a squashed unit keeps its squash and its recolour (Ruling 10; G2b R5)", () => {
   assert.deepEqual([hitWhiteArg({ hit_white_ms: 60, hit_white_mode: "tint" }, 1300, 1320, undefined), hitWhiteArg({ hit_white_ms: 60, hit_white_mode: "tint", impact_colour: "red" }, 1300, 1320, undefined)], ["#ffb048", "#ffb048"]);
   const sheets = buildDrawList(at(world([fx({ squash: true, hit_white_ms: 60 })]), 1320), fit, cam, 1320, 10).cmds.map((c) => c.sheet);
-  assert.deepEqual([sheets.some((s) => s.startsWith("hero-sheet~sq")), sheets.some((s) => s.includes("~hw:"))], [true, false]);
+  assert.deepEqual([sheets.some((s) => s.startsWith("hero-sheet~sq")), sheets.some((s) => s.includes("~hw:"))], [true, true]);
 });
 
 test("QA 33b-3: pool ties drop the earlier effect; unit-layer particles draw in fxAir; the 300 cut takes the newest rects first (Rulings 6 and 7)", () => {
