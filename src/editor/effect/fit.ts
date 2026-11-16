@@ -61,5 +61,5 @@ export function flatten(a: Source, b: Source, o: { base: "a" | "b"; mix: number;
   const doc: Record<string, unknown> = { ...base.doc, parts: [...baseParts, ...movedParts], steps: [...baseSteps, ...moved], ...(typeof hitId === "string" ? { connect_step: hitId } : {}) };
   const seed = writeSeed(blendSeed(base.doc["variant_seed"], other.doc["variant_seed"], o.mix, o.base));
   if (seed === undefined) delete doc["variant_seed"]; else doc["variant_seed"] = seed;
-  return { doc, messages };
+  const done = fit(doc, [...baseSteps.map((): Side => "base"), ...moved.map((): Side => "other")], o.preset === true ? { preset: true } : {}); return { doc: done.doc, messages: [...messages, ...done.messages] };
 }

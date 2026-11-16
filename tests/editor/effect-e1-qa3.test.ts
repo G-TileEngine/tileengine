@@ -16,11 +16,12 @@ test("E1 QA3 provenance: a shared acyclic source is current; a loop back to this
   assert.deepEqual(st([P("a", "S")], { S: [P("a", "S")] }), ["cycle"]);
 });
 const host: DocHost = { id: "h", castMs: 0, caster: "u", sheetOf: () => ({ id: "fx", fw: 16, fh: 16, columns: 4 }) };
-test("E1 QA3 converter: a piece lasts len + hold_ms + fade_out_ms (fade on dim/stamp only); connect out of range is noted; hold_ms clamps to 0", () => {
+test("E1 QA3 converter: a piece lasts len + hold_ms + fade_out_ms (fade on dim/stamp only); connect out of range is noted; hold_ms clamps to 0; an at-time first step starts at start_at_ms (R-a)", () => {
   const doc: FxDocValues = { steps: [{ id: "a", kind: "stamp", seconds: 0.3, hold_ms: 200, fade_out_ms: 100 }, { id: "b", kind: "straight", seconds: 0.3, hold_ms: 150, fade_out_ms: 100 }] };
   assert.deepEqual(docToLiveFx(doc, host).fx.pieces.map((p) => [p.at, p.ms]), [[0, 600], [500, 450]]);
   assert.deepEqual(stepTimes({ steps: [{ id: "a" }], connect: 5 }).notes, [{ code: "outOfRange", message: "connect" }]);
   assert.deepEqual(stepTimes({ steps: [{ id: "a", seconds: 0.3, hold_ms: -500 }, { id: "b" }] }).starts, [0, 300]);
+  assert.deepEqual(stepTimes({ steps: [{ id: "a", start_mode: "at-time", start_at_ms: 250, seconds: 0.3 }, { id: "b" }] }).starts, [250, 550]);
 });
 test("E1 QA3 merge: blendSeed reads seeds through variantSeed; flatten runs Fit (sparks to 48, 32 for a preset; 12 steps) with its lines", () => {
   for (const bad of [-1, 2.5, 2 ** 31, Number.NaN, "5"]) assert.equal(blendSeed(bad, 7, 50, "a"), blendSeed(0, 7, 50, "a"));

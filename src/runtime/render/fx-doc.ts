@@ -21,7 +21,7 @@ export function stepTimes(doc: FxDocValues): Timing {
     let sec = known ?? DOC.secDefault;
     if (raw !== undefined && (known === null || known < DOC.secMin || known > DOC.secMax)) { notes.push({ code: "outOfRange", message: `steps[${i}].seconds` }); sec = known === null ? DOC.secDefault : Math.min(DOC.secMax, Math.max(DOC.secMin, known)); }
     lens.push(Math.round(sec * 1000)); const kind = s["kind"];
-    fades.push(kind === "stamp" || kind === "dim" ? Math.min(DOC.fadeMax, Math.max(0, Math.round(num(s["fade_out_ms"]) ?? 0))) : 0); holds.push(num(s["hold_ms"]) ?? 0);
+    fades.push(kind === "stamp" || kind === "dim" ? Math.min(DOC.fadeMax, Math.max(0, Math.round(num(s["fade_out_ms"]) ?? 0))) : 0); holds.push(clampMs(num(s["hold_ms"]) ?? 0));
     const m = s["start_mode"];
     if (m !== undefined && (typeof m !== "string" || !MODES.has(m))) { notes.push({ code: "outOfRange", message: `steps[${i}].start_mode` }); mode.push("after-last"); } else mode.push(typeof m === "string" ? m : "after-last");
     at.push(num(s["start_at_ms"]) ?? 0);
@@ -34,7 +34,7 @@ export function stepTimes(doc: FxDocValues): Timing {
   let hitMs = 0;
   for (let i = 0; i < n; i += 1) {
     const m = resolved[i] ?? "after-last", prev = starts[i - 1] ?? 0;
-    const st = i === 0 ? 0 : m === "at-hit" ? clampMs(hitMs + (at[i] ?? 0)) : m === "with-last" ? prev : m === "at-time" ? clampMs(at[i] ?? 0) : prev + (lens[i - 1] ?? 0) + (holds[i - 1] ?? 0);
+    const st = i === 0 && m !== "at-time" ? 0 : m === "at-hit" ? clampMs(hitMs + (at[i] ?? 0)) : m === "with-last" ? prev : m === "at-time" ? clampMs(at[i] ?? 0) : prev + (lens[i - 1] ?? 0) + (holds[i - 1] ?? 0);
     starts.push(st); if (i === hitIndex) hitMs = Math.ceil(st + Math.max(DOC.minHitLen, lens[i] ?? 0) * connect);
   }
   const ends = starts.map((st, i) => st + (lens[i] ?? 0) + (fades[i] ?? 0) + (holds[i] ?? 0));
@@ -45,8 +45,8 @@ export function docToLiveFx(doc: FxDocValues, host: DocHost): { fx: LiveFx; note
   for (let i = 0; i < steps.length; i += 1) {
     const s = steps[i] ?? {}; if (s["enabled"] === false) continue;
     const sheet = host.sheetOf(s, i); if (sheet === null) { notes.push({ code: "noPicture", message: `steps[${i}]` }); continue; }
-    const kind = s["kind"], fade = kind === "stamp" || kind === "dim" ? Math.min(DOC.fadeMax, Math.max(0, Math.round(num(s["fade_out_ms"]) ?? 0))) : 0, clip = host.clipOf?.(s, i);
-    const piece: Record<string, unknown> = { at: timing.starts[i] ?? 0, ms: (timing.lens[i] ?? 0) + fade, sheet, ...(clip === undefined ? {} : { clip }) };
+    const clip = host.clipOf?.(s, i);
+    const piece: Record<string, unknown> = { at: timing.starts[i] ?? 0, ms: (timing.ends[i] ?? 0) - (timing.starts[i] ?? 0), sheet, ...(clip === undefined ? {} : { clip }) };
     for (const k of STEP_KEYS) if (s[k] !== undefined) piece[k] = s[k];
     pieces.push(piece as FxPiece);
   }
