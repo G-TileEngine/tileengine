@@ -1,5 +1,5 @@
 {
-  "commit": "d982155b6cf266f6f0f79da813452312dfd45e11",
+  "commit": "35fa749f4ad395d56c9c19ba701ac9a11a7ff91a",
   "node": "24.22.1",
   "entry": "index.html",
   "files": {
@@ -20,9 +20,9 @@
     "src/runtime/render/fit.js": "67a8e225ca5371d397f702ab35ad4c086fb3eacabd8e0b14a87a13bb6bc8f006",
     "src/runtime/render/frames.js": "592cb8c4f760614b89b055faaee66b4f561df9c4e838ee9e2d9488a9f15570b7",
     "src/runtime/render/fx-light.js": "43854d6ff84c70e0ac605bbb41b7cad35d9f3dd961f9ccadcf2194775a07ed79",
-    "src/runtime/render/fx-live.js": "3c0c87e79eb6766ac1e9a7d7c9d7101ef4ff3913a85acac3a06e6c5f8348d75f",
+    "src/runtime/render/fx-live.js": "b0f42ec0c30d263c453c347f98d9b0cf0af503adfb0b346a368bb9db2abae795",
     "src/runtime/render/fx-look.js": "906ba11d8c8bc9fc25e0efaf47eb57dbccd7f6f1116be679b2c5ce423a897770",
-    "src/runtime/render/fx-particles.js": "1b5eb3e7ffe827dce311668f892ff36c1a102c22d4518f441169209fc2f847f8",
+    "src/runtime/render/fx-particles.js": "4bc35b9f8fa028e38529c248ff20af5b95cf638cba550c50a91d3aa7985a2618",
     "src/runtime/render/fx-player.js": "688d14d312e81278cf2d124b0b5036fae58a49d2885f083d64d6bedef02e2fd6",
     "src/runtime/render/index.js": "a7e9ddf55647d276d362943ee251fe0a48c8e4e1693348b25a01250303cc6692",
     "src/runtime/render/light.js": "64a5ad6e8a333254599b53c3745f518bce871a05537b26f73b98a87a896ae986",
@@ -32,7 +32,10 @@
     "src/runtime/render/water.js": "ecbe308a6f0daf366f8f46e3f47f89c4dc9f37bc32bff4abc0aee54052149296",
     "src/runtime/render/world-motion.js": "999f3e9b0585cce8461ba1abc9562d7cfc916b598edbc89809f09b19391e037a",
     "src/runtime/scene/world-scene.js": "79e0bbc60fb4ea5bc142c6ac0a9f44b53be5a2b65236c209db99d97fa6a0b696",
-    "tools/device-page/page.js": "10d7af9548f08af04e39c7d26f791761e8f1e3f7d7579914ae54a06871d4ca7b",
+    "tools/device-page/bold-stubs.js": "7a98398ccb26358c33244a526d420de06b16d2e8b97a476ba379d7755275d691",
+    "tools/device-page/bold-swatch.js": "1f92d5a860f51b98bba13f66c6a77fd2ca0d226f022e88d0867def24dff39e8f",
+    "tools/device-page/bold.js": "9156448e5d34189020e0093621970b60cc386d5165034195f8298bea22dc330a",
+    "tools/device-page/page.js": "a7369dc55a78200b588c9f314f21a5f2d7e3b7d9bec4e994062f74bc810e22bc",
     "tools/pixel-suite/fixture.js": "17fcbc0c676d6ce57d2dc9ef56c7aa5e05cb208d83f18b91909ca8a64c721a0e",
     "tools/pixel-suite/l2.js": "bc1d35abd3dfd0facdc44f20f9d2e96e102cfce4757b37ab215244af1cf38c30"
   }

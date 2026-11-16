@@ -18,6 +18,7 @@ export function particleRead(p                                                  
   const jitter = spread("jitter"), start_spread = spread("start_spread"), size_spread = spread("size_spread");
   return { motion: known ?? "burst", count: count.n, life: life.n, pull: pull.n, bad, ...(jitter > 0 ? { jitter } : {}), ...(start_spread > 0 ? { start_spread } : {}), ...(size_spread > 0 ? { size_spread } : {}) };
 }
+export const variantSeed = (v         )                                                              => v === undefined ? { seed: 0, bad: null } : typeof v !== "number" ? { seed: 0, bad: "invalidValue" } : Number.isInteger(v) && v >= 0 && v <= 2147483647 ? { seed: v, bad: null } : { seed: 0, bad: "outOfRange" };
 export function capCounts(counts                   )                                            {
   let left = PARTICLES.perEffect; const sum = counts.reduce((a, b) => a + b, 0);
   return { counts: counts.map((n) => { const k = Math.min(Math.max(0, n), Math.max(0, left)); left -= k; return k; }), over: sum > PARTICLES.perEffect ? sum : null };
