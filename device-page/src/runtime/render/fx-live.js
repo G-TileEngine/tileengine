@@ -1,6 +1,5 @@
-import { px } from "./camera.js";
 import { anchorPx } from "./draw-list.js";
-import { clipMs, hash32, instanceOffset } from "./frames.js";
+import { clipMs, footAt, hash32, instanceOffset } from "./frames.js";
 import { playerPx, shakeAt, shakeLen, shakePx, stopMs, warp,                              } from "./feel.js";
 import { pieceLook } from "./fx-look.js";
 import { FX_LIGHT, hitWhiteArg, hitWhiteMs, lightColour, lightMode, lightRadius, litTiles, popIsFlash, rampOf,            } from "./fx-light.js";
@@ -12,11 +11,16 @@ import { clipEvents, clipPoints, frameStart, hitAt, nextChangeMs, ownLight, plac
                                                                          
                                                           
                                                                                                                                                                                                                                                                     
-                                                                                                                   
-                                                                                                                                                                                                                                                                                                                                                                             
+                                                                                                                                                                                                                                                                                                                         
                                                                                                                                                                                                                                                                                                      
 const blank = ()             => ({ hand: [], tip: [], head: [], centre: [] }), NO_LIT        = { lights: [] };
-const pixScale = (s         )                              => { if (s === undefined || s === "match-sprite") return { k: 1, bad: false }; if (typeof s !== "number" || !Number.isFinite(s)) return { k: 1, bad: true }; const n = Math.round(s); return { k: Math.min(6, Math.max(1, n)), bad: n !== s || s < 1 || s > 6 }; };
+const mid = (p                    , tileW        , tileH        )                           => {
+  if (!("kind" in p)) return { x: p.x + p.sheet.fw / 2, y: p.y + p.sheet.fh / 2 };
+  const foot = footAt(p.c, p.r, tileW, tileH, p.dx ?? 0, p.dy ?? 0), mark = anchorPx(p.sheet);
+  return { x: foot.x - mark.x + (p.ox ?? 0) + p.sheet.fw / 2, y: foot.y - mark.y + (p.oy ?? 0) + p.sheet.fh / 2 };
+};
+const pixScale = (s         )                              => { if (s === undefined || s === null || s === "match-sprite") return { k: 1, bad: false }; if (typeof s === "string") return /^[1-6]$/.test(s) ? { k: Number(s), bad: false } : { k: 1, bad: true }; if (typeof s !== "number" || !Number.isFinite(s)) return { k: 1, bad: true }; const n = Math.round(s); return { k: Math.min(6, Math.max(1, n)), bad: n !== s || s < 1 || s > 6 }; };
+const litAt = (p                    , g          , k        )                           => { if (k === 1) return mid(p, g.tileW, g.tileH); const ax = anchorPx(p.sheet), x0 = "kind" in p ? footAt(p.c, p.r, g.tileW, g.tileH, p.dx ?? 0, p.dy ?? 0).x - ax.x + (p.ox ?? 0) : p.x, y0 = "kind" in p ? footAt(p.c, p.r, g.tileW, g.tileH, p.dx ?? 0, p.dy ?? 0).y - ax.y + (p.oy ?? 0) : p.y; return { x: x0 + ax.x + (p.sheet.fw / 2 - ax.x) * k, y: y0 + ax.y + (p.sheet.fh / 2 - ax.y) * k }; };
                                                                        
 export function clipIndex(clip      , tMs        , stepMs        , offsetMs        )         {
   const n = clip.frames.length;
@@ -45,7 +49,7 @@ export function createFxLive()         {
       return clip === undefined ? { actor } : { actor, clip };
     },
     frame(list, unitOf, t1, t2, grid) {
-      const lite = grid.lite === true, pose = poseMs(t2, lite), standing             = [], overlays            = [], fired              = [], views                         = {}, notes           = [], keep = new Set        (), kicks         = [], holds                           = {}, want          = [], bag                                                                        = [], spent           = [];
+      const lite = grid.lite === true, pose = poseMs(t2, lite), standing             = [], overlays            = [], fired              = [], views                         = {}, notes           = [], keep = new Set        (), kicks         = [], want          = [], bag                                                                        = [], spent           = [];
       let fxDraws = 0;
       const see = (id        , at        , type                 , name         )       => { if (t1 < at && at <= t2) fired.push(name === undefined ? { type, at, fx: id } : { type, at, name, fx: id }); };
       let playing = false;
@@ -83,17 +87,17 @@ export function createFxLive()         {
           const mode0 = lightMode(p);
           if (cell === null) { if (mode0 !== "off") { used += 1; if (used > (lite ? 1 : FX_LIGHT.perEffect) && !warned) { notes.push({ code: "fxLightsOverCap", message: e.id }); warned = true; } } continue; }
           slot.actor = actor; slot.mem = mem; slot.i = i; slot.spawn = p.attach !== "follow"; slot.freeze = !slot.spawn && p.detach === "hit"; slot.pose = pose; slot.hit = hit;
-          const placed = placeStep(p, start, drawT, hit, atUnit, { x: cell.c * grid.tileW + Math.round(grid.tileW / 2), y: (cell.r + 1) * grid.tileH }, grid.tileW, grid.tileH, grid.stepMs);
+          const placed = placeStep(p, start, drawT, hit, atUnit, footAt(cell.c, cell.r, grid.tileW, grid.tileH), grid.tileW, grid.tileH, grid.stepMs);
           const parts = reads[i];
-          if (parts != null && placed !== null) { const seed = hash32(grid.mapSeed, e.id, i, 0), ramp = rampOf([p.tint_ramp, e.tint_ramp], grid.ramps).ramp, ex = "kind" in placed ? placed.c * grid.tileW + px(grid.tileW / 2) + (placed.dx ?? 0) - anchorPx(placed.sheet).x + (placed.ox ?? 0) + placed.sheet.fw / 2 : placed.x + placed.sheet.fw / 2, ey = "kind" in placed ? (placed.r + 1) * grid.tileH + (placed.dy ?? 0) - anchorPx(placed.sheet).y + (placed.oy ?? 0) + placed.sheet.fh / 2 : placed.y + placed.sheet.fh / 2, band = "kind" in placed || placed.band === "ui" ? "fxAir"          : placed.band; for (let n = 0; n < (caps.counts[i] ?? 0); n += 1) { const dot = particleAt(parts, n, seed, drawT - (start + p.at), ramp, grid.reduce === true); if (dot !== null) bag.push({ born: start + p.at, ei, si: i, pi: n, dot: { band, x: ex + dot.x * scale.k, y: ey + dot.y * scale.k, size: dot.size * scale.k, colour: dot.colour, alpha: dot.alpha } }); } }
-          else if (placed !== null && drew < FX_BUDGET.effect && fxDraws < FX_BUDGET.total) { drew += 1; fxDraws += 1; const look = pieceLook(p.sheet.fw, p.sheet.fh, p.outline, p.blend, p.angle, rampOf([p.tint_ramp, e.tint_ramp], grid.ramps).ramp, lite, p.kind === "stamp" ? stamp : null); const extra = { ...(look === undefined ? {} : { look }), ...(scale.k > 1 ? { scale: scale.k } : {}), ...(p.blend === "add" && !("kind" in placed) ? { op: "add"          } : {}) }; if ("kind" in placed) standing.push(Object.assign(placed, ownLight(p) ? extra : { sceneLit: true         , ...extra })); else overlays.push(Object.assign(placed, ownLight(p) ? { selfLit: true         , ...extra } : extra)); }
+          if (parts != null && placed !== null) { const seed = hash32(grid.mapSeed, e.id, i, 0), ramp = rampOf([p.tint_ramp, e.tint_ramp], grid.ramps).ramp, centre = mid(placed, grid.tileW, grid.tileH), band = "kind" in placed ? "fxAir"          : placed.band === "ui" ? "flash"          : placed.band; for (let n = 0, nCap = caps.counts[i] ?? 0; n < (lite ? Math.ceil(nCap / 2) : nCap); n += 1) { const dot = particleAt(parts, n, seed, drawT - (start + p.at), ramp, grid.reduce === true, grid.tileW); if (dot !== null) bag.push({ born: start + p.at, ei, si: i, pi: n, dot: { band, x: centre.x + dot.x * scale.k, y: centre.y + dot.y * scale.k, size: dot.size * scale.k, colour: dot.colour, alpha: dot.alpha } }); } }
+          else if (placed !== null && drew < FX_BUDGET.effect && fxDraws < FX_BUDGET.total) { drew += 1; fxDraws += 1; const look = pieceLook(p.sheet.fw, p.sheet.fh, p.outline, p.blend, p.angle, rampOf([p.tint_ramp, e.tint_ramp], grid.ramps).ramp, lite, p.kind === "stamp" ? stamp : null); const extra = { ...(look === undefined ? {} : { look }), ...(scale.k > 1 ? { scale: scale.k } : {}), ...(p.blend === "add" ? { op: "add"          } : {}) }; if ("kind" in placed) standing.push(Object.assign(placed, ownLight(p) ? extra : { sceneLit: true         , ...extra })); else overlays.push(Object.assign(placed, ownLight(p) ? { selfLit: true         , ...extra } : extra)); }
           if (mode0 === "off") continue;
           used += 1; if (used > (lite ? 1 : FX_LIGHT.perEffect)) { if (!warned) { notes.push({ code: "fxLightsOverCap", message: e.id }); warned = true; } continue; }
           const rad = lightRadius(p.light_radius); if (rad.bad) notes.push({ code: "outOfRange", message: "light_radius" });
           const steady = lite || (grid.flashes === true && mode0 === "pop" && popIsFlash(rad.tiles, FX_LIGHT.flashTilePx)), tiles = litTiles(steady ? "steady" : mode0, rad.tiles, drawT, start + p.at, p.ms), col = lightColour(p, e.tint_ramp, grid.ramps);
           if (col.missing.length > 0 && !rampNoted) { notes.push({ code: "fxRampMissing", message: e.id }); rampNoted = true; }
           if (!(tiles > 0) || placed === null || want.length >= FX_LIGHT.onScreen) continue;
-          want.push({ x: "kind" in placed ? placed.c * grid.tileW + px(grid.tileW / 2) + (placed.dx ?? 0) - anchorPx(placed.sheet).x + (placed.ox ?? 0) + placed.sheet.fw / 2 : placed.x + placed.sheet.fw / 2, y: "kind" in placed ? (placed.r + 1) * grid.tileH + (placed.dy ?? 0) - anchorPx(placed.sheet).y + (placed.oy ?? 0) + placed.sheet.fh / 2 : placed.y + placed.sheet.fh / 2, radius: tiles * grid.tileW, colour: col.colour, keepInDim: true });
+          const centre = litAt(placed, grid, scale.k); want.push({ x: centre.x, y: centre.y, radius: tiles * grid.tileW, colour: col.colour, keepInDim: true });
         }
         spent[ei] = drew;
       }
@@ -108,7 +112,7 @@ export function createFxLive()         {
       let gateDue = Infinity;
       if (!same) { if (t2 < shownAt || t2 >= shownAt + FX_LIGHT.replanMs) { shown = want.length === 0 ? NO_LIT : { lights: want }; shownAt = t2; } else gateDue = shownAt + FX_LIGHT.replanMs; }
       const shake = shakeAt(kicks, t2);
-      return { standing, overlays, dots, fired, views, notes, holds, lit: shown, shake: { x: shake.x, y: shake.y }, dueMs: Math.min(playing ? nextChangeMs(t2, lite) : Infinity, shake.nextMs, gateDue) };
+      return { standing, overlays, dots, fired, views, notes, lit: shown, shake: { x: shake.x, y: shake.y }, dueMs: Math.min(playing ? nextChangeMs(t2, lite) : Infinity, shake.nextMs, gateDue) };
     },
   };
 }

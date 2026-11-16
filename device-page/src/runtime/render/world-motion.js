@@ -10,7 +10,7 @@ export const BAKE_BUDGET = 32 * 1024 * 1024, PLANS_MAX = 1024;
                                                                             
                                                                                                                                                                               
                                                                                                                                                                                                                                                                                                                                                          
-                                                                                                                                             
+                                                                                                                                                                                                                                                       
 const pack = (frames                   )         => {
   const fw = frames[0]?.w ?? 0, fh = frames[0]?.h ?? 0, n = frames.length, data = new Uint8ClampedArray(fw * n * fh * 4);
   for (let f = 0; f < n; f += 1) { const src = frames[f]?.data; if (src === undefined) continue; for (let y = 0; y < fh; y += 1) data.set(src.subarray(y * fw * 4, (y + 1) * fw * 4), (y * fw * n + f * fw) * 4); }
@@ -20,6 +20,7 @@ export function createWorldMotion(source             )              {
   const notes              = [], warned = new Set        (), plans = new Map              (), pics = new Map                                       ();
   let used = 0, rev = 0, shoreMap                  = null, shoreKey = "", shoreOn                                         = null;
   const warn = (owner        , code        , message        )       => { if (notes.length >= PLANS_MAX) return; const k = `${owner}\0${code}\0${message}`; if (warned.has(k)) return; warned.add(k); notes.push({ code, message }); };
+  const tell = (owner        , rows               )       => { for (const n of rows) warn(owner, n.code, n.hint === undefined ? owner : `${owner}: ${n.hint}`); };
   const touch =     (map                , key        )                => { const got = map.get(key); if (got === undefined) return undefined; map.delete(key); map.set(key, got); return got; };
   const keep = (id        , px        )         => {
     const prev = pics.get(id); if (prev !== undefined) { used -= prev.bytes; pics.delete(id); }
@@ -27,13 +28,13 @@ export function createWorldMotion(source             )              {
     return px;
   };
   const plan                      = (m, ramps, animated, fw, fh, owner) => {
-    if (m === null) return null; if (animated) { warn(owner, "motionInvalid", ANIM_HINT); return null; }
+    if (m === null) return null; if (animated) { tell(owner, [{ code: "motionInvalid", hint: ANIM_HINT }]); return null; }
     const key = `${hash32(0, JSON.stringify([m, ramps ?? null]), 0, 0)}s${fw}x${fh}`, got = touch(plans, key);
-    if (got !== undefined) return got.tile;
+    if (got !== undefined) { tell(owner, got.notes); return got.tile; }
     const baked = bakeMotion({ w: fw, h: fh, data: new Uint8ClampedArray(fw * fh * 4) }, m, ramps === undefined ? { animated } : { ramps, animated });
-    for (const code of baked.notices) warn(owner, code, code === "motionInvalid" && baked.message !== undefined ? baked.message : code);
-    if (baked.parts.length === 0) return null;
-    const row       = { tile: { key, n: baked.frames.length, parts: baked.parts }, m, ramps, fw, fh };
+    const rows = baked.notices.map((code)                        => ({ code, ...(code === "motionInvalid" && baked.message !== undefined ? { hint: baked.message } : {}) }));
+    tell(owner, rows); if (baked.parts.length === 0) return null;
+    const row       = { tile: { key, n: baked.frames.length, parts: baked.parts }, m, ramps, fw, fh, notes: rows };
     plans.set(key, row); while (plans.size > PLANS_MAX) { const k = plans.keys().next().value; if (k === undefined) break; plans.delete(k); }
     return row.tile;
   };

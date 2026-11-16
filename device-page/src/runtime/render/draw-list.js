@@ -1,6 +1,7 @@
-import { px, toDevice } from "./camera.js";
-import { frameAt, hash32, instanceOffset } from "./frames.js";
+import { toDevice } from "./camera.js";
+import { footAt, frameAt, hash32, instanceOffset } from "./frames.js";
 import { FX_BUDGET } from "./fx-particles.js";
+import { lookBox, lookId, rgbOf } from "./fx-look.js";
 import { motionAt } from "./motion.js";
 import { BANDS,                                                                                                                                                        } from "./types.js";
 
@@ -15,21 +16,21 @@ export const anchorPx = (sheet       )                           => {
 
 export function buildDrawList(scene             , fit     , cam     , tMs        , stepMs        )           {
   const cmds            = [];
-  let dueMs = Infinity;
+  let dueMs = scene.dueMs !== undefined && Number.isFinite(scene.dueMs) ? scene.dueMs : Infinity;
   const viewX0 = Math.floor(cam.devX / fit.s), viewY0 = Math.floor(cam.devY / fit.s), viewX1 = viewX0 + fit.artW + 1, viewY1 = viewY0 + fit.artH + 1;
   const hit = (x        , y        , w        , h        )          => x + w > viewX0 && x < viewX1 && y + h > viewY0 && y < viewY1;
   const push = (band                 , sheet       , frameOf                                         , x        , y        , op        , flipX         , pass = false, look         , scale         )       => {
     const k = scale !== undefined && scale > 1 ? scale : 1, ax = anchorPx(sheet); let w = sheet.fw, h = sheet.fh, ox = 0, oy = 0;
-    if (look !== undefined) { if (/(?:^|\|)[rn]\d/.test(look)) { const s = Math.ceil(Math.hypot(sheet.fw, sheet.fh)); ox += (s - sheet.fw) / 2; oy += (s - sheet.fh) / 2; w = s; h = s; } if (/(?:^|\|)ol#/.test(look)) { ox += 1; oy += 1; w += 2; h += 2; } }
+    if (look !== undefined) { const box = lookBox(sheet.fw, sheet.fh, look); w = box.w; h = box.h; ox = box.ox; oy = box.oy; }
     const x0 = x + ax.x - (ax.x + ox) * k, y0 = y + ax.y - (ax.y + oy) * k, dw = w * k, dh = h * k; if (!hit(x0, y0, dw, dh)) return;
     const fr = frameOf(); if (fr.nextMs < dueMs) dueMs = fr.nextMs;
     const cols = Math.max(1, sheet.columns), at = toDevice(x0, y0, cam, fit);
-    cmds.push({ band, sheet: look === undefined ? sheet.id : `${sheet.id}~fx${fr.frame}~${sheet.fw}x${sheet.fh}~${look}`, op, flipX, sx: look === undefined ? (fr.frame % cols) * sheet.fw : 0, sy: look === undefined ? Math.floor(fr.frame / cols) * sheet.fh : 0, sw: look === undefined ? sheet.fw : w, sh: look === undefined ? sheet.fh : h, dx: at.x, dy: at.y, dw: dw * fit.s, dh: dh * fit.s, ...(pass ? { selfLit: true } : {}) });
+    cmds.push({ band, sheet: look === undefined ? sheet.id : lookId(sheet.id, fr.frame, sheet.fw, sheet.fh, look), op, flipX, sx: look === undefined ? (fr.frame % cols) * sheet.fw : 0, sy: look === undefined ? Math.floor(fr.frame / cols) * sheet.fh : 0, sw: look === undefined ? sheet.fw : w, sh: look === undefined ? sheet.fh : h, dx: at.x, dy: at.y, dw: dw * fit.s, dh: dh * fit.s, ...(pass ? { selfLit: true } : {}) });
   };
-  const rgba = (hex        , a        )         => { const m = /^#([0-9a-f]{6})$/i.exec(hex); if (m?.[1] === undefined) return hex; const n = Number.parseInt(m[1], 16); return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`; };
+  const rgba = (hex        , a        )         => { const c = rgbOf(hex); return c === null ? hex : `rgba(${c[0]},${c[1]},${c[2]},${a})`; };
   const specks = (band                  , lit         )       => {
     const grp = new Map                  ();
-    for (const d of scene.dots ?? []) if (d.band === band && d.x >= viewX0 && d.y >= viewY0 && d.x + d.size <= viewX1 && d.y + d.size <= viewY1) { const key = d.alpha >= 1 ? d.colour : rgba(d.colour, d.alpha), at = toDevice(d.x, d.y, cam, fit), row = grp.get(key); if (row === undefined) grp.set(key, [at.x, at.y, d.size * fit.s, d.size * fit.s]); else row.push(at.x, at.y, d.size * fit.s, d.size * fit.s); }
+    for (const d of scene.dots ?? []) if (d.band === band && hit(d.x, d.y, d.size, d.size)) { const key = d.alpha >= 1 ? d.colour : rgba(d.colour, d.alpha), at = toDevice(d.x, d.y, cam, fit), row = grp.get(key); if (row === undefined) grp.set(key, [at.x, at.y, d.size * fit.s, d.size * fit.s]); else row.push(at.x, at.y, d.size * fit.s, d.size * fit.s); }
     for (const [colour, rects] of grp) cmds.push({ band, sheet: "", op: "normal", flipX: false, sx: 0, sy: 0, sw: 0, sh: 0, dx: 0, dy: 0, dw: 0, dh: 0, colour, rects, ...(lit ? { selfLit: true } : {}) });
   };
   const cells = (layers                      )       => {
@@ -40,7 +41,7 @@ export function buildDrawList(scene             , fit     , cam     , tMs       
         const tile = layer.tiles[r * scene.cols + c];
         if (tile === undefined || tile === null) continue;
         const clip = layer.anims?.[tile], mot = layer.motion?.[tile], sheet = mot === undefined ? layer.sheet : { ...layer.sheet, id: `${layer.sheet.id}~m${tile}~${mot.key}`, columns: mot.n };
-        push("base", sheet, () => (mot !== undefined ? motionAt(mot.parts, tMs, 0, 0) : clip !== undefined ? frameAt(clip, tMs, stepMs) : { frame: tile, nextMs: Infinity }), c * scene.tileW, (r + 1) * scene.tileH - layer.sheet.fh, "normal", false);
+        push("base", sheet, () => (mot !== undefined ? motionAt(mot.parts, tMs, 0, 0) : clip !== undefined ? frameAt(clip, tMs, stepMs) : { frame: tile, nextMs: Infinity }), c * scene.tileW, footAt(c, r, scene.tileW, scene.tileH).y - layer.sheet.fh, "normal", false);
       }
     }
   };
@@ -57,13 +58,13 @@ export function buildDrawList(scene             , fit     , cam     , tMs       
   };
   paint(scene.overlays.filter((o) => o.band === "fxGround"));
   specks("fxGround", false);
-  const order = scene.standing.map((st, i) => ({ st, i })).sort((a, b) => (a.st.r + 1) * scene.tileH + (a.st.dy ?? 0) - ((b.st.r + 1) * scene.tileH + (b.st.dy ?? 0)) || a.st.c - b.st.c || rank(a.st) - rank(b.st) || (a.st.z ?? 0) - (b.st.z ?? 0) || a.i - b.i);
+  const order = scene.standing.map((st, i) => ({ st, i, foot: footAt(st.c, st.r, scene.tileW, scene.tileH, st.dx ?? 0, st.dy ?? 0) })).sort((a, b) => a.foot.y - b.foot.y || a.st.c - b.st.c || rank(a.st) - rank(b.st) || (a.st.z ?? 0) - (b.st.z ?? 0) || a.i - b.i);
   const from = cmds.length;
-  for (const { st } of order) {
+  for (const { st, foot } of order) {
     const mot = st.motion, sq = st.squash === true && st.sheet.fh > 2, sheet = sq ? { ...st.sheet, id: `${st.sheet.id}~sq${st.frame ?? 0}~${st.sheet.fw}x${st.sheet.fh}`, fw: st.sheet.fw + 2, fh: st.sheet.fh - 2, columns: 1 } : mot === undefined ? st.sheet : { ...st.sheet, id: `${st.sheet.id}~m0~${mot.key}`, columns: mot.n };
     const mark = anchorPx(sheet);
     const off = instanceOffset(st.clip, stepMs, scene.mapSeed, st.key === undefined ? st.sheet.id : `${st.sheet.id}#${st.key}`, st.key === undefined ? st.c : 0, st.key === undefined ? st.r : 0) - (st.lagMs ?? 0);
-    push("base", sheet, () => (mot !== undefined ? motionAt(mot.parts, tMs, st.c * scene.tileW + (st.dx ?? 0), hash32(scene.mapSeed, st.sheet.id, st.c, st.r)) : st.clip ? frameAt(st.clip, tMs, stepMs, off) : { frame: st.frame ?? 0, nextMs: Infinity }), st.c * scene.tileW + px(scene.tileW / 2) + (st.dx ?? 0) - mark.x + (st.ox ?? 0), (st.r + 1) * scene.tileH + (st.dy ?? 0) - mark.y + (st.oy ?? 0), "normal", st.flipX === true, st.kind === "fxFront" && st.faceSwap !== true && st.sceneLit !== true, sq || mot !== undefined ? undefined : st.look, st.scale);
+    push("base", sheet, () => (mot !== undefined ? motionAt(mot.parts, tMs, st.c * scene.tileW + (st.dx ?? 0), hash32(scene.mapSeed, st.sheet.id, st.c, st.r)) : st.clip ? frameAt(st.clip, tMs, stepMs, off) : { frame: st.frame ?? 0, nextMs: Infinity }), foot.x - mark.x + (st.ox ?? 0), foot.y - mark.y + (st.oy ?? 0), st.op ?? "normal", st.flipX === true, st.kind === "fxFront" && st.faceSwap !== true && st.sceneLit !== true, mot !== undefined ? undefined : st.look, st.scale);
   }
   for (let i = from; i < cmds.length; i += 1) {
     const a = cmds[i]; if (a?.selfLit !== true) continue;

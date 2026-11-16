@@ -1,6 +1,8 @@
 import { px } from "./camera.js";
                                        
 
+export const footAt = (c        , r        , tileW        , tileH        , dx = 0, dy = 0)                           => ({ x: c * tileW + px(tileW / 2) + dx, y: (r + 1) * tileH + dy });
+
 export const badMs = (ms         )          => Array.isArray(ms) ? ms.some((v) => !(Number.isInteger(v) && (v          ) >= 1)) : ms != null;
 
 export function clipMs(clip      , stepMs        )           {

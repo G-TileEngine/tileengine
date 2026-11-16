@@ -1,6 +1,5 @@
-import { px } from "./camera.js";
 import { anchorPx } from "./draw-list.js";
-import { clipMs, frameAt } from "./frames.js";
+import { clipMs, footAt, frameAt } from "./frames.js";
                                                                  
                                                                              
 export const FX_PLAYER = { eventCap: 16, frameCap: 64, lagMaxMs: 500, gridMs: 30, liteGridMs: 60 }         ;
@@ -12,7 +11,7 @@ export const FX_PLAYER = { eventCap: 16, frameCap: 64, lagMaxMs: 500, gridMs: 30
                                                                              
                                                                                                                                                                  
                                                                                                                                                                                                                                                                     
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
 const note = (code        )         => ({ code, message: code });
 const NAMES = ["hand", "tip", "head", "centre"]         ;
 const centreOf = (box     )     => ({ x: box.x + Math.floor(box.w / 2), y: box.y + Math.floor(box.h / 2) });
@@ -100,7 +99,7 @@ export function placeStep(p         , effectStart        , tMs        , hitMs   
   if (unit === null) return { band: unitLayer ? "fxAir" : band, sheet: p.sheet, x: tileDraw.x, y: tileDraw.y, frame };
   const pt = p.anchor_point === "foot" ? anchorPx(unit.sheet) : pointAt(unit.points, p.anchor_point             , unit.frame, unit.box, unit.sheet.fw, unit.flipX === true);
   const mark = anchorPx(unit.sheet);
-  const ux = unit.c * tileW + px(tileW / 2) + (unit.dx ?? 0) - mark.x, uy = (unit.r + 1) * tileH + (unit.dy ?? 0) - mark.y;
+  const foot = footAt(unit.c, unit.r, tileW, tileH, unit.dx ?? 0, unit.dy ?? 0), ux = foot.x - mark.x, uy = foot.y - mark.y;
   if (!unitLayer) return { band, sheet: p.sheet, x: ux + pt.x - markFx.x, y: uy + pt.y - markFx.y, frame };
   const ox = pt.x - mark.x, oy = pt.y - mark.y, faceSwap = layer === "front-unit" && p.depth_by_facing !== false && unit.facesAway === true;
   return { kind: layer === "behind-unit" ? "fxBehind" : "fxFront", sheet: p.sheet, c: unit.c, r: unit.r, frame, ...(unit.dx === undefined ? {} : { dx: unit.dx }), ...(unit.dy === undefined ? {} : { dy: unit.dy }), ...(ox === 0 ? {} : { ox }), ...(oy === 0 ? {} : { oy }), ...(faceSwap ? { faceSwap: true } : {}) };

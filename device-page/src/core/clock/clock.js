@@ -1,4 +1,5 @@
-                                                                                                   
+                                                                                                               
+import { INT_MAX } from "../limits.js";
 import { isRecord, plainCopy } from "../plain.js";
 
 const DEFAULT_STEP_MS = 10;
@@ -15,6 +16,7 @@ export function createClock(opts               )        {
   opts = isRecord(raw) ? raw                 : undefined;
   const stepMs = intAtLeast1(opts?.stepMs, DEFAULT_STEP_MS);
   const maxFrameMs = intAtLeast1(opts?.maxFrameMs, DEFAULT_MAX_FRAME_MS);
+  const maxSkipMs = opts?.maxSkipMs !== undefined && Number.isInteger(opts.maxSkipMs) && opts.maxSkipMs >= 1 && opts.maxSkipMs <= 86_400_000 ? opts.maxSkipMs : 28_800_000;
   const stepQ = stepMs * 4;
   let accQ = 0;
   let scaleQ = 4;
@@ -22,6 +24,7 @@ export function createClock(opts               )        {
   let paused = false;
   let nextId = 1;
   let dead = false;
+  let ticking = false;
   const timers              = [];
   const tickSubs                            = [];
   const renderSubs                              = [];
@@ -33,6 +36,7 @@ export function createClock(opts               )        {
       try { cb(err); } catch { /* an onError throw is not reported again */ }
     }
   }
+  const busy = (name        )          => { if (!ticking) return false; report(new RangeError(`${name}: called inside a tick; ignored`)); return true; };
 
   function listen   (list     , cb   )              {
     if (dead) return () => {};
@@ -58,12 +62,15 @@ export function createClock(opts               )        {
   function runTick()       {
     tickN += 1;
     const simMs = tickN * stepMs;
-    fireDue(simMs);
-    const info           = { tick: tickN, simMs, stepMs };
-    for (const cb of tickSubs.slice()) {
-      if (!tickSubs.includes(cb)) continue;
-      try { cb(info); } catch (err) { report(err); }
-    }
+    ticking = true;
+    try {
+      fireDue(simMs);
+      const info           = { tick: tickN, simMs, stepMs };
+      for (const cb of tickSubs.slice()) {
+        if (!tickSubs.includes(cb)) continue;
+        try { cb(info); } catch (err) { report(err); }
+      }
+    } finally { ticking = false; }
   }
 
   function render(dtMs        )       {
@@ -84,6 +91,7 @@ export function createClock(opts               )        {
   return {
     advance(dtMs        )       {
       if (!Number.isInteger(dtMs) || dtMs < 0) throw new RangeError("advance: dtMs must be an integer >= 0");
+      if (busy("advance")) return;
       const dt = dtMs < maxFrameMs ? dtMs : maxFrameMs;
       if (!paused) {
         accQ += dt * scaleQ;
@@ -91,20 +99,29 @@ export function createClock(opts               )        {
       }
       render(dt);
     },
-    skip(ms        )       {
+    skip(ms        )             {
       if (!Number.isInteger(ms) || ms < 0) throw new RangeError("skip: ms must be an integer >= 0");
-      if (paused) return;
-      const end = tickN + Math.floor((ms * scaleQ) / stepQ);
+      if (busy("skip") || paused) return { remainderMs: 0 };
+      const budget = scaleQ === 0 ? ms : Math.max(1, Math.floor(Math.max(1, Math.floor(maxSkipMs / stepMs)) * stepQ / scaleQ));
+      const used = ms < budget ? ms : budget;
+      let end = tickN;
+      if (scaleQ !== 0) { accQ += used * scaleQ; end = tickN + Math.floor(accQ / stepQ); accQ -= (end - tickN) * stepQ; }
       while (tickN < end) {
         if (tickSubs.length > 0) { runTick(); continue; }
         let next = end;
         for (const t of timers) { if (t.dead) continue; const at = Math.max(tickN + 1, Math.ceil(t.dueMs / stepMs)); if (at < next) next = at; }
-        tickN = next; fireDue(tickN * stepMs);
-        if (tickSubs.length > 0) { const info           = { tick: tickN, simMs: tickN * stepMs, stepMs }; for (const cb of tickSubs.slice()) { if (!tickSubs.includes(cb)) continue; try { cb(info); } catch (err) { report(err); } } }
+        tickN = next;
+        ticking = true;
+        try {
+          fireDue(tickN * stepMs);
+          if (tickSubs.length > 0) { const info           = { tick: tickN, simMs: tickN * stepMs, stepMs }; for (const cb of tickSubs.slice()) { if (!tickSubs.includes(cb)) continue; try { cb(info); } catch (err) { report(err); } } }
+        } finally { ticking = false; }
       }
-      render(ms); // step 30 ruling: render subscribers get the skipped host time as dtMs (not clamped to maxFrameMs)
+      render(used); // step 30 ruling: render subscribers get the skipped host time as dtMs (not clamped to maxFrameMs)
+      const remainderMs = ms - used;
+      return remainderMs > 0 ? { remainderMs, notice: { code: "skipCapped", message: `{"capMs":${maxSkipMs},"remainderMs":${remainderMs}}` } } : { remainderMs };
     },
-    step()       { runTick(); render(0); },
+    step()       { if (busy("step")) return; runTick(); render(0); },
     pause()       { paused = true; accQ = 0; },
     resume()       { paused = false; },
     get paused()          { return paused; },
@@ -113,10 +130,11 @@ export function createClock(opts               )        {
     now()         { return tickN * stepMs; },
     tick()         { return tickN; },
     get stepMs()         { return stepMs; },
+    get maxSkipMs()         { return maxSkipMs; },
     onTick(cb)              { return listen(tickSubs, cb); },
     onRender(cb)              { return listen(renderSubs, cb); },
     after(ms        , cb            )           {
-      if (!Number.isInteger(ms) || ms < 0 || typeof cb !== "function") {
+      if (!Number.isInteger(ms) || ms < 0 || ms > INT_MAX || typeof cb !== "function") {
         report(new RangeError("after: ms must be an integer >= 0 and cb a function"));
         return { id: 0, dueMs: -1, cancel() {} };
       }

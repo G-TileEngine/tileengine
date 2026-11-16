@@ -1,11 +1,11 @@
 export { BANDS,                                                                                                                                                                                                                                            } from "./types.js";
 export { backingSize, fitView, scaleRange, snapScale } from "./fit.js";
 export { clampCamera, easeCamera, px, snapCamera, toDevice } from "./camera.js";
-export { badMs, clipMs, frameAt, hash32, instanceOffset } from "./frames.js";
+export { badMs, clipMs, footAt, frameAt, hash32, instanceOffset } from "./frames.js";
 export { buildDrawList } from "./draw-list.js";
 export { CHUNK, chunkId, chunkedList, isStatic } from "./chunk-plan.js";
 export { needsDraw, present } from "./dirty.js";
-export { openCell, visibleCells, createSight,               } from "./visibility.js";
+export { openCell, visibleCells, createSight, wallsFrom,               } from "./visibility.js";
 export { BANDS_OF_LIGHT, DARK_CAP, STEPS, WASH_MAX, createLighting, createMoonlit, darkness, lightOps,                                                                      } from "./light.js";
 export { SWAY_EDGE_PX, SWAY_LOOP, WIND_PX_PER_S, cycleFrames, scrollFrames, swayFrames, waveOffsetMs,             } from "./bakes.js";
 export { FOAM_PX, SHALLOW_PX, SHORE_DEFAULTS, SHORE_MAX, WAVE_GAP, shoreDistance, shoreFrames,                                   } from "./water.js";
@@ -16,5 +16,5 @@ export { FX_PLAYER, clipEvents, clipPoints, crossed, frameStart, hitAt, nextChan
 export { FEEL, mergeHolds, playerPx, shakeAt, shakeCam, shakeLen, shakePx, shiver, squashed, steadyUi, stopMs, warp,                                                     } from "./feel.js";
 export { FX_LIGHT, HIT_WHITE, brightPixels, cuesSuppressed, hitWhiteArg, hitWhiteMode, hitWhiteMs, lightColour, lightMode, lightRadius, litTiles, popFlashStarts, popIsFlash, rampOf, snapToRamp,                                                             } from "./fx-light.js";
 export { FX_BUDGET, FX_GROUND_ORDER, PARTICLES, capCounts, particleAt, particleRead,                             } from "./fx-particles.js";
-export { LOOK, lookId, lookPixels, lookSize, recolour, turnTag } from "./fx-look.js";
-export { clipIndex, createFxLive,                                                                                                     } from "./fx-live.js";
+export { LOOK, lookBox, lookId, lookPixels, lookSize, recolour, rgbOf, turnTag } from "./fx-look.js";
+export { clipIndex, createFxLive,                                                                                      } from "./fx-live.js";

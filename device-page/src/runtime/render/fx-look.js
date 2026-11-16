@@ -1,16 +1,18 @@
                                          
 import { brightPixels,            } from "./fx-light.js";
 export const LOOK = { outlineOverPx: 6, cacheBytes: 16 * 2 ** 20, buckets: 16, liteBuckets: 8, up: 3 }         ;
-export const lookSize = (fw        , fh        , look        )                           => {
-  let w = fw, h = fh; if (/(?:^|\|)[rn]\d/.test(look)) { const s = Math.ceil(Math.hypot(fw, fh)); w = s; h = s; } if (/(?:^|\|)ol#/.test(look)) { w += 2; h += 2; } return { w, h };
+export const lookBox = (fw        , fh        , look        )                                                   => {
+  let w = fw, h = fh, ox = 0, oy = 0; if (/(?:^|\|)[rn]\d/.test(look)) { const s = Math.ceil(Math.hypot(fw, fh)); ox = (s - fw) / 2; oy = (s - fh) / 2; w = s; h = s; } if (/(?:^|\|)ol#/.test(look)) { ox += 1; oy += 1; w += 2; h += 2; } return { w, h, ox, oy };
 };
+export const lookSize = (fw        , fh        , look        )                           => { const b = lookBox(fw, fh, look); return { w: b.w, h: b.h }; };
 export const turnTag = (deg                    , lite         )                => {
   if (typeof deg !== "number" || !Number.isFinite(deg)) return null;
   const n = lite ? LOOK.liteBuckets : LOOK.buckets, b = ((Math.round(deg / (360 / n)) % n) + n) % n;
   return b === 0 ? null : lite ? `n${b * 2}` : `r${b}`;
 };
 export const lookId = (id        , frame        , fw        , fh        , look        )         => `${id}~fx${frame}~${fw}x${fh}~${look}`;
-const hexOf = (arg        )                                  => { const m = /^#([0-9a-f]{6})$/i.exec(arg); if (m?.[1] === undefined) return null; const n = Number.parseInt(m[1], 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+export const rgbOf = (arg        )                                  => { const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(arg); if (m?.[1] === undefined) return null; const h = m[1].length === 3 ? `${m[1][0]}${m[1][0]}${m[1][1]}${m[1][1]}${m[1][2]}${m[1][2]}` : m[1], n = Number.parseInt(h, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+const hexOf = rgbOf;
 const pix = (p        , x        , y        )         => { if (x < 0 || y < 0 || x >= p.w || y >= p.h) return 0; const i = (y * p.w + x) * 4, a = p.data[i + 3] ?? 0; return a === 0 ? 0 : ((((p.data[i] ?? 0) << 24) | ((p.data[i + 1] ?? 0) << 16) | ((p.data[i + 2] ?? 0) << 8) | a) >>> 0); };
 const put = (data                   , i        , c        )       => { data[i] = c >>> 24; data[i + 1] = (c >>> 16) & 255; data[i + 2] = (c >>> 8) & 255; data[i + 3] = c & 255; };
 const scale3x = (src        )         => {
