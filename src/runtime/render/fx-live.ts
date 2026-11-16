@@ -92,7 +92,7 @@ export function createFxLive(): FxLive {
           let placed = placeStep(p, start, drawT, hit, atUnit, footAt(cell.c, cell.r, grid.tileW, grid.tileH), grid.tileW, grid.tileH, grid.stepMs);
           let ang = p.angle; const ac = caster?.actor ?? e.at, bc = target?.actor ?? e.at;
           if (placed !== null && p.path !== undefined && ac !== undefined && bc !== undefined) {
-            const A = footAt(ac.c, ac.r, grid.tileW, grid.tileH), B = footAt(bc.c, bc.r, grid.tileW, grid.tileH), H = footAt(cell.c, cell.r, grid.tileW, grid.tileH), spot = pathAt(p.path, drawT - start, A, B, grid.tileW, grid.tileH), dx = spot.x - H.x, dy = spot.y - H.y;
+            const named = p.anchor !== "screen" && (p.anchor_point === "hand" || p.anchor_point === "tip" || p.anchor_point === "head" || p.anchor_point === "centre" || p.anchor_point === "foot"), held = named ? atUnit(drawT) : null, A = footAt(ac.c, ac.r, grid.tileW, grid.tileH), B = footAt(bc.c, bc.r, grid.tileW, grid.tileH), H = footAt((held ?? cell).c, (held ?? cell).r, grid.tileW, grid.tileH), spot = pathAt(p.path, drawT - start, A, B, grid.tileW, grid.tileH), dx = spot.x - H.x, dy = spot.y - H.y;
             if ("kind" in placed) placed = { ...placed, ...(dx === 0 ? {} : { ox: (placed.ox ?? 0) + dx }), ...(dy === 0 ? {} : { oy: (placed.oy ?? 0) + dy }) }; else placed = { ...placed, x: placed.x + dx, y: placed.y + dy };
             if (isTravel(p.kind) && spot.deg !== null) ang = (p.angle ?? 0) + spot.deg;
           }
