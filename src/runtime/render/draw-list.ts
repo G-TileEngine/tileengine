@@ -64,7 +64,7 @@ export function buildDrawList(scene: RenderScene, fit: Fit, cam: Cam, tMs: numbe
     const mot = st.motion, sq = st.squash === true && st.sheet.fh > 2, sheet = sq ? { ...st.sheet, id: `${st.sheet.id}~sq${st.frame ?? 0}~${st.sheet.fw}x${st.sheet.fh}`, fw: st.sheet.fw + 2, fh: st.sheet.fh - 2, columns: 1 } : mot === undefined ? st.sheet : { ...st.sheet, id: `${st.sheet.id}~m0~${mot.key}`, columns: mot.n };
     const mark = anchorPx(sheet);
     const off = instanceOffset(st.clip, stepMs, scene.mapSeed, st.key === undefined ? st.sheet.id : `${st.sheet.id}#${st.key}`, st.key === undefined ? st.c : 0, st.key === undefined ? st.r : 0) - (st.lagMs ?? 0);
-    push("base", sheet, () => (mot !== undefined ? motionAt(mot.parts, tMs, st.c * scene.tileW + (st.dx ?? 0), hash32(scene.mapSeed, st.sheet.id, st.c, st.r)) : st.clip ? frameAt(st.clip, tMs, stepMs, off) : { frame: st.frame ?? 0, nextMs: Infinity }), foot.x - mark.x + (st.ox ?? 0), foot.y - mark.y + (st.oy ?? 0), "normal", st.flipX === true, st.kind === "fxFront" && st.faceSwap !== true && st.sceneLit !== true, sq || mot !== undefined ? undefined : st.look, st.scale);
+    push("base", sheet, () => (mot !== undefined ? motionAt(mot.parts, tMs, st.c * scene.tileW + (st.dx ?? 0), hash32(scene.mapSeed, st.sheet.id, st.c, st.r)) : st.clip ? frameAt(st.clip, tMs, stepMs, off) : { frame: st.frame ?? 0, nextMs: Infinity }), foot.x - mark.x + (st.ox ?? 0), foot.y - mark.y + (st.oy ?? 0), st.op ?? "normal", st.flipX === true, st.kind === "fxFront" && st.faceSwap !== true && st.sceneLit !== true, mot !== undefined ? undefined : st.look, st.scale);
   }
   for (let i = from; i < cmds.length; i += 1) {
     const a = cmds[i]; if (a?.selfLit !== true) continue;

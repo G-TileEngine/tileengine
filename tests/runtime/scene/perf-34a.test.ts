@@ -13,8 +13,8 @@ const river = [{ tileset: "river", aboveUnits: false, visible: true, tiles: wet 
 const world = (over: Partial<SceneWorld> = {}): SceneWorld => ({ cols: n, rows: n, tileW: 16, tileH: 16, mapSeed: 3, assets, layers: river, units: [unit("u0", 5), unit("u1", 7)], objects: [], overlays: [], style, waterTiles, ...over });
 const fx = (castMs: number): LiveFx => ({ id: `e@${castMs}`, castMs, caster: "u0", target: "u1", hitOffsetMs: 150, hit_stop_ms: 60, squash: true, hit_white_ms: 60, pieces: [{ at: 0, ms: 500, sheet: { id: "slash", columns: 8, fw: 8, fh: 8 }, clip: { name: "s", frames: [0, 1, 2, 3], ms: [60, 60, 60, 60], loop: false }, anchor: "target" }] });
 
-test("stress rig: draws per frame stay in budget, no notices, and the draw list hashes as on 1bd476bd (step 34a)", () => {
-  for (const [k, frames, want] of [["C", 60, "da3c665e805d5ce99ac34e7e8035e2d2aa402e662e87ee4ec64d52080d549a35"], ["L", 30, "18d97599b307e87da6b1da2809a3c5449839c19c320f64d2232393535234d644"]] as const) {
+test("stress rig: draws per frame stay in budget, no notices, and the draw list hashes as on 1bd476bd, C as after G2b R5 (step 34a)", () => {
+  for (const [k, frames, want] of [["C", 60, "b0e6cf1450dc8271666047eda703faba93cf54884c30a8b0f26a08ed81333dab"], ["L", 30, "18d97599b307e87da6b1da2809a3c5449839c19c320f64d2232393535234d644"]] as const) {
     const rig = stressRig(STRESS[k] ?? { size: 0, water: false, moving: 0, effects: 0 }, true); for (let f = 0; f < frames; f += 1) rig.frame(f);
     const [most = 0, , notices] = rig.counts(); assert.ok(most <= 300, `${k} ${most}`); assert.equal(notices, 0); assert.equal(rig.hash(), want, k);
   }

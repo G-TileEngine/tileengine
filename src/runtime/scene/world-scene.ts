@@ -69,7 +69,7 @@ function applyFeel(lags: Map<string, Lag>, base: readonly Standing[], world: Sce
     if (rec !== undefined && rec.ms > 0 && pose >= rec.from + rec.ms) { rec = { clip, lag: rec.lag + rec.ms, from: rec.from + rec.ms, ms: 0 }; lags.set(id, rec); }
     if (squashy.has(id)) return bare(st, frameAt(clip, Math.max(squashy.get(id) ?? pose, rec?.from ?? -Infinity) - (rec?.lag ?? 0), step, off).frame, { squash: true, ...(rec !== undefined && rec.lag > 0 ? { lagMs: rec.lag } : {}) });
     return rec !== undefined && rec.lag > 0 ? { ...st, lagMs: rec.lag } : st;
-    })(); const hw = st.key === undefined || next.squash === true ? undefined : looks.get(st.key); return hw === undefined ? next : { ...next, look: hw };
+    })(); const hw = st.key === undefined ? undefined : looks.get(st.key); return hw === undefined ? next : { ...next, look: hw };
   });
 }
 
@@ -99,7 +99,7 @@ export function createSceneLink(source?: FrameSource): SceneLink {
     if (evBad) push({ code: "clipEventInvalid", message: who(id, asset.sheet.id) }); if (ptBad) push({ code: "clipPointsInvalid", message: who(id, asset.sheet.id) }); if (capBad) push({ code: "clipEventsOverCap", message: who(id, asset.sheet.id) });
   };
   const link: SceneLink = {
-    notices, pixels: (id) => squashed(id, frames) ?? lookPixels(id, frames, rampNow) ?? wm.pixels(id), get fired() { return fired; }, get views() { return views; }, get shake() { return shakeNow; }, get lit() { return litNow; }, lagged: () => lags.size,
+    notices, pixels: (id) => squashed(id, frames) ?? lookPixels(id, (a, f, w, h) => squashed(a, frames) ?? frames(a, f, w, h), rampNow) ?? wm.pixels(id), get fired() { return fired; }, get views() { return views; }, get shake() { return shakeNow; }, get lit() { return litNow; }, lagged: () => lags.size,
     scene(world, clock) {
       rampNow = world.style?.ramps;
       const reduce = clock?.reduce === true, finite = clock !== undefined && Number.isFinite(clock.tMs), raw = standings(world, wm, reduce), base = finite && clock !== undefined ? applyFeel(lags, raw, world, clock) : raw;
