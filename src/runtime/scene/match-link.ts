@@ -1,9 +1,9 @@
 import type { Notice } from "../../core/notice.ts";
-import type { SceneObject, SceneUnit, SceneWorld } from "./world-scene.ts";
+import type { SceneAsset, SceneLayer, SceneObject, SceneUnit, SceneWorld } from "./world-scene.ts";
 export const MATCH = { units: 1024, patch: 16, board: { cols: 3, rows: 2 } } as const;
 export type MatchArt = {
   readonly cols: number; readonly rows: number; readonly tileW: number; readonly tileH: number; readonly mapSeed: number;
-  readonly assets: SceneWorld["assets"]; readonly layers: SceneWorld["layers"]; readonly sprites: Readonly<Record<string, string>>;
+  readonly assets: Readonly<Record<string, SceneAsset>>; readonly layers: readonly SceneLayer[]; readonly sprites: Readonly<Record<string, string>>;
   readonly objects?: readonly SceneObject[]; readonly style?: SceneWorld["style"]; readonly waterTiles?: SceneWorld["waterTiles"];
 };
 export type MatchScene = { readonly world: SceneWorld; readonly notes: readonly Notice[] };
