@@ -3,7 +3,7 @@ import { parseLog, type CommandLog, type LogEntry } from "../core/log/index.ts";
 import type { Notice } from "../core/notice.ts";
 import { NOT_PLAIN, isRecord, plainCopy } from "../core/plain.ts";
 import { SAVE_FORMAT, SAVE_MIGRATIONS, migrateSave, type SaveChains } from "./migrations/save/index.ts";
-import type { SimInput, SimSnapshot, SimWorld } from "./types.ts";
+import type { SimInput, SimSnapshot, SimWorld, TurnState } from "./types.ts";
 import { ALL_PHASES } from "../state/index.ts";
 import { submit } from "./actions.ts";
 import { createWorld } from "./world.ts";
@@ -17,6 +17,7 @@ export function advance(world: SimWorld, ms: number): void {
   if (!Number.isInteger(ms) || ms < 0 || ms % step !== 0) throw new RangeError("advance: ms must be an integer >= 0 and a multiple of stepMs");
   replayTicks(world, ms / step);
 }
+const asTurn = (v: unknown): TurnState | null => !isRecord(v) || Object.keys(v).length !== 3 || (v.sel !== null && typeof v.sel !== "string") || (v.fuseDueMs !== null && !Number.isInteger(v.fuseDueMs)) ? null : v.undo === null ? { sel: v.sel as string | null, undo: null, fuseDueMs: v.fuseDueMs as number | null } : isRecord(v.undo) && Object.keys(v.undo).length === 2 && typeof v.undo.unitId === "string" && isRecord(v.undo.at) && Object.keys(v.undo.at).length === 2 && Number.isInteger(v.undo.at.c) && Number.isInteger(v.undo.at.r) ? { sel: v.sel as string | null, undo: { unitId: v.undo.unitId, at: { c: v.undo.at.c as number, r: v.undo.at.r as number } }, fuseDueMs: v.fuseDueMs as number | null } : null;
 export function snapshot(world: SimWorld): SimSnapshot {
   const { clock, grid, units, rng, log } = world;
   const occupancy: [number, readonly string[]][] = [];
@@ -33,9 +34,10 @@ export function snapshot(world: SimWorld): SimSnapshot {
       offset: u.offset === null ? null : { dx: u.offset.dx, dy: u.offset.dy }, facing: u.facing, alive: u.alive,
     })),
     occupancy,
-    phases: { ...world.phases },
+    phases: Object.fromEntries(Object.entries(world.phases).filter(([, v]) => typeof v !== "string" || !v.startsWith("overlay."))),
     logSeq: log.lastSeq(),
     ...(world.levels === null ? {} : { levels: world.levels.state() }),
+    ...(world.turn === undefined ? {} : { turn: world.turn }),
   };
 }
 export function replay(input: SimInput, log: CommandLog, untilTick: number): SimWorld {
@@ -77,6 +79,7 @@ export function restore(input: SimInput, log: CommandLog, snap: SimSnapshot): Si
   const phases = shot.phases as Record<string, unknown>, keys = Object.keys(phases), have = Object.keys(world.phases);
   if (keys.length !== have.length || keys.some((k) => !have.includes(k) || !(ALL_PHASES as readonly unknown[]).includes(phases[k]))) throw new Error("restore: snapshot phases are not this world's");
   world.phases = { ...(phases as SimSnapshot["phases"]) };
+  const turn = asTurn(shot.turn); if (turn !== null) world.turn = turn;
   if (JSON.stringify(snapshot(world)) !== JSON.stringify(shot)) throw new Error("restore: snapshot does not match the log");
   return world;
 }

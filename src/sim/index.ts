@@ -15,3 +15,6 @@ export { CHAOS_KINDS, chaosIntents, gestureRecipes, runChaosGen } from "./chaos-
 export { shrinkChaos } from "./shrink.ts";
 export { EXPLOIT_KINDS, acceptedCheck, exploitWire, plainDeep, protoNames, replayExploit, runExploit } from "./exploit.ts";
 export { checkDoc, huntDocs, tamperDoc } from "./exploit-docs.ts";
+export { createTurn } from "./turn.ts";
+export type { SaveMeta, Turn, TurnOptions } from "./turn.ts";
+

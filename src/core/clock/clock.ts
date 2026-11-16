@@ -1,4 +1,4 @@
-import type { Clock, ClockOptions, RenderInfo, SimTimer, TickInfo, Unsubscribe } from "./types.ts";
+import type { Clock, ClockOptions, RenderInfo, SimTimer, SkipResult, TickInfo, Unsubscribe } from "./types.ts";
 import { INT_MAX } from "../limits.ts";
 import { isRecord, plainCopy } from "../plain.ts";
 
@@ -16,6 +16,7 @@ export function createClock(opts?: ClockOptions): Clock {
   opts = isRecord(raw) ? raw as ClockOptions : undefined;
   const stepMs = intAtLeast1(opts?.stepMs, DEFAULT_STEP_MS);
   const maxFrameMs = intAtLeast1(opts?.maxFrameMs, DEFAULT_MAX_FRAME_MS);
+  const maxSkipMs = opts?.maxSkipMs !== undefined && Number.isInteger(opts.maxSkipMs) && opts.maxSkipMs >= 1 && opts.maxSkipMs <= 86_400_000 ? opts.maxSkipMs : 28_800_000;
   const stepQ = stepMs * 4;
   let accQ = 0;
   let scaleQ = 4;
@@ -98,11 +99,13 @@ export function createClock(opts?: ClockOptions): Clock {
       }
       render(dt);
     },
-    skip(ms: number): void {
+    skip(ms: number): SkipResult {
       if (!Number.isInteger(ms) || ms < 0) throw new RangeError("skip: ms must be an integer >= 0");
-      if (busy("skip")) return;
-      if (paused) return;
-      const end = tickN + Math.floor((ms * scaleQ) / stepQ);
+      if (busy("skip") || paused) return { remainderMs: 0 };
+      const budget = scaleQ === 0 ? ms : Math.max(1, Math.floor(Math.max(1, Math.floor(maxSkipMs / stepMs)) * stepQ / scaleQ));
+      const used = ms < budget ? ms : budget;
+      let end = tickN;
+      if (scaleQ !== 0) { accQ += used * scaleQ; end = tickN + Math.floor(accQ / stepQ); accQ -= (end - tickN) * stepQ; }
       while (tickN < end) {
         if (tickSubs.length > 0) { runTick(); continue; }
         let next = end;
@@ -114,7 +117,9 @@ export function createClock(opts?: ClockOptions): Clock {
           if (tickSubs.length > 0) { const info: TickInfo = { tick: tickN, simMs: tickN * stepMs, stepMs }; for (const cb of tickSubs.slice()) { if (!tickSubs.includes(cb)) continue; try { cb(info); } catch (err) { report(err); } } }
         } finally { ticking = false; }
       }
-      render(ms); // step 30 ruling: render subscribers get the skipped host time as dtMs (not clamped to maxFrameMs)
+      render(used); // step 30 ruling: render subscribers get the skipped host time as dtMs (not clamped to maxFrameMs)
+      const remainderMs = ms - used;
+      return remainderMs > 0 ? { remainderMs, notice: { code: "skipCapped", message: `{"capMs":${maxSkipMs},"remainderMs":${remainderMs}}` } } : { remainderMs };
     },
     step(): void { if (busy("step")) return; runTick(); render(0); },
     pause(): void { paused = true; accQ = 0; },
@@ -125,6 +130,7 @@ export function createClock(opts?: ClockOptions): Clock {
     now(): number { return tickN * stepMs; },
     tick(): number { return tickN; },
     get stepMs(): number { return stepMs; },
+    get maxSkipMs(): number { return maxSkipMs; },
     onTick(cb): Unsubscribe { return listen(tickSubs, cb); },
     onRender(cb): Unsubscribe { return listen(renderSubs, cb); },
     after(ms: number, cb: () => void): SimTimer {

@@ -47,6 +47,8 @@ export type SimWorld = {
   readonly levels: Levels | null;
   /** Driver state, replaced whole (never written per key): `{ battle }` from step 09b. Not in the log. */
   phases: Readonly<Record<string, Phase>>;
+  /** Live turn holder only (`createTurn`). Absent on every other world, so older snapshots stay byte-equal. */
+  turn?: TurnState;
 };
 
 /** Plain JSON. In-flight actions (pending clock timers) are not in it: restore() replays the log to rebuild them. */
@@ -59,7 +61,11 @@ export type SimSnapshot = {
   readonly phases: Readonly<Record<string, Phase>>;
   readonly logSeq: number;
   readonly levels?: LevelsState;
+  readonly turn?: TurnState;
 };
+
+/** The live turn holder's plain JSON (step G4). Written only when `createTurn` has set `world.turn`. */
+export type TurnState = { readonly sel: string | null; readonly undo: { readonly unitId: string; readonly at: Sq } | null; readonly fuseDueMs: number | null };
 
 /** M6: the AI is a hook with no phase parameter; it returns the same actions a player would submit. */
 export type Budget = { readonly kind: "side" | "unit"; readonly units: readonly string[] };
