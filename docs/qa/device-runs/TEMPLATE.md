@@ -24,7 +24,7 @@
    - If it says the port "is already used by another program" (or "EADDRINUSE"), some other program is using that port; it may be another copy of this page. Close that program or terminal window (or restart the computer or phone) and try again, or type the other command it suggests, such as `node tools/serve.ts 8735`.
    - If it says "This needs Node v22.18 or newer", or "ERR_UNKNOWN_FILE_EXTENSION", this Node is too old to run the page: install a newer one first (see Before you start).
 4. It prints a link that starts with `http://` and ends with `/tools/device-page/`. Type that exact link into the phone's browser. (If it prints more than one, try the first; if it does not open, try the next.) Leave the terminal open. Press Ctrl+C there when you are done.
-5. Hold the phone upright and do not touch the screen. When the page says TURN THE PHONE SIDEWAYS NOW (about 40 s in), turn it.
+5. Before a scored run, close every other browser tab and do not screen-record (a 2026-11-16 S21 Ultra run with 15 tabs open was 5 ms slower at p95). Hold the phone upright and do not touch the screen. When the page says TURN THE PHONE SIDEWAYS NOW (about 40 s in), turn it.
 6. At 60 s the box at the top left says DONE. Copy its numbers into the table, or take a screenshot of it.
 7. Tap "pixel check" once. The box should then say "pixels PASS".
 
@@ -70,7 +70,7 @@ Before scoring: press "60 fps cap: on" and "lite: off" first. Until then the car
 What S0 does not prove (stubs; the real slices are tested later): tiers and react can read near zero on-minus-off, which is not a cost pass. Living is a different frame labelled VISUAL ONLY, not its own colours. Caster colour is a seeded stand-in. Export bakes one 13-tile cell at DPR 3 (about 23.8 MB), so do not use it as the export heap budget. React shows text only. The page cannot force DPR 3, so write down the DPR and backing size it prints.
 Open the page with `?bold=<token>&seed=<n>` (for example `?bold=breed&seed=7`; `?bold=off` is the baseline). Tokens in order: caster, breed, rhythm, export, tiers, path, linger6, react, fusion, living. A typo shows NOTICE and stays off.
 Set "60 fps cap: on" and "lite: off" (the card says NOT SCORED otherwise), then tap "run again". Hold the phone upright and do not turn it. The box shows OFF/ON, the block number and the seconds left: OFF 0–20 s, ON 20–40, OFF, ON, OFF, ON. At 120 s it says DONE and stops changing (the hash check runs then; a short pause is normal).
-S21 Ultra first, then the Red Magic 9 Pro. To check the page itself: `?bold=off`, then `export`, `living`, `fusion`, `path`.
+S21 Ultra first, then the Red Magic 9 Pro. Close every other browser tab first and do not screen-record during a scored run. To check the page itself: `?bold=off`, then `export`, `living`, `fusion`, `path`.
 Send back a screenshot of the DONE box (it has no device identifiers), whether the budget line was RED, and anything that looked wrong (blur, stutter, flicker, a hitch when a block changes). Write the phone name on the "phone:" line and a few words on the "picture note:" line.
 
 | Phone | token | seed | cap / lite | off p95 | on p95 | delta | off / on dropped | max on | canvas peak | heap peak | hash | budget | notes |

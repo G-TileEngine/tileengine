@@ -36,7 +36,7 @@ A `bytes` limit above the ceiling is **rejected, not clamped**: `parseLog` → `
 
 `readSpriteRecipe` runs `measure` before `copy` (`src/paint/recipe/read.ts:28-35, 57-59`). The same 300,000 short-key over-cap document (`bytes: 1,000,000`) was refused as `over cap bytes` on both trees. Heap delta with `--expose-gc`: **8.73 MiB** on this proto vs **29.14 MiB** on `18f7899`. The official test bound is 12 MiB; EA’s “about 4 vs 19–28” is the same class of improvement. The in-cap 17× short-key case is still deferred (see Carries).
 
-**5. Frozen copies / `setOffset` / `feedIntent`.** `units.get` / `all` return frozen copies (record and cell); a write to the copy throws and does not reach state. `setOffset` stores a frozen copy of the caller’s object. `feedIntent` reads the intent once through `plainCopy` (getter spy count = 1) (`src/core/unit/units.ts:79-85`, `src/sim/intents.ts:31-38`).
+**5. Frozen copies / `setOffset` / `feedIntent`.** `units.get` / `all` return frozen copies (record and cell); a write to the copy throws and does not reach state. `setOffset` stores a frozen copy of the caller’s object. `feedIntent` reads the intent once through `plainCopy` (getter spy count = 1) (`src/core/unit/units.ts:79-85`, `src/sim/intents.ts:20-23`; pinned by `tests/sim/speed-memory.test.ts:74`).
 
 **6. Cyclic document; s22 M5.** A document whose `kind` is itself is `cyclic document` from `readMap` / `readManifest` / `readStage`. A shared (not cyclic) object is still `wrong kind object`. A throwing proxy stays `unreadable document`. The walk runs only after a generic failure (`src/project/read/guard.ts`). The old s22 M5 (“the map ignores the maker’s limits”) was typography on the earlier-plant script (`docLimits(limits ?? {})` already gone); it is not re-opened by this step and is not a proto defect. SE2, the actual prior test gap, is closed (see Numbers).
 
@@ -50,7 +50,7 @@ None.
 
 ## Carries (deferred, already named — not holds)
 
-1. **Step 26, gh-pages cleanup** — `ConvertEngine.init` / `new Function` (`js/convert-engine.js:49`) and unescaped session unit ids in `app.js` `innerHTML`. Not engine code. (`step-25-speed-memory.md:168`; spine `:115`.)
+1. **Step 26, gh-pages cleanup** — `ConvertEngine.init` / `new Function` (gh-pages 95aca17 `js/convert-engine.js:49`; removed by step 26, gh-pages fb7b183) and unescaped session unit ids in `app.js` `innerHTML`. Not engine code. (`step-25-speed-memory.md:168`; spine `:115`.)
 2. **Renderer** — clock pile-up on a long `durationMs` (today bounded by the 16,384 ms cap). (`step-25-speed-memory.md:169`.)
 3. **In-cap 17× recipe heap** — many short keys still cost about 17× the measure (~34 MiB at the 2 MiB default). Tightening the measure is a rule change, not an engineering fix in this step. (`step-25-speed-memory.md:170`.)
 4. **Consistent-but-live direct reader** — a direct `readMap` / `readManifest` / `readStage` on a *consistent* live document can return values a second read would change. `createWorld` copies first. (`step-25-speed-memory.md:171`.)
