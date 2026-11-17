@@ -13,7 +13,7 @@ function install(k: KnobReader): StepRule | null {
   const chosen = k.get("pattern"), cap = k.get("max_step"), reach = typeof chosen === "string" ? PLAYED[chosen] : undefined;
   if (reach === undefined) { k.unsupported("pattern", String(chosen)); return null; }
   if (typeof cap !== "number" || !Number.isInteger(cap) || cap < 1) { k.unsupported("max_step", `${String(cap)} is not a whole number ≥ 1`); return null; }
-  const notes: Notice[] = reach > cap ? [{ code: "stepClamped", message: `step-pattern.pattern ${chosen} reaches ${reach}, max_step ${cap}` }] : [];
+  const notes: Notice[] = reach > cap ? [Object.freeze({ code: "stepClamped", message: `step-pattern.pattern ${chosen} reaches ${reach}, max_step ${cap}` })] : [];
   return Object.freeze({ reach: Math.min(reach, cap), notes: Object.freeze(notes) });
 }
 
