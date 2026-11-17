@@ -9,6 +9,7 @@ import type { Rng, RngState } from "../core/rng/index.ts";
 import type { Notice } from "../core/notice.ts";
 import type { Event, Outcome, Phase } from "../state/index.ts";
 import type { FuseSetting } from "../rules/turns/fuse.ts";
+import type { Battle, BattleSetup, BattleState } from "../rules/battle/index.ts";
 import type { GestureOptions, Intent } from "../runtime/input/index.ts";
 import type { StageLimits } from "../project/read/index.ts";
 import type { LevelSetup, Levels, LevelsState } from "../rules/levels/index.ts";
@@ -30,6 +31,7 @@ export type SimInput = {
   readonly limits?: MatchLimits;
   /** Levelling with a pick of abilities (step 18): absent = off (no XP, no offers, no draws, snapshots as before). */
   readonly levels?: LevelSetup;
+  readonly rules?: BattleSetup;
   readonly hostSeed: number;
   readonly engineVersion: string;
   readonly projectHash: string;
@@ -46,6 +48,7 @@ export type SimWorld = {
   readonly notices: Notice[];
   readonly limits: MatchLimits;
   readonly levels: Levels | null;
+  readonly rules: Battle | null;
   /** Driver state, replaced whole (never written per key): `{ battle }` from step 09b. Not in the log. */
   phases: Readonly<Record<string, Phase>>;
   /** Live turn holder only (`createTurn`). Absent on every other world, so older snapshots stay byte-equal. */
@@ -63,6 +66,7 @@ export type SimSnapshot = {
   readonly logSeq: number;
   readonly levels?: LevelsState;
   readonly turn?: TurnState;
+  readonly rules?: BattleState;
 };
 
 /** The live turn holder's plain JSON (step G4). Written only when `createTurn` has set `world.turn`. */
@@ -128,7 +132,7 @@ export type Seat = {
   /** Called after each input is fed and, for a move, landed: invariant checks and per-step snapshot hashes hang here. */
   readonly onStep?: (step: PlayerStep, world: SimWorld) => void;
 };
-/** Chaos harness (step 12): the eight snapshot keys, one recorded input, and a promise checked after every step. */
+/** Chaos harness (step 12): the nine snapshot keys, one recorded input, and a promise checked after every step. */
 export type SnapshotKey = keyof SimSnapshot;
 export type ChaosMove = { readonly call: number; readonly side: SideId; readonly tick: number; readonly intent: DoorIntent; readonly aim: Sq | null };
 /** `prev` = after the last step; `before` / `fed` = just before / after the feed; `after` = after landing. */

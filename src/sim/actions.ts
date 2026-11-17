@@ -18,6 +18,7 @@ function apply(world: SimWorld, action: Action): void {
     else if (world.levels !== null) { const unit = world.units.get(action.actor); if (unit !== undefined) { const bar = world.levels.barOf(unit); world.levels.gain(bar.id, bar.pool, world.levels.rules.xp.move); } }
     return;
   }
+  if ((action.kind === "ability" || action.kind === "interact") && world.rules !== null) { const no = world.rules.act(action); if (no !== null) note(world, no); return; }
   note(world, { code: "actionUnsupported", message: "action unsupported" });
 }
 export function submit(world: SimWorld, action: Action): void {

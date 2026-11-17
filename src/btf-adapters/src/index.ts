@@ -5,3 +5,4 @@ export { BTF_LEVEL_LIMITS, BTF_LEVEL_RULES } from "./levels.ts";
 export { BTF_MATCH_LIMITS } from "./match-limits.ts";
 export { BTF_SPRITE_RECIPE_LIMITS } from "./sprite-recipe-limits.ts";
 export { BTF_MOVE_DEFAULTS } from "./btf-defaults/move.ts";
+export { BTF_BATTLE_DEFAULTS } from "./btf-defaults/battle.ts";

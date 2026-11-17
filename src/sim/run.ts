@@ -38,6 +38,7 @@ export function snapshot(world: SimWorld): SimSnapshot {
     logSeq: log.lastSeq(),
     ...(world.levels === null ? {} : { levels: world.levels.state() }),
     ...(world.turn === undefined ? {} : { turn: world.turn }),
+    ...(world.rules === null ? {} : { rules: world.rules.state() }),
   };
 }
 export function replay(input: SimInput, log: CommandLog, untilTick: number): SimWorld {
@@ -80,7 +81,8 @@ export function restore(input: SimInput, log: CommandLog, snap: SimSnapshot): Si
   if (keys.length !== have.length || keys.some((k) => !have.includes(k) || !(ALL_PHASES as readonly unknown[]).includes(phases[k]))) throw new Error("restore: snapshot phases are not this world's");
   world.phases = { ...(phases as SimSnapshot["phases"]) };
   const turn = asTurn(shot.turn); if (turn !== null) world.turn = turn;
-  if (JSON.stringify(snapshot(world)) !== JSON.stringify(shot)) throw new Error("restore: snapshot does not match the log");
+  const { rules, ...rest } = snapshot(world), mine = Object.hasOwn(shot, "rules") ? { ...rest, rules } : rest;
+  if (JSON.stringify(mine) !== JSON.stringify(shot)) throw new Error("restore: snapshot does not match the log");
   return world;
 }
 export type SaveRefusal = { readonly ok: false; readonly code: "saveEngineMismatch" | "saveProjectMismatch" | "saveFormatNewer" | "saveFormatOlder" | "saveMigrationFailed" | "saveTooLarge" | "saveTooDeep" | "saveSnapshotTickInvalid" | "saveSnapshotPhasesInvalid"; readonly needsMigration: boolean };

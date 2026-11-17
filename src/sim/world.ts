@@ -9,6 +9,7 @@ import { createRng, streamSeed } from "../core/rng/index.ts";
 import { createUnits } from "../core/unit/index.ts";
 import { readManifest, readMap, readStage, resolvePlacements, stageSeed, type ReadResult } from "../project/read/index.ts";
 import { LEVEL_EVENTS, createLevels } from "../rules/levels/index.ts";
+import { BATTLE_EVENTS, createBattle } from "../rules/battle/index.ts";
 import type { SimInput, SimWorld } from "./types.ts";
 
 function fail(doc: string, read: ReadResult<unknown>): Error {
@@ -40,7 +41,7 @@ export function createWorld(input: SimInput): SimWorld {
   if (stage.doc.mapRef !== map.doc.id) throw new Error(`mapRef ${stage.doc.mapRef}`);
   const seed = stageSeed(stage.doc) ?? input.hostSeed;
   const clock = createClock();
-  const bus = createBus(clock, input.levels === undefined ? undefined : LEVEL_EVENTS, input.busLimits);
+  const bus = createBus(clock, input.rules === undefined ? (input.levels === undefined ? undefined : LEVEL_EVENTS) : { mode: "battle", types: [...(input.levels === undefined ? [] : LEVEL_EVENTS.types), ...BATTLE_EVENTS.types] }, input.busLimits);
   const settings = manifest.doc.project.settings;
   const grid = createGrid(map.doc, input.tiles, { wrapEdges: settings.wrapEdges });
   const units = createUnits(grid, {
@@ -58,7 +59,8 @@ export function createWorld(input: SimInput): SimWorld {
   for (const p of placed.placements) units.place(p);
   const notices: Notice[] = [];
   const levels = input.levels === undefined ? null : createLevels(input.levels, createRng(streamSeed(seed, "levels")), (event) => bus.emit(event));
-  const world: SimWorld = { seed, clock, grid, units, bus, log, rng: createRng(streamSeed(seed, "match")), notices, levels, phases: { battle: "play.loading" }, limits };
+  const rules = input.rules === undefined ? null : createBattle(input.rules, units, grid, (event) => bus.emit(event));
+  const world: SimWorld = { seed, clock, grid, units, bus, log, rng: createRng(streamSeed(seed, "match")), notices, levels, rules, phases: { battle: "play.loading" }, limits };
   for (const item of [...grid.notices, ...placed.notices, ...units.notices]) note(world, item);
   return world;
 }
