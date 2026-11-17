@@ -80,7 +80,7 @@ export function createCastFx(host: CastFxHost): CastFx {
       capped = false;
       const keep = held.filter((row) => nowMs <= row.atMs + row.end);
       if (keep.length !== held.length) { held = keep; shown = undefined; }
-      const vis = held.filter((row) => row.atMs <= nowMs).map((row) => row.fx);
+      const vis = held.map((row) => row.fx);
       if (shown !== undefined && shown.length === vis.length && shown.every((fx, i) => fx === vis[i])) return shown;
       shown = vis;
       return shown;
