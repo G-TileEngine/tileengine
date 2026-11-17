@@ -1,6 +1,6 @@
 import type { Store } from "../../src/editor/effect/save.ts";
-type Handle = { getFile(): Promise<{ text(): Promise<string> }>; createWritable(): Promise<{ write(text: string): Promise<void>; close(): Promise<void> }> };
-export type Dir = { getDirectoryHandle(name: string, o?: { create?: boolean }): Promise<Dir>; getFileHandle(name: string, o?: { create?: boolean }): Promise<Handle>; removeEntry(name: string): Promise<void> };
+type FileHandle = { getFile(): Promise<{ text(): Promise<string> }>; createWritable(): Promise<{ write(text: string): Promise<void>; close(): Promise<void> }> };
+export type Dir = { getDirectoryHandle(name: string, o?: { create?: boolean }): Promise<Dir>; getFileHandle(name: string, o?: { create?: boolean }): Promise<FileHandle>; removeEntry(name: string): Promise<void> };
 const miss = (e: unknown): boolean => e instanceof Error && e.name === "NotFoundError";
 export function opfsStore(root: Dir): Store {
   const dirOf = async (name: string, create: boolean): Promise<{ dir: Dir; leaf: string }> => {

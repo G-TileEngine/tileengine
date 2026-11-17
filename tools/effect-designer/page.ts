@@ -38,7 +38,7 @@ const save = async (): Promise<void> => { if (picked === undefined) return; try 
   if ("error" in out) { say(out.message); return; }
   const done = await commit(store, out.docs, revs, { absent: out.absent }); if ("error" in done) { say(`Not saved: ${done.name} changed. Nothing was changed.`); return; }
   try { for (const t of trash) await store.remove(t); } catch { /* best-effort */ }
-  docs = out.docs; entry = out.entry; trash = []; taken.add(id); for (const [k, d] of Object.entries(out.docs)) revs[k] = Number(d["rev"]); say(`Saved '${label}' and ${who} uses it. One undo.`);
+  docs = out.docs; entry = out.entry; trash = []; taken.add(id); for (const [k, d] of Object.entries(out.docs)) revs[k] = Number(d["rev"]); say(`Saved '${label}' and ${who} uses it. One undo.${out.notes.length === 0 ? "" : ` ${out.notes.map((n) => n.message).join(" ")}`}`);
 } catch (e) { say(`Not saved: storage error (${e instanceof Error ? e.message : "error"}). Nothing was changed.`); } };
 const undo = async (): Promise<void> => { if (entry === undefined) return; try {
   const got = undoGroup(docs, entry, at());
