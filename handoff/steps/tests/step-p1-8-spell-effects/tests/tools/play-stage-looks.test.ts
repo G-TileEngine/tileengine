@@ -4,7 +4,9 @@ import { chunkedList, createLighting, fitView, snapCamera, type RenderScene } fr
 import { createSceneLink } from "../../src/runtime/scene/world-scene.ts";
 import { TILE } from "../../tools/play-stage/board.ts";
 import { animId, litPlan, picturesOf, sourceOf } from "../../tools/play-stage/looks.ts";
-import { createMatch, type Match } from "../../tools/play-stage/match.ts";
+import { createMatch } from "../../tools/play-stage/match.ts";
+
+type Match = ReturnType<typeof createMatch>;
 
 const hook = (m: Match) => { const link = createSceneLink(sourceOf((id) => m.pixels(id))); return { link, pixels: picturesOf((id) => m.pixels(id), link) }; };
 const unitOf = (m: Match, unitId: string) => { const u = m.world.units.all().find((x) => x.unitId === unitId && x.alive); if (u === undefined) throw new Error(unitId); return u; };

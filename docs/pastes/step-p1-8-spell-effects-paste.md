@@ -23,11 +23,15 @@ After P1-7 the Spell button fires `line-shot` as an ability log entry, but the m
      - `picturesOf(own, link)` returns `own(id) ?? link.pixels(id)`.
      - `litPlan(lighting, looks, lit)` returns `lighting.plan(looks.light, looks.lights, WASH, 0, LIGHT_RES, lit)`.
 7. **Hooks.**
-   - `board.ts` (`createPlay`): `looks = dress(world.grid, body.looks)` is exposed as `play.looks`. `scene()` returns `layers: looks.layers`, `objects: looks.objects`, `style`, `waterTiles` and `seeThroughCanopy: true`, and its assets are `{ ...looks.assets, FX sheet, unitAsset per unit }`. Overlays stay reach/path/aim only.
-   - `page.ts`:
-     - `createSceneLink(sourceOf((id) => play.pixels(id)))`.
-     - The driver `pixels` and `load` both use `picturesOf((id) => play.pixels(id), link)`.
-     - The view returns `lights: litPlan(createLighting(), play.looks, link.lit)` (one `createLighting()` for the page) and `shake: link.shake`.
+   - `board.ts` (ChatA's `createPlay(docs?, moveMs, autoWait)`):
+     - `body` for given docs is `{ ...docs, talk }`, so `effects` and `looks` reach the play.
+     - ChatA's `const link = createSceneLink()` inside `createPlay` is replaced by `const fx = createPlayFx(body.effects), looks = dress(world.grid, body.looks)`; the returned object adds `fx, looks` next to `pixels: pixelsOf`.
+     - `scene(): SceneWorld` returns the SceneWorld itself (no longer `link.scene(...)`): `layers: looks.layers`, `objects: looks.objects`, `effects` (from `fx.ingest`), `style`, `waterTiles` and `seeThroughCanopy: true`, with assets `{ ...looks.assets, FX sheet, unitAsset per unit }`. Overlays stay reach/path/aim only.
+   - `page.ts` (ChatA's `const match = createMatch()`):
+     - `link = createSceneLink(sourceOf((id) => match.pixels(id)))`, one `createLighting()`, and `pixels = picturesOf((id) => match.pixels(id), link)`.
+     - `load` reads `pixels(id)`, and the driver gets `pixels`.
+     - The view returns `scene: link.scene(match.scene(), { tMs: match.world.clock.now(), stepMs: match.world.clock.stepMs })`, `lights: litPlan(lighting, match.looks, link.lit)` and `shake: link.shake`.
+     - `window` also gets `__fx: match.fx` and `__link: link` for the kit-run smoke.
 8. **Feel and effect looks (built-in docs).**
    - `HOUSE_DOC = { hit_stop_ms: 80, shake: 2, squash: true, hit_white_ms: 90, steps: [{ kind: "stamp", seconds: 0.25 }] }`.
    - `LINE_SHOT_DOC = { connect_step: "fly", shake: 1, hit_white_ms: 60, tint_ramp: "fire", steps: [{ id: "fly", kind: "swerve", seconds: 0.2, bend: 1, outline: "on", light: "steady", light_radius: 2 }, { kind: "stamp", start_mode: "at-hit", seconds: 0.15, blend: "add", light: "pop", light_radius: 3 }, { kind: "particles", start_mode: "with-last", seconds: 0.3, particle_count: 12, particle_life_ms: 300 }] }`.
@@ -37,6 +41,7 @@ After P1-7 the Spell button fires `line-shot` as an ability log entry, but the m
 - House default for a basic attack is applied by the host when `refOf` is undefined and `effects` is empty, not by changing the specified `refOf`.
 - F17 goes through `PlayDocs.effects` / `docsToInput`. No OPFS and no r73 loader in this step.
 - Built-in `line-shot` values are a swerve, an at-hit stamp and a particle burst (`LINE_SHOT_DOC`). `connect_step: "fly"` makes the swerve the hit, so `atHitBeforeHit` is gone and `engine.notes` stays empty.
+- **r5:** the r4 features, files `fx.ts` / `looks.ts` and the p18 test are unchanged; only the hooks in `board.ts` / `page.ts` / `load.ts` are re-expressed against ChatA's merged P1-7 code, and the looks test types `Match` locally (`ReturnType<typeof createMatch>`), because main's `match.ts` exports no `Match` type.
 - **r4 (CEO 18:52):** the bundled stage must show every render feature. All of it is stage data plus small host hooks in `tools/play-stage/`; there is no change in `src/`. Water and rock are map terrain with `open: false` (stage data, not a game rule).
 - Not folded, per the audit: the night sheet swap (`createMoonlit`, which needs night art), `dim` / `fullyDark` / `keepInDim` lights (no Phase 1 driver), and the reduce-motion / shake / lite settings (player settings; lite is already automatic).
 - Id-keyed lookups use a `Map` (or `Object.hasOwn`); a prototype-key `constructor` is not an effect row and does not throw.
@@ -50,12 +55,12 @@ None that block this step.
 |---|---|---|---|
 | `tools/play-stage/fx.ts` | new: `createPlayFx`, `refOf`, house default, bake FX sheet (4 growing frames), `FX_CLIP` via `clipOf`, ingest cues, built-in docs with feel / light / particles / looks | 64 | 72 |
 | `tools/play-stage/looks.ts` | new: `dress`, `unitAsset`, `animId`, dressing + idle pixels, `frameOf`, `sourceOf`, `picturesOf`, `litPlan`, ramps / `WASH` / `LIGHT_RES` | 59 | 72 |
-| `tools/play-stage/load.ts` | `PlayDocs.effects?` and `looks?`; `hostSeed` optional with default; terrain row string + palette; water / rock tile types; `Looks`, `DEMO_LOOKS`; leave ChatA `docsToInput` in place | 13 | 16 |
-| `tools/play-stage/board.ts` | hooks only: `createPlayFx(body.effects)`, `dress(...)` as `play.looks`, dressing pixels first in `pixelsOf`, bake FX sheet, `play.fx`, `scene()` returns the SceneWorld with `effects`, dressing, style, water, see-through; leave ChatA bake / `fit` / intend in place | 22 | 30 |
-| `tools/play-stage/page.ts` | `createSceneLink(sourceOf(...))` wraps the driver view; `picturesOf` for `pixels` / `load`; view `lights` (`litPlan`) and `shake`; expose `__fx` / `__link` for the kit-run smoke | 13 | 16 |
+| `tools/play-stage/load.ts` | `PlayDocs.effects?` and `looks?`; `hostSeed` optional (`docsToInput` uses `docs.hostSeed ?? 24301`); terrain row string + palette; water / rock tile types; `Looks`, `DEMO_LOOKS`; leave ChatA `docsToInput` in place | 13 | 16 |
+| `tools/play-stage/board.ts` | hooks only: `body = { ...docs, talk }`; ChatA's inner `createSceneLink()` becomes `createPlayFx(body.effects)` + `dress(...)` as `play.fx` / `play.looks`; dressing pixels first in `pixelsOf`, bake FX sheet; `scene()` returns the SceneWorld with `effects`, dressing, style, water, see-through; leave ChatA bake / `fit` / intend in place | 23 | 30 |
+| `tools/play-stage/page.ts` | `createSceneLink(sourceOf(...))` wraps the driver view; `picturesOf` for `pixels` / `load`; view `link.scene(match.scene(), clock)`, `lights` (`litPlan`) and `shake`; expose `__fx` / `__link` for the kit-run smoke | 14 | 16 |
 | `tests/tools/play-stage-p18.test.ts` | new, shipped, byte-identical (unchanged from r3) | 85 | 85 |
-| `tests/tools/play-stage-looks.test.ts` | new, shipped, byte-identical | 78 | 78 |
-Total ≤ 400 changed lines (proto **334**: tools 171, tests 163; added+deleted). Hard cap 400. (r3 was 174; r4 adds the CEO 18:52 render fold.)
+| `tests/tools/play-stage-looks.test.ts` | new, shipped, byte-identical | 80 | 80 |
+Total ≤ 400 changed lines (proto **338**: tools 173, tests 165; added+deleted). Hard cap 400. (r3 was 174; r4 added the CEO 18:52 render fold at 334; r5 rebuilds the hooks on main.)
 
 ## Tests that prove it is done (9 new; ship both files byte-identical)
 Copy both files byte-identical from `handoff/steps/tests/step-p1-8-spell-effects/` to the same paths at the repo root.
@@ -76,7 +81,7 @@ Copy both files byte-identical from `handoff/steps/tests/step-p1-8-spell-effects
 N = 9. P1-6 and P1-7 play-stage tests stay green.
 
 ## How a planted bug is caught
-EA plants 29/29 (`p1-8-r4-plants.py`: r3's 8 with the `createPlayFx` needle updated, plus 21 new). In r3, each of these fails a shipped test: `refOf` returning the first of several effects, skipping the house default, ignoring editor-saved docs, never attaching `world.effects`, dropping `cueFromEntry`, `docsToInput` dropping `effects`, looking up values with `in` on a plain object, or firing `houseCue` when a ref is already present.
+EA plants 29/29 (`p1-8-r4-plants.py`, rerun unchanged on the r5 proto: r3's 8 with the `createPlayFx` needle updated, plus 21 new). In r3, each of these fails a shipped test: `refOf` returning the first of several effects, skipping the house default, ignoring editor-saved docs, never attaching `world.effects`, dropping `cueFromEntry`, `docsToInput` dropping `effects`, looking up values with `in` on a plain object, or firing `houseCue` when a ref is already present.
 
 In r4, each of these fails a shipped test:
 - Effect docs and frames: no `clipOf`, no outline, no additive blend, no particles step; no `hit_stop_ms`, `squash`, `shake` or `hit_white_ms` on the house doc.
@@ -88,15 +93,15 @@ In r4, each of these fails a shipped test:
 `handoff/steps/tests/step-p1-8-spell-effects/smoke.mjs` is required in the hand-back. From the repo root: `PLAYWRIGHT_CORE=<playwright-core dir> CHROME=<chrome binary> node handoff/steps/tests/step-p1-8-spell-effects/smoke.mjs . 8795 /tmp/p1-8-smoke.png` (install `playwright-core@1.59.1` outside the repo if you lack it, for example `npm i --prefix /tmp/pw playwright-core@1.59.1`, then `PLAYWRIGHT_CORE=/tmp/pw/node_modules/playwright-core`). It serves `tools/serve.ts`, opens `/tools/play-stage/` headless at **390 × 844** and **360 wide** (touch, @3x) and prints one `ok` or `FAIL` line per check, then `SMOKE PASS`. Paste **all** its lines into HANDBACK.md § Smoke; a `FAIL` or a timeout is a stop-and-fix. If no Chrome can run at all, stop and report (no manual substitute). Visible (not `display:none`) buttons must be ≥ 44×44. Every picture must load (`__driver.stats.failed` 0, `backend.stats.missing` false) and the torch lights must draw (`backend.stats.lightBuilds` > 0). A Spell two-tap must show the spell's effect live, lit and shaking, then `fx:hit`, then retire.
 
 ## Gates (Acceptance)
-- [ ] `npm ci && npm run green` exits 0 with **at least 1007 tests passing** (main's count at Base + 9, once P1-7 is on that main) and none failing. Typecheck, lint, deps, check:state and check:law each exit 0. (Proto on the stack: 1007/0.)
+- [ ] `npm ci && npm run green` exits 0 with **at least 1007 tests passing** (main's count at Base + 9, once P1-7 is on that main) and none failing. Typecheck, lint, deps, check:state and check:law each exit 0. (Proto on main `6df67ab9`: 1007/0.)
 - [ ] If P1-7 or E7p is not on main, or if those APIs on main differ from what the shipped tests import, **stop and report**.
-- [ ] Each file within its cap; ≤ 400 changed lines in total (334 in the proto). Hard cap 400.
+- [ ] Each file within its cap; ≤ 400 changed lines in total (338 in the proto). Hard cap 400.
 - [ ] Both shipped test files are byte-identical to the kit copies. Earlier play-stage tests stay green.
 - [ ] **Kit-run browser smoke (REQUIRED)** exits 0 with `SMOKE PASS` at 390×844 and 360 wide (no page errors, no sideways scroll, visible buttons ≥ 44×44, every picture loads, torches draw, spell effect live, lit and shaking, then hit, then retire).
 - [ ] Never touch `painter-proto/` or `ui-shell/`. Game rules stay out of `src/core` and `src/sim`. BTF is used only via adapters or rewrites with file:line cites (none new in this step). Id-keyed lookups use a `Map` or `Object.hasOwn`.
 
 ## Floor
-`npm run green` is at least **1007** tests passing (main's count at Base + 9, once P1-7 is on that main: 992 + 6 + 9). If main's count at Base (with P1-7 already merged) is C, the floor is C + 9.
+`npm run green` is at least **1007** tests passing (main's count at Base + 9: 998 + 9 at `6df67ab9`). If main's count at Base (with P1-7 already merged) is C, the floor is C + 9.
 
 ## Not in this step
 - APK wrapper / play-only packaging → P1-9.

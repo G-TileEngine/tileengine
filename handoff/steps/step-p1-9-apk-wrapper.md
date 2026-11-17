@@ -1,8 +1,8 @@
 # step-p1-9-apk-wrapper: Phase 1 P1-9 "APK wrapper" (foundation-plan-phased.md §4, ~lines 84–98). Play-only Capacitor 6 wrapper in `tools/apk/` with its own `package.json` (the 5 root pins do not move): config, `build.ts` (`--web` builds play-stage into `www/`; `--apk` is ops), Android patches kept in the script because `cap sync` overwrites `MainActivity` (BTF `docs/APK.md` L21, L53; `scripts/android.mjs:96–175`), and tests that the www folder has no network URL and opens offline. Building, signing and uploading the APK itself is an ops task, not this step. Proof: kit-run headless Chromium smoke of the www/ output at 390×844 and 360 wide. The CEO's first real test is the APK (phone test 1 after E7 is dropped).
 
-Step id: step-p1-9-apk-wrapper          Revision: r4 (restack on P1-8 r4, the CEO 18:52 render fold; smoke also checks the stage looks; 255 / cap 400; code unchanged)
+Step id: step-p1-9-apk-wrapper          Revision: r4b (restack on P1-8 r5 over main `6df67ab9`; code, test and smoke unchanged from r4; 255 / cap 400)
 Repo: https://github.com/G-TileEngine/tileengine (read only; you push nothing; see Delivery)
-Base commit: current main when you start (at kit authoring, `origin/main` is `1f779185b1f9b4d6cb33587820d187f948ef5b14`, runnable count **992**, with P1-6h, E7p and P1-6 r2 already merged; P1-7 r5 is building). **P1-8 must already be merged on that main** (and therefore P1-7, P1-6h, E7p, P1-6…P1-2, E7). Floor = that main's test count + 4. If P1-8 is not on main, or if P1-8's APIs on main differ from what the shipped tests import, **stop and report**. At kit authoring the stack after P1-8 r4 is 1007/0, so the authoring floor is **1011**. Branch: `step/step-p1-9-apk-wrapper-r<N>-chatA`, created from the Base. Never commit to `main`. The diff is always `<Base>..<head>`. One builder chat (ChatA), one QA pass, plus a rework round only if QA finds must-fixes; no A/B.
+Base commit: current main when you start (at kit authoring, `origin/main` is `6df67ab937fe00aaa0c2cdebb32d523e5becb046`, runnable count **998**, with P1-7 merged (PR #73); P1-8 r5 is next). **P1-8 must already be merged on that main** (and therefore P1-7, P1-6h, E7p, P1-6…P1-2, E7). Floor = that main's test count + 4. If P1-8 is not on main, or if P1-8's APIs on main differ from what the shipped tests import, **stop and report**. At kit authoring the stack after P1-8 r4 is 1007/0, so the authoring floor is **1011**. Branch: `step/step-p1-9-apk-wrapper-r<N>-chatA`, created from the Base. Never commit to `main`. The diff is always `<Base>..<head>`. One builder chat (ChatA), one QA pass, plus a rework round only if QA finds must-fixes; no A/B.
 Hand-back location: `handback/step-p1-9-apk-wrapper/r<N>/HANDBACK.md`. Quote this step file's sha256 in full in it.
 Depends on: P1-8 (play-stage FX + `tools/play-stage/build.ts` static build) and therefore P1-7 / E7p / P1-6…P1-2 / E6 / E7. Build order on main is E6 → P1-3 → P1-4 → P1-5 → E7 → P1-6 → E7p → P1-6h → P1-7 → P1-8 → **P1-9**. Work stops at P1-9 (CEO 2026-11-17 05:26).
 
@@ -67,7 +67,7 @@ This is the CEO's first real test (CEO 2026-11-17 05:26: phone test 1 after E7 i
 6. Repeat on the other phone.
 
 ## Gates (Acceptance)
-- [ ] `npm ci && npm run green` exits 0 with **at least 1011 tests passing** (main's count at Base + 4, once P1-8 is on that main) and none failing. Typecheck, lint, deps, check:state and check:law each exit 0. (Proto on the stack: 1011/0.)
+- [ ] `npm ci && npm run green` exits 0 with **at least 1011 tests passing** (main's count at Base + 4, once P1-8 is on that main) and none failing. Typecheck, lint, deps, check:state and check:law each exit 0. (Proto on the stack, P1-8 r5 over `6df67ab9`: 1011/0.)
 - [ ] If P1-8 is not on main, or if P1-8's APIs on main differ from what the shipped tests import, **stop and report**.
 - [ ] Each file within its cap; ≤ 400 changed lines in total (255 in the proto). Hard cap 400.
 - [ ] The shipped test file is byte-identical to the kit copy. Earlier play-stage tests stay green. The 5 root pins do not move.
@@ -75,7 +75,7 @@ This is the CEO's first real test (CEO 2026-11-17 05:26: phone test 1 after E7 i
 - [ ] Never touch `painter-proto/` or `ui-shell/`. Game rules stay out of `src/core` and `src/sim`. BTF is used only via adapters or rewrites with file:line cites (listed above). Do not install Capacitor, the Android SDK, or Gradle, and do not build or sign an APK in this step.
 
 ## Floor
-`npm run green` is at least **1011** tests passing (main's count at Base + 4, once P1-8 is on that main: 992 + 6 + 9 + 4). If main's count at Base (with P1-8 already merged) is C, the floor is C + 4.
+`npm run green` is at least **1011** tests passing (main's count at Base + 4, once P1-8 is on that main: 998 + 9 + 4). If main's count at Base (with P1-8 already merged) is C, the floor is C + 4.
 
 ## Not in this step
 - Building, signing or uploading the APK (ops, above).

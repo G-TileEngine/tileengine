@@ -57,7 +57,7 @@ This is the CEO's first real test (CEO 2026-11-17 05:26: phone test 1 after E7 i
 6. Repeat on the other phone.
 
 ## Gates (Acceptance)
-- [ ] `npm ci && npm run green` exits 0 with **at least 1011 tests passing** (main's count at Base + 4, once P1-8 is on that main) and none failing. Typecheck, lint, deps, check:state and check:law each exit 0. (Proto on the stack: 1011/0.)
+- [ ] `npm ci && npm run green` exits 0 with **at least 1011 tests passing** (main's count at Base + 4, once P1-8 is on that main) and none failing. Typecheck, lint, deps, check:state and check:law each exit 0. (Proto on the stack, P1-8 r5 over `6df67ab9`: 1011/0.)
 - [ ] If P1-8 is not on main, or if P1-8's APIs on main differ from what the shipped tests import, **stop and report**.
 - [ ] Each file within its cap; ≤ 400 changed lines in total (255 in the proto). Hard cap 400.
 - [ ] The shipped test file is byte-identical to the kit copy. Earlier play-stage tests stay green. The 5 root pins do not move.
@@ -65,7 +65,7 @@ This is the CEO's first real test (CEO 2026-11-17 05:26: phone test 1 after E7 i
 - [ ] Never touch `painter-proto/` or `ui-shell/`. Game rules stay out of `src/core` and `src/sim`. BTF is used only via adapters or rewrites with file:line cites (listed above). Do not install Capacitor, the Android SDK, or Gradle, and do not build or sign an APK in this step.
 
 ## Floor
-`npm run green` is at least **1011** tests passing (main's count at Base + 4, once P1-8 is on that main: 992 + 6 + 9 + 4). If main's count at Base (with P1-8 already merged) is C, the floor is C + 4.
+`npm run green` is at least **1011** tests passing (main's count at Base + 4, once P1-8 is on that main: 998 + 9 + 4). If main's count at Base (with P1-8 already merged) is C, the floor is C + 4.
 
 ## Not in this step
 - Building, signing or uploading the APK (ops, above).
