@@ -1,0 +1,9 @@
+A	src/editor/effect/dice.ts
+A	src/editor/effect/house.ts
+A	src/editor/effect/writer.ts
+A	tests/editor/effect-e5-qa.test.ts
+A	tests/editor/effect-e5-qa2.test.ts
+A	tests/editor/effect-e5-qa3.test.ts
+A	tests/editor/effect-e5-qa4.test.ts
+A	tests/editor/effect-e5-writer.test.ts
+A	tests/editor/effect-e5.test.ts
