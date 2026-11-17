@@ -1,6 +1,7 @@
 import { installOne } from "../../src/rules/behaviours/registry.ts";
 import { reachCells, walkTo } from "../../src/rules/move/path.ts";
 import { STEP_PATTERN } from "../../src/rules/move/step-pattern.ts";
+import { ACTION_BUDGET } from "../../src/rules/turns/action-budget.ts";
 import { botAbilityPriority } from "../../src/rules/turns/bot-ability-priority.ts";
 import { createGestureMapper } from "../../src/runtime/input/gestures.ts";
 import type { PointerSample } from "../../src/runtime/input/types.ts";
@@ -37,8 +38,10 @@ export function pixelsOf(id: string): Pixels | undefined {
   for (const recipe of Object.values(RECIPES)) if (recipe.id === id) return bake(id, TEAM[recipe.team], recipe.name.slice(0, 1));
   return id.startsWith("starter:unknown-") ? bake(id, TEAM.neutral, "?") : undefined;
 }
-export function fit(devW: number, devH: number, cols: number, rows: number): { s: number; padX: number; padY: number } {
-  const mw = cols * TILE, mh = rows * TILE, raw = devW >= mw && devH >= mh ? Math.floor(Math.min(devW / mw, devH / mh)) : 1, s = raw >= 1 && Number.isFinite(raw) ? raw : 1;
+export const MIN_CELL_CSS = 44;
+export function fit(devW: number, devH: number, cols: number, rows: number, dpr: number): { s: number; padX: number; padY: number } {
+  const mw = cols * TILE, mh = rows * TILE, fitted = Math.floor(Math.min(devW / mw, devH / mh)), minS = Math.ceil((MIN_CELL_CSS * dpr) / TILE);
+  const s = Math.max(Number.isFinite(minS) && minS >= 1 ? minS : 1, Number.isFinite(fitted) && fitted >= 1 ? fitted : 1);
   return { s, padX: Math.floor((devW - Math.floor(devW / s) * s) / 2), padY: Math.floor((devH - Math.floor(devH / s) * s) / 2) };
 }
 type Walk = { path: readonly Sq[]; from: Sq; t0: number; dur: number };
@@ -53,7 +56,9 @@ export function createPlay(docs?: PlayDocs, moveMs = 200) {
   const step = installed.out;
   let n = 0;
   const player = createPlayer(world, { side: "player", moveMs, nextId: () => `p${n += 1}`, step });
-  const bot = botAbilityPriority({ setup: body.rules, stepReach: step.reach });
+  const budget = installOne(ACTION_BUDGET, {});
+  if (budget.out === null) throw new Error("play: action-budget");
+  const bot = botAbilityPriority({ setup: body.rules, stepReach: step.reach, actionsPerTurn: budget.out.actionsPerTurn });
   const gestures = createGestureMapper({ cellPx: TILE, tapMaxPx: 12, holdMs: 500 }, { cols: world.grid.cols, rows: world.grid.rows, unitAt: (at) => world.units.occupantAt(at) });
   const link = createSceneLink();
   let selected: string | null = null, pending: Sq | null = null, reach: Sq[] = [], preview: Sq[] = [], walk: Walk | null = null;

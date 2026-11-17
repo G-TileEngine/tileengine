@@ -32,7 +32,7 @@ test("H1+H6: no ability row is noShotRow; a mid-line body does not block the aim
 test("H2+H3: taken() uses whole() for reach and ShotRow; NaN damage cannot leave a 0-hp unit alive", () => {
   for (const n of [1.5, Number.NaN, 0, -1]) bad({ reach: { knight: n } });
   assert.equal(createWorld(armed({ reach: { knight: 2 } })).rules !== null, true);
-  bad(row(3, Number.NaN, "line-shot")); bad(row(1.5, 2, "line-shot")); bad(row(0, 2, "line-shot")); bad(row(3, -1, "line-shot")); bad(row(3, 2, 1));
+  bad(row(3, Number.NaN, "line-shot")); bad(row(3, Number.POSITIVE_INFINITY, "line-shot")); bad(row(1.5, 2, "line-shot")); bad(row(0, 2, "line-shot")); bad(row(3, -1, "line-shot")); bad(row(3, 2, 1));
   const w = createWorld(armed(row(3, 0, "line-shot")));
   w.units.moveTo("archer#2", { c: 2, r: 3 }, "move");
   const died: string[] = [];
@@ -56,4 +56,14 @@ test("H5: CONFIRM_TARGET on an empty tile refuses noTarget before feeding", () =
   const tick = w.clock.tick(), n = w.notices.length;
   const step = p.feed({ type: "TargetCell", at: { c: 0, r: 0 } });
   assert.deepEqual([step.reject, step.action, w.phases.battle, w.clock.tick(), w.notices.length], ["noTarget", null, "targeting", tick, n]);
+});
+
+test("taken() copies reach and abilities onto Object.create(null); a JSON __proto__ key cannot set the copy's prototype", () => {
+  const raw = JSON.parse('{"base":{"hp":9,"atk":1},"stats":{},"hitClass":"basic","reach":{"__proto__":3,"knight":1},"abilities":{"__proto__":[{"reach":3,"damage":2,"effectRef":"line-shot"}]}}') as BattleSetup;
+  const w = createWorld({ ...input("stage-fixed"), rules: raw });
+  assert.ok(w.rules !== null);
+  const src = readFileSync(fileURLToPath(new URL("../../src/rules/battle/battle.ts", import.meta.url)), "utf8");
+  assert.match(src, /Object\.create\(null\)/);
+  assert.equal(Object.getPrototypeOf({}), Object.prototype);
+  assert.equal(Object.prototype.hasOwnProperty.call(Object.prototype, "polluted"), false);
 });

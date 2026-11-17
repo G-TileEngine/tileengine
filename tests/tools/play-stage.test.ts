@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { build } from "../../tools/play-stage/build.ts";
-import { createPlay, recipeOf, TILE } from "../../tools/play-stage/board.ts";
+import { createPlay, fit, MIN_CELL_CSS, recipeOf, TILE } from "../../tools/play-stage/board.ts";
 import { DEMO_LOAD, DEMO_MANIFEST, DEMO_MAP, DEMO_STAGE, DEMO_SETUP, docsToInput } from "../../tools/play-stage/load.ts";
 
 const idOf = (unitId: string, play: ReturnType<typeof createPlay>): string => {
@@ -75,4 +75,35 @@ test("static build writes index.html, the import tree as .js, and a build.json t
     assert.match(readFileSync(join(out, "index.html"), "utf8"), /tools\/play-stage\/page\.js/);
     assert.equal(JSON.parse(body).commit, sha);
   } finally { rmSync(out, { recursive: true, force: true }); }
+});
+
+test("fit keeps a 44 CSS px floor per cell; a 12-wide map at 360 CSS @3x does not shrink below it", () => {
+  const dpr = 3, cssW = 360, devW = cssW * dpr, devH = 844 * dpr, { s } = fit(devW, devH, 12, 9, dpr);
+  assert.ok((TILE * s) / dpr >= MIN_CELL_CSS, `cell CSS ${(TILE * s) / dpr} < ${MIN_CELL_CSS} (s=${s})`);
+  const shrunk = Math.floor(Math.min(devW / (12 * TILE), devH / (9 * TILE)));
+  assert.ok(shrunk * TILE / dpr < MIN_CELL_CSS);
+  assert.ok(s >= Math.ceil((MIN_CELL_CSS * dpr) / TILE));
+});
+
+test("a foreign-side tap does not select; a walk beyond reach and a second tap on a non-reach tile do not walk and clear the preview", () => {
+  const play = createPlay(), knight = idOf("knight", play), wolf = play.world.units.all().find((u) => u.unitId === "wolf" && u.alive);
+  assert.ok(wolf !== undefined);
+  const foreign = play.intend({ type: "SelectUnit", unitId: wolf.id });
+  assert.ok("reject" in foreign && foreign.reject === "notOwn");
+  assert.equal(play.selected, null);
+  play.intend({ type: "SelectUnit", unitId: knight });
+  const start = atOf(play, knight), far = { c: start.c + 3, r: start.r };
+  const beyond = play.intend({ type: "TargetCell", at: far });
+  assert.ok("reject" in beyond && beyond.reject === "notReachable");
+  assert.equal(play.pending, null);
+  assert.deepEqual(atOf(play, knight), start);
+  const dest = play.reach[0];
+  assert.ok(dest !== undefined);
+  const preview = play.intend({ type: "TargetCell", at: dest });
+  assert.ok("preview" in preview && play.pending !== null);
+  const miss = play.intend({ type: "TargetCell", at: far });
+  assert.ok("reject" in miss && miss.reject === "notReachable");
+  assert.equal(play.pending, null);
+  assert.deepEqual(atOf(play, knight), start);
+  assert.notEqual(play.world.phases.battle, "moving");
 });
