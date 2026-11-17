@@ -7,13 +7,15 @@ import { createGestureMapper } from "../../src/runtime/input/gestures.ts";
 import type { PointerSample } from "../../src/runtime/input/types.ts";
 import type { Pixels } from "../../src/runtime/render/bakes.ts";
 import type { Sheet } from "../../src/runtime/render/types.ts";
-import { createSceneLink } from "../../src/runtime/scene/world-scene.ts";
+import type { SceneAsset } from "../../src/runtime/scene/world-scene.ts";
 import { createPlayer } from "../../src/sim/player.ts";
 import type { DoorIntent } from "../../src/sim/types.ts";
 import { createWorld } from "../../src/sim/world.ts";
 import { xGo, type Event } from "../../src/state/index.ts";
 import type { Sq } from "../../src/types/core-types.ts";
 import { DEMO_LOAD, DEMO_TALK, RECIPES, TEAM, TILE, docsToInput, recipeOf, type PlayDocs } from "./load.ts";
+import { createPlayFx, fxPx } from "./fx.ts";
+import { dress, dressPx, unitAsset } from "./looks.ts";
 
 export { recipeOf, TILE };
 const FONT: Readonly<Record<string, readonly number[]>> = {
@@ -32,6 +34,8 @@ function bake(id: string, rgb: number, letter: string): Pixels {
   const px = { w: TILE, h: TILE, data }; cache.set(id, px); return px;
 }
 export function pixelsOf(id: string): Pixels | undefined {
+  const dressed = dressPx(id); if (dressed !== undefined) return dressed;
+  const sparked = fxPx(id); if (sparked !== undefined) return sparked;
   if (id === "play:floor") return bake(id, 0x243044, "");
   if (id === "play:reach-player") return bake(id, 0x3b82f6, "");
   if (id === "play:path-player") return bake(id, 0xf0c14a, "");
@@ -53,7 +57,7 @@ export function spellRef(setup: { readonly abilities?: Readonly<Record<string, r
 type Walk = { path: readonly Sq[]; from: Sq; t0: number; dur: number };
 export function createPlay(docs?: PlayDocs, moveMs = 200, autoWait = true) {
   const talk = docs?.talk ?? DEMO_TALK;
-  const body = docs === undefined ? DEMO_LOAD : { manifest: docs.manifest, map: docs.map, stage: docs.stage, rules: docs.rules, hostSeed: docs.hostSeed, talk };
+  const body = docs === undefined ? DEMO_LOAD : { ...docs, talk };
   const world = createWorld(docsToInput(body).input);
   const go = (e: Event): void => { const from = world.phases.battle; if (from === undefined) throw new Error("play: phase"); world.phases = { ...world.phases, battle: xGo(from, e) }; };
   go({ type: "BATTLE_READY" }); go({ type: "DEPLOY_DONE" }); go({ type: "ROUND_BEGIN" }); go({ type: "SIDE_BEGIN" });
@@ -67,7 +71,7 @@ export function createPlay(docs?: PlayDocs, moveMs = 200, autoWait = true) {
   const player = createPlayer(world, { side: "player", moveMs, nextId: () => `p${n += 1}`, step, spellOf: (id) => { const u = world.units.get(id); return u === undefined ? undefined : spellRef(body.rules, u.unitId); } });
   const bot = botAbilityPriority({ setup: body.rules, stepReach: step.reach, actionsPerTurn: budget.actionsPerTurn });
   const gestures = createGestureMapper({ cellPx: TILE, tapMaxPx: 12, holdMs: 500 }, { cols: world.grid.cols, rows: world.grid.rows, unitAt: (at) => world.units.occupantAt(at) });
-  const link = createSceneLink();
+  const fx = createPlayFx(body.effects), looks = dress(world.grid, body.looks), worn = new Map<string, SceneAsset>();
   let selected: string | null = null, pending: Sq | null = null, reach: Sq[] = [], preview: Sq[] = [], walk: Walk | null = null, aims: Sq[] = [], aimKind: "basic" | "spell" = "basic", followId: string | null = null, onLand: (() => void) | null = null;
   const mark = (): void => { reach = selected === null ? [] : reachCells(world.grid, world.units, selected, step.reach); };
   const sync = (): void => {
@@ -107,7 +111,7 @@ export function createPlay(docs?: PlayDocs, moveMs = 200, autoWait = true) {
     return stepped;
   };
   return {
-    world, step, intend, sync, bot, pixels: pixelsOf, autoWait, go,
+    world, step, intend, sync, bot, pixels: pixelsOf, autoWait, go, fx, looks,
     focus(id: string | null): void { selected = id; pending = null; preview = []; mark(); },
     arm(next: Walk): void { walk = next; sync(); },
     landed(fn: (() => void) | null): void { onLand = fn; },
@@ -120,10 +124,9 @@ export function createPlay(docs?: PlayDocs, moveMs = 200, autoWait = true) {
       sync();
       const aimSheet = aimKind === "spell" ? AIM_S : AIM_A, aimOver = world.phases.battle === "targeting" ? aims.map((c) => ({ band: "fxGround" as const, sheet: aimSheet, x: c.c * TILE, y: c.r * TILE })) : [];
       const overlays = selected === null ? aimOver : [...reach.map((c) => ({ band: "fxGround" as const, sheet: REACH, x: c.c * TILE, y: c.r * TILE })), ...preview.map((c) => ({ band: "fxGround" as const, sheet: PATH, x: c.c * TILE, y: c.r * TILE })), ...aimOver];
-      const assets: Record<string, { sheet: Sheet }> = { "play:floor": { sheet: sheet("play:floor") } };
-      const units = world.units.all().map((u) => { const id = recipeOf(u.unitId).id; assets[id] = { sheet: sheet(id) }; return { id: u.id, sprite: id, at: { c: u.at.c, r: u.at.r }, offset: u.offset, facing: u.facing, alive: u.alive }; });
-      const tiles = Array.from({ length: world.grid.cols * world.grid.rows }, () => 0);
-      return link.scene({ cols: world.grid.cols, rows: world.grid.rows, tileW: TILE, tileH: TILE, mapSeed: world.seed, assets, layers: [{ tileset: "play:floor", aboveUnits: false, visible: true, tiles }], units, objects: [], overlays });
+      const assets: Record<string, SceneAsset> = { ...looks.assets, "play:fx": { sheet: { id: "play:fx", columns: 4, fw: TILE, fh: TILE } } };
+      const units = world.units.all().map((u) => { const id = recipeOf(u.unitId).id; const asset = worn.get(id) ?? unitAsset(id); worn.set(id, asset); assets[id] = asset; return { id: u.id, sprite: id, at: { c: u.at.c, r: u.at.r }, offset: u.offset, facing: u.facing, alive: u.alive }; });
+      return { cols: world.grid.cols, rows: world.grid.rows, tileW: TILE, tileH: TILE, mapSeed: world.seed, assets, layers: looks.layers, units, objects: looks.objects, overlays, effects: fx.ingest(world.log, world.clock.stepMs, world.clock.now()), style: looks.style, waterTiles: looks.waterTiles, seeThroughCanopy: true as const };
     },
   };
 }

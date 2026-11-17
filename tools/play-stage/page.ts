@@ -1,13 +1,16 @@
 import { createDriver, type HostCanvas, type HostEnv } from "../../src/runtime/host/raf-driver.ts";
-import { fitView } from "../../src/runtime/render/index.ts";
+import { createLighting, fitView } from "../../src/runtime/render/index.ts";
+import { createSceneLink } from "../../src/runtime/scene/world-scene.ts";
 import { fit, TILE } from "./board.ts";
 import { centreOn, createCam, pan, seatCam, tickCam, zoomAt, type PlayCam } from "./camera-touch.ts";
 import { createHud } from "./hud.ts";
+import { litPlan, picturesOf, sourceOf } from "./looks.ts";
 import { createMatch } from "./match.ts";
 
 const canvas = document.querySelector("#board");
 if (!(canvas instanceof HTMLCanvasElement)) throw new Error("play: #board");
 const match = createMatch();
+const link = createSceneLink(sourceOf((id) => match.pixels(id))), lighting = createLighting(), pixels = picturesOf((id) => match.pixels(id), link);
 const cam: PlayCam = createCam(1);
 let seated = false;
 const dpr = (): number => devicePixelRatio || 1;
@@ -18,7 +21,7 @@ const band = (): { s: number; padX: number; padY: number; devW: number; devH: nu
 const seat = (): void => { const box = band(); if (canvas.clientWidth > 0) { seatCam(cam, box.s, dpr()); seated = true; } };
 const env = { requestAnimationFrame: (cb: (ts: number) => void) => requestAnimationFrame(cb), cancelAnimationFrame: (id: number) => cancelAnimationFrame(id), document, OffscreenCanvas, ResizeObserver, get devicePixelRatio() { return devicePixelRatio; } } as HostEnv;
 const load = (id: string): Promise<OffscreenCanvas> => {
-  const px = match.pixels(id);
+  const px = pixels(id);
   if (px === undefined) return Promise.reject(new Error(id));
   const baked = new OffscreenCanvas(px.w, px.h), g = baked.getContext("2d");
   if (g === null) return Promise.reject(new Error(id));
@@ -32,13 +35,13 @@ const hud = createHud({
 });
 const placed = (): { s: number; padX: number; padY: number } => { const box = band(); return { s: cam.s, padX: box.padX, padY: box.padY }; };
 const driver = createDriver({
-  env, canvas: canvas as HostCanvas, clock: match.world.clock, clear: "#0d1220", load, pixels: (id) => match.pixels(id),
+  env, canvas: canvas as HostCanvas, clock: match.world.clock, clear: "#0d1220", load, pixels,
   view: () => {
     if (!seated) seat();
     const box = band(), shown = fitView(box.devW, box.devH, cam.s, TILE, TILE);
     if (match.followId !== null) { const u = match.world.units.get(match.followId); if (u !== undefined) tickCam(cam, 16, u.at, shown); }
     hud.render(match.view());
-    return { scene: match.scene(), x: cam.x, y: cam.y, s: cam.s };
+    return { scene: link.scene(match.scene(), { tMs: match.world.clock.now(), stepMs: match.world.clock.stepMs }), lights: litPlan(lighting, match.looks, link.lit), shake: link.shake, x: cam.x, y: cam.y, s: cam.s };
   },
 });
 const send = (kind: "down" | "move" | "up" | "cancel", e: PointerEvent): void => {
@@ -69,5 +72,5 @@ canvas.addEventListener("pointermove", (e) => {
 canvas.addEventListener("pointerup", (e) => { pts.delete(e.pointerId); if (!drag && e.timeStamp - lastTap < 280) { lastTap = 0; centre(e); } else if (!drag) { lastTap = e.timeStamp; send("up", e); } drag = false; });
 canvas.addEventListener("pointercancel", (e) => { pts.delete(e.pointerId); send("cancel", e); });
 seat();
-Object.assign(window, { __play: match, __driver: driver, __cam: cam, __hud: hud });
+Object.assign(window, { __play: match, __driver: driver, __cam: cam, __hud: hud, __fx: match.fx, __link: link });
 driver.start();

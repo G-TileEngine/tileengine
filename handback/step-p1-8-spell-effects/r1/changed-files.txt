@@ -1,0 +1,7 @@
+A	tests/tools/play-stage-looks.test.ts
+A	tests/tools/play-stage-p18.test.ts
+M	tools/play-stage/board.ts
+A	tools/play-stage/fx.ts
+M	tools/play-stage/load.ts
+A	tools/play-stage/looks.ts
+M	tools/play-stage/page.ts
