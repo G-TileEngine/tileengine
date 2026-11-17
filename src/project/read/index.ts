@@ -8,3 +8,4 @@ export { readStage, stageSeed, type StageLimits } from "./stage.ts";
 export { readSetup, readStageOverrides } from "./setups.ts";
 export { readUnit } from "./unit.ts";
 export { DEFAULT_DOC_LIMITS, DOC_CEILINGS, type DocLimits } from "./limits.ts";
+export { EFFECT_ANSWERS, readEffect, type EffectDoc } from "./effect.ts";
