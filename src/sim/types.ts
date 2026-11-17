@@ -12,6 +12,7 @@ import type { FuseSetting } from "../rules/turns/fuse.ts";
 import type { GestureOptions, Intent } from "../runtime/input/index.ts";
 import type { StageLimits } from "../project/read/index.ts";
 import type { LevelSetup, Levels, LevelsState } from "../rules/levels/index.ts";
+import type { StepRule } from "../rules/move/step-pattern.ts";
 
 /** Parsed JSON documents plus the host's choices. The sim never reads files, wall time or a random source. */
 export type SimInput = {
@@ -104,8 +105,8 @@ export type ChooseAbility = { readonly type: "ChooseAbility"; readonly index: nu
 export type IntentInput = { readonly intent: DoorIntent; readonly aim?: Sq | null };
 export type IntentHook = (world: SimWorld, side: SideId, budget: Budget) => readonly IntentInput[];
 /** Caller inputs, no defaults: the seated side, the move duration (null = instant) and the action id source. */
-export type PlayerOptions = { readonly side: SideId; readonly moveMs: number | null; readonly nextId: () => string };
-export type PlayerReject = "noEvent" | "illegal" | "noUnit" | "notOwn" | "offGrid" | "noAction" | "malformed" | "disposed" | "noOffer" | "badPick";
+export type PlayerOptions = { readonly side: SideId; readonly moveMs: number | null; readonly nextId: () => string; readonly step?: StepRule };
+export type PlayerReject = "noEvent" | "illegal" | "noUnit" | "notOwn" | "offGrid" | "noAction" | "malformed" | "disposed" | "noOffer" | "badPick" | "notReachable";
 export type PlayerStep = {
   readonly intent: DoorIntent;
   readonly aim: Sq | null;
@@ -114,6 +115,7 @@ export type PlayerStep = {
   readonly event: Event | null;
   readonly action: Action | null;
   readonly reject: PlayerReject | null;
+  readonly path?: readonly Sq[];
 };
 export type Player = {
   readonly side: SideId;

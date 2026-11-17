@@ -3,6 +3,7 @@ import { TABLES, mergeTables } from "../state/index.ts";
 import { submit } from "./actions.ts";
 import { isDisposed } from "./dispose.ts";
 import { feedIntent, intentEvent } from "./intents.ts";
+import { walkTo } from "../rules/move/index.ts";
 import type { Player, PlayerOptions, PlayerReject, PlayerStep, SimWorld } from "./types.ts";
 
 const EDGES = mergeTables(TABLES);
@@ -58,17 +59,20 @@ export function createPlayer(world: SimWorld, opts: PlayerOptions): Player {
         return picked;
       }
       const event = intentEvent(from, intent, aim ?? null);
-      const reject = rejectOf(world, opts, from, event, selected);
+      const first = rejectOf(world, opts, from, event, selected);
+      const path = first === null && event?.type === "TAP_MOVE_CELL" && selected !== null && opts.step !== undefined ? walkTo(world.grid, world.units, selected, opts.step.reach, event.at) : undefined;
+      const reject = path === null ? "notReachable" : first;
       let action: Action | null = null;
       if (reject === null && event !== null) {
         feedIntent(world, intent, aim ?? null);
         if (event.type === "TAP_MOVE_CELL" && selected !== null) {
-          action = { id: opts.nextId(), kind: "move", actor: selected, target: { pipe: "tile", at: { c: event.at.c, r: event.at.r } }, durationMs: opts.moveMs, turns: null, effects: [] };
+          const ms = !path || opts.moveMs === null ? opts.moveMs : opts.moveMs * path.length;
+          action = { id: opts.nextId(), kind: "move", actor: selected, target: { pipe: "tile", at: { c: event.at.c, r: event.at.r } }, durationMs: ms, turns: null, effects: [] };
           submit(world, action);
         }
         selected = event.type === "SELECT_UNIT" ? event.unitId : null;
       }
-      const step: PlayerStep = { intent, aim: aim ?? null, tick: world.clock.tick(), from, event, action, reject };
+      const step: PlayerStep = { intent, aim: aim ?? null, tick: world.clock.tick(), from, event, action, reject, ...(action !== null && path ? { path } : {}) };
       steps.push(step);
       return step;
     },
