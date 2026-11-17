@@ -9,7 +9,8 @@ const S: BattleSetup = { base: { hp: 9, atk: 1 }, stats: { wolf: { hp: 4, atk: 1
 const door = (w: ReturnType<typeof createWorld>) => createPlayer(w, { side: "player", moveMs: null, nextId: (() => { let n = 0; return () => `p${++n}`; })() });
 
 test("qa: ChooseAction from actMenu uses selected after a move or cancel", () => {
-  const w = createWorld({ ...input("stage-fixed"), rules: S }), at = w.units.get("knight#1")!.at, p = door(w);
+  const w = createWorld({ ...input("stage-fixed"), rules: S }), p = door(w);
+  const at = w.units.get("knight#1")?.at; if (at === undefined) throw new Error("knight#1");
   w.phases = { ...w.phases, battle: "unitSelected" };
   assert.equal(p.feed({ type: "SelectUnit", unitId: "knight#1" }).reject, null);
   assert.equal(p.feed({ type: "TargetCell", at: { c: at.c, r: at.r - 1 } }).reject, null);
