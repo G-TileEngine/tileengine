@@ -1,5 +1,5 @@
 import type { Notice } from "../../core/notice.ts";
-import { undo, write, WRITER, type Row } from "./writer.ts";
+import { redo, undo, write, WRITER, type Row } from "./writer.ts";
 export const SAVE = { knob: "effect", dir: "effects/", trash: "effects/.deleted/", id: /^setup_[0-9A-HJKMNP-TV-Z]{26}$/, refused: "changed since; undo there first", bad: ["__proto__", "constructor", "prototype"] } as const;
 export type Store = { read(name: string): Promise<string | null>; write(name: string, text: string): Promise<void>; remove(name: string): Promise<void> };
 export type Docs = Readonly<Record<string, Row>>;
@@ -50,6 +50,19 @@ export function undoGroup(docs: Docs, entry: Entry, at: string): { docs: Record<
   }
   return { docs: out, moves };
 }
+export function redoGroup(docs: Docs, entry: Entry, moved: readonly Move[], at: string): { docs: Record<string, Row>; moves: Move[] } | { error: typeof SAVE.refused; name: string } {
+  const out: Record<string, Row> = { ...docs }; const moves: Move[] = [];
+  for (const name of entry.docs) {
+    const created = entry.created.includes(name), back = created ? moved.find((m) => m.from === name) : undefined, doc = created ? back?.doc : docs[name];
+    if (doc === undefined || (created && (back === undefined || docs[name] !== undefined))) return { error: SAVE.refused, name };
+    if (created && back !== undefined && opsOf(doc).length === 0) { out[name] = doc; moves.push({ from: back.to, to: name, doc }); continue; }
+    const next = redo(doc, at);
+    if (next === doc || opsOf(next).filter((op) => !opsOf(doc).includes(op)).some((op) => op["group"] !== entry.group)) return { error: SAVE.refused, name };
+    out[name] = next; if (created && back !== undefined) moves.push({ from: back.to, to: name, doc: next });
+  }
+  return { docs: out, moves };
+}
+export const trashGone: (r: Commit, moves: readonly Move[]) => string | null = (r, moves) => ("error" in r && r.got === null ? moves.find((m) => m.from === r.name)?.from ?? null : null);
 const wantOf = (expected: Readonly<Record<string, number | null>>, name: string): number | null => (Object.hasOwn(expected, name) ? expected[name] ?? null : null);
 async function gotOf(store: Store, name: string): Promise<number | null> { const text = await store.read(name); if (text === null) return null; try { const o = rec(JSON.parse(text) as unknown); return o === null ? 0 : typeof o["rev"] === "number" ? o["rev"] : 0; } catch { return 0; } }
 export async function commit(store: Store, docs: Docs, expected: Readonly<Record<string, number | null>>, o?: { moves?: readonly Move[]; absent?: readonly string[] }): Promise<Commit> {

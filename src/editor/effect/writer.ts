@@ -12,12 +12,12 @@ const rec = (v: unknown): Row | null => (v !== null && typeof v === "object" && 
 const own = (o: object, k: string): boolean => Object.prototype.hasOwnProperty.call(o, k);
 const omit = (o: Row, k: string): Row => Object.fromEntries(Object.entries(o).filter(([key]) => key !== k));
 const num = (v: unknown): number => (typeof v === "number" ? v : 0);
-const seqOf = (ops: readonly Row[], base: number): number => (typeof ops[ops.length - 1]?.["seq"] === "number" ? ops[ops.length - 1]?.["seq"] as number : base) + 1;
+const seqOf = (ops: readonly Row[], base: number): number => Math.max(base, ...ops.flatMap((op) => (typeof op["seq"] === "number" && Number.isInteger(op["seq"]) ? [op["seq"]] : []))) + 1;
 export function canonStep(step: Row): Row {
   const out: Row = {};
   for (const [k, v] of Object.entries(step)) {
     let key = k, val = v;
-    if (k === "hold") { if (typeof v === "number") key = "hold_ms"; } else if (k === "flash_seconds") { if (typeof v === "number") { key = "flash_ms"; val = Math.round(v * 1000); } } else if (k === "smear_remnant") { if (typeof v === "boolean") { key = "smear_remnant_ms"; val = v ? 40 : 0; } } else if (own(REN, k) && !own(TAB, k)) key = REN[k] ?? k; else if (own(TAB, k) && own(TAB[k] ?? {}, String(v))) { key = REN[k] ?? k; val = (TAB[k] ?? {})[String(v)]; }
+    if (k === "hold") { if (typeof v === "number") key = "hold_ms"; } else if (k === "flash_seconds") { if (typeof v === "number" && Number.isFinite(v)) { key = "flash_ms"; val = Math.round(v * 1000); } } else if (k === "smear_remnant") { if (typeof v === "boolean") { key = "smear_remnant_ms"; val = v ? 40 : 0; } } else if (own(REN, k) && !own(TAB, k)) key = REN[k] ?? k; else if (own(TAB, k) && own(TAB[k] ?? {}, String(v))) { key = REN[k] ?? k; val = (TAB[k] ?? {})[String(v)]; }
     if (key !== k && (own(step, key) || own(out, key))) continue; out[key] = val;
   }
   return out;
