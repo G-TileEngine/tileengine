@@ -1,0 +1,13 @@
+ src/btf-adapters/src/btf-defaults/move.ts |  6 +++
+ src/btf-adapters/src/index.ts             |  1 +
+ src/rules/move/index.ts                   |  3 ++
+ src/rules/move/path.ts                    | 35 ++++++++++++++
+ src/rules/move/step-pattern.ts            | 20 ++++++++
+ src/rules/move/targets.ts                 | 26 +++++++++++
+ src/sim/player.ts                         | 10 ++--
+ src/sim/types.ts                          |  6 ++-
+ tests/parity/step-pattern.parity.test.ts  | 55 ++++++++++++++++++++++
+ tests/rules/move-qa.test.ts               | 17 +++++++
+ tests/rules/move.test.ts                  | 78 +++++++++++++++++++++++++++++++
+ tests/sim/bot.test.ts                     |  2 +-
+ 12 files changed, 253 insertions(+), 6 deletions(-)

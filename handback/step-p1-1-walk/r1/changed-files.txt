@@ -1,0 +1,12 @@
+A	src/btf-adapters/src/btf-defaults/move.ts
+M	src/btf-adapters/src/index.ts
+A	src/rules/move/index.ts
+A	src/rules/move/path.ts
+A	src/rules/move/step-pattern.ts
+A	src/rules/move/targets.ts
+M	src/sim/player.ts
+M	src/sim/types.ts
+A	tests/parity/step-pattern.parity.test.ts
+A	tests/rules/move-qa.test.ts
+A	tests/rules/move.test.ts
+M	tests/sim/bot.test.ts

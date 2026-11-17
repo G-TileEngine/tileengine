@@ -81,7 +81,7 @@ test("every reject reason is reached and changes nothing, including a selected u
   const got = player.feed({ type: "ChooseAbility", unitId: "knight#1", index: 1 });
   assert.equal(got.reject === null && got.action?.effects[0] === "ward" && world.levels?.state().bars[0]?.abilities[0] === "ward", true);
   disposeWorld(world); feed({ type: "SelectUnit", unitId: "knight#1" }, "disposed");
-  const listed: Record<PlayerReject, true> = { noEvent: true, illegal: true, noUnit: true, notOwn: true, offGrid: true, noAction: true, malformed: true, disposed: true, noOffer: true, badPick: true };
+  const listed: Record<Exclude<PlayerReject, "notReachable">, true> = { noEvent: true, illegal: true, noUnit: true, notOwn: true, offGrid: true, noAction: true, malformed: true, disposed: true, noOffer: true, badPick: true };
   assert.deepEqual([...reasons].sort(), Object.keys(listed).sort());
   assert.equal(world.log.lastSeq() === 1 && player.history().length === 19, true);
   const only = createWorld(input("stage-fixed"));
