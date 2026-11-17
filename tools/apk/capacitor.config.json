@@ -1,0 +1,12 @@
+{
+  "appId": "com.tileengine.play",
+  "appName": "TileEngine",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "minSdkVersion": 26
+  }
+}

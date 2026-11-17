@@ -18,12 +18,21 @@ export function toJs(rel: string, src: string, dep: (rel: string) => void): stri
   const bad = /(?:from\s+|import\s+)"([^."][^"]*)"/.exec(out); if (bad !== null) throw new Error(`build: non-relative import ${bad[1] ?? ""} in ${rel}`); return out;
 }
 export const refuse = (head: string, asked: string | undefined, dirty: string): string | null => dirty !== "" ? "build: the checkout has uncommitted changes; build.json must name a real commit" : asked !== undefined && asked !== head ? `build: ${asked} is not the checked-out commit ${head}; check it out first` : null;
-export function build(out: string, commit: string, root: string = ROOT): string {
+export const DEV_ONLY = "// dev-only";
+export function release(src: string, rel = ""): string {
+  return src.split("\n").filter((line) => {
+    const cut = line.trimEnd(), code = cut.endsWith(DEV_ONLY) ? cut.slice(0, -DEV_ONLY.length).trimEnd() : null;
+    if (code !== null) { if (code !== 'import { DEV } from "./dev.ts";' && !/^if \(DEV\)/.test(code)) throw new Error(`release: ${rel} dev-only line must be an if (DEV) statement`); return false; }
+    if (/(^|[^A-Za-z0-9_])DEV([^A-Za-z0-9_]|$)/.test(line)) throw new Error(`release: ${rel} DEV is used outside a dev-only line`);
+    return true;
+  }).join("\n");
+}
+export function build(out: string, commit: string, root: string = ROOT, dev = false): string {
   if (!/^[0-9a-f]{40}$/.test(commit)) throw new Error("build: commit must be a full 40-character sha");
   const bj = join(out, "build.json"), prior = existsSync(out) && readdirSync(out).length > 0, text = prior && existsSync(bj) ? readFileSync(bj, "utf8") : "";
   if (prior && (text === "" || !ours(text) || !onlyBuild(out, text))) throw new Error(text === "" ? `build: ${out} is not empty; give an empty folder` : `build: ${out}/build.json is not one this builder wrote (commit, node, entry, files) or the folder holds other files; give an empty folder`);
   const bag = new Map<string, string>(), seen = new Set<string>();
-  const walk = (rel: string): void => { if (seen.has(rel)) return; seen.add(rel); bag.set(rel.replace(/\.ts$/, ".js"), toJs(rel, readFileSync(join(root, rel), "utf8"), walk)); };
+  const walk = (rel: string): void => { if (seen.has(rel)) return; seen.add(rel); const raw = readFileSync(join(root, rel), "utf8"); bag.set(rel.replace(/\.ts$/, ".js"), toJs(rel, dev ? raw : release(raw, rel), walk)); };
   walk(ENTRY); bag.set("index.html", toHtml(readFileSync(join(root, PAGE), "utf8")));
   const files = Object.fromEntries([...bag].sort(([a], [b]) => (a < b ? -1 : 1))), sums = Object.fromEntries(Object.keys(files).map((k) => [k, sha(files[k] ?? "")]));
   const body = `${JSON.stringify({ commit, node: process.versions.node, entry: "index.html", files: sums }, null, 2)}\n`;
