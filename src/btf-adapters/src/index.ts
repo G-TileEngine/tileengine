@@ -7,3 +7,4 @@ export { BTF_SPRITE_RECIPE_LIMITS } from "./sprite-recipe-limits.ts";
 export { BTF_MOVE_DEFAULTS } from "./btf-defaults/move.ts";
 export { BTF_BATTLE_DEFAULTS } from "./btf-defaults/battle.ts";
 export { BTF_SPELL_DEFAULTS } from "./btf-defaults/spells.ts";
+export { BTF_TURN_DEFAULTS } from "./btf-defaults/turns.ts";

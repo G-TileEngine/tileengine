@@ -1,0 +1,10 @@
+A	src/btf-adapters/src/btf-defaults/turns.ts
+M	src/btf-adapters/src/index.ts
+A	src/rules/turns/action-budget.ts
+A	src/rules/turns/bot-ability-priority.ts
+M	src/sim/chaos.ts
+M	src/sim/exploit.ts
+M	src/sim/index.ts
+A	tests/parity/action-budget.parity.test.ts
+A	tests/rules/bot-p15.test.ts
+A	tests/rules/bot-qa-p15.test.ts
