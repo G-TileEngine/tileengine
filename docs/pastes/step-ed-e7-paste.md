@@ -1,4 +1,4 @@
-Build step-ed-e7-designer-page2 r1 (kit-1 **r2**) from the step file `handoff/steps/step-ed-e7-designer-page2.md` on main (sha256 `08f2ef8cba9b894ccaa1dc7fe1a8a8a23744481b2a9318db1e37ca4f622b6d15`); it wins over this paste.
+Build step-ed-e7-designer-page2 r2 (kit-1 **r3-docfix**, tests unchanged from r2; Files table and totals restacked on merged ChatA E6) from the step file `handoff/steps/step-ed-e7-designer-page2.md` on main (sha256 `15dfd4777ae782924cbbbefc6e80e2afadf0ca2bc1a7d8912f19ed2c498e40b0`); it wins over this paste.
 
 Base commit: **current `main` when you start**, which must contain the **ED-E6 merge**; quote its full sha. If E6's code is not on main, or its API differs from what the shipped tests import (step file § Interfaces to match), stop and report. Branch: **`step/step-ed-e7-designer-page2-r<N>-chatA`**, created from the Base. The PR targets `main`. Never commit to `main`. The diff is always `<Base>..<head>`.
 Builds: one builder chat (ChatA), one QA review, and a rework round (r2, r3…) if QA finds must-fixes (CEO 2026-11-17 ~01:33 London, via Chief Of Staff).
@@ -6,7 +6,7 @@ Delivery (CN-028, token issued 2026-11-17): commit `handback/step-ed-e7-designer
 
 > Working style (REQUIRED): use your helper agents for review, tests and cross-checks, take your time, and self-review against Acceptance + the QA checklist. HANDBACK.md must have § Helpers & self-review (each helper and what it reviewed, plus your self-review); without it the hand-back is REJECT (incomplete). See BUILD_GUIDE §0 and HAND-BACK item 8.
 
-Shipped files (copy byte-identical from `handoff/steps/tests/step-ed-e7-designer-page2/` to the same paths at the repo root): `tests/editor/effect-e7-carries.test.ts`, `tests/tools/ed-e7.test.ts`, `tests/tools/ed-e6.test.ts` (replaces E6's, changed by ruling). Run, do not copy: `smoke.mjs` (the kit-run browser smoke at 390 × 844, REQUIRED, all lines quoted in HANDBACK.md). Floor: green at least main's count at the Base + 16 passing, 0 failing. At most 282 changed lines. Pins unchanged. Noreply author and committer. Push only your own step branch (CN-028). After E7 merges: HARD STOP for CEO phone test 1.
+Shipped files (copy byte-identical from `handoff/steps/tests/step-ed-e7-designer-page2/` to the same paths at the repo root): `tests/editor/effect-e7-carries.test.ts`, `tests/tools/ed-e7.test.ts`, `tests/tools/ed-e6.test.ts` (replaces E6's, changed by ruling). Run, do not copy: `smoke.mjs` (the kit-run browser smoke at 390 × 844, REQUIRED, all lines quoted in HANDBACK.md). Floor: green at least main's count at the Base + 16 passing, 0 failing. At most 376 changed lines (hard cap 400). Pins unchanged. Noreply author and committer. Push only your own step branch (CN-028). CEO phone test 1 after E7 is dropped (CEO 2026-11-17 05:26); the CEO's first real test is the APK.
 
 ## Goal
 After this step the Effect Designer has its second page, below **Save & use** (the 3-tap Save path is unchanged):
@@ -23,7 +23,7 @@ After this step the Effect Designer has its second page, below **Save & use** (t
 11. **Kit-run browser smoke.** `handoff/steps/tests/step-ed-e7-designer-page2/smoke.mjs` automates E6's manual smoke plus every page-2 row (0 repo lines; required in the hand-back).
 
 ## Rulings
-1. **One step.** 278 changed lines ≤ 400 (scope E7: split only if over). Base = current main with E6 merged; floor = main's count at the Base + 16.
+1. **One step.** 372 changed lines ≤ 400 (scope E7: split only if over). Base = current main with E6 merged; floor = main's count at the Base + 16.
 2. **S3 (QA E6 r2): the mint.** `ulid(now, bytes)`: 10 Crockford base-32 chars of `Math.floor(now)` (a bad clock gives "0" chars), then one char per byte for 16 bytes; `minter(now, random)` returns `(prefix) => prefix + ulid(now(), random(16))`. `page.ts` keeps D6.1's `taken` set and calls `minter(() => Date.now(), (n) => crypto.getRandomValues(new Uint8Array(n)))`. E6's page test 13 drops its alphabet needle for `"minter("` (§ Existing tests changed by ruling).
 3. **S2 (QA E6 r2): a reload closes the undo window; DSK D8.1 OK.** At boot `purgeTrash(store)` lists `effects/.deleted/` (`opfsStore(...).list(dir)`, OPFS `keys()`, sorted; a missing folder lists none; another error is thrown) and removes each name matching `^[^/]+\.json$` there (best-effort: a failed remove is skipped). Sub-folders and odd names are skipped, and a live `effects/*.json` is never touched (D8.1(b), test 7).
 4. **Redo across documents (setup §4 rule 10).** `redoGroup(docs, entry, moved, at)` walks `entry.docs` in write order. A created doc must be one of the Undo's `moved` (its trash copy) and must not exist meanwhile; a fresh one (no ops) moves back unchanged, otherwise it gets `writer.redo`. Every other doc gets `writer.redo`. Any `redo` that appends nothing, or an op outside `entry.group`, refuses by name (`SAVE.refused`), as `undoGroup` does. The page commits with `{ moves }` (trash → name, `expectedRev` checked both ends), shows **Redo** only right after **Undo**, and a new Save & use closes the redo. **D8.1(a):** if the `.deleted` copy is missing, `commit` refuses before writing anything (a missing move source is `staleRev`, `got` null) and `trashGone(r, moves)` names it; the page then toasts "Not redone: its deleted copy is gone (a reload cleared it, maybe in another tab). Nothing was changed.", drops only that redo entry and keeps every document's own history (test 6). Any other `staleRev` keeps the redo.
@@ -48,19 +48,20 @@ After this step the Effect Designer has its second page, below **Save & use** (t
 ## Files to create or change (and nothing else)
 | File | What | Proto | Cap |
 |---|---|---|---|
-| `src/editor/effect/save.ts` | change: `redoGroup`, `trashGone` (ruling 4) | 16 | 20 |
+| `src/editor/effect/save.ts` | change: `redoGroup`, `trashGone` (ruling 4) | 18 | 22 |
 | `src/editor/effect/writer.ts` | change: `seqOf` highest seq; finite `flash_seconds` (ruling 5) | 4 | 8 |
 | `src/editor/effect/dice.ts` | change: `breed` skips holes (ruling 5) | 3 | 7 |
 | `tools/effect-designer/ulid.ts` | new: `B32`, `ulid`, `minter` (ruling 2) | 4 | 8 |
 | `tools/effect-designer/store.ts` | change: `list(dir)`; `Dir.keys?`; `purgeTrash` (ruling 3) | 9 | 13 |
-| `tools/effect-designer/strip.ts` | change: `View.zoom` a number; `zoom`; `fitZoom` (ruling 17) | 6 | 10 |
+| `tools/effect-designer/strip.ts` | change: `View.zoom` a number; `zoom`; `fitZoom` (ruling 17) | 7 | 11 |
 | `tools/effect-designer/mixer.ts` | new: `PAGE2`, `Card`, `Chip`, `Mixer`, `chips`, `meterText`, `trimLine`, `beatRow`, `mixer`, `swap`, `snap`, `keysOf`, `cycle`, `mixed`, `take`, `shelve`, `toggle`, `page3`, `houseOf` (rulings 7–15) | 43 | 47 |
-| `tools/effect-designer/page.ts` | change: mint import, boot purge, Redo and its gone-copy warning, Fit, page-2 glue (rulings 2–4, 6–15, 17) | 60 | 64 |
-| `tools/effect-designer/index.html` | change: the page-2 rows and the Advanced card | 2 | 6 |
+| `tools/effect-designer/page.ts` | change: mint import, boot purge, Redo and its gone-copy warning, Fit, page-2 glue (rulings 2–4, 6–15, 17). Restacked on merged ChatA E6, whose page layout differs from the E6 proto | 124 | 128 |
+| `tools/effect-designer/index.html` | change: the page-2 rows and the Advanced card. Restacked on merged ChatA E6 | 11 | 15 |
 | `tests/editor/effect-e7-carries.test.ts` | new, shipped (7 tests) | 65 | 65 |
 | `tests/tools/ed-e7.test.ts` | new, shipped (9 tests) | 62 | 62 |
 | `tests/tools/ed-e6.test.ts` | change by ruling, shipped whole (§ Existing tests changed by ruling) | 4 | 4 |
-Total ≤ 282 changed lines (proto **278**: src 23, tools 124 incl. 2 html, tests 131; the cap is proto + 4). Caps follow STEP-TEMPLATE (proto + 4); shipped tests are byte-identical, so their cap is their proto.
+| `tools/effect-designer/presets.ts` | change: keep the E7/E6 preset set (Mend, Arrow, Halo and the documented tiles) so page 2 and the shipped tests work on the merged ChatA E6 stubs | 18 | 22 |
+Total ≤ 376 changed lines (proto **372**: src 25, tools 216 incl. 11 html, tests 131; the cap is proto + 4). Hard cap 400. Caps follow STEP-TEMPLATE (proto + 4); shipped tests are byte-identical to r2, so their cap is their proto.
 
 ## Interfaces to match (quoted exactly; bodies elided)
 The shipped tests import these. E6 and E4/E5 names they use must already be on main as quoted; if not, stop and report.
@@ -147,22 +148,22 @@ From the **basic-attack** Effect row (`?for=basic-attack&kind=melee`): tap *Slas
 The redo order (write order; created docs by move) and its refusal test; the boot purge point (S2) and that it is best-effort; the mint split (`ulid` pure, `minter` with injected clock and bytes); `seqOf`'s highest-seq rule; what makes a Breed parent usable; the chip order and the Punch-from-knobs rule; the badge rule; the meter text and the trim Undo depth (one); the beat-row source (`impactMarks`); A and B from pick order; Mix start 50; the pick cycle order; the Take picks table; shelf order and caps; the pick cap and which pick drops; the Breed page size and wrap; the dice anchor and when it resets; the house stand-in settings; bounds (BUILD_GUIDE law 13): the shelf ≤48 cards, picks ≤3, children 6, rolls 6, one previous working effect, one undone Save & use; nothing grows per frame; one driver (the strip), disposed when hidden or rebooted.
 
 ## Gates (Acceptance)
-- [ ] `npm ci && npm run green` exits 0 with **at least 916 passing** (main's count at the Base + 16; 916 if main is 900 after the E6 merge) and none failing, cancelled, skipped or todo. Typecheck, lint, deps, check:state and check:law each exit 0 (proto: 916/0; deps 128 modules / 410 deps; `check:law OK (src)`). Main's stress p95 > 4 ms test can flake under a shared-box load: re-run it alone before believing a failure.
+- [ ] `npm ci && npm run green` exits 0 with **at least 971 passing** (main's count at the Base + 16, once E6 is on that main; authoring floor **971** on main 922 after P1-3..5) and none failing, cancelled, skipped or todo. Typecheck, lint, deps, check:state and check:law each exit 0 (proto on the restacked stack: 971/0). Main's stress p95 > 4 ms test can flake under a shared-box load: re-run it alone before believing a failure.
 - [ ] `node tools/pixel-suite/smoke.ts` prints `smoke: 0 failed`.
 - [ ] `node tools/host-example/match-picture.ts` prints `match-picture: stage-fixed replay to tick 460: 6 units, 6 drawn standing, 60 draw commands` and exits 0.
 - [ ] `npm run -s sim` prints stage-fixed 48/2 `afc89d56…` and stage-weighted 22/28 `b8007292…`.
 - [ ] `node tests/perf/stress-budget.ts` counts 27/0/0, 113/0/0, 181/0/0, 181/0/0, 27/373/0.
 - [ ] `git diff <Base> --stat -- package.json package-lock.json .dependency-cruiser.cjs scripts/check-law.sh src/types/core-types.ts` is empty. Pins: `1e5dd82c`, `d7f64a09`, `45a3dbaa`, `4d7bbf48`, `d6d08696`. If a core-types or dependency-rule change seems needed, **stop and report**.
-- [ ] `git diff <Base> --stat -- src/runtime src/sim src/core src/fx src/project tools/device-page tools/pixel-suite tools/painter-proto tools/ui-shell src/editor/effect/fit.ts src/editor/effect/merge.ts src/editor/effect/parts.ts src/editor/effect/house.ts tools/effect-designer/grid.ts tools/effect-designer/presets.ts` is empty.
+- [ ] `git diff <Base> --stat -- src/runtime src/sim src/core src/fx src/project tools/device-page tools/pixel-suite tools/painter-proto tools/ui-shell src/editor/effect/fit.ts src/editor/effect/merge.ts src/editor/effect/parts.ts src/editor/effect/house.ts tools/effect-designer/grid.ts` is empty.
 - [ ] The three shipped test files are byte-identical to the sha256s above; every other E1–E6, B1 and P1 test passes unchanged.
-- [ ] Each file within its cap; at most 282 changed lines.
+- [ ] Each file within its cap; at most 376 changed lines (hard cap 400).
 - [ ] **Kit-run browser smoke (REQUIRED):** from the repo root, `PLAYWRIGHT_CORE=<playwright-core dir> CHROME=<chrome binary> node handoff/steps/tests/step-ed-e7-designer-page2/smoke.mjs . 8791 /tmp/ed-e7-smoke.png` (install `playwright-core@1.59.1` outside the repo if you lack it, for example `npm i --prefix /tmp/pw playwright-core@1.59.1`, then `PLAYWRIGHT_CORE=/tmp/pw/node_modules/playwright-core`). It serves `tools/serve.ts`, opens `/tools/effect-designer/?for=basic-attack&kind=melee` headless at **390 × 844** (touch, @3x) and prints one `ok` or `FAIL` line per check, then `SMOKE PASS`. Paste **all** its lines into HANDBACK.md § Smoke (37 `ok` lines on the proto) and attach nothing else; a `FAIL` or a timeout is a stop-and-fix. If no Chrome can run at all, stop and report (no manual substitute).
 - [ ] No `Math.random`, `Date`, timers, `localStorage`/`sessionStorage`/`indexedDB` or `Card`/`Deck` identifiers in `src/`; no hp/mana/cost/damage in the designer. Storage only through the page's OPFS `Store`; randomness in `tools/` only through `crypto.getRandomValues`.
 - [ ] Delivery per CN-028: the branch `step/step-ed-e7-designer-page2-r<N>-chatA` is pushed once with `GH_BUILDER_TOKEN` through the one-shot credential helper (that branch only; the token never printed, logged, committed or saved in `.git/config` or a remote), HANDBACK.md is its last commit, and the hand-back message quotes the branch, the full tip sha, the tree, the Base sha, `pass N fail 0` and the smoke lines.
 - [ ] Hand-back complete per `handoff/HAND-BACK.md`, with § Helpers & self-review.
 
 ## Floor
-Main's count at the Base + **16** = 7 (`effect-e7-carries`) + 9 (`ed-e7`); `ed-e6.test.ts` is replaced, not added (same 5 tests). Proto: 900 (E6 r4 on `82326beb`) + 16 = **916**. (Main moved to `75df4642`, P1-2 merged, during r2; the floor rule is unchanged.) Kit tests under `handoff/` are not run on main until merge.
+Main's count at the Base + **16** = 7 (`effect-e7-carries`) + 9 (`ed-e7`); `ed-e6.test.ts` is replaced, not added (same 5 tests). Authoring floor on this stack: 922 + 13 + 11 + 9 + 16 = **971**. If main's count at Base (with E6 already merged) is C, and P1-3..5 are also on that main, the floor is C + 13 + 11 + 9 + 16; if only E6 is on main, the floor is C + 16. Kit tests under `handoff/` are not run on main until merge.
 
 ## Perf (phone floor)
 No runtime code changes, so the draw, particle and light caps, `fx-live` and the 34b numbers are untouched. Page 2 adds no second driver: every result plays in the one strip. Merges, Take, Breed (6 blends) and rolls run once per tap, never per frame; Breed is 6 `blend` calls on ≤12-step docs. The shelf, picks, rolls and children are capped (Decisions note).
@@ -177,29 +178,29 @@ No runtime code changes, so the draw, particle and light caps, `fx-live` and the
 - **Per-layer nudge** (±30 ms, UX-B4) → **E8** with the scrub timeline.
 - **QA report-only (E5, still open):** knob `5` writes an answer under key `"5"`; a group split by a migrate barrier half-undoes; `canonStep` renames by name whatever the value type; `"true"`/`"false"` smear strings kept; a non-integer stored `baseSeq` reads as 0 silently; `valuesOf` passes a loaded `__proto__` answer through (E6 reports it). Plants 58, 96, 98, 105 and QA Q27 (E5) are still caught only by crash → **E8 writer pass** (EA).
 - **Dangling refs after a purge** (D6.2 `unknownRef` + default) → the project reader.
-- **gh-pages build of the designer** (`tools/device-page/build.ts` builds only the device page) → the **E6+E7 batch publish** for phone test 1 (scope M13), with RaiKynn's own typed OK naming the commit (open question CoS-1).
+- **gh-pages build of the designer** (`tools/device-page/build.ts` builds only the device page) → a later optional designer publish, not a gate. CEO phone test 1 is dropped. The CEO's first real test is the APK (P1-9). (Open question CoS-1, updated.)
 - Reactions (editor suggestions only) → later (scope §4).
 
 ## Out of scope
 Game rules (HP, mana, cost, damage) and any sim, core, runtime or render change. Any format change. The project loader and the stage editor. CN acceptance is DSK's; the catalogue rev is the Librarian's.
 
 ## Do not touch
-`src/types/core-types.ts`, `src/core/**`, `src/sim/**`, `src/fx/**`, `src/runtime/**`, `src/project/**`, `src/editor/effect/fit.ts`, `merge.ts`, `parts.ts`, `house.ts`, `tools/effect-designer/grid.ts`, `presets.ts`, `package.json`, the lock, `.dependency-cruiser.cjs`, `scripts/**`, `tools/device-page/**`, `tools/pixel-suite/**`, `tools/painter-proto/**` and `tools/ui-shell/**` above all, every shipped test other than `ed-e6.test.ts` (ruling 2).
+`src/types/core-types.ts`, `src/core/**`, `src/sim/**`, `src/fx/**`, `src/runtime/**`, `src/project/**`, `src/editor/effect/fit.ts`, `merge.ts`, `parts.ts`, `house.ts`, `tools/effect-designer/grid.ts`, `package.json`, the lock, `.dependency-cruiser.cjs`, `scripts/**`, `tools/device-page/**`, `tools/pixel-suite/**`, `tools/painter-proto/**` and `tools/ui-shell/**` above all, every shipped test other than `ed-e6.test.ts` (ruling 2).
 
 ## Known proto limit (DSK D8.1(c))
 With two tabs open, one tab's reload ends the other tab's redo: the reload purges `effects/.deleted/`, and the other tab's Redo then fails cleanly (ruling 4). Revisit at the project-loader step, which could purge only ids older than every open session.
 
-## HARD STOP after E7 (CEO phone test 1)
-Scope §8 cut line and CEO answer 4 ("Yes"): once E7 merges, **stop**. One gh-pages publish of the E6+E7 designer, then the CEO tests it on his phone. E7p (ability play) and E8 (Advanced) wait for that test. Builders do not start E7p or E8 from this kit.
+## After E7 (CEO phone test 1 is dropped)
+CEO 2026-11-17 05:26: CEO phone test 1 after E7 is **dropped**. Work does not stop at E7. E7p's build order is after P1-6; work continues through P1-9. The CEO's first real test is the APK (P1-9), not a gh-pages designer publish. Builders may start later steps from the agreed build order; they do not wait on phone test 1.
 
 ## Open questions
-- **CoS-1** Phone test 1 needs the designer on gh-pages; `tools/device-page/build.ts` does not build it and is out of bounds here. A separate publish step (or a build-script step) is needed before the test.
+- **CoS-1** Phone test 1 is dropped (CEO 2026-11-17 05:26). A designer gh-pages publish is not required before later steps. The CEO's first real test is the APK (P1-9).
 - Settled in r2: DSK-1 and DSK-2 by DSK D8 (`handoff/dsk-rulings/2026-11-17-phase1.md` § D8, sha256 `5b0fcb6c497c9f64f52b9be3adfb98b99a3936f1d5e96350e70b3efea7033a3b`, DSK's area `/workspace/tileengine`; not yet on main, whose copy is `58cf837c…`) (rulings 3, 4, 12, 15; § Known proto limit); UX-1…UX-8 defaults stand (ruling 18; UX-8's canonical file `ux-p1-answers.md` `7f938011…`); the strip scale (ruling 17).
 
 ## Delivery footer (must hold at hand-back)
-- `npm ci && npm run green` exits 0 with **at least 916 passing and 0 failing** (main's count at the Base + 16). Paste the summary line, the smoke line, the host example line, the sim and stress lines and all kit-run browser smoke lines into HANDBACK.md.
+- `npm ci && npm run green` exits 0 with **at least 971 passing and 0 failing** (main's count at the Base + 16). Paste the summary line, the smoke line, the host example line, the sim and stress lines and all kit-run browser smoke lines into HANDBACK.md.
 - All three shipped test files are **byte-identical** to the sha256s above.
-- Base = main with E6 merged. At most 282 changed lines. Every pin unchanged. Commits are `G-TileEngine <G-TileEngine@users.noreply.github.com>` (author and committer).
+- Base = main with E6 merged. At most 376 changed lines (hard cap 400). Every pin unchanged. Commits are `G-TileEngine <G-TileEngine@users.noreply.github.com>` (author and committer).
 
 ## Delivery
 One builder chat (ChatA), one QA review, a rework round on must-fixes (CEO 2026-11-17 ~01:33 London, via Chief Of Staff). CN-028 token issued 2026-11-17. On branch `step/step-ed-e7-designer-page2-r<N>-chatA` (base = main with E6 merged), commit as `G-TileEngine <G-TileEngine@users.noreply.github.com>` (author and committer), with HANDBACK.md as the last commit. Push once, with the token the CEO gave you in chat as `GH_BUILDER_TOKEN` (set with `export GH_BUILDER_TOKEN=...` in the shell that runs git; without `export` the helper sees nothing; never write a real value), through a one-shot credential helper: `git -c credential.helper= -c credential.helper='!f() { echo username=GTileEngineHelpers; echo "password=${GH_BUILDER_TOKEN}"; }; f' push https://github.com/G-TileEngine/tileengine.git HEAD:refs/heads/step/step-ed-e7-designer-page2-r<N>-chatA` (keep the single quotes so the token is read only when git asks; it never appears on the command line), and nothing else (never `main`, never a tag, never force-push; the rulesets block all three). Never print, echo, log or commit the token or store it in `.git/config` or a saved remote; if it appears in output, say so (the CEO revokes and reissues it). Then hand back with the branch, the full tip sha, the tree, the Base sha, `pass N fail 0` and the smoke lines.
