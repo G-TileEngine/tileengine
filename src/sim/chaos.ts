@@ -11,6 +11,8 @@ const same = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.str
 const json = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 const requireBuild = (engineSha: string, node: string): void => { if (engineSha === "" || node === "") throw new RangeError("chaos: engineSha and node are required"); };
 const firstKey = (a: SimSnapshot, b: SimSnapshot): SnapshotKey | null => KEYS.find((key) => !same(a[key], b[key])) ?? null;
+export const SNAPSHOT_KEYS = KEYS;
+export const divergentSnapshotKey = firstKey;
 function clockOf(view: ChaosView): ChaosFinding | null {
   const stepMs = view.world.clock.stepMs;
   for (const snap of [view.before, view.fed, view.after]) {

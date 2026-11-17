@@ -10,7 +10,7 @@ export { runMatch } from "./driver-phase.ts";
 export { runTicks } from "./driver-tick.ts";
 export { feedIntent, intentEvent } from "./intents.ts";
 export { createPlayer } from "./player.ts";
-export { CHAOS_CHECKS, replayChaos, runChaos } from "./chaos.ts";
+export { CHAOS_CHECKS, SNAPSHOT_KEYS, divergentSnapshotKey, replayChaos, runChaos } from "./chaos.ts";
 export { CHAOS_KINDS, chaosIntents, gestureRecipes, runChaosGen } from "./chaos-gen.ts";
 export { shrinkChaos } from "./shrink.ts";
 export { EXPLOIT_KINDS, acceptedCheck, exploitWire, plainDeep, protoNames, replayExploit, runExploit } from "./exploit.ts";
