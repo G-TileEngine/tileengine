@@ -40,7 +40,8 @@ const freeze = (doc: Row, knob: "steps" | "parts", list: readonly unknown[], min
   return { value, aliased };
 };
 const desired = (prev: Row | null, value: unknown): Row => { const kept: Row = {}; if (prev !== null) for (const [k, v] of Object.entries(prev)) if (k !== "rev" && k !== "value" && k !== "source") kept[k] = v; return value === undefined ? { ...kept, source: "default" } : { ...kept, source: "user", value }; };
-const same = (a: Row, b: Row): boolean => JSON.stringify(a) === JSON.stringify(b);
+const canon = (v: unknown): unknown => (Array.isArray(v) ? v.map(canon) : v !== null && typeof v === "object" ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, canon((v as Row)[k])])) : v);
+const same = (a: Row, b: Row): boolean => JSON.stringify(canon(a)) === JSON.stringify(canon(b));
 const pushOp = (ops: Row[], cap: number, baseSeq: number, op: Row): number => { ops.push(op); while (ops.length > cap) { ops.shift(); baseSeq += 1; } return baseSeq; };
 const tag = (op: Row, extra: Row): Row => ({ ...extra, ...(typeof op["group"] === "string" ? { group: op["group"] } : {}) });
 export function write(doc: Row, values: Readonly<Record<string, unknown>>, o: WriteOpts): Row {
@@ -60,9 +61,9 @@ const play = (doc: Row, at: string, hist: { cap: number; baseSeq: number; ops: R
   for (const op of batch) { for (const ch of (field === "before" ? op["changes"] : (hist.ops.find((item) => item["seq"] === op["target"]) ?? {})["changes"]) as unknown[] | undefined ?? []) { const c = rec(ch); if (c !== null && typeof c["knob"] === "string") apply(answers, c["knob"], rec(c[field]) ?? { source: "default" }); } rev += 1; baseSeq = pushOp(ops, hist.cap, baseSeq, tag(op, { seq: seqOf(ops, baseSeq), at, kind, target: kind === "undo" ? op["seq"] : op["target"], changes: [] })); }
   return { ...doc, rev, updatedAt: at, answers, orphans: { ...(rec(doc["orphans"]) ?? {}) }, history: { cap: hist.cap, baseSeq, ops } };
 };
-export function undo(doc: Row, at: string): Row {
+export function undo(doc: Row, at: string, o?: { alone?: boolean }): Row {
   const hist = readHist(doc), open = openOps(hist.ops); if (open.length === 0) return doc;
-  const top = open[open.length - 1], group = top?.["group"], members = (typeof group === "string" ? open.filter((op) => op["group"] === group) : [top]).filter((op): op is Row => op !== undefined);
+  const top = open[open.length - 1], group = o?.alone === true ? undefined : top?.["group"], members = (typeof group === "string" ? open.filter((op) => op["group"] === group) : [top]).filter((op): op is Row => op !== undefined);
   if (typeof group === "string" && open.slice(open.indexOf(members[0] as Row) + 1).some((op) => op["group"] !== group)) return doc;
   return play(doc, at, hist, [...members].reverse(), "before", "undo");
 }
