@@ -34,6 +34,8 @@ export function createMatch(docs?: PlayDocs, moveMs = 200) {
   const cells = (list: readonly { id: string }[]): Sq[] => list.flatMap((t) => { const u = play.world.units.get(t.id); return u === undefined ? [] : [u.at]; });
   const go = (e: Parameters<typeof play.go>[0]): void => { play.go(e); };
   const finish = (): boolean => {
+    const from = play.world.phases.battle;
+    if (from !== "idle" && from !== "unitSelected") return false;
     go({ type: "END_TURN" }); go({ type: "SIDE_END" });
     const got = wiped(play.world, { round, side });
     if (got !== null) { go({ type: "CHECK_END", outcome: got }); outcome = got; return true; }
