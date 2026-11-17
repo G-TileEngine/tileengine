@@ -1,7 +1,7 @@
 // P1-9 kit-run browser smoke (the builder runs it; 0 repo lines): node smoke.mjs <worktree> [port] [shot.png]
 // Env: PLAYWRIGHT_CORE = playwright-core package dir, CHROME = Chrome binary. Headless 390x844 and 360 wide @3x, touch.
 // Serves the tools/apk --web (play-stage) www/ output statically. Exits 1 on any FAIL, any page error, or any request that is not this localhost origin.
-// Checks: boot, HUD 44px targets, no sideways scroll, no page errors, no external http(s)/ws(s) requests.
+// Checks: boot, HUD 44px targets, no sideways scroll, the stage looks (every picture loads; torch lights drawn), no page errors, no external http(s)/ws(s) requests.
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
 import { mkdtempSync, readFileSync, rmSync, statSync } from "node:fs";
@@ -53,6 +53,8 @@ try {
       return { shown: shown.map((b) => ({ t: b.t, w: b.w, h: b.h, id: b.id })), small, end: shown.some((b) => b.id === "end" || /end/i.test(b.t)), menu: shown.some((b) => b.id === "menu") };
     });
     check(`touch targets >= 44x44 at ${width}`, hud.small.length === 0 && hud.end && hud.menu, JSON.stringify(hud));
+    const looks = await page.evaluate(() => { const d = window.__driver; return { failed: d.stats.failed, errors: d.stats.errors, missing: d.backend.stats.missing, lightBuilds: d.backend.stats.lightBuilds, draws: d.stats.draws }; });
+    check(`stage looks load and torches draw at ${width}`, looks.failed === 0 && looks.errors === 0 && looks.missing === false && looks.lightBuilds > 0 && looks.draws > 0, JSON.stringify(looks));
     check(`no page errors at ${width}`, errs.length === 0, errs.join(" | ") || "none");
     check(`no external request at ${width}`, ext.length === 0, ext.join(" | ") || "none");
     if (shot) await page.screenshot({ path: shot, fullPage: true });

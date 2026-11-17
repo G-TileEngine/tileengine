@@ -1,6 +1,7 @@
 // P1-8 kit-run browser smoke (the builder runs it; 0 repo lines): node smoke.mjs <worktree> [port] [shot.png]
 // Env: PLAYWRIGHT_CORE = playwright-core package dir, CHROME = Chrome binary. Headless 390x844 and 360 wide @3x, touch. Exits 1 on any FAIL.
-// Steps: open play-stage, HUD 44px targets, no sideways scroll, no page errors, Spell two-tap: effect is live, fx:hit fires, then it retires.
+// Steps: open play-stage, HUD 44px targets, no sideways scroll, no page errors, the stage looks (every picture loads: dressing, shore, motion, idle clips; torch lights drawn),
+// Spell two-tap: effect is live, fx:hit fires, effect light and shake show, then it retires.
 import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
 const PW = process.env.PLAYWRIGHT_CORE ?? "/usr/local/lib/pnpm/5/.pnpm/playwright-core@1.59.1/node_modules/playwright-core/";
@@ -27,6 +28,8 @@ try {
       return { shown, small, end: shown.some((b) => b.id === "end" || /end/i.test(b.t)), menu: shown.some((b) => b.id === "menu") };
     });
     check(`touch targets >= 44x44 at ${width}`, hud.small.length === 0 && hud.end && hud.menu, JSON.stringify(hud));
+    const looks = await page.evaluate(() => { const d = window.__driver; return { failed: d.stats.failed, errors: d.stats.errors, missing: d.backend.stats.missing, lightBuilds: d.backend.stats.lightBuilds, draws: d.stats.draws }; });
+    check(`stage looks load and torches draw at ${width}`, looks.failed === 0 && looks.errors === 0 && looks.missing === false && looks.lightBuilds > 0 && looks.draws > 0, JSON.stringify(looks));
     const fx = await page.evaluate(async () => {
       const play = window.__play, hud = window.__hud, link = window.__link;
       hud.hideBanner();
@@ -39,7 +42,7 @@ try {
       const at = play.aims[0] ?? wolf.at;
       play.intend({ type: "TargetCell", at });
       play.intend({ type: "TargetCell", at });
-      let live = 0, hits = 0, retired = false;
+      let live = 0, hits = 0, retired = false, lit = 0, shook = 0;
       const t0 = performance.now();
       while (performance.now() - t0 < 4000) {
         await new Promise((r) => requestAnimationFrame(r));
@@ -47,12 +50,13 @@ try {
         const n = (play.scene().effects ?? []).length;
         if (n > 0) live = Math.max(live, n);
         hits += (link.fired ?? []).filter((e) => e.type === "fx:hit").length;
+        if (link.lit.lights.length > 0) lit += 1; if (link.shake.x !== 0 || link.shake.y !== 0) shook += 1;
         if (live > 0 && n === 0) retired = true;
-        if (live > 0 && hits > 0 && retired) break;
+        if (live > 0 && hits > 0 && retired && lit > 0 && shook > 0) break;
       }
-      return { ok: true, live, hits, retired, notes: play.fx.engine.notes.map((n) => n.code) };
+      return { ok: true, live, hits, retired, lit, shook, failed: window.__driver.stats.failed, notes: play.fx.engine.notes.map((n) => n.code) };
     });
-    check(`spell effect live, hit, retire at ${width}`, fx.ok && fx.live > 0 && fx.hits > 0 && fx.retired === true, JSON.stringify(fx));
+    check(`spell effect live, hit, lit, shake, retire at ${width}`, fx.ok && fx.live > 0 && fx.hits > 0 && fx.retired === true && fx.lit > 0 && fx.shook > 0 && fx.failed === 0, JSON.stringify(fx));
     await page.evaluate(() => window.__raf.clear()); await page.waitForTimeout(800);
     const r = await page.evaluate(() => { const v = [...window.__raf.values()]; return { frames: v.length, multi: v.filter((n) => n > 1).length }; });
     check(`one rAF callback per frame at ${width}`, r.frames > 10 && r.multi === 0, `${r.frames} frames, ${r.multi} with >1`);
