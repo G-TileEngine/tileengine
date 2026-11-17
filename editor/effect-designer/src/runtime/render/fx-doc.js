@@ -1,0 +1,66 @@
+                                              
+                                                      
+                                           
+import { PATH, readPath } from "./fx-path.js";
+                                                        
+                                                            
+                                                                                                                                                                                                                                                                                                                                              
+export const DOC = { steps: 12, secMin: 0.15, secMax: 3, secDefault: 0.48, msMax: 20000, fadeMax: 5000, minHitLen: 50, connect: 0.92 }         ;
+export const stepsOf = (doc             )            => Array.isArray(doc["steps"]) ? (doc["steps"]             ).filter((s)               => s !== null && typeof s === "object" && !Array.isArray(s)) : [];
+const STEP_KEYS = ["kind", "anchor", "anchor_point", "attach", "detach", "draw_layer", "depth_by_facing", "lit", "light_mode", "light", "light_radius", "light_ramp", "tint_ramp", "tint_snap", "outline", "blend", "angle", "particle_life", "particle_motion", "particle_count", "particle_life_ms", "particle_pull", "jitter", "start_spread", "size_spread"]         ;
+const KNOBS = ["hit_stop_ms", "shake", "shake_ms", "shake_dir", "squash", "tint_ramp", "pixel_scale", "hit_white_ms", "hit_white_target", "hit_white_mode", "impact_colour", "variant_seed", "start_on", "commitMs", "lungePeakMs"]         ;
+const MODES = new Set(["after-last", "with-last", "at-time", "at-hit"]);
+const num = (v         )                => (typeof v === "number" && Number.isFinite(v) ? v : null);
+const clampMs = (n        )         => Math.max(0, Math.min(DOC.msMax, n));
+                                                                                                                                                                                                                                              
+export function stepTimes(doc             )         {
+  const all = stepsOf(doc), notes           = [], n = Math.min(all.length, DOC.steps);
+  if (all.length > DOC.steps) notes.push({ code: "overCap", message: "Steps 13+ are saved but won't play" });
+  const lens           = [], fades           = [], holds           = [], mode           = [], at           = [];
+  for (let i = 0; i < n; i += 1) {
+    const s = all[i] ?? {}, raw = s["seconds"], known = num(raw);
+    let sec = known ?? DOC.secDefault;
+    if (raw !== undefined && (known === null || known < DOC.secMin || known > DOC.secMax)) { notes.push({ code: "outOfRange", message: `steps[${i}].seconds` }); sec = known === null ? DOC.secDefault : Math.min(DOC.secMax, Math.max(DOC.secMin, known)); }
+    lens.push(Math.round(sec * 1000)); const kind = s["kind"];
+    fades.push(kind === "stamp" || kind === "dim" ? Math.min(DOC.fadeMax, Math.max(0, Math.round(num(s["fade_out_ms"]) ?? 0))) : 0); holds.push(clampMs(num(s["hold_ms"]) ?? 0));
+    const m = s["start_mode"];
+    if (m !== undefined && (typeof m !== "string" || !MODES.has(m))) { notes.push({ code: "outOfRange", message: `steps[${i}].start_mode` }); mode.push("after-last"); } else mode.push(typeof m === "string" ? m : "after-last");
+    at.push(num(s["start_at_ms"]) ?? 0);
+  }
+  const named = doc["connect_step"]; let hitIndex = Math.max(0, n - 1);
+  if (typeof named === "string" && named !== "") { const idx = all.slice(0, n).findIndex((s) => s["id"] === named); if (idx < 0) notes.push({ code: "unknownRef", message: `connect_step ${named}` }); else hitIndex = idx; }
+  const cRaw = num(doc["connect"]); let connect         = DOC.connect;
+  if (doc["connect"] !== undefined && (cRaw === null || cRaw < 0.02 || cRaw > 1)) { notes.push({ code: "outOfRange", message: "connect" }); connect = cRaw === null ? DOC.connect : Math.min(1, Math.max(0.02, cRaw)); } else if (cRaw !== null) connect = cRaw;
+  const resolved = mode.map((m, i) => (m === "at-hit" && i <= hitIndex ? (notes.push({ code: "atHitBeforeHit", message: `steps[${i}]` }), "after-last") : m)), starts           = [];
+  let hitMs = 0;
+  for (let i = 0; i < n; i += 1) {
+    const m = resolved[i] ?? "after-last", prev = starts[i - 1] ?? 0;
+    const st = i === 0 && m !== "at-time" ? 0 : m === "at-hit" ? clampMs(hitMs + (at[i] ?? 0)) : m === "with-last" ? prev : m === "at-time" ? clampMs(at[i] ?? 0) : prev + (lens[i - 1] ?? 0) + (holds[i - 1] ?? 0);
+    starts.push(st); if (i === hitIndex) hitMs = Math.ceil(st + Math.max(DOC.minHitLen, lens[i] ?? 0) * connect);
+  }
+  const ends = starts.map((st, i) => st + (lens[i] ?? 0) + (fades[i] ?? 0) + (holds[i] ?? 0));
+  return { starts, lens, ends, hitIndex, hitMs, endMs: ends.reduce((m, e) => (e > m ? e : m), 0), notes };
+}
+export function docToLiveFx(doc             , host         )                                  {
+  const timing = stepTimes(doc), all = stepsOf(doc), steps = all.slice(0, DOC.steps), notes = [...timing.notes], pieces            = [];
+  for (let i = 0; i < steps.length; i += 1) {
+    const s = steps[i] ?? {}; if (s["enabled"] === false) continue;
+    const sheet = host.sheetOf(s, i); if (sheet === null) { notes.push({ code: "noPicture", message: `steps[${i}]` }); continue; }
+    const clip = host.clipOf?.(s, i);
+    const piece                          = { at: timing.starts[i] ?? 0, ms: (timing.ends[i] ?? 0) - (timing.starts[i] ?? 0), sheet, ...(clip === undefined ? {} : { clip }) };
+    for (const k of STEP_KEYS) if (s[k] !== undefined) piece[k] = s[k];
+    const got = readPath(s, timing.starts[i] ?? 0, timing.lens[i] ?? 0); for (const b of got.bad) notes.push({ code: b.code, message: `steps[${i}].${b.field}` });
+    let path = got.path; const ride = s["ride"], can = (PATH.riders                      ).includes(s["kind"]) && (s["kind"] !== "flash" || s["flash_shape"] === "circle");
+    if (path === null && can && "ride" in s) {
+      const j = typeof ride === "string" && ride !== "" ? all.findIndex((t) => t["id"] === ride) : -1, t = j >= 0 ? all[j] : undefined;
+      if (typeof ride !== "string") notes.push({ code: "invalidValue", message: `steps[${i}].ride` });
+      else if (t === undefined || j >= DOC.steps || j === i || t["enabled"] === false || !(PATH.kinds                      ).includes(t["kind"])) notes.push({ code: "unknownRef", message: `steps[${i}].ride` });
+      else path = readPath(t, timing.starts[j] ?? 0, timing.lens[j] ?? 0).path;
+    }
+    if (path !== null) piece["path"] = path;
+    pieces.push(piece           );
+  }
+  const knobs                          = {}; for (const k of KNOBS) if (doc[k] !== undefined) knobs[k] = doc[k];
+  const fx = { id: host.id, castMs: host.castMs, caster: host.caster, pieces, hitOffsetMs: timing.hitMs, ...(host.target === undefined ? {} : { target: host.target }), ...(host.at === undefined ? {} : { at: host.at }), ...(host.loopMs === undefined ? {} : { loopMs: host.loopMs }), ...knobs }          ;
+  return { fx, notes };
+}
