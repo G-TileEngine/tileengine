@@ -17,7 +17,10 @@ test("defaults match BTF battle numbers; per-class L3 stats install as BTF's; a 
     assert.deepEqual([name, got.out, got.notes], [name, s, []]);
   }
   const { warrior, archer } = BTF_BATTLE_DEFAULTS.classes;
-  const w = createWorld({ ...input("stage-fixed"), rules: { base: warrior, stats: { archer }, hitClass: "basic" } }), trail: number[] = [];
-  for (let i = 1; i <= 5; i += 1) { submit(w, { id: `h${i}`, kind: "ability", actor: "archer#2", target: { pipe: "unit", unitId: "knight#1" }, durationMs: null, turns: null, effects: [] }); trail.push(snapshot(w).rules?.units[0]?.hp ?? -1); }
-  assert.deepEqual([trail, w.units.get("knight#1")?.alive], [[7, 5, 3, 1, 0], false]);
+  const w = createWorld({ ...input("stage-fixed"), rules: { base: warrior, stats: { archer, wolf: warrior }, hitClass: "basic" } }), trail: number[] = [];
+  const wolf = w.units.get("wolf#3");
+  if (wolf === undefined) throw new Error("no wolf#3");
+  w.units.moveTo("archer#2", { c: wolf.at.c, r: wolf.at.r + 1 }, "move");
+  for (let i = 1; i <= 5; i += 1) { submit(w, { id: `h${i}`, kind: "ability", actor: "archer#2", target: { pipe: "unit", unitId: "wolf#3" }, durationMs: null, turns: null, effects: [] }); trail.push(snapshot(w).rules?.units.find((u) => u.id === "wolf#3")?.hp ?? -1); }
+  assert.deepEqual([trail, w.units.get("wolf#3")?.alive], [[7, 5, 3, 1, 0], false]);
 });

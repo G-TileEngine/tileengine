@@ -10,4 +10,6 @@ export const BTF_BATTLE_DEFAULTS = Object.freeze({
   }),
   wipe_wins: true as const,
   mutual_wipe: "draw" as const,
+  basic_reach: 1 as const,
+  class_reach: Object.freeze({ warrior: 1 as const, archer: 2 as const, mage: 2 as const, cleric: 1 as const }),
 });

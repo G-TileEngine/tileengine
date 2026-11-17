@@ -1,5 +1,5 @@
 import type { Action } from "../core/log/index.ts";
-import { TABLES, mergeTables } from "../state/index.ts";
+import { TABLES, mergeTables, xGo } from "../state/index.ts";
 import { submit } from "./actions.ts";
 import { isDisposed } from "./dispose.ts";
 import { feedIntent, intentEvent } from "./intents.ts";
@@ -22,7 +22,6 @@ function rejectOf(world: SimWorld, opts: PlayerOptions, from: PlayerStep["from"]
     if (unit.side !== opts.side) return "notOwn";
     return null;
   }
-  if (event.type === "CONFIRM_TARGET") return "noAction";
   if (event.type === "TAP_MOVE_CELL") {
     const unit = selected === null ? undefined : world.units.get(selected);
     if (unit === undefined || !unit.alive) return "noUnit";
@@ -34,7 +33,7 @@ function rejectOf(world: SimWorld, opts: PlayerOptions, from: PlayerStep["from"]
 export function createPlayer(world: SimWorld, opts: PlayerOptions): Player {
   if (opts.moveMs !== null && (!Number.isInteger(opts.moveMs) || opts.moveMs < 0)) throw new RangeError("createPlayer: moveMs must be null or an integer >= 0");
   const steps: PlayerStep[] = [];
-  let selected: string | null = null;
+  let selected: string | null = null, pending: "basic" | "interact" | null = null;
   return {
     side: opts.side,
     feed(intent, aim) {
@@ -58,10 +57,21 @@ export function createPlayer(world: SimWorld, opts: PlayerOptions): Player {
         steps.push(picked);
         return picked;
       }
+      if (intent.type === "ChooseAction") {
+        const id = intent.unitId ?? selected ?? "", unit = world.units.get(id);
+        const event = { type: "CHOOSE_ACTION" as const, actionId: intent.actionId, next: "targeting" as const };
+        const known = intent.actionId === "basic" || intent.actionId === "interact";
+        const reject = !EDGES.has(`${from}|CHOOSE_ACTION`) ? "illegal" as const : unit === undefined || !unit.alive ? "noUnit" as const : unit.side !== opts.side ? "notOwn" as const : !known ? "illegal" as const : null;
+        if (reject === null && unit !== undefined) { world.phases = { ...world.phases, battle: xGo(from, event) }; selected = unit.id; pending = intent.actionId; }
+        const picked: PlayerStep = { intent, aim: null, tick: world.clock.tick(), from, event: reject === null ? event : null, action: null, reject };
+        steps.push(picked);
+        return picked;
+      }
       const event = intentEvent(from, intent, aim ?? null);
       const first = rejectOf(world, opts, from, event, selected);
-      const path = first === null && event?.type === "TAP_MOVE_CELL" && selected !== null && opts.step !== undefined ? walkTo(world.grid, world.units, selected, opts.step.reach, event.at) : undefined;
-      const reject = path === null ? "notReachable" : first;
+      const held = event?.type === "CONFIRM_TARGET" && pending === null ? "noAction" as const : first;
+      const path = held === null && event?.type === "TAP_MOVE_CELL" && selected !== null && opts.step !== undefined ? walkTo(world.grid, world.units, selected, opts.step.reach, event.at) : undefined;
+      const reject = path === null ? "notReachable" : held;
       let action: Action | null = null;
       if (reject === null && event !== null) {
         feedIntent(world, intent, aim ?? null);
@@ -69,6 +79,14 @@ export function createPlayer(world: SimWorld, opts: PlayerOptions): Player {
           const ms = !path || opts.moveMs === null ? opts.moveMs : opts.moveMs * path.length;
           action = { id: opts.nextId(), kind: "move", actor: selected, target: { pipe: "tile", at: { c: event.at.c, r: event.at.r } }, durationMs: ms, turns: null, effects: [] };
           submit(world, action);
+        }
+        if (event.type === "CONFIRM_TARGET" && pending !== null && selected !== null && event.target.pipe === "tile") {
+          const id = world.units.occupantAt(event.target.at);
+          if (id !== undefined) {
+            action = { id: opts.nextId(), kind: pending === "interact" ? "interact" : "ability", actor: selected, target: { pipe: "unit", unitId: id }, durationMs: null, turns: null, effects: [] };
+            submit(world, action);
+          }
+          pending = null;
         }
         selected = event.type === "SELECT_UNIT" ? event.unitId : null;
       }

@@ -3,10 +3,18 @@ import { test } from "node:test";
 import type { Action } from "../../src/core/log/index.ts";
 import type { BattleSetup } from "../../src/rules/battle/index.ts";
 import { createWorld, snapshot, submit, type SimWorld } from "../../src/sim/index.ts";
+function standBy(w: SimWorld, actor: string, target: string): void {
+  const t = w.units.get(target);
+  if (t === undefined) throw new Error(`standBy: no ${target}`);
+  for (const at of [{ c: t.at.c, r: t.at.r + 1 }, { c: t.at.c, r: t.at.r - 1 }, { c: t.at.c + 1, r: t.at.r }, { c: t.at.c - 1, r: t.at.r }]) {
+    if (w.grid.inBounds(at) && w.units.occupantsAt(at).length === 0) { const moved = w.units.moveTo(actor, at, "move"); if (moved.ok) return; }
+  }
+  throw new Error(`standBy: no cell for ${actor} next to ${target}`);
+}
 import { input } from "../sim/input.ts";
 
 // QA P1-2 pins (G1 misses q01-q08, q11, q15): bad setup, atk 0, overkill amount, remove-then-died, rules last key.
-const S: BattleSetup = { base: { hp: 9, atk: 1 }, stats: { wolf: { hp: 1, atk: 0 }, archer: { hp: 6, atk: 2 } }, hitClass: "basic" };
+const S: BattleSetup = { base: { hp: 9, atk: 1 }, stats: { wolf: { hp: 1, atk: 0 }, archer: { hp: 6, atk: 2 } }, reach: { wolf: 99, archer: 99, knight: 99 }, hitClass: "basic" };
 const arm = (rules: unknown = S) => createWorld({ ...input("stage-fixed"), rules: rules as BattleSetup });
 const hit = (id: string, actor: string, unitId: string): Action => ({ id, kind: "ability", actor, target: { pipe: "unit", unitId }, durationMs: null, turns: null, effects: [] });
 const seen = (w: SimWorld) => w.bus.history().flatMap((r) => (r.event.type === "hit" || r.event.type === "unit.died" ? [r.event] : []));
@@ -21,7 +29,9 @@ test("qa: a bad setup is refused, never skipped (step rule 4)", () => {
 test("qa: atk 0 is a hit of amount 0 that never kills; overkill reports amount = atk, hp 0", () => {
   const w = arm(), died: unknown[] = [];
   w.bus.on("unit.died", (e) => died.push([e.type, w.units.get("wolf#3")?.alive, w.units.occupantsAt({ c: 2, r: 0 }).length]));
+  standBy(w, "wolf#3", "knight#1");
   submit(w, hit("a1", "wolf#3", "knight#1"));
+  standBy(w, "archer#2", "wolf#3");
   submit(w, hit("a2", "archer#2", "wolf#3"));
   assert.deepEqual(seen(w), [
     { type: "hit", unit: "knight#1", by: "wolf#3", amount: 0, hp: 9, hitClass: "basic" },
