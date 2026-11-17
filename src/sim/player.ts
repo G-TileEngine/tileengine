@@ -34,7 +34,7 @@ function rejectOf(world: SimWorld, opts: PlayerOptions, from: PlayerStep["from"]
 export function createPlayer(world: SimWorld, opts: PlayerOptions): Player {
   if (opts.moveMs !== null && (!Number.isInteger(opts.moveMs) || opts.moveMs < 0)) throw new RangeError("createPlayer: moveMs must be null or an integer >= 0");
   const steps: PlayerStep[] = [];
-  let selected: string | null = null, pending: "basic" | "interact" | null = null;
+  let selected: string | null = null, pending: "basic" | "interact" | "spell" | null = null;
   return {
     side: opts.side,
     feed(intent, aim) {
@@ -59,7 +59,7 @@ export function createPlayer(world: SimWorld, opts: PlayerOptions): Player {
         return picked;
       }
       if (intent.type === "ChooseAction") {
-        const id = intent.unitId ?? selected ?? "", unit = world.units.get(id), known = intent.actionId === "basic" || intent.actionId === "interact";
+        const id = intent.unitId ?? selected ?? "", unit = world.units.get(id), known = intent.actionId === "basic" || intent.actionId === "interact" || intent.actionId === "spell";
         const event = { type: "CHOOSE_ACTION" as const, actionId: intent.actionId, next: "targeting" as const };
         const reject = !EDGES.has(`${from}|CHOOSE_ACTION`) ? "illegal" as const : unit === undefined || !unit.alive ? "noUnit" as const : unit.side !== opts.side ? "notOwn" as const : !known ? "illegal" as const : null;
         if (reject === null && unit !== undefined) { world.phases = { ...world.phases, battle: xGo(from, event) }; selected = unit.id; pending = intent.actionId; }
@@ -82,7 +82,7 @@ export function createPlayer(world: SimWorld, opts: PlayerOptions): Player {
         }
         if (event.type === "CONFIRM_TARGET" && pending !== null && selected !== null && event.target.pipe === "tile") {
           const id = world.units.occupantAt(event.target.at);
-          if (id !== undefined) { action = { id: opts.nextId(), kind: pending === "interact" ? "interact" : "ability", actor: selected, target: { pipe: "unit", unitId: id }, durationMs: null, turns: null, effects: [] }; submit(world, action); }
+          if (id !== undefined) { const ref = pending === "spell" ? opts.spellOf?.(selected) : undefined; action = { id: opts.nextId(), kind: pending === "interact" ? "interact" : "ability", actor: selected, target: { pipe: "unit", unitId: id }, durationMs: null, turns: null, effects: ref === undefined || ref === "" ? [] : [ref] }; submit(world, action); }
           pending = null;
         }
         if (event.type === "SELECT_UNIT") selected = event.unitId; else if (event.type === "CANCEL") pending = null; else if (event.type !== "TAP_MOVE_CELL") selected = null;
