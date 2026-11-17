@@ -30,7 +30,7 @@ function taken(setup: BattleSetup): BattleSetup {
 }
 export function createBattle(setup: BattleSetup, units: Units, grid: Grid, emit: (event: BusEvent<NoModeEvents>) => void): Battle {
   const cfg = taken(setup), hp = new Map<string, number>();
-  const of = (id: string): UnitStats => cfg.stats[id] ?? cfg.base;
+  const of = (id: string): UnitStats => (Object.hasOwn(cfg.stats, id) ? cfg.stats[id] : cfg.base) ?? cfg.base;
   for (const u of units.all()) hp.set(u.id, of(u.unitId).hp);
   const refuse = (reason: HitRefusedReason): HitRefused => ({ code: "hitRefused", message: `hit refused (${reason})`, reason });
   return {

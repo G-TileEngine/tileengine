@@ -132,7 +132,7 @@ export type Seat = {
   /** Called after each input is fed and, for a move, landed: invariant checks and per-step snapshot hashes hang here. */
   readonly onStep?: (step: PlayerStep, world: SimWorld) => void;
 };
-/** Chaos harness (step 12): the eight snapshot keys, one recorded input, and a promise checked after every step. */
+/** Chaos harness (step 12): the nine snapshot keys, one recorded input, and a promise checked after every step. */
 export type SnapshotKey = keyof SimSnapshot;
 export type ChaosMove = { readonly call: number; readonly side: SideId; readonly tick: number; readonly intent: DoorIntent; readonly aim: Sq | null };
 /** `prev` = after the last step; `before` / `fed` = just before / after the feed; `after` = after landing. */
