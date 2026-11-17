@@ -5,3 +5,10 @@ coverage/
 .DS_Store
 tools/pixel-suite/node_modules
 tools/pixel-suite/package-lock.json
+tools/apk/node_modules
+tools/apk/package-lock.json
+tools/apk/www
+tools/apk/android
+tools/apk/artifacts
+*.jks
+*.keystore

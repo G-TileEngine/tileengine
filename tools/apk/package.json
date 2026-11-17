@@ -1,0 +1,12 @@
+{
+  "name": "tileengine-apk",
+  "private": true,
+  "type": "module",
+  "description": "Play-only Capacitor 6 wrapper. These pins stay here so the five root pins do not move.",
+  "dependencies": {
+    "@capacitor/core": "6.2.0",
+    "@capacitor/app": "6.0.3",
+    "@capacitor/android": "6.2.0",
+    "@capacitor/cli": "6.2.0"
+  }
+}

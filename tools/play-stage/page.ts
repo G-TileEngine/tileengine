@@ -1,11 +1,12 @@
 import { createDriver, type HostCanvas, type HostEnv } from "../../src/runtime/host/raf-driver.ts";
 import { createLighting, fitView } from "../../src/runtime/render/index.ts";
 import { createSceneLink } from "../../src/runtime/scene/world-scene.ts";
-import { fit, TILE } from "./board.ts";
+import { boardBox, fit, TILE } from "./board.ts";
 import { centreOn, createCam, pan, seatCam, tickCam, zoomAt, type PlayCam } from "./camera-touch.ts";
 import { createHud } from "./hud.ts";
 import { litPlan, picturesOf, sourceOf } from "./looks.ts";
 import { createMatch } from "./match.ts";
+import { DEV } from "./dev.ts"; // dev-only
 
 const canvas = document.querySelector("#board");
 if (!(canvas instanceof HTMLCanvasElement)) throw new Error("play: #board");
@@ -15,7 +16,7 @@ const cam: PlayCam = createCam(1);
 let seated = false;
 const dpr = (): number => devicePixelRatio || 1;
 const band = (): { s: number; padX: number; padY: number; devW: number; devH: number } => {
-  const ratio = dpr(), cssH = Math.max(TILE, canvas.clientHeight - 176), devW = canvas.clientWidth * ratio, devH = cssH * ratio;
+  const ratio = dpr(), devW = canvas.clientWidth * ratio, devH = canvas.clientHeight * ratio;
   return { ...fit(devW, devH, match.world.grid.cols, match.world.grid.rows, ratio), devW, devH };
 };
 const seat = (): void => { const box = band(); if (canvas.clientWidth > 0) { seatCam(cam, box.s, dpr()); seated = true; } };
@@ -71,6 +72,8 @@ canvas.addEventListener("pointermove", (e) => {
 });
 canvas.addEventListener("pointerup", (e) => { pts.delete(e.pointerId); if (!drag && e.timeStamp - lastTap < 280) { lastTap = 0; centre(e); } else if (!drag) { lastTap = e.timeStamp; send("up", e); } drag = false; });
 canvas.addEventListener("pointercancel", (e) => { pts.delete(e.pointerId); send("cancel", e); });
+const place = (): void => { const box = boardBox(innerHeight); Object.assign(canvas.style, { position: "fixed", left: "0", right: "0", width: "100%", top: `${box.top}px`, height: `${box.height}px` }); };
+place(); addEventListener("resize", () => { place(); seated = false; });
 seat();
-Object.assign(window, { __play: match, __driver: driver, __cam: cam, __hud: hud, __fx: match.fx, __link: link });
+if (DEV) Object.assign(window, { __play: match, __driver: driver, __cam: cam, __hud: hud, __fx: match.fx, __link: link }); // dev-only
 driver.start();
