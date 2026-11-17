@@ -4,7 +4,8 @@ Guide version guide-3 (2026-11-13, CN-016). Matches QA & Build Guard's `docs/qa/
 
 ## Where
 - **Repo:** https://github.com/G-TileEngine/tileengine (visibility is the CEO's call). Never push to `main`.
-- **Branch:** `step/<step-id>-r<N>` — `<step-id>` is the step file's id (e.g. `step-00-skeleton`), `r1` for the first hand-back, `r2`, `r3`… for rework after a REJECT. **Delivery (CN-003):** you read the repo but do not push. Finish with `git bundle create <step-id>-r<N>.bundle <base>..step/<step-id>-r<N>`, check it with `git bundle verify`, and upload the bundle plus a copy of `HAND-BACK.md` to the CEO's Drive. Chief Of Staff pushes the branch and opens the PR to `main`. The Architect merges after ACCEPT and tags `accepted/<step-id>`.
+- **Branch:** `step/<step-id>-r<N>-chatA` — `<step-id>` is the step file's id (e.g. `step-ed-e6-designer-page`), `r1` for the first hand-back, `r2`, `r3`… for the rework round after a REJECT. One builder chat (ChatA) per step, one QA review, and a rework round on must-fixes (CEO 2026-11-17 ~01:33 London, via Chief Of Staff). **Delivery (CN-028, from ED-E6):** commit the hand-back on the branch as its last commit and push that branch only, once, with the builder token through a one-shot credential helper: `git -c credential.helper= -c credential.helper='!f() { echo username=GTileEngineHelpers; echo "password=${GH_BUILDER_TOKEN}"; }; f' push https://github.com/G-TileEngine/tileengine.git HEAD:refs/heads/step/<step-id>-r<N>-chatA` (keep the single quotes so the token is read only when git asks; it never appears on the command line). Never push to `main` or any other branch or tag, never force-push, never delete a branch, and never open, merge or close a PR. Chief Of Staff opens the PR to `main` from the branch. The Architect merges after ACCEPT and tags `accepted/<step-id>`.
+- **Token (CN-028, token issued 2026-11-17):** The CEO gives the builder chat the token in chat, once, at the start of the step. The builder keeps it as `GH_BUILDER_TOKEN`, set with `export GH_BUILDER_TOKEN=...` in the shell that runs git (without `export` the credential helper sees nothing; never write a real value), and never prints, echoes, logs or commits it, and never stores it in `.git/config` or a saved remote. Push once, through a one-shot credential helper: `git -c credential.helper= -c credential.helper='!f() { echo username=GTileEngineHelpers; echo "password=${GH_BUILDER_TOKEN}"; }; f' push https://github.com/G-TileEngine/tileengine.git HEAD:refs/heads/step/<step-id>-r<N>-chatA` (keep the single quotes so the token is read only when git asks; it never appears on the command line) (e.g. `step/step-ed-e6-designer-page-r1-chatA`). Commits stay authored and committed as `G-TileEngine <G-TileEngine@users.noreply.github.com>`. Only `step/**` branches are pushed: never `main`, never a tag, never a force-push (the rulesets block all three). If the token ever appears in output, the builder says so and the CEO revokes and reissues it. Never write the builder account's numeric id, and never write a token value anywhere (files, messages, logs).
 - **Hand-back location (decided on purpose, CEO via CoS 2026-11-09):** in the repo, on that branch, at `handback/<step-id>/r<N>/`, committed as the branch's **last** commit. Never edit an earlier `rN` folder.
 - **Base commit:** every step file states it. The diff is always `<base>..<head>`. For `step-00` the base is `main` @ the commit Chief Of Staff pushes with the kit (today `main` holds only `README.md`). For later steps it is `main`'s SHA after the previous step was accepted (the merge of its PR, tagged `accepted/<previous step-id>`), written in the step file as `<base: main's SHA after <previous step-id> was accepted>` until the Architect fills in the hash at publish.
 
@@ -21,13 +22,13 @@ Guide version guide-3 (2026-11-13, CN-016). Matches QA & Build Guard's `docs/qa/
 | 6 | `stat.txt` | `git diff --stat <base>..<head> -- . ':!package-lock.json' ':!handback'` | G7 |
 | 7 | `HANDBACK.md` § Shipped tests | `sha256sum` of every shipped test file as it sits in `tests/`; each must equal the sha256 in the step file (BUILD_GUIDE §8) | G1 |
 | 8 | `HANDBACK.md` § Helpers & self-review | **Required** (CEO 2026-11-14, BUILD_GUIDE §0): one line per helper agent used (what it was asked to review or test, and what it found or changed), then your self-review against every Acceptance line and the QA checklist, each marked done | §0.6 |
-The bundle is the patch; once Chief Of Staff has pushed it, QA clones the branch for the clean checkout (§1) and reviews `<base>..<head>`. No `diff.patch` is needed. The PR line in HANDBACK.md reads `PR: opened by Chief Of Staff from the bundle` (never a guessed PR state).
+The pushed branch is the patch: QA clones `step/<step-id>-r<N>-chatA` for the clean checkout (§1) and reviews `<base>..<head>`. No `diff.patch` is needed. Your hand-back message quotes the branch name, the full 40-character tip sha, its tree, the Base sha, the test counts (`pass N fail 0`, with the floor from the step doc) and any smoke the step doc requires. The PR line in HANDBACK.md reads `PR: opened by Chief Of Staff from the branch` (never a guessed PR state).
 
 ## `HANDBACK.md` shape
 ```
 # Hand-back <step-id> r<N>
 Step file: <path of the step file answered>
-Base commit: <hash>     Head commit: <hash>     Branch: step/<step-id>-r<N>     PR: opened by Chief Of Staff from the bundle
+Base commit: <hash>     Head commit: <hash>     Tree: <hash>     Branch: step/<step-id>-r<N>-chatA     PR: opened by Chief Of Staff from the branch
 Node: <node -v>     npm: <npm -v>     rg: <rg --version first line>
 
 ## Changed files
@@ -35,6 +36,9 @@ Node: <node -v>     npm: <npm -v>     rg: <rg --version first line>
 
 ## Green
 npm test: <pass>/<fail>/<skipped>/<todo>    typecheck: exit <n>    lint: exit <n>    deps: exit <n>    check:state: exit <n>    check:law: exit <n>
+
+## Smoke (when the step doc requires one, e.g. E6's browser smoke)
+<each line the step doc's Acceptance asks for, quoted from the run>
 
 ## Shipped tests (sha256, unchanged)
 <sha256sum output for each shipped file, at its tests/ path>
@@ -60,8 +64,8 @@ npm test: <pass>/<fail>/<skipped>/<todo>    typecheck: exit <n>    lint: exit <n
 - A shipped test is never a deviation you may choose: copy it unchanged. If one looks wrong, stop and say so; a weakened, renamed or deleted shipped test is a REJECT, and a failing shipped test is a must-fix.
 
 ## Outcomes and rework
-- **ACCEPT** (QA writes `docs/qa/step-<NN>-review.md`, and `docs/qa/step-<NN>-ab.md` when two builds are compared) → RaiKynn accepts via Chief Of Staff → the PR is merged. No tags: the merge commit on `main` is the record and the next step's base.
+- **ACCEPT** (QA writes `docs/qa/step-<NN>-review.md`; one QA review of the one build, no A/B) → RaiKynn accepts via Chief Of Staff → the PR is merged. No tags: the merge commit on `main` is the record and the next step's base.
 - **ACCEPT WITH NOTES** → same, and the notes go into the next step's brief. The step is not reopened.
-- **REJECT** → QA's report lists each failure (file:line, command, expected vs actual, smallest fix). Fix it in the **same step**: branch `step/<step-id>-r<N+1>` from the `r<N>` head, hand back in `handback/<step-id>/r<N+1>/`, deliver a new bundle (Chief Of Staff opens the new PR and closes the old one). Touch only the failed items. Base commit stays the same.
+- **REJECT** → QA's report lists each failure (file:line, command, expected vs actual, smallest fix). Fix it in the **same step** (the rework round): branch `step/<step-id>-r<N+1>-chatA` from the `r<N>` head, hand back in `handback/<step-id>/r<N+1>/`, and push the new branch (Chief Of Staff opens the new PR and closes the old one; the old branch is left alone). Touch only the failed items. Base commit stays the same.
 - **CHANGE NOTICE REQUIRED** → stop. The Architect issues a Change Notice; you re-run the step against it ("refactor, do not patch").
 - Three REJECTs on one step → escalated to Chief Of Staff; the step is split or re-specified.

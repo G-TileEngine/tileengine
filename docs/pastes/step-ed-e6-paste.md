@@ -1,0 +1,202 @@
+Build step-ed-e6-designer-page r1 (kit-1 **r4**) from the step file `handoff/steps/step-ed-e6-designer-page.md` on main (sha256 `224834771c6cb8cf85cdece10f989194de7f0758e03814dc38ffc12502c0a0db`); it wins over this paste.
+
+Base commit: **`41ac9bcc`** (`41ac9bcc388c0e7d3b91534f26aff1886e450059`, B1 and P1-1 in it). Branch: **`step/step-ed-e6-designer-page-r<N>-chatA`**, created from the Base. The PR targets `main`. Never commit to `main`. The diff is always `<Base>..<head>`.
+Builds: one builder chat (ChatA), one QA review, and a rework round (r2, r3…) if QA finds must-fixes (CEO 2026-11-17 ~01:33 London, via Chief Of Staff).
+Delivery (CN-028, token issued 2026-11-17): commit `handback/step-ed-e6-designer-page/r<N>/HANDBACK.md` as the branch's last commit (author and committer `G-TileEngine <G-TileEngine@users.noreply.github.com>`), then push once, through a one-shot credential helper: `git -c credential.helper= -c credential.helper='!f() { echo username=GTileEngineHelpers; echo "password=${GH_BUILDER_TOKEN}"; }; f' push https://github.com/G-TileEngine/tileengine.git HEAD:refs/heads/step/step-ed-e6-designer-page-r<N>-chatA` (keep the single quotes so the token is read only when git asks; it never appears on the command line). The CEO gives you the token in chat once, at the start: keep it as `GH_BUILDER_TOKEN`, set with `export GH_BUILDER_TOKEN=...` in the shell that runs git (without `export` the credential helper sees nothing; never write a real value); never print, echo, log or commit it, never store it in `.git/config` or a saved remote; if it ever appears in output, say so (the CEO revokes and reissues it). Never write the builder account's numeric id; never write a token value anywhere. Push that `step/**` branch only: never `main`, never a tag, never force-push (the rulesets block all three), no branch delete, no PR actions. HANDBACK.md's PR line reads `PR: opened by Chief Of Staff from the branch`. Your hand-back message quotes the branch name, the full 40-character tip sha, its tree, the Base sha, the test counts (`pass N fail 0`, floor 900) and the required browser smoke lines.
+
+> Working style (REQUIRED): use your helper agents for review, tests and cross-checks, take your time, and self-review against Acceptance + the QA checklist. HANDBACK.md must have § Helpers & self-review (each helper and what it reviewed, plus your self-review); without it the hand-back is REJECT (incomplete). See BUILD_GUIDE §0 and HAND-BACK item 8.
+
+Shipped files (copy byte-identical from `handoff/steps/tests/step-ed-e6-designer-page/` to the same paths at the repo root): `tests/editor/effect-e6-save.test.ts`, `tests/tools/ed-e6.test.ts`, `tests/editor/effect-e6-qa.test.ts` (QA r2 pin), `tests/editor/effect-e6-qa2.test.ts` (QA r3 pin). Floor: green at least 900 passing (main's count + 18), 0 failing. At most 355 changed lines. Pins unchanged. Noreply author and committer. The browser smoke at 390 × 844 is required and quoted in HANDBACK.md (Acceptance). Push only your own step branch (CN-028).
+
+## Goal
+E5 gave the editor a writer, but there is no page, no save and no undo across documents. After this step:
+1. **Designer page 1** (`tools/effect-designer/`): a top strip that plays the chosen effect on `fx-live` with the stand-in caster (M8) and Turn and 1×/2×/3× chips, paused off-screen; a "What is it?" chip row (Slash · Shot · Burst · Aura · Heal · Buff · Ground) and a colour chip row over a preset grid; **Save & use**. Three taps when the chip is pre-selected (Design new, the tile, Save & use).
+2. **Save & use** (K-5): one compound action that creates the effect document and points the owner's `effect` answer at it, both ops in one `group`, one undo entry across both documents (setup §4 rule 10).
+3. **OPFS save with `expectedRev`** (setup §11): every document is checked before any is written, so a stale one saves nothing (`staleRev`).
+4. **E5 carries folded in:** `invalidValue` notes for input the writer drops; the S8 fallback (a refused group undo undoes the top op alone, so undo never sticks); a no-op write on an answer stored in another key order or with an extra field logs nothing (QA's E5 should-fix).
+
+## Rulings
+1. **Place and layering.** New `src/editor/effect/save.ts` (`SAVE`, `blankEffect`, `notesOf`, `undoStep`, `ownerOf`, `saveAndUse`, `undoGroup`, `commit`, types `Store`, `Docs`, `Entry`, `Commit`): pure editor logic, Node-testable, no DOM, no storage API (the host passes a `Store`). New page files under `tools/effect-designer/`: `grid.ts`, `presets.ts`, `strip.ts`, `store.ts` (DOM-free, tested in Node) and `page.ts`, `index.html` (DOM glue). `writer.ts` changes in two places only (rulings 6 and 7). Nothing in `src/runtime`, `src/sim`, `src/core`, `src/fx`, `src/project` or `tools/device-page` changes. Game rules stay out: the designer never reads or writes damage, HP, mana or cost.
+2. **Save & use (K-5; setup §4 rule 10).** `saveAndUse(effect, owner, o)` mints one `group` with `o.mint("grp_")` and makes two `write` calls with it: the effect values into `effect.doc` (or, when `effect.doc` is `null`, into `blankEffect(o.id, o.label, o.at, o.catalogueRev)`: `kind: "behaviour-setup"`, `formatVersion: 3`, `behaviourId: "effect"`, `rev: 0`, `catalogue: {rev}`, `createdAt`/`updatedAt` = `at`, `copiedFrom: null`, empty `answers`/`orphans`, `history {cap: 200, baseSeq: 0, ops: []}`), then `{[SAVE.knob]: o.id}` (`SAVE.knob = "effect"`) into the owner. The `Entry` lists, in write order, only the documents a write changed (a created doc always), and `created` names the new file. `notes` = `notesOf(base, effect.values)`. Values go through the E5 writer, so M4/M6 hold. D6.1: a new doc must have a freshly minted `o.id` matching `SAVE.id` = `/^setup_[0-9A-HJKMNP-TV-Z]{26}$/` (a Crockford ULID), not in `o.taken` (ids the host already used, live or in the trash), and `effect.name` must be exactly `effects/<id>.json`; otherwise `saveAndUse` returns `{error: "invalidValue", message}` and writes nothing. An existing `effect.doc` is never re-minted or re-checked. The result also lists `absent: [trashOf(name)]` for a created doc, so `commit` proves the id is unused in the trash too. Pinned by tests 4, 5, 6.
+3. **One undo entry across documents (setup §4 rule 10).** `undoGroup(docs, entry, at)` walks `entry.docs` newest first and calls `undo` on each. It **refuses the whole entry** with `{error: "changed since; undo there first", name}` (the first doc it can't undo) when that doc's undo appends nothing, or appends any op whose `group` is not `entry.group` (a later op in that doc, or a refused in-doc group). Nothing is half-undone: the result is built on a copy and returned only when every doc passed. A created doc is **not hard-deleted** (D6.2, like project-format §6.7 delete-undo): it is dropped from `docs` and returned as a `Move` `{from: name, to: trashOf(name), doc}` where `doc` is the undone document with its history (so a redo can restore it); `trashOf("effects/<id>.json")` = `effects/.deleted/<id>.json`. A created doc with no ops at all moves too. Pinned by test 6.
+4. **OPFS save with `expectedRev` (setup §11; D6.3).** `commit(store, docs, expected, o?: {moves?, absent?})` first reads every name it will touch: each doc (want `expected[name]`), each move source (want `expected[from]`) and target (want `null`), and each `absent` name (want `null`). An absent or `null` `expectedRev` means **"must not exist"**. The stored rev is `null` for a missing file, the doc's `rev` (0 if it has none) for a JSON object, and **0 for anything unreadable or not an object**, so an existing unreadable file is `staleRev` (`got: 0`) against "must not exist". The first mismatch returns `{error: "staleRev", name, want, got}` and **nothing is written, moved or removed**. Only a missing file is absent: a file whose JSON is `null`, an array, a number or a string is `got: 0` too (QA E6 note 3). Then it writes in this order (QA E6 note 2): each move target (the trash copy), each **new** doc (stored rev `null`), each existing doc (the referencing doc, e.g. the owner, last), as `JSON.stringify(doc, null, 2) + "\n"`, and only then removes each move source; the result is `{saved, moved}`. If a write or remove throws part-way, `commit` rolls back what it already did, newest first (a file that did not exist is removed, any other gets its prior text back), and rethrows, so the files are as they were. The page wraps Save & use and Undo in `try`/`catch` (QA E6 note 1): a storage error (quota, IO) shows "Not saved: storage error (…). Nothing was changed." or "Not undone: storage error (…). Nothing was changed.", never an unhandled rejection; the trash purge after a save ignores its own errors. The page's store is `opfsStore(await navigator.storage.getDirectory())`: names with `/` become nested folders (created on write only), a missing file reads `null`, removing a missing file is fine, and any error other than `NotFoundError` is thrown. Pinned by tests 7, 8, 12.
+5. **Notes for dropped input (E5 r3 S1–S3 carry).** `notesOf(doc, values?)` returns `{code: "invalidValue", message}` notices, never an error, in this order: each prototype-name key in `values` (`knob "__proto__" skipped`), each prototype-name key in the stored `answers` (`answers["__proto__"] ignored`), the number of junk history ops (`N history op(s) dropped`, the same test as E5 ruling 5), and per list knob `steps`, `parts` the number of non-record items (`N non-record steps item(s) dropped`). Clean input gives `[]`. The page shows them in the save toast. Pinned by tests 3, 4.
+6. **S8 fallback (E5 ruling 6, carried).** `undo(doc, at, {alone: true})` undoes the newest open op on its own, even when it has a `group`. `undoStep(doc, at)` = `undo(doc, at)`, and when that returns the same document, `undo(doc, at, {alone: true})`. A group that is not interleaved still undoes whole; nothing to undo still returns the same document. The page's Undo falls back to `undoStep` on the doc `undoGroup` named. Pinned by test 2.
+7. **Key-order-free no-op (QA E5 should-fix).** The writer compares before/after answer states with keys sorted at every depth (arrays keep their order). An answer stored as `{value, note, source}` or with a value object in another key order, written with the same value, returns the same document and logs nothing. Pinned by test 1.
+8. **Chips and grid (UX v3 §1.1; scope §5 L78; no CN).** `INTENTS` = `slash shot burst aura heal buff ground` in that order. `intentFor(kind)` maps `melee→slash`, `ranged→shot`, `area→ground`, `heal→heal`, `buff→buff` (own keys only); anything else is `null` (all tiles). `tagsOf` reads the first 4 `effect.tags` items and keeps string ids. `tiles(presets, intent, ramp)` keeps presets whose tags include the intent (`null` = all) and recolours each. The chips store nothing in the document. Pinned by test 9.
+9. **Ramp-only colour (scope §5 L80; CN-019 rule 6; CN-015).** `rampChips(options, styleRamps)` keeps, in option order and once each, only ramps the style has. `recolour(doc, ramp)` sets the effect `tint_ramp` knob and replaces `tint_ramp` on every step that names its own (step wins); `null` returns the same doc; inputs are never mutated. The page passes the options `fire frost holy venom` (CEO Q4) and the style's ramps from `?ramps=` (stand-in default: all four, until E7 reads the project style). Pinned by test 10.
+10. **Top strip (scope R5, M8; UX v3 §1.2).** `STRIP` = facings `S W N E`, zooms `1 2 3`, a 3 × 2 board, `loopMs` 1600, caster `me`, target `foe`. `preview(doc, view, castMs, sheet)` returns one `LiveFx` from `docToLiveFx` (id `preview`, looping) plus two stand-in units (caster at column 0 facing `STRIP.facings[view.facing]`, target at the last column facing W). `VIEW0` opens at **3×** integer scale (UX default for phones; the strip canvas is `image-rendering: pixelated`). `turn` cycles the facing; `zoom` sets the crisp-check scale (the driver's view scale); `seen(view, visible)` returns the same view when nothing changed, and a hidden strip disposes the driver (IntersectionObserver), so no frames run off-screen. Pinned by tests 11, 13.
+11. **Stand-in presets.** `PRESETS` holds 7 small editor-made tiles, at least one per intent, each with `tags` and ≤ 3 steps; they are not BTF code or data. The catalogue's N5 presets replace them in E7 (§ Not in this step). Pinned by test 9.
+12. **Size.** 353 changed lines, under 400; no split. Cap 355 (r3 was 344): QA r3 pin +13, shipped byte-identical. r3 was over r2's cap of 334 because the QA r2 pin added 21 test lines and the S1 owner check 6 src and 7 test lines (ruling 14), with `page.ts` unchanged in size. Under the scope's ~400 because the writer, Fit and blend already landed in E1–E5, and Night and the catalogue presets are carried (§ Not in this step).
+13. **The trash window (D6.2).** The page keeps one undo entry. When a new Save & use succeeds, the previous entry has left the undo window, so its trash files are purged (`store.remove`). A trashed doc is never in the export closure (nothing reads `effects/.deleted/`) and its id is never reused (ruling 2). A ref to it that dangles after the purge is the reader's `unknownRef` warning with the default used, never a block (D6.2; no E6 code path creates one: the owner ref is undone in the same entry). Pinned by tests 6, 13.
+14. **The owner file (QA E6 r2 S1; consistent with D6.3).** `ownerOf(name, text)` reads the owner's stored text before Save & use: `null` (no file) → `{doc: null}` (the page builds a new owner, rev `null` = must not exist); a JSON record with the setup envelope (setup §2.1: `kind: "behaviour-setup"`, a number `formatVersion`, a string `id` and `behaviourId`, an integer `rev` ≥ 0, record `answers` and `history`) → `{doc}`. Anything else is refused: unparseable text, `null`, an array, a number, a string or a boolean → `{error: "staleRev", name, message: "Not saved: can't read <name> (unreadable). Nothing was changed."}`; a record without the envelope (`{}` included) → the same with `(no setup envelope)`. The page shows the message and writes nothing (no overwrite, no new file), the same as an unreadable or non-object existing file is `staleRev` in `commit` (ruling 4, DSK D6: any existing file that isn't a valid owner gives `staleRev`). The page records the owner's rev from the accepted doc. A full stored envelope (every §8 field, as a Save & use writes it) loads as is. Pinned by tests 13, 14 and 18.
+
+## CN / format questions (for DSK and the Librarian; report-only, nothing filed)
+- **No new format CN.** E6 writes only existing envelope fields (setup §2.1) and reads the §2.1 envelope to accept an owner file (ruling 14), the owner's existing `effect` ref answer and existing effect knobs; `group` is setup §4 rule 10. CN-028 (process) is filed in this kit push.
+- **Settled by DSK D6 (`handoff/dsk-rulings/2026-11-17-phase1.md` lines 1–39 (through §D6) sha256 `ed2e705f92f61e39b548466efbfac5436c9e511aa58885ac1df7b16b7ddfd0ee`):** (1) the created envelope matches setup-format §8 `BehaviourSetup` v3, with a fresh never-reused `setup_<ULID>` at `effects/<id>.json` (ruling 2); (2) undo moves the created doc to `effects/.deleted/<id>.json` with its history, purged after the undo window, dangling refs `unknownRef` + default (rulings 3, 13); (3) absent/null `expectedRev` = must not exist, unreadable = `staleRev` `got: 0`, removals checked the same way (ruling 4).
+- **Catalogue:** no new L-entry. Preset intent tags stay on `effect.tags` (UX v3 EA answer 3).
+
+## Files to create or change (and nothing else)
+| File | Change | Proto (lines changed) | Cap (lines changed) |
+|---|---|---|---|
+| `src/editor/effect/save.ts` | new: `SAVE`, `blankEffect`, `notesOf`, `undoStep`, `trashOf`, `ownerOf`, `saveAndUse`, `undoGroup`, `commit` with ordered writes and rollback (rulings 2–6, 13, 14) | 65 | 69 |
+| `src/editor/effect/writer.ts` | change: key-order-free `same` (ruling 7); `undo(doc, at, o?)` with `alone` (ruling 6) | 7 | 11 |
+| `tools/effect-designer/grid.ts` | new: `INTENTS`, `intentFor`, `tagsOf`, `rampChips`, `recolour`, `tiles` (rulings 8–9) | 20 | 24 |
+| `tools/effect-designer/presets.ts` | new: `PRESETS` (ruling 11) | 12 | 16 |
+| `tools/effect-designer/strip.ts` | new: `STRIP`, `VIEW0`, `turn`, `zoom`, `seen`, `preview` (ruling 10) | 19 | 23 |
+| `tools/effect-designer/store.ts` | new: `opfsStore`, type `Dir` (ruling 4) | 15 | 19 |
+| `tools/effect-designer/page.ts` | new: DOM glue (strip, chips, grid, ULID mint, owner read through `ownerOf`, Save & use, Undo with fallback and trash move, purge, toast, storage-error catch) | 48 | 52 |
+| `tools/effect-designer/index.html` | new: the page (48 px targets, strip canvas, rows) | 6 | 10 |
+| `tests/editor/effect-e6-save.test.ts` | new, shipped (9 tests) | 87 | 87 |
+| `tests/tools/ed-e6.test.ts` | new, shipped (5 tests) | 40 | 40 |
+| `tests/editor/effect-e6-qa.test.ts` | new, shipped (3 tests, the QA pin `3ef0e6ef`) | 21 | 21 |
+| `tests/editor/effect-e6-qa2.test.ts` | new, shipped (1 test, the QA r3 pin `ab8f3970`) | 13 | 13 |
+Total ≤ 355 changed lines (proto r4 **353**: src 72, tools 120, tests 161; r3 was 340, r2 306, r1 270). Caps follow STEP-TEMPLATE (proto + 4); shipped tests are byte-identical, so their cap is their proto; the total cap is 353 + 2 (QA r3 pin +13, shipped byte-identical).
+
+## Interfaces to match (quoted exactly; bodies elided)
+```ts
+// src/editor/effect/save.ts
+export const SAVE: { knob: "effect"; dir: "effects/"; trash: "effects/.deleted/"; id: RegExp /* /^setup_[0-9A-HJKMNP-TV-Z]{26}$/ */; refused: "changed since; undo there first"; bad: readonly ["__proto__", "constructor", "prototype"] };
+export type Store = { read(name: string): Promise<string | null>; write(name: string, text: string): Promise<void>; remove(name: string): Promise<void> };
+export type Docs = Readonly<Record<string, Row>>;
+export type Entry = { readonly group: string; readonly docs: readonly string[]; readonly created: readonly string[] };
+export type Move = { readonly from: string; readonly to: string; readonly doc: Row };
+export type Commit = { readonly saved: readonly string[]; readonly moved: readonly string[] } | { readonly error: "staleRev"; readonly name: string; readonly want: number | null; readonly got: number | null };
+export const blankEffect: (id: string, name: string, at: string, catalogueRev: number) => Row;
+export function notesOf(doc: Row, values?: Readonly<Record<string, unknown>>): Notice[];
+export const undoStep: (doc: Row, at: string) => Row;
+export const trashOf: (name: string) => string;
+export function ownerOf(name: string, text: string | null): { doc: Row | null } | { error: "staleRev"; name: string; message: string };
+export function saveAndUse(effect: { name: string; doc: Row | null; values: Readonly<Record<string, unknown>> }, owner: { name: string; doc: Row }, o: { at: string; mint: (prefix: string) => string; id: string; label: string; catalogueRev: number; taken?: readonly string[] }): { docs: Record<string, Row>; entry: Entry; absent: string[]; notes: Notice[] } | { error: "invalidValue"; message: string };
+export function undoGroup(docs: Docs, entry: Entry, at: string): { docs: Record<string, Row>; moves: Move[] } | { error: typeof SAVE.refused; name: string };
+export async function commit(store: Store, docs: Docs, expected: Readonly<Record<string, number | null>>, o?: { moves?: readonly Move[]; absent?: readonly string[] }): Promise<Commit>;
+// src/editor/effect/writer.ts (changed signature)
+export function undo(doc: Row, at: string, o?: { alone?: boolean }): Row;
+// tools/effect-designer/grid.ts
+export const INTENTS: readonly ["slash", "shot", "burst", "aura", "heal", "buff", "ground"];
+export type Intent = (typeof INTENTS)[number];
+export type Preset = { readonly id: string; readonly label: string; readonly doc: FxDocValues };
+export const intentFor: (kind: unknown) => Intent | null;
+export const tagsOf: (doc: FxDocValues) => string[];
+export const rampChips: (options: readonly string[], styleRamps: readonly string[]) => string[];
+export function recolour(doc: FxDocValues, ramp: string | null): FxDocValues;
+export const tiles: (presets: readonly Preset[], intent: Intent | null, ramp: string | null) => Preset[];
+// tools/effect-designer/presets.ts
+export const PRESETS: readonly Preset[];
+// tools/effect-designer/strip.ts
+export const STRIP: { facings: readonly ["S", "W", "N", "E"]; zooms: readonly [1, 2, 3]; cols: 3; rows: 2; loopMs: 1600; caster: "me"; target: "foe" };
+export type View = { readonly facing: number; readonly zoom: 1 | 2 | 3; readonly visible: boolean };
+export const VIEW0: View;
+export const turn: (v: View) => View;
+export const zoom: (v: View, z: 1 | 2 | 3) => View;
+export const seen: (v: View, visible: boolean) => View;
+export function preview(doc: FxDocValues, v: View, castMs: number, sheet: Sheet): { effects: LiveFx[]; units: SceneUnit[]; notes: FxNote[] };
+// tools/effect-designer/store.ts
+export type Dir = { getDirectoryHandle(name: string, o?: { create?: boolean }): Promise<Dir>; getFileHandle(name: string, o?: { create?: boolean }): Promise<FileHandle>; removeEntry(name: string): Promise<void> };
+export function opfsStore(root: Dir): Store;
+```
+
+## Smoke lines
+Unchanged: `smoke: 0 failed`; sim stage-fixed 48/2 `afc89d56…` and stage-weighted 22/28 `b8007292…`; stress counts 27/0/0, 113/0/0, 181/0/0, 181/0/0, 27/373/0. The host example still prints `match-picture: stage-fixed replay to tick 460: 6 units, 6 drawn standing, 60 draw commands`.
+
+## Existing tests changed by ruling (and only these)
+None. Every E1–E5 test (QA pins `effect-e5-qa` … `effect-e5-qa5` included) passes unchanged on the proto; ruling 7 only removes ops that E5's tests never expected.
+
+## Tests that prove it is done (18 new; ship all four files byte-identical)
+| Shipped file (under `handoff/steps/tests/step-ed-e6-designer-page/`) | Copy to | sha256 |
+|---|---|---|
+| `tests/editor/effect-e6-save.test.ts` | same path | `342b20a5350931c8bd473f513c6fe186691f45af2787fe170848726e7546b6a0` |
+| `tests/tools/ed-e6.test.ts` | same path | `3b828a0e1da111de0c63b30e1da732d1391e8287b8b250c7fce70a499fdbaf87` |
+| `tests/editor/effect-e6-qa.test.ts` (QA pin) | same path | `738e46f5667fc952e15ceae6587a291a83cdae995820315e101c1ecfe7f7a139` |
+| `tests/editor/effect-e6-qa2.test.ts` (QA r3 pin) | same path | `1a053e5831cab8c285caf047f82f20a827b3c56dd58d38b83d8739b37398ce99` |
+
+`tests/editor/effect-e6-save.test.ts`:
+1. "E6 writer no-op (QA E5 should-fix): another key order or an extra field writes nothing; a value object in another key order too; a real change still logs one op"
+2. "E6 S8 fallback: a refused group undo undoes the top op alone; undo(…, {alone}) takes one op; undoStep never sticks while ops are open"
+3. "E6 notes (E5 r3 S1–S3 carries): invalidValue for prototype-name knobs, a loaded __proto__ answer, junk ops and non-record list items; clean input has none"
+4. "E6 Save & use (K-5, setup §4 rule 10): a new effect doc and the owner's effect answer, one grp_ group across both, one entry; the new doc is a v3 effect envelope"
+5. "E6 D6.1 (DSK ed2e705f): a new effect's id is a fresh setup_<ULID>, never reused, at effects/<id>.json; anything else is invalidValue and writes nothing"
+6. "E6 undoGroup (D6.2): both docs as one entry, newest document first; the created doc moves to effects/.deleted/<id>.json with its history; refused with 'changed since' if either doc has a later op, nothing half-undone"
+7. "E6 commit (setup §11, D6.3): absent or null expectedRev = must not exist, an unreadable file too; a stale rev saves nothing (all checked first); a move checks its source rev and an empty target; JSON ends with a newline"
+8. "E6 commit order and rollback (QA E6 notes 2): new files first, the referencing doc last, move sources removed last; a write or remove that fails mid-commit rolls back what was done and rethrows, leaving the files as they were"
+14. "E6 owner file (QA E6 r2 S1): a missing file is a new owner, a setup envelope loads as is; junk, null, an array, a number or a record without the envelope is refused by name (staleRev), never overwritten"
+
+`tests/tools/ed-e6.test.ts`:
+9. "E6 chips (UX v3 §1.1): seven intents in order; the ability kind pre-selects only when obvious; the grid filters on effect.tags (first 4 only); every intent has a tile"
+10. "E6 colour chips (CN-019 rule 6, CN-015): only ramps the style has, in option order, once; a tap recolours the knob and every step that names its own ramp; null keeps the same doc; inputs untouched"
+11. "E6 strip (scope R5, M8): Turn cycles S W N E on the stand-in caster; 1×–3× zoom, opening at 3× (UX default); off-screen pauses (same view when unchanged); one LiveFx on fx-live per preview"
+12. "E6 OPFS store: a missing file reads null; write makes nested folders and reads back; remove of a missing file is fine; other errors are thrown"
+13. "E6 page: Save & use through saveAndUse + commit, Undo through undoGroup with the undoStep fallback and the trash move (D6.2), a setup_<ULID> mint (D6.1), storage errors toasted (QA E6 note 1), a bad owner file refused by name (QA E6 r2 S1), IntersectionObserver pause, OPFS only, pixelated strip; the device page build stays without it"
+
+`tests/editor/effect-e6-qa.test.ts` (QA pin, byte-identical):
+15. "E6 QA (ruling 2, Law 13): a new effect's history is {cap: WRITER.cap (200), baseSeq: 0, ops: []}"
+16. "E6 QA (ruling 11): every stand-in preset is within the Fit caps (no message from fit, ≤ 3 steps), so Save & use never stores an over-cap tile"
+17. "E6 QA (E5 carry, no-op compare): a stored answer missing a field the write adds is a change, never a no-op"
+
+`tests/editor/effect-e6-qa2.test.ts` (QA r3 pin, byte-identical):
+18. "E6 QA r3 (ruling 14): a full stored envelope loads: the owner a Save & use wrote, and one with every §8 field"
+
+## How a planted bug is caught (EA plants 81/81, `/workspace/scratch-ea/ede6/r3/ede6-plants-r3.py`; run by `proto-check.sh` / `qa-plants.sh --plants-file` against the E5 tests and the three shipped files)
+1–3 key-order compare (top level, nested, arrays) · 4–5 S8 (`alone` ignored; no fallback) · 6–10 notes (each class; the seq check) · 11–16 Save & use (group on each doc; `created`; unchanged owner listed; envelope `behaviourId`; notes dropped) · 17–20 undoGroup (other group accepted; refused doc ignored; created doc kept; fresh doc kept) · 21–25 commit (write before all checks; no stale check; move source not removed; no newline; bad JSON read as absent) · 26–32 grid (`__proto__` kind; tag cap; style filter; dedupe; step recolour; null copies; intent filter) · 33–35 strip (Turn stuck; `seen` always new; no loop) · 36–40 store (missing read throws; all errors swallowed; no nested folders; write not closed; missing remove throws) · 41–42 page (no Undo fallback; no IntersectionObserver) · 43–49 D6.1 (id format unchecked; I/L/O/U allowed; length unchecked; file name unchecked; reused id allowed; existing doc re-checked; trash name not reserved) · 50–53 D6.2 (hard delete; history dropped; wrong trash path; trash target not written) · 54–58 D6.3 (move source rev unchecked; move target may exist; absent names unchecked; non-object JSON read as absent; missing `expectedRev` means any) · 59 page (no trash purge) · 60 UX (strip opens at 1×) · 61–67 QA E6 notes (owner written before the new file; no rollback; rollback deletes what it should restore; failure swallowed; move source removed first; Save not caught; array JSON read as absent) · 68–81 S1 owner file (array read as a record; each envelope field unchecked: kind, formatVersion, id, behaviourId, integer rev, rev ≥ 0, answers, history; junk read as missing; the file not named; reasons swapped; page saves after the refusal; page drops the owner rev).
+QA's plants on r3/r4 (scripts from `docs/qa/qa-runs/effect-designer/e6/`): D6 **9/12** (D3 an equivalent mutant; D6 and D8 refused by `saveAndUse` and caught by the browser smoke), risk **14/20** (R4, R12, R18 caught by the QA pin; R10, R14, R16, R17 caught by the browser smoke; R11 by design, the purge is best-effort; R15 → S3 carry), S1 **9/9** with the QA r3 pin (Q9, a full envelope refused, is caught by test 18). Four page plants and D6/D8 are caught **only** by the browser smoke, which is why the smoke is required in the hand-back.
+
+## Example
+From the **basic-attack** Effect row (`?for=basic-attack&kind=melee`): the page opens with **Slash** pre-selected and one tile, *Slash arc*. Tap it: it plays in the strip on the stand-in caster; **Turn** shows the four facings; **3×** is the crisp check. Tap **fire**: the tile's knob `tint_ramp` and its stamp step's own ramp become `fire`. Tap **Save & use**: `effects/setup_<ULID>.json` is created (rev 1, one `set` op, group `grp_<ULID>`) and `setups/basic-attack.json` gets `effect: "setup_<ULID>"` (one op, same group); both are checked against their stored revs before either is written. The toast reads "Saved 'Slash arc' and basic-attack uses it. One undo. [Undo]". **Undo** moves the effect file to `effects/.deleted/setup_<ULID>.json` with its history (D6.2; purged on the next Save & use) and puts the owner's `effect` answer back; if the phone is out of storage, the toast says "Not saved: storage error (…). Nothing was changed." and no file is left behind; if `setups/basic-attack.json` holds junk, `null`, an array or `{}`, the toast says "Not saved: can't read setups/basic-attack.json (unreadable)." (or "(no setup envelope)") and nothing is written; if the owner was changed elsewhere since, the whole undo is refused ("changed since; undo there first") and the newest op in that doc is undone alone instead.
+
+## Decisions note: what to name
+The group mint (`o.mint("grp_")`, one per Save & use); the write order (effect, then owner) and so the undo order (owner first); the refusal test in `undoGroup` (nothing appended, or any appended op outside the group); the id mint and `taken` set (D6.1); "created doc → moved to `.deleted` with its history" and the purge point (D6.2); the `expectedRev` reading (missing = `null`, no `rev` = 0, bad or non-object JSON = 0; D6.3); the owner envelope check and its two reasons (ruling 14); check-all-then-write, the write order and the rollback; the notes order (ruling 5); the key sort used by the no-op compare; the `alone` option and when `undoStep` uses it; the intent table and the ramp option list the page passes; `STRIP` values; bounds (BUILD_GUIDE law 13): the page keeps one `Entry` (the last Save & use), the current docs, one rev per file name it touched, the trash names of that one entry and the `taken` id set (one id per Save & use in the session); nothing grows per frame; the driver is disposed whenever the strip is hidden or rebooted.
+
+## Gates (Acceptance)
+- [ ] `npm ci && npm run green` exits 0 with **at least 900 passing** (main's 882 + 18) and none failing, cancelled, skipped or todo. Typecheck, lint, deps, check:state and check:law each exit 0 (proto: 900/0; deps 128 modules / 410 deps; `check:law OK (src)`). Main's stress p95 > 4 ms test can flake under a shared-box load: re-run it alone before believing a failure.
+- [ ] `node tools/pixel-suite/smoke.ts` prints `smoke: 0 failed`.
+- [ ] `node tools/host-example/match-picture.ts` prints `match-picture: stage-fixed replay to tick 460: 6 units, 6 drawn standing, 60 draw commands` and exits 0.
+- [ ] `npm run -s sim` prints stage-fixed 48/2 `afc89d56…` and stage-weighted 22/28 `b8007292…`.
+- [ ] `node tests/perf/stress-budget.ts` counts 27/0/0, 113/0/0, 181/0/0, 181/0/0, 27/373/0.
+- [ ] `git diff 41ac9bcc --stat -- package.json package-lock.json .dependency-cruiser.cjs scripts/check-law.sh src/types/core-types.ts` is empty. Pins: `1e5dd82c`, `d7f64a09`, `45a3dbaa`, `4d7bbf48`, `d6d08696`. If a core-types or dependency-rule change seems needed, **stop and report**.
+- [ ] `git diff 41ac9bcc --stat -- src/runtime src/sim src/core src/fx src/project tools/device-page tools/pixel-suite src/editor/effect/fit.ts src/editor/effect/merge.ts src/editor/effect/parts.ts src/editor/effect/dice.ts src/editor/effect/house.ts` is empty.
+- [ ] All four shipped test files are byte-identical to the sha256s above; every E1–E5, B1 and P1-1 test passes unchanged.
+- [ ] Each file within its cap; at most 355 changed lines.
+- [ ] **Browser smoke (REQUIRED, QA E6 r2):** `node tools/serve.ts`, then `/tools/effect-designer/?for=basic-attack&kind=melee` in Chrome at **390 × 844** (touch). Quote in HANDBACK.md § Smoke, for each: (1) the **tile count** (1, *Slash arc*); (2) **rAF callbacks per frame** after a re-boot (Turn, 1×, 2×, 3×): max 1, no frame with more; (3) the **stored-file listing** (OPFS) after Save & use (`setups/basic-attack.json` + `effects/setup_<ULID>.json`), after Undo (the effect at `effects/.deleted/setup_<ULID>.json`, owner kept) and after a second Save & use (a new id; the `.deleted` file purged); (4) **button sizes**: every button at least 48 × 48 CSS px (none under 44); (5) **page errors**: none (a missing favicon 404 is fine). Also quote the toast for a bad owner file (junk and `[]` → "can't read … (unreadable)", `{}` → "(no setup envelope)", files unchanged). E7 automates this from QA's `smoke.mjs`.
+- [ ] No `Math.random`, `Date`, timers, `localStorage`/`sessionStorage`/`indexedDB` or `Card`/`Deck` identifiers in `src/`; no hp/mana/cost/damage in the designer. Storage only through the page's OPFS `Store`.
+- [ ] Delivery per CN-028: the branch `step/step-ed-e6-designer-page-r<N>-chatA` is pushed once with `GH_BUILDER_TOKEN` through the one-shot credential helper (that branch only; the token never printed, logged, committed or saved in `.git/config` or a remote), HANDBACK.md is its last commit, and the hand-back message quotes the branch, the full tip sha, the tree, the Base sha, `pass N fail 0` and the browser smoke lines.
+- [ ] Hand-back complete per `handoff/HAND-BACK.md`, with § Helpers & self-review.
+
+## Floor
+882 → **900** = main's count + 18: 882 (main `41ac9bcc`, B1 and P1-1 in it) + 14 EA (9 in `effect-e6-save`, 5 in `ed-e6`) + 3 QA r2 pin (`effect-e6-qa`) + 1 QA r3 pin (`effect-e6-qa2`). (QA's trial of r3 + the r3 pin on `6cd8fa25` was 900/0; `01dfe82a` adds the P1-2 kit, whose tests sit under `handoff/`, and `41ac9bcc` docs only.) Kit tests under `handoff/` are not run on main until merge.
+
+## Perf (phone floor)
+No runtime code changes, so the draw, particle and light caps, `fx-live` and the 34b numbers are untouched. The strip is one `LiveFx` on a 3 × 2 board (far under stress C's 100 effects) and is disposed off-screen. `saveAndUse`, `undoGroup` and `commit` run once per tap, never per frame; a commit touches at most 3 files (plus their rollback). The strip opens at 3× (a 144 × 96 px canvas, still one effect).
+
+## Not in this step (carries, with their target step)
+- **Night chip** (draw through the real light and moonlit path; scope §5 L79): the stand-in board has no style ramps with night swaps yet (gap X5) → **E7**, with the effect ramps (E9 art).
+- **Catalogue presets** (the N5 presets / the 10 BTF effects, L51) instead of the 7 stand-in tiles; the "Make my own…" entry on the owner's Effect row → **E7**.
+- **S2 (QA E6 r2): the trash survives a reload.** The `.deleted` purge list lives only in page memory, so a reload after Undo leaves the trashed file unpurged → **E7** rebuilds the purge list from the `effects/.deleted/` folder at boot (with the Undo/Redo bar).
+- **S3 (QA E6 r2): the ULID mint** lives in DOM glue (`page.ts`), so no Node test sees its format or randomness (QA plant R15) → **E7** moves it to a DOM-free module with a test.
+- **Browser smoke automation:** E6's smoke is a quoted manual run (Acceptance) → **E7** automates it from QA's `smoke.mjs` (`docs/qa/qa-runs/effect-designer/e6/`).
+- **QA report-only (E6 r2):** redo (restore from `.deleted`) is E7 (below); `Date.now`, `crypto` and `new Date()` are in `tools/` (host role, ruling 2), never in `src/`.
+- **The real patch** (the caster's real clip and tiles, hit mark on `hitAt`) once the page is opened from a project → E7 (scope M8: E3's match link is merged; the page has no project loader yet).
+- **gh-pages build of the page** (`tools/device-page/build.ts` builds only the device page) → the **E6+E7 batch publish** (scope M13), with RaiKynn's own typed OK naming the commit.
+- **Redo across documents** (setup §4 rule 10 applies to redo too), restoring a created doc from `effects/.deleted/` (D6.2) → E7, with the Undo/Redo bar; E6's toast offers Undo only and the trash keeps one entry.
+- **Dangling refs after a purge** (D6.2: `unknownRef` warning + the default, never a block) are the reader's; E6 creates none → the project reader / E7.
+- Shelf, reactions, dice strip, Breed, house-style card, parent badges on Breed, "update this layer?" → **E7** (as in E5).
+- **QA report-only (E5, still open):** knob 5 writes an answer under key `"5"`; seqs `[5, 3]` give a next seq of 4; a group split by a migrate barrier half-undoes; `breed` throws on `[A, [], B]`; `canonStep` renames by name whatever the value type; `flash_seconds` NaN/Infinity; `"true"`/`"false"` smear strings kept; an `undefined` Breed parent; a non-integer stored `baseSeq`. E6 now *reports* a loaded `__proto__` answer (`notesOf`) but `valuesOf` still passes it through. Plants 58, 96, 98, 105 and QA Q27 (E5) are still caught only by crash. → **E7 writer pass** (EA).
+- **S7 (UX):** dice ±1 for step-10/100/0.5 sliders → UX call with E7's dice UI.
+- The generic catalogue-driven writer → later (scope M4).
+
+## Out of scope
+Game rules (HP, mana, cost, damage) and any sim, core, runtime or render change. Any format change. The project loader and the stage editor (Phase 1 is its own step). CN acceptance is DSK's; the catalogue rev is the Librarian's.
+
+## Do not touch
+`src/types/core-types.ts`, `src/core/**`, `src/sim/**`, `src/fx/**`, `src/runtime/**`, `src/project/**`, `src/editor/effect/fit.ts`, `merge.ts`, `parts.ts`, `dice.ts`, `house.ts`, `package.json`, the lock, `.dependency-cruiser.cjs`, `scripts/**`, `tools/device-page/**`, `tools/pixel-suite/**`, `tools/painter-proto/**` and `tools/ui-shell/**` above all, every E1–E5 shipped test.
+
+## Open questions
+- None open.
+- Settled since r1: the three DSK questions (D6 `ed2e705f`, rulings 2–4 and 13), the UX strip default (3×, ruling 10) and QA's smoke answer (r2 review: a quoted browser smoke is enough for E6 and is **required**; E7 automates it).
+
+## Delivery footer (must hold at hand-back)
+- `npm ci && npm run green` exits 0 with **at least 900 passing and 0 failing** (main's count + 18). Paste the summary line, the smoke line, the host example line, the sim and stress lines and the browser smoke lines into HANDBACK.md.
+- All four shipped test files are **byte-identical** to the sha256s above.
+- Base **`41ac9bcc`**. At most 355 changed lines. Every pin unchanged. Commits are `G-TileEngine <G-TileEngine@users.noreply.github.com>` (author and committer).
+
+## Delivery
+One builder chat (ChatA), one QA review, a rework round on must-fixes (CEO 2026-11-17 ~01:33 London, via Chief Of Staff). CN-028 token issued 2026-11-17. On branch `step/step-ed-e6-designer-page-r<N>-chatA` (base `41ac9bcc`), commit as `G-TileEngine <G-TileEngine@users.noreply.github.com>` (author and committer), with HANDBACK.md as the last commit. Push once, with the token the CEO gave you in chat as `GH_BUILDER_TOKEN` (set with `export GH_BUILDER_TOKEN=...` in the shell that runs git; without `export` the helper sees nothing; never write a real value), through a one-shot credential helper: `git -c credential.helper= -c credential.helper='!f() { echo username=GTileEngineHelpers; echo "password=${GH_BUILDER_TOKEN}"; }; f' push https://github.com/G-TileEngine/tileengine.git HEAD:refs/heads/step/step-ed-e6-designer-page-r<N>-chatA` (keep the single quotes so the token is read only when git asks; it never appears on the command line), and nothing else (never `main`, never a tag, never force-push; the rulesets block all three). Never print, echo, log or commit the token or store it in `.git/config` or a saved remote; if it appears in output, say so (the CEO revokes and reissues it). Then hand back with the branch, the full tip sha, the tree, the Base sha, `pass N fail 0` and the browser smoke lines.

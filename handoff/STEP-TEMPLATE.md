@@ -6,14 +6,14 @@ Copy this for every step file `steps/<step-id>.md`. All headed sections are requ
 # <step-id>: <title> (<plan or slice reference; approvals>)
 
 Step id: <step-id>          Revision: r<N> (r1 first; r2, r3… only after a REJECT)
-Repo: https://github.com/G-TileEngine/tileengine (read it; you do not push anything — see Delivery)
+Repo: https://github.com/G-TileEngine/tileengine (you push your own step branch only — see Delivery)
 Base commit: <base: main's SHA after <previous step-id> was merged, with PR and verify result>
-Branch: step/<step-id>-r<N>, from the base. Never commit to main. Chief Of Staff pushes your branch and opens the PR to main.
-Delivery (CN-003): git bundle create <step-id>-r<N>.bundle <base>..step/<step-id>-r<N>; git bundle verify; upload the bundle + a copy of your HANDBACK.md to the CEO's Drive. HANDBACK.md PR line: "PR: opened by Chief Of Staff from the bundle".
+Branch: step/<step-id>-r<N>-chatA, from the base. Never commit to main. Chief Of Staff opens the PR to main from your pushed branch.
+Delivery (CN-028): one builder chat (ChatA), one QA review, and a rework round on must-fixes (CEO 2026-11-17 ~01:33 London, via Chief Of Staff). Commit HANDBACK.md as the branch's last commit, then push once with `GH_BUILDER_TOKEN` through a one-shot credential helper (CN-028 § Token; keep the single quotes): `git -c credential.helper= -c credential.helper='!f() { echo username=GTileEngineHelpers; echo "password=${GH_BUILDER_TOKEN}"; }; f' push https://github.com/G-TileEngine/tileengine.git HEAD:refs/heads/step/<step-id>-r<N>-chatA` (that branch only: never main, another branch or a tag; no force-push, no branch delete, no PR actions). The hand-back message quotes the branch, the full tip sha, the Base sha and the test counts. HANDBACK.md PR line: "PR: opened by Chief Of Staff from the branch".
 Hand-back location: in the repo, on that branch: handback/<step-id>/r<N>/HANDBACK.md   (shape: handoff/HAND-BACK.md)
 Depends on: <step ids, formats and CNs this step reads, with sha256 prefixes>
 Read first: BUILD_GUIDE.md §<n>; <QA reviews and format sections this step needs>
-Kit: r<N>, <date>. <Proto branch and head, tree, test count, plants result, bundle sha.>
+Kit: r<N>, <date>. <Proto branch and head, tree, test count, plants result, and the Architect's proto bundle sha.>
 Carries: <CNs filed or none; pins unchanged or the CN that moves them>
 
 > Working style (REQUIRED): use your helper agents for review, tests and cross-checks, take your time, and self-review against Acceptance + the QA checklist. HANDBACK.md must have § Helpers & self-review (each helper and what it reviewed, plus your self-review); without it the hand-back is REJECT (incomplete). See BUILD_GUIDE §0 and HAND-BACK item 8.
