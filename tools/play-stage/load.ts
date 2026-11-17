@@ -26,7 +26,7 @@ export const DEMO_STAGE = {
   enemyPool: { mode: "fixed" as const, entries: [{ unitId: "wolf", at: { c: 2, r: 0 }, facing: "S" }, { unitId: "wolf", at: { c: 3, r: 0 } }] },
   loadout: { roster: ["knight", "archer", "cleric"], size: 3, required: ["knight"] }, rules: [] as string[],
 };
-export const DEMO_SETUP: BattleSetup = { base: { hp: 9, atk: 1 }, stats: { knight: { hp: 9, atk: 1 }, archer: { hp: 6, atk: 2 }, wolf: { hp: 4, atk: 1 }, cleric: { hp: 7, atk: 1 }, villager: { hp: 4, atk: 0 }, crate: { hp: 3, atk: 0 }, merchant: { hp: 5, atk: 0 } }, hitClass: "basic" };
+export const DEMO_SETUP: BattleSetup = { base: { hp: 9, atk: 1 }, stats: { knight: { hp: 9, atk: 1 }, archer: { hp: 6, atk: 2 }, wolf: { hp: 4, atk: 1 }, cleric: { hp: 7, atk: 1 }, villager: { hp: 4, atk: 0 }, crate: { hp: 3, atk: 0 }, merchant: { hp: 5, atk: 0 } }, hitClass: "basic", reach: { archer: 3 }, abilities: { archer: [{ reach: 3, damage: 2, effectRef: "line-shot" }] } };
 export type PlayDocs = { readonly manifest: unknown; readonly map: unknown; readonly stage: unknown; readonly rules: BattleSetup; readonly hostSeed: number; readonly talk?: Readonly<Record<string, string>> };
 export const DEMO_LOAD: PlayDocs & { readonly talk: Readonly<Record<string, string>> } = { manifest: DEMO_MANIFEST, map: DEMO_MAP, stage: DEMO_STAGE, rules: DEMO_SETUP, talk: DEMO_TALK, hostSeed: 24301 };
 const TILES = [{ id: "floor", open: true, push_can_enter: true }] as const;

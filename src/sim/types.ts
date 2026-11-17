@@ -105,13 +105,13 @@ export type MatchResult = {
 /** Step 18: the level pick, fed through the same door; `index` points into the bar's pending offer. `unitId` names the bar under
  *  `bar: "unit"`; under "side" the bar is the seat's own side and `unitId` is not read. */
 export type ChooseAbility = { readonly type: "ChooseAbility"; readonly index: number; readonly unitId?: string };
-export type ChooseAction = { readonly type: "ChooseAction"; readonly actionId: "basic" | "interact"; readonly unitId?: string };
+export type ChooseAction = { readonly type: "ChooseAction"; readonly actionId: "basic" | "interact" | "spell"; readonly unitId?: string };
 export type DoorIntent = Intent | ChooseAbility | ChooseAction;
 /** The one door: every move arrives as an intent (touch, bot, chaos player, a later online peer). */
 export type IntentInput = { readonly intent: DoorIntent; readonly aim?: Sq | null };
 export type IntentHook = (world: SimWorld, side: SideId, budget: Budget) => readonly IntentInput[];
 /** Caller inputs, no defaults: the seated side, the move duration (null = instant) and the action id source. */
-export type PlayerOptions = { readonly side: SideId; readonly moveMs: number | null; readonly nextId: () => string; readonly step?: StepRule };
+export type PlayerOptions = { readonly side: SideId; readonly moveMs: number | null; readonly nextId: () => string; readonly step?: StepRule; readonly spellOf?: (unitId: string) => string | undefined };
 export type PlayerReject = "noEvent" | "illegal" | "noUnit" | "notOwn" | "offGrid" | "noAction" | "malformed" | "disposed" | "noOffer" | "badPick" | "notReachable" | "noTarget";
 export type PlayerStep = {
   readonly intent: DoorIntent;

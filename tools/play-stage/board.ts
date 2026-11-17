@@ -22,7 +22,7 @@ const FONT: Readonly<Record<string, readonly number[]>> = {
 };
 const cache = new Map<string, Pixels>();
 const sheet = (id: string): Sheet => ({ id, columns: 1, fw: TILE, fh: TILE });
-const REACH = sheet("play:reach-player"), PATH = sheet("play:path-player");
+const REACH = sheet("play:reach-player"), PATH = sheet("play:path-player"), AIM_A = sheet("play:aim-attack"), AIM_S = sheet("play:aim-spell");
 function bake(id: string, rgb: number, letter: string): Pixels {
   const hit = cache.get(id); if (hit !== undefined) return hit;
   const data = new Uint8ClampedArray(TILE * TILE * 4), r = (rgb >>> 16) & 255, g = (rgb >>> 8) & 255, b = rgb & 255;
@@ -35,6 +35,8 @@ export function pixelsOf(id: string): Pixels | undefined {
   if (id === "play:floor") return bake(id, 0x243044, "");
   if (id === "play:reach-player") return bake(id, 0x3b82f6, "");
   if (id === "play:path-player") return bake(id, 0xf0c14a, "");
+  if (id === "play:aim-attack") return bake(id, 0xe04848, "");
+  if (id === "play:aim-spell") return bake(id, 0xf08a30, "");
   for (const recipe of Object.values(RECIPES)) if (recipe.id === id) return bake(id, TEAM[recipe.team], recipe.name.slice(0, 1));
   return id.startsWith("starter:unknown-") ? bake(id, TEAM.neutral, "?") : undefined;
 }
@@ -44,8 +46,12 @@ export function fit(devW: number, devH: number, cols: number, rows: number, dpr:
   const s = Math.max(Number.isFinite(minS) && minS >= 1 ? minS : 1, Number.isFinite(fitted) && fitted >= 1 ? fitted : 1);
   return { s, padX: Math.floor((devW - Math.floor(devW / s) * s) / 2), padY: Math.floor((devH - Math.floor(devH / s) * s) / 2) };
 }
+/** Own ability rows only. A prototype key such as `constructor` is not a spell. */
+export function spellRef(setup: { readonly abilities?: Readonly<Record<string, readonly { readonly effectRef: string }[]>> }, id: string): string | undefined {
+  const bag = setup.abilities; if (bag === undefined || !Object.hasOwn(bag, id)) return undefined; return bag[id]?.[0]?.effectRef;
+}
 type Walk = { path: readonly Sq[]; from: Sq; t0: number; dur: number };
-export function createPlay(docs?: PlayDocs, moveMs = 200) {
+export function createPlay(docs?: PlayDocs, moveMs = 200, autoWait = true) {
   const talk = docs?.talk ?? DEMO_TALK;
   const body = docs === undefined ? DEMO_LOAD : { manifest: docs.manifest, map: docs.map, stage: docs.stage, rules: docs.rules, hostSeed: docs.hostSeed, talk };
   const world = createWorld(docsToInput(body).input);
@@ -55,13 +61,14 @@ export function createPlay(docs?: PlayDocs, moveMs = 200) {
   if (installed.out === null) throw new Error("play: step-pattern");
   const step = installed.out;
   let n = 0;
-  const player = createPlayer(world, { side: "player", moveMs, nextId: () => `p${n += 1}`, step });
-  const budget = installOne(ACTION_BUDGET, {});
-  if (budget.out === null) throw new Error("play: action-budget");
-  const bot = botAbilityPriority({ setup: body.rules, stepReach: step.reach, actionsPerTurn: budget.out.actionsPerTurn });
+  const spent = installOne(ACTION_BUDGET, {});
+  if (spent.out === null) throw new Error("play: action-budget");
+  const budget = spent.out;
+  const player = createPlayer(world, { side: "player", moveMs, nextId: () => `p${n += 1}`, step, spellOf: (id) => { const u = world.units.get(id); return u === undefined ? undefined : spellRef(body.rules, u.unitId); } });
+  const bot = botAbilityPriority({ setup: body.rules, stepReach: step.reach, actionsPerTurn: budget.actionsPerTurn });
   const gestures = createGestureMapper({ cellPx: TILE, tapMaxPx: 12, holdMs: 500 }, { cols: world.grid.cols, rows: world.grid.rows, unitAt: (at) => world.units.occupantAt(at) });
   const link = createSceneLink();
-  let selected: string | null = null, pending: Sq | null = null, reach: Sq[] = [], preview: Sq[] = [], walk: Walk | null = null;
+  let selected: string | null = null, pending: Sq | null = null, reach: Sq[] = [], preview: Sq[] = [], walk: Walk | null = null, aims: Sq[] = [], aimKind: "basic" | "spell" = "basic", followId: string | null = null, onLand: (() => void) | null = null;
   const mark = (): void => { reach = selected === null ? [] : reachCells(world.grid, world.units, selected, step.reach); };
   const sync = (): void => {
     if (walk === null || selected === null) return;
@@ -69,8 +76,8 @@ export function createPlay(docs?: PlayDocs, moveMs = 200) {
     if (t >= 1) {
       world.units.setOffset(selected, null);
       const from = world.phases.battle;
-      if (from === "moving") { let phase = xGo(from, { type: "MOVE_DONE" }); phase = xGo(phase, { type: "WAIT" }); phase = xGo(phase, { type: "UNIT_DONE", next: "idle" }); world.phases = { ...world.phases, battle: phase }; }
-      walk = null; pending = null; preview = []; mark(); return;
+      if (from === "moving") { let phase = xGo(from, { type: "MOVE_DONE" }); if (autoWait) { phase = xGo(phase, { type: "WAIT" }); phase = xGo(phase, { type: "UNIT_DONE", next: "idle" }); } world.phases = { ...world.phases, battle: phase }; }
+      walk = null; pending = null; preview = []; mark(); onLand?.(); return;
     }
     const steps = walk.path.length, f = t * steps, i = Math.min(steps - 1, Math.floor(f)), a = i === 0 ? walk.from : walk.path[i - 1], b = walk.path[i];
     if (a === undefined || b === undefined) return;
@@ -86,25 +93,33 @@ export function createPlay(docs?: PlayDocs, moveMs = 200) {
     }
     if (intent.type === "Cancel") { pending = null; preview = []; return player.feed(intent); }
     if (intent.type !== "TargetCell") return player.feed(intent);
-    const at = intent.at, same = pending !== null && pending.c === at.c && pending.r === at.r, on = reach.some((c) => c.c === at.c && c.r === at.r);
+    const at = intent.at, same = pending !== null && pending.c === at.c && pending.r === at.r, targeting = world.phases.battle === "targeting";
+    const on = (targeting ? aims : reach).some((c) => c.c === at.c && c.r === at.r);
     if (!same && !on) { pending = null; preview = []; return { reject: "notReachable" as const, preview: [] as readonly Sq[] }; }
-    if (!same) { const path = selected === null ? null : walkTo(world.grid, world.units, selected, step.reach, at); pending = { c: at.c, r: at.r }; preview = path ?? []; return { preview }; }
+    if (!same) { pending = { c: at.c, r: at.r }; preview = targeting ? [pending] : (selected === null ? [] : walkTo(world.grid, world.units, selected, step.reach, at) ?? []); return { preview }; }
     const stepped = player.feed(intent);
     pending = null; preview = [];
     if (stepped.action?.kind === "move" && stepped.path !== undefined && selected !== null) {
       const u = world.units.get(selected);
       walk = { path: stepped.path, from: { c: u?.at.c ?? at.c, r: u?.at.r ?? at.r }, t0: world.clock.now(), dur: stepped.action.durationMs ?? 0 };
-      sync();
+      followId = selected; sync();
     }
     return stepped;
   };
   return {
-    world, step, intend, sync, bot, pixels: pixelsOf,
+    world, step, intend, sync, bot, pixels: pixelsOf, autoWait, go,
+    focus(id: string | null): void { selected = id; pending = null; preview = []; mark(); },
+    arm(next: Walk): void { walk = next; sync(); },
+    landed(fn: (() => void) | null): void { onLand = fn; },
+    get aims() { return aims; }, set aims(v: readonly Sq[]) { aims = v.map((c) => ({ c: c.c, r: c.r })); },
+    get aimKind() { return aimKind; }, set aimKind(v: "basic" | "spell") { aimKind = v; },
+    get followId() { return followId; }, set followId(v: string | null) { followId = v; },
     get selected() { return selected; }, get reach() { return reach; }, get pending() { return pending; }, get walk() { return walk; },
     pointer(sample: PointerSample): void { for (const intent of gestures(sample)) intend(intent); },
     scene() {
       sync();
-      const overlays = selected === null ? [] : [...reach.map((c) => ({ band: "fxGround" as const, sheet: REACH, x: c.c * TILE, y: c.r * TILE })), ...preview.map((c) => ({ band: "fxGround" as const, sheet: PATH, x: c.c * TILE, y: c.r * TILE }))];
+      const aimSheet = aimKind === "spell" ? AIM_S : AIM_A, aimOver = world.phases.battle === "targeting" ? aims.map((c) => ({ band: "fxGround" as const, sheet: aimSheet, x: c.c * TILE, y: c.r * TILE })) : [];
+      const overlays = selected === null ? aimOver : [...reach.map((c) => ({ band: "fxGround" as const, sheet: REACH, x: c.c * TILE, y: c.r * TILE })), ...preview.map((c) => ({ band: "fxGround" as const, sheet: PATH, x: c.c * TILE, y: c.r * TILE })), ...aimOver];
       const assets: Record<string, { sheet: Sheet }> = { "play:floor": { sheet: sheet("play:floor") } };
       const units = world.units.all().map((u) => { const id = recipeOf(u.unitId).id; assets[id] = { sheet: sheet(id) }; return { id: u.id, sprite: id, at: { c: u.at.c, r: u.at.r }, offset: u.offset, facing: u.facing, alive: u.alive }; });
       const tiles = Array.from({ length: world.grid.cols * world.grid.rows }, () => 0);
