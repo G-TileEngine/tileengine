@@ -1,0 +1,8 @@
+A	src/rules/behaviours/catalogue.ts
+A	src/rules/behaviours/index.ts
+A	src/rules/behaviours/registry.ts
+A	src/rules/behaviours/terrain.ts
+A	src/rules/behaviours/types.ts
+A	src/rules/behaviours/xp-levels.ts
+A	tests/rules/behaviours-qa.test.ts
+A	tests/rules/behaviours.test.ts

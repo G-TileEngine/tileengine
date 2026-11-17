@@ -1,0 +1,9 @@
+ src/rules/behaviours/catalogue.ts |  25 ++++++
+ src/rules/behaviours/index.ts     |   5 ++
+ src/rules/behaviours/registry.ts  | 102 +++++++++++++++++++++++
+ src/rules/behaviours/terrain.ts   |  21 +++++
+ src/rules/behaviours/types.ts     |  15 ++++
+ src/rules/behaviours/xp-levels.ts |  17 ++++
+ tests/rules/behaviours-qa.test.ts |  33 ++++++++
+ tests/rules/behaviours.test.ts    | 167 ++++++++++++++++++++++++++++++++++++++
+ 8 files changed, 385 insertions(+)
