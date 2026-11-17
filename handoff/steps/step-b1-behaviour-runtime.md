@@ -68,6 +68,13 @@ Gap found and fixed in r2: r1 hard-checked values on inactive knobs (now dropped
 - **S5 (QA r4 review, fixed in r5):** behaviour definitions frozen (ruling 12). Asserted in test 13; plants 97–98. QA's r4 pin `f2f61867` (N8) and r5 pin `090551e4` (S5e/S5f: the def knob lists are frozen) adopted whole.
 - **QA plants:** QA's r4 copy `b1-qa-plants-r4.py` (QA's r3 set; identical body to EA's adapted copy) catches 31/32 on r7 (Q2 is an equivalent mutant, as QA found). QA's `b1-qa-plants-r4-new.py` (N1–N12) catches **10/12**: N3 (`label unchecked`, needle includes `length <= 48`) and N4 (`label cap 49`) still target the old hard 48-char cap, so the needles no longer exist and are left unchanged (QA's files). N5 (empty label) still applies. In r4, `i["id"] !== ""` became the id pattern, so Q5's needle no longer exists. EA's copy `b1-qa-plants-r4.py` retargets only Q5 to the same mutation (empty id accepted: `ITEM_ID.test(i["id"])` → `(i["id"] === "" || ITEM_ID.test(i["id"]))`).
 
+## Rulings (added at merge, QA builds `docs/qa/step-b1-builds.md` 6888f626)
+14. **Pick and EA catalogue pin (merge time).** Under the CEO's ~01:33 ruling, every step has one builder from now on. QA picks **ChatA** (first handback; one QA pass; no A/B). Tip `f3380466` (`f3380466c678f0c3e9ae7aa7b0baa2f699d921e2`, tree `01de15c1`, on Base `bb7df0fc`; code `cfd2bf05` (`cfd2bf05dce7833c8d7f5c1bb6a038a1e3c7f547`, tree `a9fb9698`; parent `3346acce`); 3 commits `3346acc` the runtime, `cfd2bf0` the `resolveKnob` parameter name, `f338046` the hand-back; all noreply). ChatA green **851/0** on the Base. Delivery was under CN-003 (Drive bundles; PR opened from the bundle). The kit never shipped the generator or rev 26, so ChatA hand-built a 25-line `catalogue.ts` (sha256 `4502df67c115f1126855fc6d62e1bca8f816ccaef6fbcaf4ca9c874e9bb48c85`) whose live hash still passed test 12. That slice is not rev 26 (QA M1). **EA pin `3238dddb`** (`3238dddbfbdd6e2d6475541a617ea697b0ee88e7`, tree `4c5c097f`, parent `f3380466`; G-TileEngine noreply author and committer) replaced only `src/rules/behaviours/catalogue.ts` with the exact output of `gen-catalogue.py` (sha256 `8398d417d66712f636e82d5858a1049504b3eccf46fde0534c1b2f883b97d088`, 46 lines, table `3b16c673…`). QA's builds doc is `docs/qa/step-b1-builds.md` (sha256 `6888f626ce2703e8e8b92370eaf87f73c3d823051a945c8ce8f2e2b588894423`, 71 lines), verdict **OK TO OPEN PR**, plants **159/159**. **Status: merged.** PR https://github.com/G-TileEngine/tileengine/pull/60, merge commit **`9ebb9413`** (`9ebb94138e19e31a94b5705b3a1062691bbceb1b`, tree `ccb7f0ed828c43ac03646bb4265f5a7406519f47`, parents `6add89b6` + `3238dddb`); QA's B1 docs follow it as **`16fabf3d`** (`16fabf3d63f098ffd528a636f17e65279a07dacf`); EA verify-merge PASS 874/0 at floor 874, pins 5/5, smoke 0 failed.
+    - **Kit lesson:** kits ship generated files byte-for-byte and never require EA-only tools. The generator stays an EA/QA tool: `/workspace/scratch-ea/b1/gen-catalogue.py` sha256 `b7087fddb20d1351f75bce2aa6ecbb3ebbc3d0e884650ab5aded872d02a27b14`, run as `python3 gen-catalogue.py <out.ts>`, reading `behaviour-library/_src/behaviours.rev26.json` sha256 `ea8b3302…`. Builders copy the shipped `catalogue.ts`.
+    - **S1, carried to B5/rev 27 and P1-4 (not fixed in B1):** pin the literal table hash `3b16c673…` in a shipped test, or ship the generator with a check. Test 12 recomputes the hash from the live tables, so a self-consistent hand-built slice still passes.
+    - **Report-only (no new rule):** R1: terrain tiles are not frozen; each install gets fresh ones. R2: user list-item keys come first. R3: `index.ts` no longer re-exports `Gate`, `InstallCtx` or `KnobType`; they are still in `types.ts`. ChatA's HANDBACK calls the reserved tiles '15th/16th', but they are slots 14–15.
+    - Evidence (EA verify-merge on merge `9ebb9413`): green **874/0**; pins 5/5 unchanged; smoke 0 failed; merge-tree onto main `6add89b6` is clean (tree `ccb7f0ed`). **406 changed lines** excluding `handback/` (ChatA 385 + 21 from the catalogue pin; src 206, tests 200), inside the 400–500 band (kit cap ≤ 450).
+
 ## CN / format questions (for DSK and the Librarian; report-only, nothing filed)
 - **No new CN.** B1 reads only existing envelope fields and project-format §7.1 layers.
 - See § Open questions.
@@ -90,7 +97,7 @@ Gap found and fixed in r2: r1 hard-checked values on inactive knobs (now dropped
 | `src/rules/behaviours/index.ts` | new: exports | 5 | 6 |
 | `tests/rules/behaviours.test.ts` | new, shipped (13 tests) | 167 | 167 |
 | `tests/rules/behaviours-qa.test.ts` | new, shipped: QA's pins `68eca030` + `f2f61867` + `090551e4` + `32f9019c` (3 tests), byte-identical | 33 | 33 |
-Total ≤ 450 (band 400–500, reason given) changed lines (proto **433**: src 233, tests 200). **Band reason:** QA's pins (33 lines, adopted whole per M1) plus M2 and S1–S3 (+18 in EA's r4 commit), S5 (+2 test lines in r5) and r7's DSK label ruling (+3) on top of the r2 DSK rulings and QA r1 findings; without the pins B1 is 400. `docs/foundation/STATUS.md` is **not** in this slice: it is written in B1's merge-time doc commit (it needs the merge sha, and adding its ~99 lines here would put B1 at ~440, in the band).
+Total ≤ 450 (band 400–500, reason given) changed lines (proto **433**: src 233, tests 200). Merged ChatA + EA pin (ruling 14): **406** (ChatA 385 + 21; src 206, tests 200). **Band reason:** QA's pins (33 lines, adopted whole per M1) plus M2 and S1–S3 (+18 in EA's r4 commit), S5 (+2 test lines in r5) and r7's DSK label ruling (+3) on top of the r2 DSK rulings and QA r1 findings; without the pins B1 is 400. `docs/foundation/STATUS.md` is **not** in this slice: it is written in B1's merge-time doc commit (it needs the merge sha, and adding its ~99 lines here would put B1 at ~440, in the band).
 
 ## Interfaces to match (quoted exactly; bodies elided)
 ```ts
@@ -159,18 +166,18 @@ None.
 Registry (1–3), value types (4–8), lists and built-ins (9–11), layer order and sources (12–19), range/step/L5 (20–26), unknown and per-unit warnings (27–28), gates (29–32, 60, 63), install and reporting (33–41), `outOf` (42), xp-levels (43–51, 58–59), terrain (52–57, 61), catalogue stamp (62); r2 DSK rulings: strayValue, `{value, rev}`, nullable, inactive checks (64–72); r2 QA findings: table hash and generated gate defaults (73–74), `unknownKnob` on unit layers (75), `unknownBehaviour` (76–77, 83), r3 inactive values per §2.6: a notice for an inactive value (78), an inactive value leaking into the result (79), `unknownField` (80–82); r4 QA review: non-record layer docs (84–85), item id and label (86–91), finite L5 (92–93), frozen catalogue (94–96); r5 QA review: frozen behaviour definitions (97–98); r7 DSK ruling: long-label `outOfRange` silent (91, retargeted) and a long label made hard (99). Every EA plant fails `tests/rules/behaviours.test.ts`. QA's 32 plants (Q1–Q32) run against both test files; all but the equivalent Q2 fail. Of QA's 12 r4 plants (N1–N12), N3 and N4 still needle the old 48-char hard cap and are left unchanged.
 
 ## Gates (Acceptance)
-- [ ] `npm ci && npm run green` exits 0 with **at least 851 passing** (835 + 16) and none failing, cancelled, skipped or todo. Typecheck, lint, deps, check:state and check:law each exit 0. (Proto on `bb7df0fc`: 851/0; deps 119 modules / 380 deps; `check:law OK (src)`.)
+- [ ] `npm ci && npm run green` exits 0 with **at least 874 passing** (858 + 16, ruling 14) and none failing, cancelled, skipped or todo. Typecheck, lint, deps, check:state and check:law each exit 0. (Proto on `bb7df0fc`: 851/0; ChatA + EA pin on main `6add89b6`: 874/0; deps 122 modules / 391 deps; `check:law OK (src)`.)
 - [ ] `node tools/pixel-suite/smoke.ts`, `node tools/host-example/match-picture.ts`, `npm run -s sim` and `node tests/perf/stress-budget.ts` print the § Smoke lines.
 - [ ] `git diff bb7df0fc --stat -- package.json package-lock.json .dependency-cruiser.cjs scripts/check-law.sh src/types/core-types.ts` is empty (pins `1e5dd82c`, `d7f64a09`, `45a3dbaa`, `4d7bbf48`, `d6d08696`). If a core-types or dependency-rule change seems needed, **stop and report**.
 - [ ] `git diff bb7df0fc --stat -- src/core src/sim src/runtime src/fx src/editor src/project src/btf-adapters src/rules/levels src/rules/turns` is empty.
 - [ ] Both shipped test files are byte-identical to the sha256s above.
-- [ ] Each file within its cap; ≤ 450 changed lines in total (band 400–500, reason given).
-- [ ] `python3 gen-catalogue.py` on catalogue rev 26 reproduces `src/rules/behaviours/catalogue.ts` byte-identical (QA).
+- [ ] Each file within its cap; 406 changed lines at merge (band 400–500, reason given; ruling 14).
+- [ ] QA runs `python3 gen-catalogue.py <out.ts>` on catalogue rev 26 and requires the output byte-identical to `src/rules/behaviours/catalogue.ts`. Builders copy the shipped `catalogue.ts`; they do not run the generator (ruling 14).
 - [ ] No `Math.random`, `Date`, timers or `Card`/`Deck` identifiers. Nothing in `src/` reads files or the catalogue folder.
 - [ ] Hand-back complete per `handoff/HAND-BACK.md`, with § Helpers & self-review.
 
 ## Floor
-835 → **851**: 835 (main `bb7df0fc` = `f8a451f5` for tests) + 13 EA (`tests/rules/behaviours.test.ts`) + 3 QA (`tests/rules/behaviours-qa.test.ts`, QA's floor 850 + EA's r4 test). Kit tests under `handoff/` are not run on main until merge.
+835 → **851**: 835 (main `bb7df0fc` = `f8a451f5` for tests) + 13 EA (`tests/rules/behaviours.test.ts`) + 3 QA (`tests/rules/behaviours-qa.test.ts`, QA's floor 850 + EA's r4 test) = 851 → **874** at merge (858 on main `6add89b6` after ED-E5 + 16 B1 tests, ruling 14). Kit tests under `handoff/` are not run on main until merge.
 
 ## Perf (phone floor)
 No runtime code changes. Install runs once per match setup, never per frame; 29 knobs (plus 4 layer scans for unknown keys and held values), linear in knobs + answer keys.
@@ -189,6 +196,8 @@ No runtime code changes. Install runs once per match setup, never per frame; 29 
 - L336 severity is resolved (DSK 00:23, setup-format §2.5): the id pattern is hard; a list-item label must be a non-empty string (hard `invalidValue` if missing, empty, or not a string, L333). A label over 48 chars is a warning `outOfRange` and is kept as stored (the editor clips it for display).
 - Report-only (QA r5): `createRegistry` does not freeze host-passed behaviour objects (only the shipped `XP_LEVELS`/`TERRAIN` are frozen) → **B5** decides when hosts can register behaviours. Extra properties on install functions are never read by the runtime and are harmless.
 - `docs/foundation/STATUS.md` (64 rows, standing defaults Q1–Q5) → B1's merge-time doc commit; its honesty test `tests/foundation/status.test.ts` → later B-step.
+- **S1 (QA builds, due before B5/rev 27 and now P1-4):** pin the literal table hash `3b16c673…` in a shipped test, or ship the generator with a check (ruling 14). Test 12 recomputes the hash from the live tables, so a self-consistent hand-built slice still passes.
+- **Report-only (QA builds, not fixed in B1):** R1: terrain tiles are not frozen; each install gets fresh ones. R2: user list-item keys come first. R3: `index.ts` no longer re-exports `Gate`, `InstallCtx` or `KnobType`; they are still in `types.ts`. ChatA's HANDBACK calls the reserved tiles '15th/16th', but they are slots 14–15.
 
 ## Out of scope
 UI, the editor writer, any format or catalogue change, sim wiring (`createWorld` callers keep passing `tiles`, `terrain`, `levels`; B2/B5/B7 wire install into a host).
@@ -197,9 +206,9 @@ UI, the editor writer, any format or catalogue change, sim wiring (`createWorld`
 `painter-proto/`, `ui-shell/`, `src/core`, `src/sim`, `src/types/core-types.ts`, every pin file, `BTF_LEVEL_RULES` (kept as the parity reference).
 
 ## Delivery footer (must hold at hand-back)
-- `npm ci && npm run green` exits 0 with **at least 851 passing and 0 failing**. Paste the summary line, the smoke line, the host example line, and the sim and stress lines into HANDBACK.md.
+- `npm ci && npm run green` exits 0 with **at least 874 passing and 0 failing** (ruling 14). Paste the summary line, the smoke line, the host example line, and the sim and stress lines into HANDBACK.md.
 - Both shipped test files are **byte-identical** to the sha256s above.
-- Base **`bb7df0fc`**. The bundle is `bb7df0fc..step/step-b1-behaviour-runtime-r<N>` and passes `git bundle verify`. Total ≤ 450 changed lines (band 400–500, reason given). Every pin unchanged. Commits are `G-TileEngine <G-TileEngine@users.noreply.github.com>` (author and committer).
+- Base **`bb7df0fc`**. The bundle is `bb7df0fc..step/step-b1-behaviour-runtime-r<N>` and passes `git bundle verify`. Total 406 changed lines at merge (band 400–500, reason given; ruling 14). Every pin unchanged. Commits are `G-TileEngine <G-TileEngine@users.noreply.github.com>` (author and committer).
 
 ## Delivery
 On branch `step/step-b1-behaviour-runtime-r<N>` (base `bb7df0fc`), commit as `G-TileEngine <G-TileEngine@users.noreply.github.com>` (author and committer). Run `git bundle create step-b1-behaviour-runtime-r<N>.bundle bb7df0fc..step/step-b1-behaviour-runtime-r<N>`, then `git bundle verify`. Upload the bundle and HANDBACK.md to the CEO's Drive. Push nothing to GitHub.
