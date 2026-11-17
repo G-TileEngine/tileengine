@@ -1,0 +1,12 @@
+A	src/editor/effect/save.ts
+M	src/editor/effect/writer.ts
+A	tests/editor/effect-e6-qa.test.ts
+A	tests/editor/effect-e6-qa2.test.ts
+A	tests/editor/effect-e6-save.test.ts
+A	tests/tools/ed-e6.test.ts
+A	tools/effect-designer/grid.ts
+A	tools/effect-designer/index.html
+A	tools/effect-designer/page.ts
+A	tools/effect-designer/presets.ts
+A	tools/effect-designer/store.ts
+A	tools/effect-designer/strip.ts
