@@ -2,6 +2,7 @@ import { anchorPx } from "./draw-list.js";
 import { clipMs, footAt, frameAt } from "./frames.js";
                                                                  
                                                                              
+                                           
 export const FX_PLAYER = { eventCap: 16, frameCap: 64, lagMaxMs: 500, gridMs: 30, liteGridMs: 60 }         ;
                                                                          
                                                                           
@@ -11,7 +12,7 @@ export const FX_PLAYER = { eventCap: 16, frameCap: 64, lagMaxMs: 500, gridMs: 30
                                                                              
                                                                                                                                                                  
                                                                                                                                                                                                                                                                     
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
 const note = (code        )         => ({ code, message: code });
 const NAMES = ["hand", "tip", "head", "centre"]         ;
 const centreOf = (box     )     => ({ x: box.x + Math.floor(box.w / 2), y: box.y + Math.floor(box.h / 2) });
