@@ -1,0 +1,12 @@
+# P1-3 range-interact, ChatA r3 (PR #66) — build review
+
+QA & Build Guard, 2026-11-17 13:11 GMT. Evidence: `docs/qa/qa-runs/p1/p1-3/build-r3/`. Fetch-only; only `refs/cmp/*` were written. No GitHub/Drive writes.
+
+**Verdict: must-fix. Not OK TO MERGE.** Lint is blocking in `qa-gates.sh` (`gates_ok` requires exit 0) and the kit's `npm run green` (`eslint --max-warnings 0 .`). There are no GitHub workflows or required status checks; main `6d5bfbbe` lints clean. Tip lint exits 1 only on pin line 12 (`)!`, `no-non-null-assertion`); `eslint src` is clean. Adopt pin `refs/cmp/p1-3-build-qa-fix-b` `27eb2152338fcb963d29ab5bf6e2c538657278bd` (tree `f6d7b8c1`, 36 lines, sha256 `b7d1d71355fe081e4fc6d535752b559b3cbe93466f5cd82ad52f3b62e4d0412f`). Bundle `/workspace/share/step-p1-3-build-qa-fix-b.bundle` sha256 `513756994b0dc05613738162510528ee3a04f9a5a4cc2c50bdda9e0636cf4631`, parent `12a125df`. Same two tests, no `!`; tests/lint/typecheck pass. As-is trial merge onto `6d5bfbbe` is tree **`410fd7990c2b3255d4388f478354ebe57afb881a`**; do not merge. Postmerge floor **937**. After pin-b, trial tree is `7a0c1f79f2c6a897023167c4c9bf538264e4d4fa`.
+
+- Tip `12a125df` (tree `0e0f7633`), code `51e4b8c4`, on pin `dd05740e`, base `9ac26da8`. All commits noreply. HANDBACK last. Pin file byte-identical (`d9ed0c619612123dee94c184591d0f35ee6a0b6ca9d2cf989893f6553f0e4e58`, 35 lines).
+- M1 fixed as in proto `0bff08bc`: `selected` is kept on `TAP_MOVE_CELL` and `CANCEL`; `CANCEL` clears `pending`.
+- Diff r2..r3 src+tests is the pin, the M1 line, and equivalent compaction (`range.ts`, `targets.ts`, blank lines in `basic-attack.ts`/`interact.ts`, denser confirm in `player.ts`). Nine shipped tests unchanged. `reachOf` still uses `Object.hasOwn`.
+- Size (kit measure: src+tests vs base, insertions+deletions, no handback): r2 +364/−37 = **401**; r3 +381/−38 = **419** (cap 420). All per-file caps hold (`battle.ts` 40/40). Without compaction, 401+35 = 436, over only because of the QA pin (an allowed raise); nothing was trimmed from tests or weakened. Pin-b is +382/−38 = **420**.
+- Plants (r3 wording, same mutations): kit **20/20**, extras **6/6** including q05, M1 repro **1/1**. All caught.
+- Gates (`pgrep` clear before each run): tip vs `--main` `9ac26da8`, floor 937: tests **937/0**, typecheck/deps (138/446)/state/law/smoke PASS, lint FAIL. Sim SAME (`afc89d56`, `b8007292`). Stress SAME, complete, no p95 flake (no rerun). Trial `refs/cmp/p1-3-build-r3-trial` `0579ae05`, tree **`410fd799`** (matches CoS), **937/0**, law PASS, lint FAIL, `RESULT FAIL`.
