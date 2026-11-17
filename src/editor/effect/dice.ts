@@ -37,7 +37,7 @@ const differ = (doc: FxDocValues, step: Row, i: number, parents: readonly Source
   return null;
 };
 export function breed(parents: readonly (Source | null)[], o: { seed: unknown; mint: (prefix: string) => string; ramps?: readonly string[]; preset?: boolean }): Child[] {
-  const kept: { src: Source; i: number }[] = []; parents.forEach((p, i) => { if (p !== null) kept.push({ src: p, i }); }); const use = kept.slice(0, 3); if (use.length < 2) return [];
+  const kept: { src: Source; i: number }[] = []; parents.forEach((p, i) => { const o = rec(p); if (o !== null && rec(o["doc"]) !== null) kept.push({ src: p as Source, i }); }); const use = kept.slice(0, 3); if (use.length < 2) return [];
   const plan: readonly (readonly [number, number, AB, number])[] = use.length === 2 ? [[0, 1, "a", 25], [0, 1, "a", 50], [0, 1, "a", 75], [0, 1, "b", 25], [0, 1, "b", 50], [0, 1, "b", 75]] : [[0, 1, "a", 25], [0, 1, "a", 75], [1, 2, "a", 25], [1, 2, "a", 75], [2, 0, "a", 25], [2, 0, "a", 75]];
   return plan.map(([a, b, base, mix], k) => {
     const pa = use[a]?.src, pb = use[b]?.src; if (pa === undefined || pb === undefined) return null;
