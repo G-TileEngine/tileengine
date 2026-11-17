@@ -6,3 +6,5 @@ export { BASIC_ATTACK, type BasicAttack } from "./basic-attack.ts";
 export { INTERACT_REFUSED_REASONS, interactRefused, type InteractRefused, type InteractRefusedReason } from "./interact.ts";
 export { inOrthogonalReach, reachOf, type ReachTable } from "./range.ts";
 export { targetsFor } from "./targets.ts";
+export { abilityTableFor } from "./abilities.ts";
+export { LINE_SHOT } from "./line-shot.ts";

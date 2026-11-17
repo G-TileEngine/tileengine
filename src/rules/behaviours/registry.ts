@@ -28,7 +28,7 @@ function listCopy(spec: KnobSpec, value: unknown, behaviour: string, layer: Laye
     if (!isRecord(raw) || typeof raw.id !== "string" || !ITEM_ID.test(raw.id) || seen.has(raw.id) || typeof raw.label !== "string" || raw.label === "") return (notes.push(hard(behaviour, spec.id, layer)), null);
     seen.add(raw.id); const copy: Record<string, unknown> = {};
     for (const key of Object.keys(raw)) { if (key !== "id" && key !== "label" && !Object.hasOwn(item, key)) notes.push(note("unknownField", `${behaviour}.${spec.id} ${String(raw.id)}.${key}`)); if (Object.hasOwn(item, key) && typeof raw[key] !== "boolean") return (notes.push(hard(behaviour, spec.id, layer)), null); copy[key] = raw[key]; }
-    if (raw.label.length > 48) notes.push(note("outOfRange", `${behaviour}.${spec.id} ${raw.id}.label`));
+    if ([...raw.label].length > 48) notes.push(note("outOfRange", `${behaviour}.${spec.id} ${raw.id}.label`));
     for (const key of Object.keys(item)) if (!Object.hasOwn(copy, key)) copy[key] = item[key]; out.push(copy);
   }
   if (spec.reserved === true && Array.isArray(spec.default)) for (const raw of spec.default) if (isRecord(raw) && typeof raw.id === "string" && !seen.has(raw.id)) { notes.push(note("reservedMissing", `${behaviour}.${spec.id} ${raw.id}`)); seen.add(raw.id); out.push({ ...raw }); }
@@ -77,7 +77,7 @@ export function installOne<T>(def: BehaviourDef<T>, layers: SetupLayers, ctx?: I
   };
   const knobs: Record<string, Resolved> = {};
   for (const spec of def.knobs) { const row = cell(spec); if (!row.on) continue; notes.push(...row.notes); knobs[spec.id] = row.resolved; }
-  if (notes.some((item) => item.code === "invalidValue")) return finish<T>({ id: def.id, out: null, knobs, unsupported: [], notes, playable: false });
+  if (notes.some((item) => item.code === "invalidValue")) { def.afterInstall?.(notes, ctx); return finish<T>({ id: def.id, out: null, knobs, unsupported: [], notes, playable: false }); }
   const unsupported: KnobUnsupported[] = [], read = new Set<string>();
   const reader: KnobReader = {
     get(knob) { read.add(knob); const spec = byId.get(knob); if (spec === undefined) return undefined; const row = cell(spec); return row.on ? row.resolved.value : undefined; },
@@ -85,7 +85,7 @@ export function installOne<T>(def: BehaviourDef<T>, layers: SetupLayers, ctx?: I
   };
   const out = def.install(reader);
   for (const spec of def.knobs) { const row = cell(spec); if (row.on && !read.has(spec.id)) unsupported.push(entry(def.id, spec.id, row.resolved.value, row.resolved.layer, "noCode")); }
-  for (const row of unsupported) notes.push(uNote(row)); return finish({ id: def.id, out, knobs, unsupported, notes, playable: true });
+  for (const row of unsupported) notes.push(uNote(row)); def.afterInstall?.(notes, ctx); return finish({ id: def.id, out, knobs, unsupported, notes, playable: true });
 }
 function missing(setup: SetupIn): Installed {
   const id = setup.behaviourId, notes: Notice[] = [], unsupported: KnobUnsupported[] = [], answers = isRecord(setup.answers) ? setup.answers : undefined, keys = answers === undefined ? [] : Object.keys(answers);

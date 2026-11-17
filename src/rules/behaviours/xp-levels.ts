@@ -2,7 +2,7 @@ import type { LevelRules } from "../levels/index.ts";
 import { XP_LEVELS_KNOBS } from "./catalogue.ts";
 import type { BehaviourDef, KnobReader } from "./types.ts";
 
-const nums = (value: unknown): number[] => typeof value === "string" ? value.split(",").map(Number) : [];
+const nums = (value: unknown): number[] => Array.isArray(value) ? value.filter((n): n is number => typeof n === "number" && Number.isInteger(n)) : typeof value === "string" ? value.split(",").map(Number) : [];
 function install(k: KnobReader): LevelRules | null {
   const rule = k.get("level_rule");
   if (rule !== "xp_table") { k.unsupported("level_rule", `${String(rule)} levelling`); return null; }

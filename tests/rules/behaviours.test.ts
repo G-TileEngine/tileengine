@@ -137,6 +137,7 @@ test("B1 r2 DSK rulings (setup-format r29 §2.2, §2.5, §2.6, §2.9.4): strayVa
 
 test("B1 r2 QA findings: the generated table is hash-stamped, gate defaults come from the catalogue, nothing is dropped without a warning, and a gated-off value is kept silently (§2.6)", () => {
   assert.equal(createHash("sha256").update(JSON.stringify({ gates: GATE_DEFAULTS, "xp-levels": XP_LEVELS_KNOBS, terrain: TERRAIN_KNOBS })).digest("hex"), CATALOGUE.table);
+  assert.equal(CATALOGUE.table, "3b16c673b0afb3b3bae0fcac1909af1980168b30c7b1734595065e26f4a40eae"); // B1 S1 pin: a self-consistent restamp must not pass
   assert.deepEqual(GATE_DEFAULTS, { "uses-card-hand": false, "uses-menu": true });
   assert.deepEqual(codes(installOne(ROSTER, { unit: { unit_atk: v(1) }, stageUnit: { x: v(1) } })), ["unknownKnob roster-test.unit_atk (unit)", "unknownKnob roster-test.x (stageUnit)"]);
   const ghost = installSetups(createRegistry([]), [{ behaviourId: "mana-pool", answers: { mana_start: user(6) }, stage: { mana_max: v(9) }, unit: {}, stageUnit: { mana_start: v(1) } }]).get("mana-pool");
@@ -154,7 +155,10 @@ test("B1 r4 QA review: a layer that is not a record warns, list items need a pat
     const t = terrain({ answers: { tile_types: user([item]) } }); assert.deepEqual([t.playable, codes(t)[0], t.knobs["tile_types"]?.layer], [false, "invalidValue terrain.tile_types (L1)", "L0"], JSON.stringify(item)); // S1
   }
   assert.equal(terrain({ answers: { tile_types: user([{ id: "0bog_2-x", label: "x".repeat(48) }]) } }).playable, true);
-  const long = terrain({ answers: { tile_types: user([{ id: "bog", label: "x".repeat(49) }]) } }); // DSK: a long label warns and is kept
+  const cps = terrain({ answers: { tile_types: user([{ id: "bog", label: "x".repeat(47) + "😀" }]) } }); // 48 code points, 49 UTF-16 — DSK label length
+  assert.equal(cps.playable, true);
+  assert.deepEqual(codes(cps).filter((c) => c.startsWith("outOfRange")), []);
+  const long = terrain({ answers: { tile_types: user([{ id: "bog", label: "x".repeat(48) + "😀" }]) } }); // 49 code points
   assert.deepEqual([long.playable, long.knobs["tile_types"]?.layer, codes(long).filter((c) => c.startsWith("outOfRange"))], [true, "L1", ["outOfRange terrain.tile_types bog.label"]]);
   const huge = installOne(ROSTER, { answers: { unit_hp: user(1e308) } }, { difficulty: { hp: 2 } }); // S2
   assert.deepEqual([huge.playable, huge.knobs["unit_hp"], codes(huge).includes("invalidValue roster-test.unit_hp (L5)")], [false, { value: 1e308, layer: "L1" }, true]);
