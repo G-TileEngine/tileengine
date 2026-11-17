@@ -18,8 +18,8 @@ test("every row of every table is accepted", () => {
       }
     }
   }
-  assert.equal(edges, 38);
-  assert.equal(keys.size, 34);
+  assert.equal(edges, 40);
+  assert.equal(keys.size, 35);
 });
 
 test("CHOOSE_ACTION with next resolving skips targeting", () => {

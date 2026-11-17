@@ -6,7 +6,7 @@ import { createWorld, submit } from "../../src/sim/index.ts";
 import { input } from "../sim/input.ts";
 
 // QA P1-2 r2 pin (G1 misses d11-d13, d15): D7 precedence needs two faults at once; the reason list is frozen.
-const S: BattleSetup = { base: { hp: 9, atk: 1 }, stats: { wolf: { hp: 2, atk: 1 }, archer: { hp: 6, atk: 2 } }, hitClass: "basic" };
+const S: BattleSetup = { base: { hp: 9, atk: 1 }, stats: { wolf: { hp: 2, atk: 1 }, archer: { hp: 6, atk: 2 } }, reach: { wolf: 99, archer: 99, knight: 99 }, hitClass: "basic" };
 const hit = (id: string, actor: string, more: Partial<Action> = {}): Action => ({ id, kind: "ability", actor, target: { pipe: "unit", unitId: "archer#2" }, durationMs: null, turns: null, effects: [], ...more });
 
 test("qa: hitRefused checks the actor before the aim (D7 order); the reason list is frozen", () => {

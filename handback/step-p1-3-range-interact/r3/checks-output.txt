@@ -1,0 +1,27 @@
+
+> tileengine-engine@0.0.0 lint
+> eslint --max-warnings 0 .
+
+
+/workspace/tileengine/tests/rules/battle-qa-p13-build.test.ts
+  12:70  error  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+✖ 1 problem (1 error, 0 warnings)
+
+
+> tileengine-engine@0.0.0 deps
+> depcruise src --config .dependency-cruiser.cjs
+
+
+✔ no dependency violations found (138 modules, 446 dependencies cruised)
+
+
+> tileengine-engine@0.0.0 check:state
+> sh scripts/check-state.sh
+
+check:state OK (src)
+
+> tileengine-engine@0.0.0 check:law
+> sh scripts/check-law.sh
+
+check:law OK (src)

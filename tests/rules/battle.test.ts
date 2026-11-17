@@ -5,14 +5,26 @@ import { BTF_LEVEL_RULES } from "../../src/btf-adapters/src/index.ts";
 import { installOne } from "../../src/rules/behaviours/index.ts";
 import { DAMAGE_RESOLUTION, HIT_REFUSED_REASONS, installDamage, UNIT_ROSTER, WIN_CONDITION, wipeRule, type BattleSetup, type HitRefusedReason } from "../../src/rules/battle/index.ts";
 import { advance, createWorld, loadSave, replay, restore, saveMatch, snapshot, submit, type SimInput, type SimSnapshot, type SimWorld } from "../../src/sim/index.ts";
-import { input } from "../sim/input.ts";
+import { input, move } from "../sim/input.ts";
 
-const SETUP: BattleSetup = { base: { hp: 9, atk: 1 }, stats: { wolf: { hp: 2, atk: 1 }, archer: { hp: 6, atk: 2 } }, hitClass: "arrow" };
+const SETUP: BattleSetup = { base: { hp: 9, atk: 1 }, stats: { wolf: { hp: 2, atk: 1 }, archer: { hp: 6, atk: 2 } }, reach: { wolf: 99, archer: 99, knight: 99 }, hitClass: "arrow" };
 const armed = (rules: BattleSetup = SETUP): SimInput => ({ ...input("stage-fixed"), rules });
 const hit = (id: string, actor: string, unitId: string, more: Partial<Action> = {}): Action => ({ id, kind: "ability", actor, target: { pipe: "unit", unitId }, durationMs: null, turns: null, effects: [], ...more });
 const hpOf = (w: SimWorld, id: string) => snapshot(w).rules?.units.find((u) => u.id === id);
 const seen = (w: SimWorld) => w.bus.history().flatMap((r) => (r.event.type === "hit" || r.event.type === "unit.died" ? [r.event] : []));
 const codes = (w: SimWorld) => w.notices.map((n) => n.code);
+function standBy(w: SimWorld, actor: string, target: string): void {
+  const t = w.units.get(target);
+  if (t === undefined) throw new Error(`standBy: no ${target}`);
+  for (const at of [{ c: t.at.c, r: t.at.r + 1 }, { c: t.at.c, r: t.at.r - 1 }, { c: t.at.c + 1, r: t.at.r }, { c: t.at.c - 1, r: t.at.r }]) {
+    if (w.grid.inBounds(at) && w.units.occupantsAt(at).length === 0) {
+      const moved = w.units.moveTo(actor, at, "move");
+      if (moved.ok) return;
+    }
+  }
+  throw new Error(`standBy: no cell for ${actor} next to ${target}`);
+}
+
 
 test("unit-roster: defaults 9/1, L3 sets a unit document's stats, L5 scales HP only; a bad value is unsupported", () => {
   assert.deepEqual(installOne(UNIT_ROSTER, {}).out, { hp: 9, atk: 1 });
@@ -43,8 +55,10 @@ test("without world.rules, ability and interact stay actionUnsupported and nothi
 test("a hit through the UNIT pipe subtracts the attacker's atk; at 0 HP the unit dies and its body leaves the board in the same step", () => {
   const w = createWorld(armed());
   assert.deepEqual([hpOf(w, "knight#1"), hpOf(w, "archer#2"), hpOf(w, "wolf#3")], [{ id: "knight#1", hp: 9, alive: true }, { id: "archer#2", hp: 6, alive: true }, { id: "wolf#3", hp: 2, alive: true }]);
+  standBy(w, "wolf#3", "archer#2");
   submit(w, hit("a1", "wolf#3", "archer#2"));
   assert.deepEqual(hpOf(w, "archer#2"), { id: "archer#2", hp: 5, alive: true });
+  standBy(w, "archer#2", "wolf#3");
   submit(w, hit("a2", "archer#2", "wolf#3"));
   assert.deepEqual(hpOf(w, "wolf#3"), { id: "wolf#3", hp: 0, alive: false });
   assert.deepEqual([w.units.get("wolf#3")?.alive, w.units.occupantsAt({ c: 2, r: 0 })], [false, []]);
@@ -72,6 +86,7 @@ const REFUSED: readonly { reason: HitRefusedReason; a: Action }[] = [
 for (const { reason, a } of REFUSED) {
   test(`hitRefused (DSK D7) ${a.id}: reason ${reason}, one code, nothing changes`, () => {
     const w = createWorld(armed());
+    standBy(w, "archer#2", "wolf#3");
     submit(w, hit("a1", "archer#2", "wolf#3"));
     const before = snapshot(w), events = seen(w).length;
     submit(w, a);
@@ -80,12 +95,11 @@ for (const { reason, a } of REFUSED) {
   });
 }
 
-test("refused: every D7 reason has a row; effects (spells, P1-4) and interact (P1-3) stay actionUnsupported; nothing changes", () => {
+test("refused: every D7 reason has a row; effects (spells, P1-4) stay actionUnsupported; nothing changes", () => {
   assert.deepEqual([...new Set(REFUSED.map((r) => r.reason))], [...HIT_REFUSED_REASONS]);
   const w = createWorld(armed()), before = snapshot(w);
   submit(w, hit("b9", "archer#2", "wolf#4", { effects: ["fire"] }));
-  submit(w, hit("b10", "archer#2", "wolf#4", { kind: "interact" }));
-  assert.deepEqual(codes(w), ["actionUnsupported", "actionUnsupported"]);
+  assert.deepEqual(codes(w), ["actionUnsupported"]);
   assert.deepEqual([snapshot(w).rules, snapshot(w).units, seen(w).length], [before.rules, before.units, 0]);
 });
 
@@ -102,7 +116,7 @@ test("win-condition wipe as a VictoryRule from sides[0]'s view: win, lose, draw 
   const w = createWorld(armed()), sides = ["player", "wolves"] as const, at = (side: "player" | "wolves") => ({ round: 1, side });
   const wipe = wipeRule({ wipe: true, mutual: "draw" }, sides), last = wipeRule({ wipe: true, mutual: "last-actor-loses" }, sides), off = wipeRule({ wipe: false, mutual: "draw" }, sides);
   assert.equal(wipe(w, at("player")), null);
-  submit(w, hit("a1", "archer#2", "wolf#3")); submit(w, hit("a2", "archer#2", "wolf#4"));
+  standBy(w, "archer#2", "wolf#3"); submit(w, hit("a1", "archer#2", "wolf#3")); standBy(w, "archer#2", "wolf#4"); submit(w, hit("a2", "archer#2", "wolf#4"));
   assert.deepEqual([wipe(w, at("player")), off(w, at("player"))], ["win", null]);
   const v = createWorld(armed());
   for (const id of ["knight#1", "archer#2", "merchant#6"]) v.units.remove(id);
@@ -113,7 +127,7 @@ test("win-condition wipe as a VictoryRule from sides[0]'s view: win, lose, draw 
 
 test("snapshot.rules: replay and restore rebuild it, a save without it still loads (match-save v1), a wrong HP is refused", () => {
   const src = armed(), w = createWorld(src);
-  submit(w, hit("a1", "archer#2", "wolf#3")); submit(w, hit("a2", "wolf#4", "knight#1", { durationMs: 200 }));
+  submit(w, move("m1", "archer#2", 2, 1, null)); submit(w, hit("a1", "archer#2", "wolf#3")); submit(w, move("m2", "wolf#4", 0, 7, null)); submit(w, hit("a2", "wolf#4", "knight#1", { durationMs: 200 }));
   advance(w, 200);
   const snap = snapshot(w), tick = snap.tick;
   assert.deepEqual(hpOf(w, "knight#1"), { id: "knight#1", hp: 8, alive: true });

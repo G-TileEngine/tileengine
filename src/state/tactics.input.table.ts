@@ -8,7 +8,7 @@ export const TACTICS_INPUT_TABLE = {
     { from: ["unitSelected"], event: "TAP_MOVE_CELL", to: "moving", sets: ["path"] },
     { from: ["moving"], event: "MOVE_DONE", to: "actMenu" },
     { from: ["actMenu"], event: "UNDO_MOVE", to: "unitSelected", sets: ["cell"] },
-    { from: ["actMenu"], event: "CHOOSE_ACTION", to: ["targeting", "resolving"], sets: ["action"] },
+    { from: ["unitSelected", "actMenu"], event: "CHOOSE_ACTION", to: ["targeting", "resolving"], sets: ["action"] },
     { from: ["targeting"], event: "CANCEL", to: "actMenu" },
     { from: ["actMenu"], event: "WAIT", to: "unitDone" },
   ],
