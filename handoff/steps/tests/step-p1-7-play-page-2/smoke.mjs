@@ -27,6 +27,8 @@ try {
       return { shown, small, end: shown.some((b) => b.id === "end" || /end/i.test(b.t)), menu: shown.some((b) => b.id === "menu") };
     });
     check(`touch targets >= 44x44 at ${width}`, hud.small.length === 0 && hud.end && hud.menu, JSON.stringify(hud));
+    const cell = await page.evaluate(() => { const cam = window.__cam, dpr = window.devicePixelRatio || 1, css = (16 * cam.s) / dpr; return { s: cam.s, dpr, css }; });
+    check(`cell CSS >= 44 after init at ${width}`, cell.css >= 44, JSON.stringify(cell));
     const walked = await page.evaluate(async () => {
       const play = window.__play, hud = window.__hud, cam = window.__cam;
       hud.hideBanner();
