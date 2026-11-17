@@ -2,7 +2,7 @@
 
 Step id: step-p1-9-apk-wrapper          Revision: r<N> (start at r1; r2, r3… only after a REJECT)
 Repo: https://github.com/G-TileEngine/tileengine (read only; you push nothing; see Delivery)
-Base commit: current main when you start (at kit authoring, `origin/main` is `9ac26da821d8f5e71a108cdbc578c5c8a38f2037`, runnable count **922** with P1-2 and ED-E6 already merged). **P1-8 must already be merged on that main** (and therefore P1-7, E7p, P1-6…P1-2, E7). Floor = that main's test count + 4. If P1-8 is not on main, or if P1-8's APIs on main differ from what the shipped tests import, **stop and report**. At kit authoring the restacked stack after P1-8 is 991/0, so the authoring floor is **995**. Branch: `step/step-p1-9-apk-wrapper-r<N>-chatA`, created from the Base. Never commit to `main`. The diff is always `<Base>..<head>`. One builder chat (ChatA), one QA pass, plus a rework round only if QA finds must-fixes; no A/B.
+Base commit: current main when you start (at kit authoring, `origin/main` is `3ca06e6d0a4b0eccc9412e7b55b51949c054538a`, runnable count **957** with P1-2, ED-E6, P1-3 r3, P1-4 r2 and P1-5 r2 already merged). **P1-8 must already be merged on that main** (and therefore P1-7, E7p, P1-6…P1-2, E7). Floor = that main's test count + 4. If P1-8 is not on main, or if P1-8's APIs on main differ from what the shipped tests import, **stop and report**. At kit authoring the restacked stack after P1-8 is 997/0, so the authoring floor is **1001**. Branch: `step/step-p1-9-apk-wrapper-r<N>-chatA`, created from the Base. Never commit to `main`. The diff is always `<Base>..<head>`. One builder chat (ChatA), one QA pass, plus a rework round only if QA finds must-fixes; no A/B.
 Hand-back location: `handback/step-p1-9-apk-wrapper/r<N>/HANDBACK.md`. Quote this step file's sha256 in full in it.
 Depends on: P1-8 (play-stage FX + `tools/play-stage/build.ts` static build) and therefore P1-7 / E7p / P1-6…P1-2 / E6 / E7. Build order on main is E6 → P1-3 → P1-4 → P1-5 → E7 → P1-6 → E7p → P1-7 → P1-8 → **P1-9**. Work stops at P1-9 (CEO 2026-11-17 05:26).
 
@@ -67,7 +67,7 @@ This is the CEO's first real test (CEO 2026-11-17 05:26: phone test 1 after E7 i
 6. Repeat on the other phone.
 
 ## Gates (Acceptance)
-- [ ] `npm ci && npm run green` exits 0 with **at least 995 tests passing** (main's count at Base + 4, once P1-8 is on that main) and none failing. Typecheck, lint, deps, check:state and check:law each exit 0. (Proto on the restacked stack: 995/0.)
+- [ ] `npm ci && npm run green` exits 0 with **at least 1001 tests passing** (main's count at Base + 4, once P1-8 is on that main) and none failing. Typecheck, lint, deps, check:state and check:law each exit 0. (Proto on the restacked stack: 1001/0.)
 - [ ] If P1-8 is not on main, or if P1-8's APIs on main differ from what the shipped tests import, **stop and report**.
 - [ ] Each file within its cap; ≤ 400 changed lines in total (255 in the proto). Hard cap 400.
 - [ ] The shipped test file is byte-identical to the kit copy. Earlier play-stage tests stay green. The 5 root pins do not move.
@@ -75,7 +75,7 @@ This is the CEO's first real test (CEO 2026-11-17 05:26: phone test 1 after E7 i
 - [ ] Never touch `painter-proto/` or `ui-shell/`. Game rules stay out of `src/core` and `src/sim`. BTF is used only via adapters or rewrites with file:line cites (listed above). Do not install Capacitor, the Android SDK, or Gradle, and do not build or sign an APK in this step.
 
 ## Floor
-`npm run green` is at least **995** tests passing (main's count at Base + 4, once P1-8 is on that main: 922 + 13 + 11 + 9 + 16 + 4 + 7 + 5 + 4 + 4). If main's count at Base (with P1-8 already merged) is C, the floor is C + 4.
+`npm run green` is at least **1001** tests passing (main's count at Base + 4, once P1-8 is on that main: 957 + 16 + 8 + 7 + 5 + 4 + 4). If main's count at Base (with P1-8 already merged) is C, the floor is C + 4.
 
 ## Not in this step
 - Building, signing or uploading the APK (ops, above).
@@ -90,7 +90,7 @@ painter-proto, ui-shell, GitHub push, core-types, catalogue edits, Phase 2.
 `painter-proto/`, `ui-shell/` (read-only reference is OK), `src/core`, `src/types/core-types.ts`, `src/rules/behaviours/catalogue.ts`, `src/sim/migrations`, pin files, play-stage shipped tests, `/workspace/g-tile-engine` (read-only cites only), `/workspace/apk-test` (read-only). Do not run git in `/workspace/tileengine`, `/workspace/tileengine-repo`, `/workspace/g-tile-engine`, or their worktrees. Do not write a keystore into the repo.
 
 ## Delivery footer (must hold at hand-back)
-- `npm ci && npm run green` exits 0 with **at least 995 tests passing** and 0 failing (main's count at Base + 4). Paste the summary line and all kit-run browser smoke lines into HANDBACK.md.
+- `npm ci && npm run green` exits 0 with **at least 1001 tests passing** and 0 failing (main's count at Base + 4). Paste the summary line and all kit-run browser smoke lines into HANDBACK.md.
 - The shipped test file is **byte-identical** to the kit copy.
 - The branch starts at the Base (P1-8 already on main). ≤ 400 changed lines. Commits are `G-TileEngine <G-TileEngine@users.noreply.github.com>` (author and committer).
 

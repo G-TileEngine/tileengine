@@ -1,12 +1,12 @@
-Build step-p1-8-spell-effects r1 from the step file `handoff/steps/step-p1-8-spell-effects.md` (sha256 `522ff2a4bbcb34ca57730d64b86c09fda2e5a392c2bbb7064b5deb5510243622`); it wins over this paste.
+Build step-p1-8-spell-effects r1 from the step file `handoff/steps/step-p1-8-spell-effects.md` (sha256 `ef867bd150979b81abdae46a66ed3ddc33c55a5d3ca7a7a815a5212916c56af0`); it wins over this paste.
 
-Base commit: current main when you start (at kit authoring, `origin/main` is `9ac26da821d8f5e71a108cdbc578c5c8a38f2037`, runnable count **922** with P1-2 and ED-E6 already merged). Floor = that main's count + 4 (authoring floor **991**). **P1-7 must already be merged on that main.** If a required earlier step is missing or its APIs on main differ from what the shipped tests import, **stop and report**. Branch: `step/step-p1-8-spell-effects-r1-chatA`, created from the Base. Never commit to `main`. The diff is always `<Base>..<head>`. One builder chat (ChatA), one QA pass, plus a rework round only if QA finds must-fixes; no A/B.
+Base commit: current main when you start (at kit authoring, `origin/main` is `3ca06e6d0a4b0eccc9412e7b55b51949c054538a`, runnable count **957** with P1-2, ED-E6, P1-3 r3, P1-4 r2 and P1-5 r2 already merged). Floor = that main's count + 4 (authoring floor **997**). **P1-7 must already be merged on that main.** If a required earlier step is missing or its APIs on main differ from what the shipped tests import, **stop and report**. Branch: `step/step-p1-8-spell-effects-r1-chatA`, created from the Base. Never commit to `main`. The diff is always `<Base>..<head>`. One builder chat (ChatA), one QA pass, plus a rework round only if QA finds must-fixes; no A/B.
 
 > Working style (REQUIRED): use your helper agents for review, tests and cross-checks, take your time, and self-review against Acceptance + the QA checklist. HANDBACK.md must have § Helpers & self-review (each helper and what it reviewed, plus your self-review); without it the hand-back is REJECT (incomplete).
 
-Shipped files (copy byte-identical from `handoff/steps/tests/step-p1-8-spell-effects/` to the same paths at the repo root): `tests/tools/play-stage-p18.test.ts`. Floor: green at least main's count + 4 = 991 passing on a main that already holds the earlier steps, 0 failing (proto 991/0).
+Shipped files (copy byte-identical from `handoff/steps/tests/step-p1-8-spell-effects/` to the same paths at the repo root): `tests/tools/play-stage-p18.test.ts`. Floor: green at least main's count + 4 = 997 passing on a main that already holds the earlier steps, 0 failing (proto 997/0).
 
-Kit: kit-1 **r1**, 2026-11-17. Engine Architect. Restacked proto `/tmp/batch2` branch `proto/restack`, head `746df26d16ef69e035bd1d6b37e09ff446f86087`, tree `0ccc1ed0542e67721eb52755aa92756cab196418`, parent `d75a013498f8ed737792488efe393b6ff808ee99`. 5 files, +158/−4 = **162 changed lines**. Green **991/0**. N = 4. Hard cap 400.
+Kit: kit-1 **r1**, 2026-11-17. Engine Architect. Restacked proto `/tmp/heavy` branch `proto/heavy`, head `ad0cda103fb6d9be52895cf6dc72514ab1177110`, tree `7e4e10ac1b26c7c0f9008cc94777cfa65bd1c4fb`, parent `5fd7e1fd91e3703504d2f7be7ef29350af9f4224`. 5 files, +158/−4 = **162 changed lines**. Green **997/0**. N = 4. Hard cap 400.
 ## Goal
 After P1-7 the Spell button fires `line-shot` as an ability log entry, but the match does not play a visible effect. After this step:
 1. **Cast-fx hookup.** On each new ability log entry the play host calls E7p `cueFromEntry(entry, stepMs, refOf)` and `createCastFx({sheetOf, clipOf?, values})` from `src/runtime/scene/cast-fx.ts`. `refOf` is exactly `(action) => action.effects.length === 1 ? action.effects[0] : undefined`. `values` looks up a ref with a `Map` (or `Object.hasOwn`), never `in` on a plain object. `sheetOf` / `clipOf` come from the play-stage FX sheet. `readEffect` is imported from `src/project/read/index.ts`. The live list is attached to the scene world (`world.effects`); `createSceneLink().scene(...)` is what fires `fx:hit`.
@@ -43,7 +43,7 @@ EA plants 8/8 (`p1-8-plants.py`). `refOf` returning the first of several effects
 `handoff/steps/tests/step-p1-8-spell-effects/smoke.mjs` is required in the hand-back. From the repo root: `PLAYWRIGHT_CORE=<playwright-core dir> CHROME=<chrome binary> node handoff/steps/tests/step-p1-8-spell-effects/smoke.mjs . 8795 /tmp/p1-8-smoke.png` (install `playwright-core@1.59.1` outside the repo if you lack it, for example `npm i --prefix /tmp/pw playwright-core@1.59.1`, then `PLAYWRIGHT_CORE=/tmp/pw/node_modules/playwright-core`). It serves `tools/serve.ts`, opens `/tools/play-stage/` headless at **390 × 844** and **360 wide** (touch, @3x) and prints one `ok` or `FAIL` line per check, then `SMOKE PASS`. Paste **all** its lines into HANDBACK.md § Smoke; a `FAIL` or a timeout is a stop-and-fix. If no Chrome can run at all, stop and report (no manual substitute). Visible (not `display:none`) buttons must be ≥ 44×44. A Spell two-tap must show the spell's effect live, then `fx:hit`, then retire.
 
 ## Gates (Acceptance)
-- [ ] `npm ci && npm run green` exits 0 with **at least 991 tests passing** (main's count at Base + 4, once P1-7 is on that main) and none failing. Typecheck, lint, deps, check:state and check:law each exit 0. (Proto on the restacked stack: 991/0.)
+- [ ] `npm ci && npm run green` exits 0 with **at least 997 tests passing** (main's count at Base + 4, once P1-7 is on that main) and none failing. Typecheck, lint, deps, check:state and check:law each exit 0. (Proto on the restacked stack: 997/0.)
 - [ ] If P1-7 or E7p is not on main, or if those APIs on main differ from what the shipped tests import, **stop and report**.
 - [ ] Each file within its cap; ≤ 400 changed lines in total (162 in the proto). Hard cap 400.
 - [ ] The shipped test file is byte-identical to the kit copy. Earlier play-stage tests stay green.
@@ -51,7 +51,7 @@ EA plants 8/8 (`p1-8-plants.py`). `refOf` returning the first of several effects
 - [ ] Never touch `painter-proto/` or `ui-shell/`. Game rules stay out of `src/core` and `src/sim`. BTF is used only via adapters or rewrites with file:line cites (none new in this step). Id-keyed lookups use a `Map` or `Object.hasOwn`.
 
 ## Floor
-`npm run green` is at least **991** tests passing (main's count at Base + 4, once P1-7 is on that main: 922 + 13 + 11 + 9 + 16 + 4 + 7 + 5 + 4). If main's count at Base (with P1-7 already merged) is C, the floor is C + 4.
+`npm run green` is at least **997** tests passing (main's count at Base + 4, once P1-7 is on that main: 957 + 16 + 8 + 7 + 5 + 4). If main's count at Base (with P1-7 already merged) is C, the floor is C + 4.
 
 ## Not in this step
 - APK wrapper / play-only packaging → P1-9.
@@ -65,7 +65,7 @@ painter-proto, ui-shell, GitHub push, core-types, catalogue edits, Phase 2, CEO 
 `painter-proto/`, `ui-shell/` (read-only reference is OK), `src/core`, `src/types/core-types.ts`, `src/rules/behaviours/catalogue.ts`, `src/sim/migrations`, pin files, P1-6 and P1-7 play-stage tests, E7p's shipped tests. Do not run git in `/workspace/tileengine`, `/workspace/tileengine-repo`, `/workspace/g-tile-engine`, or their worktrees.
 
 ## Delivery footer (must hold at hand-back)
-- `npm ci && npm run green` exits 0 with **at least 991 tests passing** and 0 failing (main's count at Base + 4). Paste the summary line and all kit-run browser smoke lines into HANDBACK.md.
+- `npm ci && npm run green` exits 0 with **at least 997 tests passing** and 0 failing (main's count at Base + 4). Paste the summary line and all kit-run browser smoke lines into HANDBACK.md.
 - The shipped test file is **byte-identical** to the kit copy.
 - The branch starts at the Base (P1-7 and E7p already on main). ≤ 400 changed lines. Commits are `G-TileEngine <G-TileEngine@users.noreply.github.com>` (author and committer).
 

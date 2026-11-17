@@ -2,15 +2,16 @@
 
 Replaces "done" messages to the CEO (CEO rule 2026-11-16 22:45). Created with B1; every step's merge-time doc commit updates it. EA writes, CoS pushes (19:20 rule). Plan: `foundation-plan.md` r1 §6.
 
-- **Main:** `9ac26da8` (`9ac26da821d8f5e71a108cdbc578c5c8a38f2037`, parent `1cdcd41f`, tree `fe6edaef`; floor 922/0) · **P1-1 walk / movement:** merged `7dde2f22` (PR #61, tree `14da7388`, ChatA r1; verify-merge 882/0) · **P1-2 battle:** merged `1775d83a` (PR #63, tree `ce99d97e`, ChatA r2; 904/0) · **ED-E6:** merged `1cdcd41f` (PR #64, ChatA r1; QA build review on `9ac26da8`; 922/0) · **P1-3..5:** r2 kits filed (authoring floors from 922: 935 / 946 / 955; P1-3 cap 420, others 400) · **ED-E7:** r2 kit + docfix filed (restacked on merged E6; tests unchanged; authoring floor 971) · **P1-6..P1-9 and E7p:** batch 2 kits filed (authoring floors 975 / 982 / 987 / 991 / 995); design stops at P1-9 until the CEO's APK tests · **Catalogue snapshot:** rev 26, sha256 `ea8b3302…` (in `src/rules/behaviours/catalogue.ts`: xp-levels, terrain) · **Updated:** 2026-11-17 06:57 London (GMT)
+- **Main:** `3ca06e6d` (`3ca06e6d0a4b0eccc9412e7b55b51949c054538a`, parent `f60f2805`, tree `869fa698`; floor 957/0) · **P1-1 walk / movement:** merged `7dde2f22` (PR #61, tree `14da7388`, ChatA r1; verify-merge 882/0) · **P1-2 battle:** merged `1775d83a` (PR #63, tree `ce99d97e`, ChatA r2; 904/0) · **ED-E6:** merged `1cdcd41f` (PR #64, ChatA r1; QA build review on `9ac26da8`; 922/0) · **P1-3:** merged `9dfd92fe` (PR #66, r3) · **P1-4:** merged `0ddeafc6` (PR #67, r2); QA build review on `69fad867` · **P1-5:** merged `f60f2805` (PR #68, r2); QA build review on `3ca06e6d` · **ED-E7:** r2 kit + docfix filed (authoring floor 973) · **P1-6 r2:** Heavy-review fixes folded into the play-page kit (499 / cap 500; authoring floor 981) · **E7p r3 / P1-7 r2 / P1-8 / P1-9:** re-gated on P1-6 r2 (authoring floors 988 / 993 / 997 / 1001); design stops at P1-9 until the CEO's APK tests · **Catalogue snapshot:** rev 26, sha256 `ea8b3302…` (in `src/rules/behaviours/catalogue.ts`: xp-levels, terrain) · **Updated:** 2026-11-17 14:28 London (GMT)
 - **Totals:** behaviours done 0/64 (partly registered: xp-levels, terrain, and P1-2 unit-roster / damage-resolution / win-condition) · knobs honoured 9/567 · functions done 0/26 (F1, F3 partly, F2 resolver maths)
 - **States:** `not started` · `in kit` · `merged` (partly = some knobs honoured; the rest are reported `knobUnsupported`, never ignored).
 
 ## Plain words, newest first
-- **Batch 2 kits filed:** P1-6 (play page 1), E7p (ability-play r3, QA pin adopted), P1-7 (play page 2), P1-8 (spell effects) and P1-9 (APK wrapper; `*.jks` and `*.keystore` are gitignored). Design stops at P1-9 until the CEO's APK tests.
-- **ED-E7** (designer page 2): r2 kit filed; docfix filed (CEO phone test 1 after E7 is dropped; the CEO's first real test is the APK). Tests unchanged vs r2. Restacked on the merged E6 ChatA code; authoring floor 971.
-- **ED-E6** (designer page 1): merged at `1cdcd41f` (PR #64, ChatA r1). Main `9ac26da8` also holds the E6 and P1-3..5 r2 QA reviews. Floor 922/0.
-- **P1-3 / P1-4 / P1-5** (range and interact, line-shot, enemy turn): r2 kits filed, not merged yet. Authoring floors from main 922: 935, 946 and 955.
+- **P1-6 r2 Heavy-review fixes folded:** six QA-triaged findings (noShotRow, `whole` reach/ShotRow, mid-line still hits, `sides[0]` JSDoc, empty-tile `noTarget`, and the P1-4 mid-line test gap) land in the P1-6 kit so they are on main before the P1-6 go-line, with no extra build round (499 / cap 500). Later steps re-gated on `3ca06e6d` (957/0; P1-5 is now on main). Authoring floors: E7 973, P1-6 r2 981, E7p 988, P1-7 r2 993, P1-8 997, P1-9 1001. Design still stops at P1-9 until the CEO's APK tests.
+- **P1-5 r2 merged** at `f60f2805` (PR #68), with QA build review on `3ca06e6d`, 957/0. P1-3 r3 (`9dfd92fe`, PR #66) and P1-4 r2 (`0ddeafc6`, PR #67) landed earlier, after the batch-2 kit filing (`6d5bfbbe`, parent `9ac26da8`).
+- **Batch 2 kits filed:** P1-6 (play page 1), E7p (ability-play r3, QA pin adopted), P1-7 (play page 2), P1-8 (spell effects) and P1-9 (APK wrapper; `*.jks` and `*.keystore` are gitignored). Those kits were restacked in this filing onto current main (P1-6 as r2).
+- **ED-E7** (designer page 2): r2 kit filed; docfix filed (CEO phone test 1 after E7 is dropped; the CEO's first real test is the APK). Tests unchanged vs r2. Restacked on the merged E6 ChatA code; authoring floor 973 on this main.
+- **ED-E6** (designer page 1): merged at `1cdcd41f` (PR #64, ChatA r1). Floor was 922/0 on `9ac26da8` before P1-3 r3 and P1-4 r2 landed.
 - **P1-2** (battle): a hit subtracts the attacker's attack, a unit at 0 HP leaves the board in the same step, and a refused hit is one of six frozen reasons. Settings for roster, damage class and wipe-win are live; a unit id that is a prototype key still takes the base 9/1. Merged at `1775d83a` (PR #63).
 - **P1-1** (walk / movement): a unit can walk straight (north, east, south or west, no turning) up to its step reach, the scene gets the path, and a tile out of reach is refused. Merged at `7dde2f22` (PR #61).
 - **B1** (behaviour runtime): the engine now has a list of behaviours that reads your settings, starting from Before The Fall's numbers. Levelling and tile types read your settings; anything not built yet is listed as "not supported yet" instead of being ignored.
@@ -26,7 +27,7 @@ Replaces "done" messages to the CEO (CEO rule 2026-11-16 22:45). Created with B1
 | # | id | step | state | knobs honoured | knobUnsupported | parity file | parity cases | merge sha |
 |---|---|---|---|---|---|---|---|---|
 | 1 | `ability-presentation` | B6 groups; B35 hand_placement, team colours | not started | 0/6 | all (no code; main: catalogue-only) | — | 0 | — |
-| 2 | `action-budget` | B4; per-unit scope B31; focus knobs B33; P1-5 kit | in kit | 0/12 | (P1-5 r2 kit filed, not merged) | — | 0 | — |
+| 2 | `action-budget` | B4; per-unit scope B31; focus knobs B33; P1-5 | **merged (P1-5 r2)** | 0/12 | (merged PR #68; knob remainder later if any) | — | 0 | `f60f2805` |
 | 3 | `mana-pool` | B4 | not started | 0/6 | all (no code; main: catalogue-only) | — | 0 | — |
 | 4 | `mana-gain` | B22 | not started | 0/9 | all (no code; main: catalogue-only) | — | 0 | — |
 | 5 | `special-meter` | B24 | not started | 0/11 | all (no code; main: catalogue-only) | — | 0 | — |
@@ -37,9 +38,9 @@ Replaces "done" messages to the CEO (CEO rule 2026-11-16 22:45). Created with B1
 | 10 | `step-pattern` | B3 | not started | 0/7 | all (no code; main: pieces unused) | — | 0 | — |
 | 11 | `teleport` | B16 | not started | 0/6 | all (no code; main: pieces unused) | — | 0 | — |
 | 12 | `reach-extension` | B17 | not started | 0/7 | all (no code; main: catalogue-only) | — | 0 | — |
-| 13 | `basic-attack` | B3; P1-3 kit | in kit | 0/8 | (P1-3 r2 kit filed, not merged) | — | 0 | — |
+| 13 | `basic-attack` | B3; P1-3 | **merged (P1-3 r3)** | 0/8 | (merged PR #66; knob remainder later if any) | — | 0 | `9dfd92fe` |
 | 14 | `damage-resolution` | B2; guard/soak order B19; **P1-2** hit_class + L5 warning | **merged (P1-2, partly)** | 1/3 | guard/soak knobs later (B19) | `tests/parity/battle.parity.test.ts` | 1 | `1775d83a` |
-| 15 | `line-shot` | B3; P1-4 kit | in kit | 0/12 | (P1-4 r2 kit filed, not merged) | — | 0 | — |
+| 15 | `line-shot` | B3; P1-4 | **merged (P1-4 r2)** | 0/12 | (merged PR #67; knob remainder later if any) | — | 0 | `0ddeafc6` |
 | 16 | `pierce-line` | B11 | not started | 0/8 | all (no code; main: catalogue-only) | — | 0 | — |
 | 17 | `radial-volley` | B12 | not started | 0/11 | all (no code; main: catalogue-only) | — | 0 | — |
 | 18 | `sky-drop` | B13 | not started | 0/8 | all (no code; main: catalogue-only) | — | 0 | — |
@@ -79,7 +80,7 @@ Replaces "done" messages to the CEO (CEO rule 2026-11-16 22:45). Created with B1
 | 52 | `neutral-guardians` | B27 | not started | 0/13 | all (no code; main: pieces unused) | — | 0 | — |
 | 53 | `neutral-roamer` | B27 | not started | 0/9 | all (no code; main: catalogue-only) | — | 0 | — |
 | 54 | `objective-contest` | B28 + B29 | not started | 0/18 | all (no code; main: catalogue-only) | — | 0 | — |
-| 55 | `bot-ability-priority` | B6 generic order; B32 custom order, per-side combos; P1-5 kit | in kit | 0/2 | (P1-5 r2 kit filed, not merged) | — | 0 | — |
+| 55 | `bot-ability-priority` | B6 generic order; B32 custom order, per-side combos; P1-5 | **merged (P1-5 r2)** | 0/2 | (merged PR #68; knob remainder later if any) | — | 0 | `f60f2805` |
 | 56 | `reveal-intent` | B32 | not started | 0/6 | all (no code; main: catalogue-only) | — | 0 | — |
 | 57 | `stat-plates` | B34 | not started | 0/19 | all (no code; main: catalogue-only) | — | 0 | — |
 | 58 | `hand-and-draw` | B33 | not started | 0/7 | all (no code; main: catalogue-only) | — | 0 | — |
@@ -104,14 +105,14 @@ Replaces "done" messages to the CEO (CEO rule 2026-11-16 22:45). Created with B1
 | B1 behaviour runtime | 340 / 340 (proto) | — | — | — |
 | P1-1 walk / movement | 265 (kit) / 259 | ChatA r1 | `7dde2f22` | PASS 882/0 |
 | P1-2 battle | ChatA r2 (build pin included) | ChatA r2 | `1775d83a` | 904/0 (docs on `75df4642`) |
-| P1-3 range, interact | r2 kit filed (419 / cap 420) | pending | — | authoring floor 935 |
-| P1-4 line-shot | r2 kit filed (365 / cap 400) | pending | — | authoring floor 946 |
-| P1-5 enemy turn | r2 kit filed (313 / cap 400) | pending | — | authoring floor 955 |
+| P1-3 range, interact | ChatA r3 | ChatA r3 | `9dfd92fe` | merged PR #66 (on main 957/0; QA docs on `b7d4326` / `69fad867`) |
+| P1-4 line-shot | ChatA r2 | ChatA r2 | `0ddeafc6` | merged PR #67 (on main 957/0; QA docs on `69fad867`) |
+| P1-5 enemy turn | ChatA r2 | ChatA r2 | `f60f2805` | merged PR #68 (on main 957/0; QA docs on `3ca06e6d`) |
 | ED-E6 designer page 1 | ChatA r1 | ChatA r1 | `1cdcd41f` | 922/0 (QA docs on `9ac26da8`) |
-| ED-E7 designer page 2 | r2 kit + docfix filed | pending | — | authoring floor 971 |
-| P1-6 play page 1 | r1 kit filed (393 / cap 400) | pending | — | authoring floor 975 |
-| ED-E7p ability play | r3 kit filed (315 / cap 320; QA pin adopted) | pending | — | authoring floor 982 |
-| P1-7 play page 2 | r1 kit filed (388 / cap 400) | pending | — | authoring floor 987 |
-| P1-8 spell effects | r1 kit filed (162 / cap 400) | pending | — | authoring floor 991 |
-| P1-9 APK wrapper | r1 kit filed (255 / cap 400; `*.jks`/`*.keystore` ignored) | pending | — | authoring floor 995 |
+| ED-E7 designer page 2 | r2 kit + docfix filed | pending | — | authoring floor 973 |
+| P1-6 play page 1 | r2 kit filed (499 / cap 500; Heavy-review fixes folded) | pending | — | authoring floor 981 |
+| ED-E7p ability play | r3 kit filed (315 / cap 320; QA pin adopted) | pending | — | authoring floor 988 |
+| P1-7 play page 2 | r2 kit filed (447 / cap 500; restack on P1-6 r2) | pending | — | authoring floor 993 |
+| P1-8 spell effects | r1 kit filed (162 / cap 400) | pending | — | authoring floor 997 |
+| P1-9 APK wrapper | r1 kit filed (255 / cap 400; `*.jks`/`*.keystore` ignored) | pending | — | authoring floor 1001 |
 | B2–B38 | plan §4 | — | — | — |
