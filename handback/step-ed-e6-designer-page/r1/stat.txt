@@ -1,0 +1,13 @@
+ src/editor/effect/save.ts           | 65 +++++++++++++++++++++++++++
+ src/editor/effect/writer.ts         |  7 +--
+ tests/editor/effect-e6-qa.test.ts   | 21 +++++++++
+ tests/editor/effect-e6-qa2.test.ts  | 13 ++++++
+ tests/editor/effect-e6-save.test.ts | 87 +++++++++++++++++++++++++++++++++++++
+ tests/tools/ed-e6.test.ts           | 40 +++++++++++++++++
+ tools/effect-designer/grid.ts       | 15 +++++++
+ tools/effect-designer/index.html    |  7 +++
+ tools/effect-designer/page.ts       | 50 +++++++++++++++++++++
+ tools/effect-designer/presets.ts    | 12 +++++
+ tools/effect-designer/store.ts      | 16 +++++++
+ tools/effect-designer/strip.ts      | 16 +++++++
+ 12 files changed, 346 insertions(+), 3 deletions(-)
