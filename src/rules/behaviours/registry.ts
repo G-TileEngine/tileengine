@@ -49,12 +49,12 @@ function readSlot(spec: KnobSpec, raw: unknown, layer: Layer, answer: boolean, b
   if (answer ? (raw.source !== "user" && raw.source !== "preset") || !has : !has) return (notes.push(hard(behaviour, spec.id, layer)), { use: false });
   return accept(spec, raw.value, behaviour, layer, notes);
 }
-export function resolveKnob(behaviour: string, spec: KnobSpec, layers: SetupLayers, ctx?: InstallCtx): { resolved: Resolved; notes: Notice[] } {
-  const notes: Notice[] = [], slots = spec.perUnit === true ? (["stageUnit", "unit", "stage", "answers"] as const) : (["stage", "answers"] as const);
-  let resolved: Resolved = { value: spec.default, layer: "L0" };
-  for (const name of slots) { const doc = layers[name]; if (!isRecord(doc) || !Object.hasOwn(doc, spec.id)) continue; const got = readSlot(spec, doc[spec.id], CODE[name], name === "answers", behaviour, notes); if (got.use) { resolved = { value: got.value, layer: CODE[name] }; break; } }
+export function resolveKnob(behaviour: string, s: KnobSpec, layers: SetupLayers, ctx?: InstallCtx): { resolved: Resolved; notes: Notice[] } {
+  const notes: Notice[] = [], slots = s.perUnit === true ? (["stageUnit", "unit", "stage", "answers"] as const) : (["stage", "answers"] as const);
+  let resolved: Resolved = { value: s.default, layer: "L0" };
+  for (const name of slots) { const doc = layers[name]; if (!isRecord(doc) || !Object.hasOwn(doc, s.id)) continue; const got = readSlot(s, doc[s.id], CODE[name], name === "answers", behaviour, notes); if (got.use) { resolved = { value: got.value, layer: CODE[name] }; break; } }
   const hp = ctx?.difficulty;
-  if (spec.l5 === "hp" && hp !== undefined && Object.hasOwn(hp, "hp") && typeof resolved.value === "number") { if (typeof hp.hp !== "number" || !Number.isFinite(hp.hp) || !(hp.hp > 0)) notes.push(note("invalidValue", `difficulty.hp for ${behaviour}.${spec.id}`)); else { const next = Math.max(1, Math.round(resolved.value * hp.hp)); if (Number.isFinite(next)) resolved = { value: next, layer: resolved.layer }; else notes.push(note("invalidValue", `${behaviour}.${spec.id} (L5)`)); } }
+  if (s.l5 === "hp" && hp !== undefined && Object.hasOwn(hp, "hp") && typeof resolved.value === "number") { if (typeof hp.hp !== "number" || !Number.isFinite(hp.hp) || !(hp.hp > 0)) notes.push(note("invalidValue", `difficulty.hp for ${behaviour}.${s.id}`)); else { const next = Math.max(1, Math.round(resolved.value * hp.hp)); if (Number.isFinite(next)) resolved = { value: next, layer: resolved.layer }; else notes.push(note("invalidValue", `${behaviour}.${s.id} (L5)`)); } }
   return { resolved, notes };
 }
 function entry(behaviour: string, knob: string, value: unknown, layer: KnobUnsupported["layer"], why: KnobUnsupported["why"], detail?: string): KnobUnsupported {
