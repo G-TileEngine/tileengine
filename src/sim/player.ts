@@ -28,6 +28,7 @@ function rejectOf(world: SimWorld, opts: PlayerOptions, from: PlayerStep["from"]
     if (unit.side !== opts.side) return "notOwn";
     if (!world.grid.inBounds(event.at)) return "offGrid";
   }
+  if (event.type === "CONFIRM_TARGET" && event.target.pipe === "tile" && world.units.get(world.units.occupantAt(event.target.at) ?? "")?.alive !== true) return "noTarget";
   return null;
 }
 export function createPlayer(world: SimWorld, opts: PlayerOptions): Player {

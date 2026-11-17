@@ -6,7 +6,7 @@ import { DAMAGE_RESOLUTION, LINE_SHOT, abilityTableFor, installDamage, type Batt
 import { createWorld, snapshot, submit, type SimWorld } from "../../src/sim/index.ts";
 import { input } from "../sim/input.ts";
 
-const SETUP: BattleSetup = { base: { hp: 9, atk: 1 }, stats: { wolf: { hp: 4, atk: 1 }, archer: { hp: 6, atk: 2 }, knight: { hp: 9, atk: 1 } }, hitClass: "basic" };
+const SETUP: BattleSetup = { base: { hp: 9, atk: 1 }, stats: { wolf: { hp: 4, atk: 1 }, archer: { hp: 6, atk: 2 }, knight: { hp: 9, atk: 1 } }, hitClass: "basic", abilities: { archer: [{ reach: 3, damage: 2, effectRef: "line-shot" }] } };
 const armed = (more: Partial<BattleSetup> = {}): ReturnType<typeof input> & { rules: BattleSetup } => ({ ...input("stage-fixed"), rules: { ...SETUP, ...more } });
 const shot = (id: string, actor: string, unitId: string): Action =>
   ({ id, kind: "ability", actor, target: { pipe: "unit", unitId }, durationMs: null, turns: null, effects: ["line-shot"] });

@@ -16,7 +16,7 @@ export type BattleSetup = { readonly base: UnitStats; readonly stats: Readonly<R
 export type BattleState = { readonly units: readonly { readonly id: string; readonly hp: number; readonly alive: boolean }[] };
 export const HIT_REFUSED_REASONS = Object.freeze(["unknownActor", "deadActor", "notUnitAim", "aimMissed", "selfTarget", "deadTarget"] as const);
 export const HIT_FILTER_REASONS = Object.freeze(["outOfReach", "allyTarget"] as const);
-export type HitRefusedReason = (typeof HIT_REFUSED_REASONS)[number];
+export type HitRefusedReason = (typeof HIT_REFUSED_REASONS)[number] | "noShotRow";
 export type HitFilterReason = (typeof HIT_FILTER_REASONS)[number];
 export type HitRefused = Notice & { readonly code: "hitRefused"; readonly reason: HitRefusedReason | HitFilterReason };
 export interface Battle { act(action: Action): Notice | null; state(): BattleState }
@@ -33,7 +33,8 @@ function taken(setup: BattleSetup): BattleSetup {
   if (abilitiesIn !== undefined && !isRecord(abilitiesIn)) throw new RangeError("createBattle: bad setup");
   const stats: Record<string, UnitStats> = {}, reach: Record<string, number> = {};
   for (const key of Object.keys(statsIn)) { const row = statsIn[key]; if (!pair(row)) throw new RangeError("createBattle: bad setup"); stats[key] = { hp: row.hp, atk: row.atk }; }
-  if (isRecord(reachIn)) for (const key of Object.keys(reachIn)) { const n = reachIn[key]; if (typeof n !== "number") throw new RangeError("createBattle: bad setup"); reach[key] = n; }
+  if (isRecord(reachIn)) for (const key of Object.keys(reachIn)) { const n = reachIn[key]; if (!whole(n, 1)) throw new RangeError("createBattle: bad setup"); reach[key] = n; }
+  if (isRecord(abilitiesIn)) for (const list of Object.values(abilitiesIn)) { if (!Array.isArray(list)) throw new RangeError("createBattle: bad setup"); for (const row of list) if (!isRecord(row) || !whole(row.reach, 1) || !whole(row.damage, 0) || typeof row.effectRef !== "string") throw new RangeError("createBattle: bad setup"); }
   return { base: { hp: copy.base.hp, atk: copy.base.atk }, stats, hitClass: klass as HitClass, ...(isRecord(reachIn) ? { reach } : {}), ...(isRecord(abilitiesIn) ? { abilities: abilitiesIn as NonNullable<BattleSetup["abilities"]> } : {}) };
 }
 export function createBattle(setup: BattleSetup, units: Units, grid: Grid, emit: (event: BusEvent<NoModeEvents>) => void): Battle {
@@ -47,7 +48,7 @@ export function createBattle(setup: BattleSetup, units: Units, grid: Grid, emit:
       const talk = action.kind === "interact", spell = action.effects.length === 1 && action.effects[0] === "line-shot";
       if ((!talk && action.kind !== "ability") || (action.effects.length > 0 && !spell)) return { code: "actionUnsupported", message: "action unsupported" };
       const actor = units.get(action.actor);
-      const no = (reason: HitRefusedReason): Notice => (talk ? interactRefused(reason) : hitNo(reason));
+      const no = (reason: (typeof HIT_REFUSED_REASONS)[number]): Notice => (talk ? interactRefused(reason) : hitNo(reason));
       if (actor === undefined) return no("unknownActor");
       if (!actor.alive) return no("deadActor");
       const target = action.target;
@@ -59,7 +60,9 @@ export function createBattle(setup: BattleSetup, units: Units, grid: Grid, emit:
       if (talk) { if (body === undefined || !inOrthogonalReach(actor.at, body.at, 1)) return interactRefused("notAdjacent"); if (body.side !== "neutral") return interactRefused("foeTarget"); emit({ type: "unit.interacted", by: action.actor, target: res.unitId }); return null; }
       if (body !== undefined && body.side === actor.side) return hitNo("allyTarget");
       const list = !spell || cfg.abilities === undefined || !Object.hasOwn(cfg.abilities, actor.unitId) ? undefined : cfg.abilities[actor.unitId];
-      const row = list?.find((r) => r.effectRef === "line-shot"), reachN = row?.reach ?? (spell ? 3 : reachOf(cfg.reach, actor.unitId)), atk = row?.damage ?? (spell ? 2 : of(actor.unitId).atk);
+      const row = list?.find((r) => r.effectRef === "line-shot");
+      if (spell && row === undefined) return hitNo("noShotRow");
+      const reachN = row?.reach ?? reachOf(cfg.reach, actor.unitId), atk = row?.damage ?? of(actor.unitId).atk;
       if (body === undefined || !inOrthogonalReach(actor.at, body.at, reachN)) return hitNo("outOfReach");
       const cur = hp.get(res.unitId) ?? 0, next = cur > atk ? cur - atk : 0;
       hp.set(res.unitId, next);

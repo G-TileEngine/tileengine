@@ -112,7 +112,7 @@ export type IntentInput = { readonly intent: DoorIntent; readonly aim?: Sq | nul
 export type IntentHook = (world: SimWorld, side: SideId, budget: Budget) => readonly IntentInput[];
 /** Caller inputs, no defaults: the seated side, the move duration (null = instant) and the action id source. */
 export type PlayerOptions = { readonly side: SideId; readonly moveMs: number | null; readonly nextId: () => string; readonly step?: StepRule };
-export type PlayerReject = "noEvent" | "illegal" | "noUnit" | "notOwn" | "offGrid" | "noAction" | "malformed" | "disposed" | "noOffer" | "badPick" | "notReachable";
+export type PlayerReject = "noEvent" | "illegal" | "noUnit" | "notOwn" | "offGrid" | "noAction" | "malformed" | "disposed" | "noOffer" | "badPick" | "notReachable" | "noTarget";
 export type PlayerStep = {
   readonly intent: DoorIntent;
   readonly aim: Sq | null;

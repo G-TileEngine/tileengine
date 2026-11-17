@@ -13,6 +13,7 @@ function install(k: KnobReader): WinRule {
   return Object.freeze({ wipe: k.get("wipe_wins") === true, mutual: mutual === "last-actor-loses" ? "last-actor-loses" : "draw" });
 }
 export const WIN_CONDITION: BehaviourDef<WinRule> = Object.freeze({ id: "win-condition", knobs: WIN_CONDITION_KNOBS, install });
+/** Point-of-view contract: `sides[0]` is the player first; returned `win` / `lose` / `draw` are from that view. */
 export function wipeRule(win: WinRule, sides: readonly SideId[]): (world: { readonly units: Units }, at: { readonly round: number; readonly side: SideId }) => Outcome | null {
   return (world, at) => {
     if (!win.wipe) return null;
