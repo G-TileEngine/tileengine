@@ -91,7 +91,7 @@ test("acceptedCheck allows a legal ability or interact when rules are on, and st
 
 test("defaults (no opts override): 2 actions; neutrals are not foes; a killing shot is not followed by a shot at the body", () => {
   const setup: BattleSetup = { ...SETUP, stats: { ...SETUP.stats, wolf: { hp: 2, atk: 1 } } };
-  const b = botAbilityPriority({ setup });
+  const b = botAbilityPriority({ setup, actionsPerTurn: budget.actionsPerTurn });
   const w = createWorld({ ...input("stage-fixed"), rules: setup });
   w.units.moveTo("archer#2", { c: 2, r: 3 }, "move");
   w.units.moveTo("knight#1", { c: 2, r: 1 }, "move");

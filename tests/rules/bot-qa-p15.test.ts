@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { Action } from "../../src/core/log/index.ts";
 import type { BattleSetup } from "../../src/rules/battle/index.ts";
+import { installOne } from "../../src/rules/behaviours/index.ts";
+import { ACTION_BUDGET } from "../../src/rules/turns/action-budget.ts";
 import { botAbilityPriority } from "../../src/rules/turns/bot-ability-priority.ts";
 import { createWorld } from "../../src/sim/index.ts";
 import { input } from "../sim/input.ts";
@@ -9,7 +11,9 @@ import { input } from "../sim/input.ts";
 // QA P1-5 pin: shotRow prototype keys must not crash the side; tie-breaks (path length, lowest HP, placement) were untested (G1).
 const S: BattleSetup = { base: { hp: 9, atk: 1 }, stats: { wolf: { hp: 4, atk: 1 }, archer: { hp: 6, atk: 2 }, cub: { hp: 1, atk: 1 } }, hitClass: "basic", abilities: { archer: [{ reach: 3, damage: 2, effectRef: "line-shot" }] } };
 const targetOf = (a: Action | undefined): string => a?.target && a.target.pipe === "unit" ? a.target.unitId : "";
-const bot = (setup: BattleSetup = S) => botAbilityPriority({ setup });
+const budget = installOne(ACTION_BUDGET, {}).out;
+if (budget === null) throw new Error("budget");
+const bot = (setup: BattleSetup = S) => botAbilityPriority({ setup, actionsPerTurn: budget.actionsPerTurn });
 const withCub = (setup: BattleSetup, at: { c: number; r: number }) => {
   const src = input("stage-fixed"), stage = structuredClone(src.stage) as { enemyPool: { entries: unknown[] } };
   return (stage.enemyPool.entries.push({ unitId: "cub", at }), createWorld({ ...src, stage, rules: setup }));

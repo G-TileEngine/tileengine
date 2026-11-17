@@ -10,15 +10,16 @@ type HookWorld = {
   readonly rules: { state(): { readonly units: readonly { readonly id: string; readonly hp: number }[] } } | null;
 };
 
-type Opt = { readonly actionsPerTurn?: number; readonly setup?: BattleSetup; readonly stepReach?: number };
+type Opt = { readonly actionsPerTurn: number; readonly setup: BattleSetup; readonly stepReach?: number };
 type Body = { id: string; unitId: string; side: string; c: number; r: number; hp: number; alive: boolean; order: number };
 type Cand = { dist: number; hp: number; foe: number; actor: number; who: Body; target: Body; kind: "spell" | "basic" | "step"; damage: number; at?: Sq };
 
 const key = (c: number, r: number): string => `${c},${r}`;
 const foeOf = (a: Body, b: Body): boolean => b.alive && b.side !== a.side && b.side !== "neutral";
 function stats(setup: BattleSetup | undefined, id: string): { hp: number; atk: number } {
-  if (setup !== undefined && Object.hasOwn(setup.stats, id)) return setup.stats[id] ?? setup.base;
-  return setup?.base ?? { hp: 1, atk: 1 };
+  if (setup === undefined) throw new Error("botAbilityPriority: setup and actionsPerTurn required");
+  if (Object.hasOwn(setup.stats, id)) return setup.stats[id] ?? setup.base;
+  return setup.base;
 }
 /** Own keys only. A prototype-key unit id is not a spell row. */
 function shotRow(setup: BattleSetup | undefined, id: string): { reach: number; damage: number } | undefined {
@@ -98,9 +99,12 @@ function apply(book: Body[], pick: Cand): void {
   pick.target.hp -= pick.damage;
   if (pick.target.hp <= 0) pick.target.alive = false;
 }
-/** Spell in reach, else a basic in reach, else an orthogonal BFS step (cap `stepReach`, default 2). Ties: path length, lowest HP, placement. No RNG. */
-export function botAbilityPriority(opts: Opt = {}): (world: HookWorld, side: string) => readonly Action[] {
-  const turns = opts.actionsPerTurn ?? 2, stepReach = opts.stepReach ?? 2, setup = opts.setup;
+/** P1-5 bot step cap when the host omits stepReach. Not an engine rule. */
+export const DEFAULT_STEP_REACH = 2;
+/** Spell in reach, else a basic in reach, else an orthogonal BFS step (cap `stepReach`, else DEFAULT_STEP_REACH). Ties: path length, lowest HP, placement. No RNG. */
+export function botAbilityPriority(opts: Opt): (world: HookWorld, side: string) => readonly Action[] {
+  if (opts.setup === undefined || !Number.isInteger(opts.actionsPerTurn) || opts.actionsPerTurn < 1) throw new Error("botAbilityPriority: setup and actionsPerTurn required");
+  const turns = opts.actionsPerTurn, stepReach = opts.stepReach ?? DEFAULT_STEP_REACH, setup = opts.setup;
   return (world, side) => {
     const book = bookOf(world, setup), out: Action[] = [];
     for (let n = 1; n <= turns; n += 1) {

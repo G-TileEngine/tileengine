@@ -1,0 +1,10 @@
+ src/rules/battle/battle.ts              | 10 +++++-----
+ src/rules/turns/bot-ability-priority.ts | 16 ++++++++++------
+ tests/rules/battle-p16-heavy.test.ts    | 12 +++++++++++-
+ tests/rules/bot-p15.test.ts             |  2 +-
+ tests/rules/bot-p16h.test.ts            | 24 ++++++++++++++++++++++++
+ tests/rules/bot-qa-p15.test.ts          |  6 +++++-
+ tests/tools/play-stage.test.ts          | 33 ++++++++++++++++++++++++++++++++-
+ tools/play-stage/board.ts               | 11 ++++++++---
+ tools/play-stage/page.ts                |  2 +-
+ 9 files changed, 97 insertions(+), 19 deletions(-)

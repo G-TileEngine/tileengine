@@ -31,11 +31,11 @@ function taken(setup: BattleSetup): BattleSetup {
   if (!pair(copy.base) || !isRecord(statsIn) || typeof klass !== "string" || !(HIT_CLASSES as readonly string[]).includes(klass)) throw new RangeError("createBattle: bad setup");
   if (reachIn !== undefined && !isRecord(reachIn)) throw new RangeError("createBattle: bad setup");
   if (abilitiesIn !== undefined && !isRecord(abilitiesIn)) throw new RangeError("createBattle: bad setup");
-  const stats: Record<string, UnitStats> = {}, reach: Record<string, number> = {};
-  for (const key of Object.keys(statsIn)) { const row = statsIn[key]; if (!pair(row)) throw new RangeError("createBattle: bad setup"); stats[key] = { hp: row.hp, atk: row.atk }; }
-  if (isRecord(reachIn)) for (const key of Object.keys(reachIn)) { const n = reachIn[key]; if (!whole(n, 1)) throw new RangeError("createBattle: bad setup"); reach[key] = n; }
-  if (isRecord(abilitiesIn)) for (const list of Object.values(abilitiesIn)) { if (!Array.isArray(list)) throw new RangeError("createBattle: bad setup"); for (const row of list) if (!isRecord(row) || !whole(row.reach, 1) || !whole(row.damage, 0) || typeof row.effectRef !== "string") throw new RangeError("createBattle: bad setup"); }
-  return { base: { hp: copy.base.hp, atk: copy.base.atk }, stats, hitClass: klass as HitClass, ...(isRecord(reachIn) ? { reach } : {}), ...(isRecord(abilitiesIn) ? { abilities: abilitiesIn as NonNullable<BattleSetup["abilities"]> } : {}) };
+  const stats: Record<string, UnitStats> = Object.create(null), reach: Record<string, number> = Object.create(null), abilities: Record<string, ShotRow[]> = Object.create(null);
+  for (const key of Object.keys(statsIn)) { if (!Object.hasOwn(statsIn, key)) continue; const row = statsIn[key]; if (!pair(row)) throw new RangeError("createBattle: bad setup"); stats[key] = { hp: row.hp, atk: row.atk }; }
+  if (isRecord(reachIn)) for (const key of Object.keys(reachIn)) { if (!Object.hasOwn(reachIn, key)) continue; const n = reachIn[key]; if (!whole(n, 1)) throw new RangeError("createBattle: bad setup"); reach[key] = n; }
+  if (isRecord(abilitiesIn)) for (const key of Object.keys(abilitiesIn)) { if (!Object.hasOwn(abilitiesIn, key)) continue; const list = abilitiesIn[key]; if (!Array.isArray(list)) throw new RangeError("createBattle: bad setup"); const rows: ShotRow[] = []; for (const row of list) { if (!isRecord(row) || !whole(row.reach, 1) || !whole(row.damage, 0) || typeof row.effectRef !== "string") throw new RangeError("createBattle: bad setup"); rows.push({ reach: row.reach, damage: row.damage, effectRef: row.effectRef }); } abilities[key] = rows; }
+  return { base: { hp: copy.base.hp, atk: copy.base.atk }, stats, hitClass: klass as HitClass, ...(isRecord(reachIn) ? { reach } : {}), ...(isRecord(abilitiesIn) ? { abilities } : {}) };
 }
 export function createBattle(setup: BattleSetup, units: Units, grid: Grid, emit: (event: BusEvent<NoModeEvents>) => void): Battle {
   const cfg = taken(setup), hp = new Map<string, number>();

@@ -14,7 +14,7 @@ const load = (id: string): Promise<OffscreenCanvas> => {
   g.putImageData(image, 0, 0);
   return Promise.resolve(baked);
 };
-const placed = (): { s: number; padX: number; padY: number } => fit(canvas.clientWidth * devicePixelRatio, canvas.clientHeight * devicePixelRatio, play.world.grid.cols, play.world.grid.rows);
+const placed = (): { s: number; padX: number; padY: number } => fit(canvas.clientWidth * devicePixelRatio, canvas.clientHeight * devicePixelRatio, play.world.grid.cols, play.world.grid.rows, devicePixelRatio || 1);
 const driver = createDriver({
   env, canvas: canvas as HostCanvas, clock: play.world.clock, clear: "#0d1220", load, pixels: (id) => play.pixels(id),
   view: () => ({ scene: play.scene(), x: 0, y: 0, s: placed().s }),
