@@ -1,0 +1,20 @@
+ src/btf-adapters/src/btf-defaults/spells.ts |  6 ++
+ src/btf-adapters/src/index.ts               |  1 +
+ src/project/read/index.ts                   |  2 +
+ src/project/read/setups.ts                  | 30 ++++++++++
+ src/project/read/unit.ts                    | 25 ++++++++
+ src/rules/battle/abilities.ts               | 29 ++++++++++
+ src/rules/battle/battle.ts                  | 20 ++++---
+ src/rules/battle/damage.ts                  | 11 ++--
+ src/rules/battle/index.ts                   |  2 +
+ src/rules/battle/line-shot.ts               | 15 +++++
+ src/rules/behaviours/registry.ts            |  6 +-
+ src/rules/behaviours/types.ts               |  4 +-
+ src/rules/behaviours/xp-levels.ts           |  2 +-
+ tests/parity/line-shot.parity.test.ts       | 16 ++++++
+ tests/project/unit-setup.test.ts            | 45 +++++++++++++++
+ tests/rules/battle-p14.test.ts              | 89 +++++++++++++++++++++++++++++
+ tests/rules/battle-qa-p14.test.ts           | 25 ++++++++
+ tests/rules/battle.test.ts                  |  2 +-
+ tests/rules/behaviours.test.ts              |  6 +-
+ 19 files changed, 316 insertions(+), 20 deletions(-)

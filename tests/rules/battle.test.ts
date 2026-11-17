@@ -103,7 +103,7 @@ test("refused: every D7 reason has a row; effects (spells, P1-4) stay actionUnsu
   assert.deepEqual([snapshot(w).rules, snapshot(w).units, seen(w).length], [before.rules, before.units, 0]);
 });
 
-test("L5 difficulty.damage is P1-4: installDamage warns layerNotApplied once per install when it is not 1, and plays as 1", () => {
+test("L5 difficulty.damage stays a warning through P1-4 (real layering is Phase 4): installDamage warns layerNotApplied once per install when it is not 1, and plays as 1", () => {
   const warn = { code: "layerNotApplied", message: "L5 difficulty.damage" };
   const got = installDamage({ answers: { hit_class: { source: "user", value: "spell" } } }, { difficulty: { hp: 1, damage: 1.5 } });
   assert.deepEqual([got.out, got.notes, installDamage({}, { difficulty: { hp: 2, damage: 0 } }).notes], [{ hitClass: "spell" }, [warn], [warn]]);

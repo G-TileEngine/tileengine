@@ -11,7 +11,8 @@ import { inOrthogonalReach, reachOf, type ReachTable } from "./range.ts";
 import type { UnitStats } from "./roster.ts";
 
 export const BATTLE_EVENTS: EventRegistry<NoModeEvents> = { mode: "battle", types: ["hit", "unit.died", "unit.interacted"] };
-export type BattleSetup = { readonly base: UnitStats; readonly stats: Readonly<Record<string, UnitStats>>; readonly hitClass: HitClass; readonly reach?: ReachTable };
+export type ShotRow = { readonly reach: number; readonly damage: number; readonly effectRef: string };
+export type BattleSetup = { readonly base: UnitStats; readonly stats: Readonly<Record<string, UnitStats>>; readonly hitClass: HitClass; readonly reach?: ReachTable; readonly abilities?: Readonly<Record<string, readonly ShotRow[]>> };
 export type BattleState = { readonly units: readonly { readonly id: string; readonly hp: number; readonly alive: boolean }[] };
 export const HIT_REFUSED_REASONS = Object.freeze(["unknownActor", "deadActor", "notUnitAim", "aimMissed", "selfTarget", "deadTarget"] as const);
 export const HIT_FILTER_REASONS = Object.freeze(["outOfReach", "allyTarget"] as const);
@@ -26,13 +27,14 @@ const pair = (v: unknown): v is UnitStats => isRecord(v) && whole(v.hp, 1) && wh
 function taken(setup: BattleSetup): BattleSetup {
   const copy = plainCopy(setup, 4);
   if (copy === NOT_PLAIN || !isRecord(copy)) throw new RangeError("createBattle: bad setup");
-  const klass = copy.hitClass, statsIn = copy.stats, reachIn = copy.reach;
+  const klass = copy.hitClass, statsIn = copy.stats, reachIn = copy.reach, abilitiesIn = copy.abilities;
   if (!pair(copy.base) || !isRecord(statsIn) || typeof klass !== "string" || !(HIT_CLASSES as readonly string[]).includes(klass)) throw new RangeError("createBattle: bad setup");
   if (reachIn !== undefined && !isRecord(reachIn)) throw new RangeError("createBattle: bad setup");
+  if (abilitiesIn !== undefined && !isRecord(abilitiesIn)) throw new RangeError("createBattle: bad setup");
   const stats: Record<string, UnitStats> = {}, reach: Record<string, number> = {};
   for (const key of Object.keys(statsIn)) { const row = statsIn[key]; if (!pair(row)) throw new RangeError("createBattle: bad setup"); stats[key] = { hp: row.hp, atk: row.atk }; }
   if (isRecord(reachIn)) for (const key of Object.keys(reachIn)) { const n = reachIn[key]; if (typeof n !== "number") throw new RangeError("createBattle: bad setup"); reach[key] = n; }
-  return { base: { hp: copy.base.hp, atk: copy.base.atk }, stats, hitClass: klass as HitClass, ...(isRecord(reachIn) ? { reach } : {}) };
+  return { base: { hp: copy.base.hp, atk: copy.base.atk }, stats, hitClass: klass as HitClass, ...(isRecord(reachIn) ? { reach } : {}), ...(isRecord(abilitiesIn) ? { abilities: abilitiesIn as NonNullable<BattleSetup["abilities"]> } : {}) };
 }
 export function createBattle(setup: BattleSetup, units: Units, grid: Grid, emit: (event: BusEvent<NoModeEvents>) => void): Battle {
   const cfg = taken(setup), hp = new Map<string, number>();
@@ -42,8 +44,8 @@ export function createBattle(setup: BattleSetup, units: Units, grid: Grid, emit:
   return {
     state: () => ({ units: units.all().flatMap((u) => { const n = hp.get(u.id); return n === undefined ? [] : [{ id: u.id, hp: n, alive: u.alive }]; }) }),
     act(action) {
-      const talk = action.kind === "interact";
-      if ((!talk && action.kind !== "ability") || action.effects.length > 0) return { code: "actionUnsupported", message: "action unsupported" };
+      const talk = action.kind === "interact", spell = action.effects.length === 1 && action.effects[0] === "line-shot";
+      if ((!talk && action.kind !== "ability") || (action.effects.length > 0 && !spell)) return { code: "actionUnsupported", message: "action unsupported" };
       const actor = units.get(action.actor);
       const no = (reason: HitRefusedReason): Notice => (talk ? interactRefused(reason) : hitNo(reason));
       if (actor === undefined) return no("unknownActor");
@@ -56,10 +58,12 @@ export function createBattle(setup: BattleSetup, units: Units, grid: Grid, emit:
       const body = units.get(res.unitId);
       if (talk) { if (body === undefined || !inOrthogonalReach(actor.at, body.at, 1)) return interactRefused("notAdjacent"); if (body.side !== "neutral") return interactRefused("foeTarget"); emit({ type: "unit.interacted", by: action.actor, target: res.unitId }); return null; }
       if (body !== undefined && body.side === actor.side) return hitNo("allyTarget");
-      if (body === undefined || !inOrthogonalReach(actor.at, body.at, reachOf(cfg.reach, actor.unitId))) return hitNo("outOfReach");
-      const atk = of(actor.unitId).atk, cur = hp.get(res.unitId) ?? 0, next = cur > atk ? cur - atk : 0;
+      const list = !spell || cfg.abilities === undefined || !Object.hasOwn(cfg.abilities, actor.unitId) ? undefined : cfg.abilities[actor.unitId];
+      const row = list?.find((r) => r.effectRef === "line-shot"), reachN = row?.reach ?? (spell ? 3 : reachOf(cfg.reach, actor.unitId)), atk = row?.damage ?? (spell ? 2 : of(actor.unitId).atk);
+      if (body === undefined || !inOrthogonalReach(actor.at, body.at, reachN)) return hitNo("outOfReach");
+      const cur = hp.get(res.unitId) ?? 0, next = cur > atk ? cur - atk : 0;
       hp.set(res.unitId, next);
-      emit({ type: "hit", unit: res.unitId, by: action.actor, amount: atk, hp: next, hitClass: cfg.hitClass });
+      emit({ type: "hit", unit: res.unitId, by: action.actor, amount: atk, hp: next, hitClass: spell ? "spell" : cfg.hitClass });
       if (next === 0 && atk > 0) { units.remove(res.unitId); emit({ type: "unit.died", unit: res.unitId, by: action.actor }); }
       return null;
     },
