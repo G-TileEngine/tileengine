@@ -49,3 +49,9 @@ sceneFromMatch(snap: plain SimSnapshot data, art: MatchAssets) -> SceneWorld
 - Then `link.scene(world, clock)` and `buildDrawList` (or the driver), on one clock (rule 3).
 
 `tools/host-example/match-picture.ts` is a working copy. It plays a `stage-fixed` match, keeps only the log, replays it fresh, snapshots, copies as JSON and draws the last frame. Run `node tools/host-example/match-picture.ts`; it prints `stage-fixed replay to tick 460: 6 units, 6 drawn standing, 60 draw commands`. It is tools only (src never imports it). `tsconfig.json` includes it, so tsc and lint cover it. The real link is `sceneFromMatch` in `src/runtime/scene/match-link.ts`.
+
+## Playing ability effects
+13. **Read the saved effect.** `readEffect` (`src/project/read/effect.ts`) turns a `behaviour-setup` v3 file with `behaviourId: "effect"` into `{id, rev, values}`. A `source:"default"` knob is copied only when that key is own on the host `defaults`; otherwise the runtime default stands (`DOC.connect` is 0.92).
+14. **Cue, cast, hit.** `cueFromEntry(entry, stepMs, refOf)` reads the action (`refOf` is given the action, so one `effects` entry wins and `via.ref` never does). `createCastFx({sheetOf, values})` compiles each `ref@rev` once. Put `effects(nowMs)` on `world.effects` (replace the array only when the list changes, seam 37). `fx:hit` fires at `toTick(castMs + hitOffsetMs, stepMs)`. The sim does not wait.
+15. **Misses.** `node tools/host-example/match-fx.ts` prints `match-fx: 3 cues, 2 live at 50ms, 2 hits, notes: unknownRef missing`. A missing ref is `unknownRef`. `"none"` adds no note and no picture.
+
