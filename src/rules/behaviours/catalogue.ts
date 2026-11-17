@@ -1,25 +1,46 @@
 import type { KnobSpec } from "./types.ts";
 
-function deep<T>(value: T): T {
-  if (typeof value !== "object" || value === null || Object.isFrozen(value)) return value;
-  const rec = value as Record<string, unknown>;
-  for (const key of Object.keys(rec)) deep(rec[key]);
-  return Object.freeze(value);
-}
-
-const SLICE = JSON.parse(`{"gates":{"uses-card-hand":false,"uses-menu":true},"xp-levels":[{"id":"level_rule","type":"picker","default":"xp_table","options":["xp_table","pvp_kills"]},{"id":"levels","type":"slider","default":9,"min":1,"max":9,"step":1},{"id":"thresholds","type":"picker","default":"17,11,13,11,13,14,11,11,11","options":["17,11,13,11,13,14,11,11,11","13,10,11,12,13,10,11,12,13"],"when":{"knob":"level_rule","eq":"xp_table"}},{"id":"pvp_kills","type":"slider","default":1,"min":0,"max":99,"step":1,"when":{"knob":"level_rule","eq":"pvp_kills"}},{"id":"xp_move","type":"slider","default":1,"min":0,"max":5,"step":1},{"id":"xp_basic","type":"slider","default":1,"min":0,"max":5,"step":1},{"id":"xp_kill_summon","type":"slider","default":2,"min":0,"max":5,"step":1},{"id":"xp_contest_win","type":"slider","default":2,"min":0,"max":5,"step":1},{"id":"xp_kill_neutral","type":"slider","default":2,"min":0,"max":5,"step":1},{"id":"xp_kill_unit","type":"slider","default":5,"min":0,"max":5,"step":1},{"id":"level_card_offer_levels","type":"picker","default":"1,3,4,6,7,9","options":["1,3,4,6,7,9"],"when":{"gate":"uses-card-hand"}},{"id":"ability_unlock_levels","type":"picker","default":"1,3,4,6,7,9","options":["1,3,4,6,7,9"],"when":{"gate":"uses-menu"}},{"id":"unlock_pick_count","type":"slider","default":3,"min":1,"max":8,"step":1,"when":{"gate":"uses-menu"}},{"id":"choice_levels","type":"picker","default":"2,5,8","options":["2,5,8"]},{"id":"level_draw_levels","type":"picker","default":"3,6,9","options":["3,6,9"],"when":{"gate":"uses-card-hand"}},{"id":"unit_unlock_when","type":"picker","default":"on_level","options":["on_level","never"]},{"id":"unit_unlock_sides","type":"picker","default":"both","options":["both","player","enemy"],"when":{"knob":"unit_unlock_when","eq":"on_level"}},{"id":"unit_unlock_levels","type":"picker","default":"3,6,9","options":["3,6,9"],"when":{"knob":"unit_unlock_when","eq":"on_level"}},{"id":"unit_unlock_pairs","type":"picker","default":"3,6,9","options":["3,6,9"],"when":{"knob":"unit_unlock_when","eq":"on_level"}}],"terrain":[{"id":"tile_types","type":"list","default":[{"id":"floor","label":"Floor","open":true,"kills_on_landing":false,"push_can_enter":true,"slows_move":false,"trips":false,"buildable":false},{"id":"fallen","label":"Fallen tile (abyss)","open":false,"kills_on_landing":true,"push_can_enter":true,"slows_move":false,"trips":false,"buildable":false},{"id":"flask","label":"Flask tile","open":false,"kills_on_landing":false,"push_can_enter":false,"slows_move":false,"trips":false,"buildable":false},{"id":"rising","label":"Rising tile (a unit is coming back here)","open":false,"kills_on_landing":false,"push_can_enter":false,"slows_move":false,"trips":false,"buildable":false},{"id":"tide","label":"Tide mark","open":false,"kills_on_landing":false,"push_can_enter":false,"slows_move":false,"trips":false,"buildable":false},{"id":"warp-mark","label":"Warp mark","open":false,"kills_on_landing":false,"push_can_enter":false,"slows_move":false,"trips":false,"buildable":false},{"id":"sword-mark","label":"Sword fade-in tile","open":false,"kills_on_landing":false,"push_can_enter":false,"slows_move":false,"trips":false,"buildable":false},{"id":"boss-cover","label":"Portal boss tile","open":false,"kills_on_landing":false,"push_can_enter":false,"slows_move":false,"trips":false,"buildable":false},{"id":"vines","label":"Vines","open":true,"kills_on_landing":false,"push_can_enter":true,"slows_move":true,"trips":false,"buildable":false},{"id":"trap","label":"Trap","open":true,"kills_on_landing":false,"push_can_enter":true,"slows_move":false,"trips":true,"buildable":false},{"id":"water","label":"Water","open":false,"kills_on_landing":false,"push_can_enter":false,"slows_move":false,"trips":false,"buildable":false},{"id":"lava","label":"Lava","open":true,"kills_on_landing":true,"push_can_enter":true,"slows_move":false,"trips":false,"buildable":false},{"id":"wall-block","label":"Wall block","open":false,"kills_on_landing":false,"push_can_enter":false,"slows_move":false,"trips":false,"buildable":false},{"id":"pit","label":"Pit","open":true,"kills_on_landing":false,"push_can_enter":true,"slows_move":false,"trips":false,"buildable":false},{"id":"ice","label":"Ice","open":true,"kills_on_landing":false,"push_can_enter":true,"slows_move":false,"trips":false,"buildable":false}],"item":{"open":true,"kills_on_landing":false,"push_can_enter":true,"slows_move":false,"trips":false,"buildable":false},"reserved":true},{"id":"lethal_landing_scope","type":"picker","default":"any","options":["any","forced_only"]},{"id":"wall_blocks_los","type":"toggle","default":true},{"id":"wall_blocks_shots","type":"toggle","default":true},{"id":"push_into_walls","type":"toggle","default":false},{"id":"lanes_enabled","type":"toggle","default":false},{"id":"lane_axis","type":"picker","default":"row","options":["row","column"],"when":{"knob":"lanes_enabled","eq":true}},{"id":"lane_count","type":"slider","default":3,"min":1,"max":9,"step":1,"when":{"knob":"lanes_enabled","eq":true}},{"id":"lane_field_lanes","type":"toggle","default":false,"when":{"knob":"lanes_enabled","eq":true}},{"id":"centre_lane","type":"toggle","default":false,"when":{"knob":"lanes_enabled","eq":true}}]}`) as {
-  gates: Readonly<Record<string, boolean>>;
-  "xp-levels": KnobSpec[];
-  terrain: KnobSpec[];
-};
-
-export const GATE_DEFAULTS: Readonly<Record<string, boolean>> = deep(SLICE.gates);
-export const XP_LEVELS_KNOBS: readonly KnobSpec[] = deep(SLICE["xp-levels"]);
-export const TERRAIN_KNOBS: readonly KnobSpec[] = deep(SLICE.terrain);
-const tileDefault = TERRAIN_KNOBS[0]?.default;
-export const TILE_TYPES: readonly Readonly<Record<string, unknown>>[] = Array.isArray(tileDefault) ? tileDefault : [];
-export const CATALOGUE = deep({
-  rev: 26 as const,
-  sha: "ea8b3302adccce6e144b00b02072bb191dddfe13f079ea6f6bfac57756e523b0" as const,
-  table: "8e9d46a5fbb21060b0f851483392c8f22c9791ff16bab82521200fa916add9ec" as const,
-});
+/** The catalogue slice the engine carries (generated by EA's gen-catalogue.py; never hand-edited; regenerate from the Librarian's rev):
+ *  behaviours.json rev 26, sha256 ea8b3302…. `table` = sha256 of the canonical JSON of {gates, xp-levels, terrain}; a test recomputes it. */
+export const CATALOGUE = Object.freeze({ rev: 26, sha: "ea8b3302adccce6e144b00b02072bb191dddfe13f079ea6f6bfac57756e523b0", table: "3b16c673b0afb3b3bae0fcac1909af1980168b30c7b1734595065e26f4a40eae" } as const);
+/** Named gates (catalogue `gates`) evaluated at the catalogue defaults (`ability-presentation.shortcut = "all-menu"`); the host passes resolved ones. */
+export const GATE_DEFAULTS: Readonly<Record<string, boolean>> = Object.freeze({ "uses-card-hand": false, "uses-menu": true });
+/** Every table is deep-frozen: installs share it read-only, and a mutation attempt throws instead of leaking into the next install. */
+const frozen = <T>(o: T): T => { if (typeof o === "object" && o !== null && !Object.isFrozen(o)) { for (const v of Object.values(o)) frozen(v); Object.freeze(o); } return o; };
+const TILE_FIELDS = ["open", "kills_on_landing", "push_can_enter", "slows_move", "trips", "buildable"] as const;
+const TILE_ROWS: readonly (readonly [string, string, string])[] = [["floor", "Floor", "101000"], ["fallen", "Fallen tile (abyss)", "011000"], ["flask", "Flask tile", "000000"], ["rising", "Rising tile (a unit is coming back here)", "000000"], ["tide", "Tide mark", "000000"], ["warp-mark", "Warp mark", "000000"], ["sword-mark", "Sword fade-in tile", "000000"], ["boss-cover", "Portal boss tile", "000000"], ["vines", "Vines", "101100"], ["trap", "Trap", "101010"], ["water", "Water", "000000"], ["lava", "Lava", "111000"], ["wall-block", "Wall block", "000000"], ["path", "Path", "101000"], ["dirt", "Dirt", "101000"]];
+/** `terrain.tile_types` L0: the 15 reserved items, each field a "1"/"0" flag in `TILE_FIELDS` order. */
+export const TILE_TYPES: readonly Readonly<Record<string, unknown>>[] = frozen(TILE_ROWS.map(([id, label, f]) => ({ id, label, ...Object.fromEntries(TILE_FIELDS.map((k, i) => [k, f[i] === "1"])) })));
+export const XP_LEVELS_KNOBS: readonly KnobSpec[] = frozen([
+  { id: "levels", type: "slider", default: 9, min: 1, max: 9, step: 1 },
+  { id: "level_rule", type: "picker", default: "xp_table", options: ["xp_table", "pvp_kills"] },
+  { id: "pvp_kills", type: "slider", default: 3, min: 1, max: 9, step: 1, when: { knob: "level_rule", eq: "pvp_kills" } },
+  { id: "thresholds", type: "picker", default: "17,11,13,11,13,14,11,11,11", options: ["17,11,13,11,13,14,11,11,11", "13,10,11,12,13,10,11,12,13"], when: { knob: "level_rule", eq: "xp_table" } },
+  { id: "xp_move", type: "slider", default: 1, min: 0, max: 5, step: 1 },
+  { id: "xp_basic", type: "slider", default: 1, min: 0, max: 5, step: 1 },
+  { id: "xp_kill_summon", type: "slider", default: 2, min: 0, max: 5, step: 1 },
+  { id: "xp_contest_win", type: "slider", default: 2, min: 0, max: 5, step: 1 },
+  { id: "xp_kill_neutral", type: "slider", default: 2, min: 0, max: 5, step: 1 },
+  { id: "xp_kill_unit", type: "slider", default: 5, min: 0, max: 5, step: 1 },
+  { id: "level_card_offer_levels", type: "picker", default: "1,3,4,6,7,9", options: ["1,3,4,6,7,9"], when: { gate: "uses-card-hand" } },
+  { id: "ability_unlock_levels", type: "picker", default: "1,3,4,6,7,9", options: ["1,3,4,6,7,9"], when: { gate: "uses-menu" } },
+  { id: "unlock_pick_count", type: "slider", default: 3, min: 1, max: 3, step: 1, when: { gate: "uses-menu" } },
+  { id: "choice_levels", type: "picker", default: "2,5,8", options: ["2,5,8"] },
+  { id: "unit_unlock_when", type: "picker", default: "bot-matches", options: ["bot-matches", "never"] },
+  { id: "unit_unlock_sides", type: "picker", default: "both", options: ["both", "bot_only"], when: { knob: "unit_unlock_when", eq: "bot-matches" } },
+  { id: "unit_unlock_levels", type: "picker", default: "3,6,9", options: ["3,6,9"], when: { knob: "unit_unlock_when", eq: "bot-matches" } },
+  { id: "unit_unlock_pairs", type: "list", default: [], when: { knob: "unit_unlock_when", eq: "bot-matches" } },
+  { id: "level_draw_levels", type: "picker", default: "3,6,9", options: ["3,6,9"], when: { gate: "uses-card-hand" } },
+]);
+export const TERRAIN_KNOBS: readonly KnobSpec[] = frozen([
+  { id: "tile_types", type: "list", default: TILE_TYPES, item: { open: true, kills_on_landing: false, push_can_enter: true, slows_move: false, trips: false, buildable: false }, reserved: true },
+  { id: "lethal_landing_scope", type: "picker", default: "any", options: ["any", "forced_only"] },
+  { id: "wall_blocks_los", type: "toggle", default: true },
+  { id: "wall_blocks_shots", type: "toggle", default: true },
+  { id: "push_into_walls", type: "toggle", default: false },
+  { id: "lanes_enabled", type: "toggle", default: false },
+  { id: "lane_axis", type: "picker", default: "row", options: ["row", "column"], when: { knob: "lanes_enabled", eq: true } },
+  { id: "lane_count", type: "slider", default: 3, min: 1, max: 9, step: 1, when: { knob: "lanes_enabled", eq: true } },
+  { id: "lane_field_lanes", type: "picker", default: "centre-only", options: ["centre-only", "any"], when: { knob: "lanes_enabled", eq: true } },
+  { id: "centre_lane", type: "picker", default: "lower", options: ["lower", "upper"], when: { knob: "lanes_enabled", eq: true } },
+]);
