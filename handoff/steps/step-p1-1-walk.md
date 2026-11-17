@@ -49,6 +49,9 @@ Today a player move is one jump to any in-bounds cell (only `inBounds` is checke
 - Bodies on the line: **closed**, EA ruling 01:12: any body blocks, own team included (BTF default; ruling 4). The earlier own-team pass-through ruling is withdrawn.
 - `orthogonal-2` turning: **closed**, EA ruling 01:06: straight only, no turning (ruling 4).
 
+## Merged (PR #61)
+**Status: merged.** PR https://github.com/G-TileEngine/tileengine/pull/61, merge commit **`7dde2f22`** (`7dde2f2283b0a759dbd176a92d3e87ae5171ddd1`, tree `14da73886b7d437ca3f97a477d7741aa04ab4d48`, parents `dc381e99` (`dc381e995c9a4383a1aa0f6181290c9e7e7efbad`) + picked tip `3ecbcaed` (`3ecbcaed091bdde5646c24c12d95ede4b4207911`, ChatA r1, code commit `3134cc75` (`3134cc75dfdf13eec22c873cc87efe5e4982bf95`))). 12 product files +253/−6 = **259** lines. `handback/step-p1-1-walk/r1/` was kept on main by precedent (every earlier step). QA's build review is `docs/qa/step-p1-1-build.md` (sha256 `4ccfa7a7a2fd11ee23cca7cb7888afba7e33a06ec73e89f8dcf9c30cfb703d88`, 46 lines, commit `6cd8fa25` (`6cd8fa25734bbe70a1063bc4f58f86a17a5f5513`)), verdict **OK TO OPEN PR**, no must-fixes, no QA pin. EA verify-merge PASS **882/0** at floor 882. Carries already recorded: `src/sim/exploit.ts:75` → **P1-5**; a unit that reaches 0 HP must be `remove`d in the same step → **P1-2**; S2 dead-target fallback (`fallbackAt` on a dead target hits whoever stands on the fallback spot) → **P1-3**.
+
 ## Files to create or change (and nothing else)
 | File | Change | Proto (lines changed) | Cap (lines changed) |
 |---|---|---|---|
@@ -151,6 +154,7 @@ No per-frame code. A walk check is 4 rays of ≤ 2 steps (≤ 8 cells), once per
 - Attack and talk (HP, atk, `hit`, `unit.died`, `unit.interacted`, talk text, the team/npc/atk filters on `targetsFor`) → **P1-2 / P1-3**. `targetsFor` as the adjacency list is already in this step. **Carry for P1-2:** a unit that reaches 0 HP must be `remove`d in the same step. Otherwise `walks` and `targetsFor` (which test `alive`, not HP) would treat a 0-HP body as a blocker or a target.
 - Wiring `step` and `targetsFor` into the play page (P1-6) / host. A host-built `StepRule`'s `notes` (`stepClamped`) are shown by the host; P1-1 only returns them.
 - Bots and chaos with `step` set (they keep the one-jump move) → P1-5 / Phase 3/4. **S1:** `src/sim/exploit.ts:75` flags any move whose `durationMs` is not exactly `moveMs`. Walked moves take `moveMs` per tile, so a multi-tile walk is flagged once chaos or exploit checks run with `step`. Fix that check in this P1-5 carry.
+- A `fallbackAt` aim on a dead target lands on whoever stands at the fallback spot (QA S2, recorded in the P1-2 kit) → **P1-3** decides (aims without a fallback, or deliberately with one).
 
 ## Out of scope
 UI, the play page, the editor, any format, log or catalogue change, HP or any rules effect, bots.

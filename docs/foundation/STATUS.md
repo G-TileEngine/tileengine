@@ -1,12 +1,13 @@
 # Foundation status (completion record)
 
-Replaces "done" messages to the CEO (CEO rule 2026-11-16 22:45). Created with B1; every B-step's merge-time doc commit updates it. EA writes, CoS pushes (19:20 rule). Plan: `foundation-plan.md` r1 §6.
+Replaces "done" messages to the CEO (CEO rule 2026-11-16 22:45). Created with B1; every step's merge-time doc commit updates it. EA writes, CoS pushes (19:20 rule). Plan: `foundation-plan.md` r1 §6.
 
-- **Main:** `9ebb9413` (B1, PR #60, tree `ccb7f0ed`; floor 874/0) · **Catalogue snapshot:** rev 26, sha256 `ea8b3302…` (in `src/rules/behaviours/catalogue.ts`: xp-levels, terrain) · **Updated:** 2026-11-17 02:20 London
+- **Main:** `01dfe82a` (P1-2 kit, parent `6cd8fa25`, tree `633f4013`; floor 882/0) · **P1-1 walk / movement:** merged `7dde2f22` (PR #61, tree `14da7388`, ChatA r1; verify-merge 882/0) · **P1-2 battle:** kit pushed `01dfe82a`, builder ChatA pending, floor 903 · **Catalogue snapshot:** rev 26, sha256 `ea8b3302…` (in `src/rules/behaviours/catalogue.ts`: xp-levels, terrain) · **Updated:** 2026-11-17 03:15 London
 - **Totals:** behaviours done 0/64 (2 partly registered: xp-levels, terrain) · knobs honoured 9/567 · functions done 0/26 (F1, F3 partly, F2 resolver maths)
 - **States:** `not started` · `in kit` · `merged` (partly = some knobs honoured; the rest are reported `knobUnsupported`, never ignored).
 
 ## Plain words, newest first
+- **P1-1** (walk / movement): a unit can walk straight (north, east, south or west, no turning) up to its step reach, the scene gets the path, and a tile out of reach is refused. Merged at `7dde2f22` (PR #61).
 - **B1** (behaviour runtime): the engine now has a list of behaviours that reads your settings, starting from Before The Fall's numbers. Levelling and tile types read your settings; anything not built yet is listed as "not supported yet" instead of being ignored.
 
 ## Standing defaults (CEO can change)
@@ -96,4 +97,6 @@ Replaces "done" messages to the CEO (CEO rule 2026-11-16 22:45). Created with B1
 | step | size planned / actual | QA pick | merge sha | verify-merge |
 |---|---|---|---|---|
 | B1 behaviour runtime | 340 / 340 (proto) | — | — | — |
+| P1-1 walk / movement | 265 (kit) / 259 | ChatA r1 | `7dde2f22` | PASS 882/0 |
+| P1-2 battle | kit pushed `01dfe82a` | ChatA pending | — | floor 903 |
 | B2–B38 | plan §4 | — | — | — |
