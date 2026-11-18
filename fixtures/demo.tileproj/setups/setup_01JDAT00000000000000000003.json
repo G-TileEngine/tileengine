@@ -1,0 +1,86 @@
+{
+  "kind": "behaviour-setup",
+  "formatVersion": 3,
+  "id": "setup_01JDAT00000000000000000003",
+  "rev": 1,
+  "name": "Army",
+  "behaviourId": "unit-roster",
+  "catalogue": {
+    "rev": 28
+  },
+  "createdAt": "2026-11-18T00:00:00Z",
+  "updatedAt": "2026-11-18T00:00:00Z",
+  "copiedFrom": null,
+  "answers": {
+    "board_cols": {
+      "source": "default",
+      "rev": 0,
+      "defaultRef": {
+        "rev": 1
+      },
+      "needsReask": null
+    },
+    "board_rows": {
+      "source": "default",
+      "rev": 0,
+      "defaultRef": {
+        "rev": 1
+      },
+      "needsReask": null
+    },
+    "piece_count": {
+      "source": "default",
+      "rev": 0,
+      "defaultRef": {
+        "rev": 1
+      },
+      "needsReask": null
+    },
+    "unit_hp": {
+      "source": "default",
+      "rev": 0,
+      "defaultRef": {
+        "rev": 1
+      },
+      "needsReask": null
+    },
+    "unit_atk": {
+      "source": "default",
+      "rev": 0,
+      "defaultRef": {
+        "rev": 1
+      },
+      "needsReask": null
+    },
+    "opening_row": {
+      "source": "default",
+      "rev": 0,
+      "defaultRef": {
+        "rev": 16
+      },
+      "needsReask": null
+    },
+    "clip_cues": {
+      "source": "default",
+      "rev": 0,
+      "defaultRef": {
+        "rev": 8
+      },
+      "needsReask": null
+    },
+    "team_colour": {
+      "source": "default",
+      "rev": 0,
+      "defaultRef": {
+        "rev": 9
+      },
+      "needsReask": null
+    }
+  },
+  "orphans": {},
+  "history": {
+    "cap": 200,
+    "baseSeq": 1,
+    "ops": []
+  }
+}

@@ -1,0 +1,617 @@
+{
+  "kind": "catalogue-slice",
+  "formatVersion": 1,
+  "schema_version": 3,
+  "catalogue_rev": 28,
+  "gates": {
+    "uses-card-hand": {
+      "id": "uses-card-hand"
+    },
+    "uses-menu": {
+      "id": "uses-menu"
+    }
+  },
+  "behaviours": [
+    {
+      "id": "ability-presentation",
+      "closure": "when-used",
+      "knobs": [
+        {
+          "id": "shortcut",
+          "type": "picker",
+          "rev": 1,
+          "default": "all-menu",
+          "options": [
+            "all-menu",
+            "basic-only"
+          ]
+        },
+        {
+          "id": "basic_style",
+          "type": "picker",
+          "rev": 1,
+          "default": "button",
+          "options": [
+            "button"
+          ]
+        },
+        {
+          "id": "spells_style",
+          "type": "picker",
+          "rev": 1,
+          "default": "button",
+          "options": [
+            "button"
+          ]
+        },
+        {
+          "id": "custom_groups",
+          "type": "list",
+          "rev": 1,
+          "default": []
+        },
+        {
+          "id": "hand_placement",
+          "type": "picker",
+          "rev": 1,
+          "default": "bottom",
+          "options": [
+            "bottom"
+          ]
+        },
+        {
+          "id": "team_colours",
+          "type": "list",
+          "rev": 1,
+          "default": []
+        }
+      ]
+    },
+    {
+      "id": "basic-attack",
+      "closure": "when-used",
+      "knobs": [
+        {
+          "id": "reach_mode",
+          "type": "picker",
+          "rev": 1,
+          "default": "same-as-step",
+          "options": [
+            "same-as-step",
+            "one-tile-straight",
+            "custom-cross"
+          ]
+        },
+        {
+          "id": "custom_ns",
+          "type": "slider",
+          "rev": 1,
+          "default": 1,
+          "min": 1,
+          "max": 9,
+          "step": 1
+        },
+        {
+          "id": "custom_ew",
+          "type": "slider",
+          "rev": 1,
+          "default": 1,
+          "min": 1,
+          "max": 9,
+          "step": 1
+        },
+        {
+          "id": "damage",
+          "type": "slider",
+          "rev": 1,
+          "default": 1,
+          "min": 0,
+          "max": 9,
+          "step": 1
+        },
+        {
+          "id": "blocked_by_bodies",
+          "type": "toggle",
+          "rev": 1,
+          "default": true
+        },
+        {
+          "id": "enemy_basic_crosses_barrier",
+          "type": "toggle",
+          "rev": 1,
+          "default": false
+        },
+        {
+          "id": "ability_group",
+          "type": "picker",
+          "rev": 1,
+          "default": "basic",
+          "options": [
+            "basic"
+          ]
+        },
+        {
+          "id": "effect",
+          "type": "ref",
+          "rev": 1,
+          "default": "none"
+        }
+      ]
+    },
+    {
+      "id": "line-shot",
+      "closure": "when-used",
+      "knobs": [
+        {
+          "id": "directions",
+          "type": "picker",
+          "rev": 1,
+          "default": "orthogonal",
+          "options": [
+            "orthogonal"
+          ]
+        },
+        {
+          "id": "range",
+          "type": "slider",
+          "rev": 1,
+          "default": 3,
+          "min": 1,
+          "max": 9,
+          "step": 1
+        },
+        {
+          "id": "damage",
+          "type": "slider",
+          "rev": 1,
+          "default": 1,
+          "min": 0,
+          "max": 9,
+          "step": 1
+        },
+        {
+          "id": "stops_on_first",
+          "type": "toggle",
+          "rev": 1,
+          "default": true
+        },
+        {
+          "id": "barrier_blocks",
+          "type": "toggle",
+          "rev": 1,
+          "default": true
+        },
+        {
+          "id": "caster_class",
+          "type": "picker",
+          "rev": 1,
+          "default": "any",
+          "options": [
+            "any",
+            "archer"
+          ]
+        },
+        {
+          "id": "pair_doubles",
+          "type": "toggle",
+          "rev": 1,
+          "default": false
+        },
+        {
+          "id": "neutrals_legal",
+          "type": "toggle",
+          "rev": 1,
+          "default": false
+        },
+        {
+          "id": "hit_class",
+          "type": "picker",
+          "rev": 1,
+          "default": "basic",
+          "options": [
+            "basic"
+          ]
+        },
+        {
+          "id": "mana_cost",
+          "type": "slider",
+          "rev": 1,
+          "default": 0,
+          "min": 0,
+          "max": 9,
+          "step": 1
+        },
+        {
+          "id": "ability_group",
+          "type": "picker",
+          "rev": 1,
+          "default": "spell",
+          "options": [
+            "spell"
+          ]
+        },
+        {
+          "id": "effect",
+          "type": "ref",
+          "rev": 1,
+          "default": "none"
+        }
+      ]
+    },
+    {
+      "id": "barrier-line",
+      "closure": "when-used",
+      "knobs": [
+        {
+          "id": "length",
+          "type": "slider",
+          "rev": 1,
+          "default": 1,
+          "min": 1,
+          "max": 9,
+          "step": 1
+        }
+      ]
+    },
+    {
+      "id": "adjacency-synergy",
+      "closure": "when-used",
+      "knobs": [
+        {
+          "id": "bonus",
+          "type": "slider",
+          "rev": 1,
+          "default": 0,
+          "min": 0,
+          "max": 9,
+          "step": 1
+        }
+      ]
+    },
+    {
+      "id": "unit-roster",
+      "closure": "when-used",
+      "knobs": [
+        {
+          "id": "board_cols",
+          "type": "slider",
+          "rev": 1,
+          "default": 6,
+          "min": 1,
+          "max": 64,
+          "step": 1
+        },
+        {
+          "id": "board_rows",
+          "type": "slider",
+          "rev": 1,
+          "default": 9,
+          "min": 1,
+          "max": 64,
+          "step": 1
+        },
+        {
+          "id": "piece_count",
+          "type": "slider",
+          "rev": 1,
+          "default": 3,
+          "min": 1,
+          "max": 9,
+          "step": 1
+        },
+        {
+          "id": "unit_hp",
+          "type": "slider",
+          "rev": 1,
+          "default": 9,
+          "min": 1,
+          "max": 99,
+          "step": 1
+        },
+        {
+          "id": "unit_atk",
+          "type": "slider",
+          "rev": 1,
+          "default": 1,
+          "min": 0,
+          "max": 99,
+          "step": 1
+        },
+        {
+          "id": "opening_row",
+          "type": "picker",
+          "rev": 1,
+          "default": "bottom",
+          "options": [
+            "bottom"
+          ]
+        },
+        {
+          "id": "clip_cues",
+          "type": "list",
+          "rev": 1,
+          "default": []
+        },
+        {
+          "id": "team_colour",
+          "type": "picker",
+          "rev": 1,
+          "default": "side",
+          "options": [
+            "side"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "talk",
+      "closure": "when-used",
+      "knobs": [
+        {
+          "id": "line",
+          "type": "text",
+          "rev": 1,
+          "default": "",
+          "max_len": 128
+        },
+        {
+          "id": "effect",
+          "type": "ref",
+          "rev": 1,
+          "default": "none"
+        }
+      ]
+    },
+    {
+      "id": "terrain",
+      "closure": "always",
+      "knobs": [
+        {
+          "id": "tile_types",
+          "type": "list",
+          "default": [
+            {
+              "id": "floor",
+              "label": "Floor",
+              "open": true,
+              "kills_on_landing": false,
+              "push_can_enter": true,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "fallen",
+              "label": "Fallen tile (abyss)",
+              "open": false,
+              "kills_on_landing": true,
+              "push_can_enter": true,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "flask",
+              "label": "Flask tile",
+              "open": false,
+              "kills_on_landing": false,
+              "push_can_enter": false,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "rising",
+              "label": "Rising tile (a unit is coming back here)",
+              "open": false,
+              "kills_on_landing": false,
+              "push_can_enter": false,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "tide",
+              "label": "Tide mark",
+              "open": false,
+              "kills_on_landing": false,
+              "push_can_enter": false,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "warp-mark",
+              "label": "Warp mark",
+              "open": false,
+              "kills_on_landing": false,
+              "push_can_enter": false,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "sword-mark",
+              "label": "Sword fade-in tile",
+              "open": false,
+              "kills_on_landing": false,
+              "push_can_enter": false,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "boss-cover",
+              "label": "Portal boss tile",
+              "open": false,
+              "kills_on_landing": false,
+              "push_can_enter": false,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "vines",
+              "label": "Vines",
+              "open": true,
+              "kills_on_landing": false,
+              "push_can_enter": true,
+              "slows_move": true,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "trap",
+              "label": "Trap",
+              "open": true,
+              "kills_on_landing": false,
+              "push_can_enter": true,
+              "slows_move": false,
+              "trips": true,
+              "buildable": false
+            },
+            {
+              "id": "water",
+              "label": "Water",
+              "open": false,
+              "kills_on_landing": false,
+              "push_can_enter": false,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "lava",
+              "label": "Lava",
+              "open": true,
+              "kills_on_landing": true,
+              "push_can_enter": true,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "wall-block",
+              "label": "Wall block",
+              "open": false,
+              "kills_on_landing": false,
+              "push_can_enter": false,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "path",
+              "label": "Path",
+              "open": true,
+              "kills_on_landing": false,
+              "push_can_enter": true,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "dirt",
+              "label": "Dirt",
+              "open": true,
+              "kills_on_landing": false,
+              "push_can_enter": true,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            }
+          ],
+          "item": {
+            "open": true,
+            "kills_on_landing": false,
+            "push_can_enter": true,
+            "slows_move": false,
+            "trips": false,
+            "buildable": false
+          },
+          "reserved": true
+        },
+        {
+          "id": "lethal_landing_scope",
+          "type": "picker",
+          "default": "any",
+          "options": [
+            "any",
+            "forced_only"
+          ]
+        },
+        {
+          "id": "wall_blocks_los",
+          "type": "toggle",
+          "default": true
+        },
+        {
+          "id": "wall_blocks_shots",
+          "type": "toggle",
+          "default": true
+        },
+        {
+          "id": "push_into_walls",
+          "type": "toggle",
+          "default": false
+        },
+        {
+          "id": "lanes_enabled",
+          "type": "toggle",
+          "default": false
+        },
+        {
+          "id": "lane_axis",
+          "type": "picker",
+          "default": "row",
+          "options": [
+            "row",
+            "column"
+          ],
+          "when": {
+            "knob": "lanes_enabled",
+            "eq": true
+          }
+        },
+        {
+          "id": "lane_count",
+          "type": "slider",
+          "default": 3,
+          "min": 1,
+          "max": 9,
+          "step": 1,
+          "when": {
+            "knob": "lanes_enabled",
+            "eq": true
+          }
+        },
+        {
+          "id": "lane_field_lanes",
+          "type": "picker",
+          "default": "centre-only",
+          "options": [
+            "centre-only",
+            "any"
+          ],
+          "when": {
+            "knob": "lanes_enabled",
+            "eq": true
+          }
+        },
+        {
+          "id": "centre_lane",
+          "type": "picker",
+          "default": "lower",
+          "options": [
+            "lower",
+            "upper"
+          ],
+          "when": {
+            "knob": "lanes_enabled",
+            "eq": true
+          }
+        }
+      ]
+    }
+  ]
+}

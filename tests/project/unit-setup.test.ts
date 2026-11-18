@@ -7,13 +7,13 @@ const unit = (more: Record<string, unknown> = {}) => ({ kind: "unit", formatVers
 const setup = (more: Record<string, unknown> = {}) => ({ kind: "behaviour-setup", formatVersion: 3, id: "ls", behaviourId: "line-shot", catalogue: { rev: 26 }, ...more });
 
 test("readUnit: v2 subset sprite, setupIds, stats; a bad field is refused; core identity is kept", () => {
-  const ok = readUnit(unit({ sprite: "mage.png", setupIds: ["ls", "ba"], stats: { reach: 4, damage: 3 } }));
+  const ok = readUnit(unit({ name: "Mage", sprite: "mage.png", setupIds: ["ls", "ba"], stats: { reach: { value: 4, rev: 1 }, damage: { value: 3, rev: 1 } } }));
   assert.equal(ok.ok, true);
-  if (ok.ok) assert.deepEqual(ok.doc, { kind: "unit", formatVersion: 2, id: "mage", rev: 1, sprite: "mage.png", setupIds: ["ls", "ba"], stats: { reach: 4, damage: 3 } });
+  if (ok.ok) assert.deepEqual(ok.doc, { kind: "unit", formatVersion: 2, id: "mage", rev: 1, name: "Mage", sprite: "mage.png", setupIds: ["ls", "ba"], stats: { reach: 4, damage: 3 } });
   assert.equal(readUnit(unit()).ok, true);
   assert.equal(readUnit(unit({ sprite: 1 })).ok, false);
   assert.equal(readUnit(unit({ setupIds: [1] })).ok, false);
-  assert.equal(readUnit(unit({ stats: { reach: "x" } })).ok, false);
+  assert.equal(readUnit(unit({ stats: { reach: { value: "x", rev: 1 } } })).ok, false);
   assert.equal(readUnit({ kind: "unit", formatVersion: 1, id: "mage", rev: 1 }).ok, false);
 });
 

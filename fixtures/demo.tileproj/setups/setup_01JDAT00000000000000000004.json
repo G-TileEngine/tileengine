@@ -1,0 +1,89 @@
+{
+  "kind": "behaviour-setup",
+  "formatVersion": 3,
+  "id": "setup_01JDAT00000000000000000004",
+  "rev": 1,
+  "name": "Archer basic attack",
+  "behaviourId": "basic-attack",
+  "catalogue": {
+    "rev": 28
+  },
+  "createdAt": "2026-11-18T00:00:00Z",
+  "updatedAt": "2026-11-18T00:00:00Z",
+  "copiedFrom": null,
+  "answers": {
+    "reach_mode": {
+      "source": "user",
+      "value": "custom-cross",
+      "rev": 1,
+      "defaultRef": {
+        "rev": 1
+      },
+      "needsReask": null
+    },
+    "custom_ns": {
+      "source": "user",
+      "value": 3,
+      "rev": 1,
+      "defaultRef": {
+        "rev": 1
+      },
+      "needsReask": null
+    },
+    "custom_ew": {
+      "source": "user",
+      "value": 3,
+      "rev": 1,
+      "defaultRef": {
+        "rev": 1
+      },
+      "needsReask": null
+    },
+    "damage": {
+      "source": "default",
+      "rev": 0,
+      "defaultRef": {
+        "rev": 1
+      },
+      "needsReask": null
+    },
+    "blocked_by_bodies": {
+      "source": "default",
+      "rev": 0,
+      "defaultRef": {
+        "rev": 1
+      },
+      "needsReask": null
+    },
+    "enemy_basic_crosses_barrier": {
+      "source": "default",
+      "rev": 0,
+      "defaultRef": {
+        "rev": 1
+      },
+      "needsReask": null
+    },
+    "ability_group": {
+      "source": "default",
+      "rev": 0,
+      "defaultRef": {
+        "rev": 7
+      },
+      "needsReask": null
+    },
+    "effect": {
+      "source": "default",
+      "rev": 0,
+      "defaultRef": {
+        "rev": 8
+      },
+      "needsReask": null
+    }
+  },
+  "orphans": {},
+  "history": {
+    "cap": 200,
+    "baseSeq": 1,
+    "ops": []
+  }
+}
