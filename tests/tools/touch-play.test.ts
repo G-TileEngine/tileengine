@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { fitView } from "../../src/runtime/render/index.ts";
-import { TILE } from "../../tools/play-stage/board.ts";
+import { recipeOf, TILE } from "../../tools/play-stage/board.ts";
 import { createCam } from "../../tools/play-stage/camera-touch.ts";
 import { createMatch } from "../../tools/play-stage/match.ts";
 import { createTouch, type TouchEv } from "../../tools/play-stage/touch.ts";
-const idOf = (m: ReturnType<typeof createMatch>, unitId: string): string => { const id = m.world.units.all().find((u) => u.unitId === unitId && u.alive)?.id; if (id === undefined) throw new Error(unitId); return id; };
+const idOf = (m: ReturnType<typeof createMatch>, unitId: string): string => { const id = m.world.units.all().find((u) => u.alive && recipeOf(u.unitId).name.toLowerCase() === unitId)?.id; if (id === undefined) throw new Error(unitId); return id; };
 const hpOf = (m: ReturnType<typeof createMatch>, id: string): number => m.world.rules?.state().units.find((u) => u.id === id)?.hp ?? 0;
 const logs = (m: ReturnType<typeof createMatch>): number => m.world.log.entries().filter((e) => e.action.kind === "ability").length;
-const wolfTo = (m: ReturnType<typeof createMatch>, c: number, r: number): string => { const w = m.world.units.all().find((u) => u.unitId === "wolf" && u.alive); if (w === undefined) throw new Error("wolf"); if (!m.world.units.moveTo(w.id, { c, r }, "move").ok) throw new Error("wolf move"); return w.id; };
+const wolfTo = (m: ReturnType<typeof createMatch>, c: number, r: number): string => { const w = m.world.units.all().find((u) => u.alive && recipeOf(u.unitId).name.toLowerCase() === "wolf"); if (w === undefined) throw new Error("wolf"); if (!m.world.units.moveTo(w.id, { c, r }, "move").ok) throw new Error("wolf move"); return w.id; };
 function rig(moveMs = 40) {
   const m = createMatch(undefined, moveMs), cam = createCam(12), box = () => ({ devW: 1170, devH: 1992, kx: 3, ky: 3, cols: m.world.grid.cols, rows: m.world.grid.rows }), touch = createTouch({ match: m, cam, box });
   let t = 1000, n = 1;

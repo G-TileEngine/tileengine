@@ -6,12 +6,16 @@ import { centreOn, clamp, createCam, seatCam, tickCam, type PlayCam } from "./ca
 import { createHud } from "./hud.ts";
 import { litPlan, picturesOf, sourceOf } from "./looks.ts";
 import { createMatch } from "./match.ts";
+import { openBundled } from "./project.ts";
 import { createTouch } from "./touch.ts";
 import { DEV } from "./dev.ts"; // dev-only
 
 const canvas = document.querySelector("#board");
 if (!(canvas instanceof HTMLCanvasElement)) throw new Error("play: #board");
-const match = createMatch();
+const opened = openBundled();
+if (opened.docs === null) document.body.textContent = opened.error;
+else {
+const match = createMatch(opened.docs);
 const link = createSceneLink(sourceOf((id) => match.pixels(id))), lighting = createLighting(), pixels = picturesOf((id) => match.pixels(id), link);
 const cam: PlayCam = createCam(1);
 let seated = false;
@@ -52,3 +56,4 @@ place(); addEventListener("resize", () => { place(); seated = false; });
 seat();
 if (DEV) Object.assign(window, { __play: match, __driver: driver, __cam: cam, __hud: hud, __fx: match.fx, __link: link }); // dev-only
 driver.start();
+}

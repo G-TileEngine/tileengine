@@ -5,6 +5,7 @@ import { createSceneLink } from "../../src/runtime/scene/world-scene.ts";
 import { TILE } from "../../tools/play-stage/board.ts";
 import { animId, litPlan, picturesOf, sourceOf } from "../../tools/play-stage/looks.ts";
 import { createMatch } from "../../tools/play-stage/match.ts";
+import { U } from "./demo-fixture.ts";
 
 type Match = ReturnType<typeof createMatch>;
 
@@ -14,7 +15,7 @@ const fit = fitView(390 * 3, 600 * 3, 9, TILE, TILE), cam = snapCamera(0, 0, fit
 /** Every picture the page's draw list names (chunks and plain fills aside) must load through the page's lookup. */
 const unloaded = (rs: RenderScene, pixels: ReturnType<typeof hook>["pixels"], t: number): string[] => chunkedList(rs, fit, cam, t, 10).cmds.map((c) => c.sheet).filter((id) => id !== "" && !id.startsWith("chunk:") && pixels(id) === undefined);
 function cast(kind: "basic" | "spell"): { m: Match; t0: number } {
-  const m = createMatch(undefined, 40), me = unitOf(m, kind === "basic" ? "knight" : "archer"), wolf = unitOf(m, "wolf");
+  const m = createMatch(undefined, 40), me = unitOf(m, kind === "basic" ? U.knight : U.archer), wolf = unitOf(m, U.wolf);
   m.world.units.moveTo(me.id, { c: wolf.at.c, r: wolf.at.r + (kind === "basic" ? 1 : 2) }, "move");
   m.intend({ type: "SelectUnit", unitId: me.id }); assert.equal(m.choose(kind), null);
   const at = m.aims[0] ?? wolf.at; m.intend({ type: "TargetCell", at }); m.intend({ type: "TargetCell", at }); m.sync();
@@ -37,7 +38,7 @@ test("canopy sways above units and turns see-through over a unit; braziers flick
   const m = createMatch(), { link } = hook(m), before = link.scene(m.scene()), canopy = before.above[0];
   assert.ok(canopy !== undefined && canopy.tiles.filter((t) => t !== null).length === 3 && canopy.motion?.[0] !== undefined);
   const braziers = before.standing.filter((s) => s.kind === "object"); assert.equal(braziers.length, 2); assert.ok(braziers.every((s) => s.motion !== undefined));
-  m.world.units.moveTo(unitOf(m, "wolf").id, { c: 5, r: 2 }, "move");
+  m.world.units.moveTo(unitOf(m, U.wolf).id, { c: 5, r: 2 }, "move");
   const after = link.scene(m.scene()).above[0]; assert.ok(after !== undefined);
   assert.equal(after.tiles[2 * 6 + 5], null); assert.equal(after.tiles[1 * 6 + 5], null); assert.equal(after.tiles[1 * 6 + 4], 0);
 });

@@ -7,7 +7,8 @@ import { buildWeb, debugGlobals, listFiles } from "../../tools/apk/build.ts";
 import { boardBox, fit, HUD_FOOT, HUD_TOP, PLATE_H, ROW_FOOT, TILE } from "../../tools/play-stage/board.ts";
 import { DEV_ONLY, release } from "../../tools/play-stage/build.ts";
 import { createCam, seatCam } from "../../tools/play-stage/camera-touch.ts";
-import { DEMO_LOAD, DEMO_MAP, DEMO_SEED, DEMO_STAGE, docsToInput } from "../../tools/play-stage/load.ts";
+import { docsToInput } from "../../tools/play-stage/load.ts";
+import { demoDocs } from "./demo-fixture.ts";
 
 const hudSrc = readFileSync(new URL("../../tools/play-stage/hud.ts", import.meta.url), "utf8");
 
@@ -47,10 +48,11 @@ test("export audit: a release www drops every DEV path (define + dead-code remov
   } finally { rmSync(rel, { recursive: true, force: true }); rmSync(dev, { recursive: true, force: true }); }
 });
 
-test("DEMO_SEED is the stage seed, the demo host seed and the host seed when docs give none", () => {
-  assert.equal(DEMO_STAGE.seed, DEMO_SEED);
-  assert.equal(DEMO_LOAD.hostSeed, DEMO_SEED);
-  const { manifest, rules, talk } = DEMO_LOAD;
-  assert.equal(docsToInput({ manifest, map: DEMO_MAP, stage: DEMO_STAGE, rules, talk }).input.hostSeed, DEMO_SEED);
-  assert.equal(docsToInput({ manifest, map: DEMO_MAP, stage: DEMO_STAGE, rules, talk, hostSeed: 7 }).input.hostSeed, 7);
+test("stage seed 24301 is the host seed when docs give none", () => {
+  const docs = demoDocs(), stage = docs.stage, { hostSeed: _host, ...rest } = docs;
+  assert.equal(typeof stage === "object" && stage !== null && "seed" in stage && stage.seed, 24301);
+  assert.equal(docs.hostSeed, 24301);
+  assert.equal(docsToInput(rest).input.hostSeed, 24301);
+  assert.equal(docsToInput({ ...rest, hostSeed: 7 }).input.hostSeed, 7);
+  void _host;
 });

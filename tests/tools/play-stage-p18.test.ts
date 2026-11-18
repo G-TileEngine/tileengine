@@ -3,9 +3,9 @@ import { test } from "node:test";
 import type { Action } from "../../src/core/log/index.ts";
 import { stepTimes } from "../../src/runtime/render/fx-doc.ts";
 import { createSceneLink } from "../../src/runtime/scene/world-scene.ts";
-import { DEMO_SETUP, DEMO_MANIFEST, DEMO_MAP, DEMO_STAGE, DEMO_TALK } from "../../tools/play-stage/load.ts";
 import { createPlayFx, HOUSE_ATTACK, HOUSE_DOC, LINE_SHOT_DOC, refOf } from "../../tools/play-stage/fx.ts";
 import { createMatch } from "../../tools/play-stage/match.ts";
+import { demoDocs, U } from "./demo-fixture.ts";
 
 const SAVED_ID = "setup_01J0P18F17TEST000000000000";
 const SAVED = {
@@ -15,7 +15,7 @@ const SAVED = {
 const idOf = (m: ReturnType<typeof createMatch>, unitId: string): string => {
   const id = m.world.units.all().find((u) => u.unitId === unitId && u.alive)?.id; if (id === undefined) throw new Error(unitId); return id;
 };
-const ability = (effects: readonly string[]): Action => ({ id: "a1", kind: "ability", actor: "archer#2", target: { pipe: "unit", unitId: "wolf#1", fallbackAt: { c: 4, r: 1 } }, durationMs: null, turns: null, effects });
+const ability = (effects: readonly string[]): Action => ({ id: "a1", kind: "ability", actor: `${U.archer}#2`, target: { pipe: "unit", unitId: `${U.wolf}#1`, fallbackAt: { c: 4, r: 1 } }, durationMs: null, turns: null, effects });
 
 test("refOf is exactly one effect; a constructor id does not throw; empty effects get the house default", () => {
   assert.equal(refOf(ability(["line-shot"])), "line-shot");
@@ -26,7 +26,7 @@ test("refOf is exactly one effect; a constructor id does not throw; empty effect
   assert.equal(fx.values(HOUSE_ATTACK)?.rev, 1);
   const log = { entries: () => [{ seq: 1, tick: 0, action: ability([]) }] };
   const live = fx.ingest(log, 10, 0);
-  assert.ok(live.length === 1 && live[0]?.caster === "archer#2");
+  assert.ok(live.length === 1 && live[0]?.caster === `${U.archer}#2`);
   assert.equal(stepTimes(HOUSE_DOC).endMs, 250);
   assert.equal(fx.ingest(log, 10, 251).length, 0);
   const two = createPlayFx();
@@ -43,14 +43,14 @@ test("F17: an editor-saved effect setup is what the match uses", () => {
   const log = { entries: () => [{ seq: 1, tick: 0, action: ability([SAVED_ID]) }] };
   assert.equal(fx.ingest(log, 10, 0).length, 1);
   assert.equal(fx.ingest(log, 10, end + 1).length, 0);
-  const m = createMatch({ manifest: DEMO_MANIFEST, map: DEMO_MAP, stage: DEMO_STAGE, talk: DEMO_TALK, rules: { ...DEMO_SETUP, abilities: { archer: [{ reach: 3, damage: 2, effectRef: SAVED_ID }] } }, effects: [SAVED] });
+  const docs = demoDocs(), m = createMatch({ ...docs, rules: { ...docs.rules, abilities: { [U.archer]: [{ reach: 3, damage: 2, effectRef: SAVED_ID }] } }, effects: [SAVED] });
   assert.equal(m.fx.values(SAVED_ID)?.rev, 4);
   assert.deepEqual(m.fx.values(SAVED_ID)?.values, got.values);
 });
 
 test("a Spell two-tap cues line-shot; the scene is live, then fx:hit, then retired", () => {
-  const m = createMatch(undefined, 40), archer = idOf(m, "archer");
-  const wolf = m.world.units.all().find((u) => u.unitId === "wolf" && u.alive); assert.ok(wolf !== undefined);
+  const m = createMatch(undefined, 40), archer = idOf(m, U.archer);
+  const wolf = m.world.units.all().find((u) => u.unitId === U.wolf && u.alive); assert.ok(wolf !== undefined);
   m.world.units.moveTo(archer, { c: wolf.at.c, r: wolf.at.r + 2 }, "move");
   m.intend({ type: "SelectUnit", unitId: archer });
   assert.equal(m.choose("spell"), null);
@@ -72,8 +72,8 @@ test("a Spell two-tap cues line-shot; the scene is live, then fx:hit, then retir
 });
 
 test("a basic attack with empty effects plays the house default", () => {
-  const m = createMatch(undefined, 40), knight = idOf(m, "knight");
-  const wolf = m.world.units.all().find((u) => u.unitId === "wolf" && u.alive); assert.ok(wolf !== undefined);
+  const m = createMatch(undefined, 40), knight = idOf(m, U.knight);
+  const wolf = m.world.units.all().find((u) => u.unitId === U.wolf && u.alive); assert.ok(wolf !== undefined);
   m.world.units.moveTo(knight, { c: wolf.at.c, r: wolf.at.r + 1 }, "move");
   m.intend({ type: "SelectUnit", unitId: knight });
   assert.equal(m.choose("basic"), null);

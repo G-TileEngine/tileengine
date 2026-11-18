@@ -13,7 +13,8 @@ import type { DoorIntent } from "../../src/sim/types.ts";
 import { createWorld } from "../../src/sim/world.ts";
 import { xGo, type Event } from "../../src/state/index.ts";
 import type { Sq } from "../../src/types/core-types.ts";
-import { DEMO_LOAD, DEMO_TALK, RECIPES, TEAM, TILE, docsToInput, recipeOf, type PlayDocs } from "./load.ts";
+import { RECIPES, TEAM, TILE, docsToInput, recipeOf, type PlayDocs } from "./load.ts";
+import { bundledDocs } from "./project.ts";
 import { createPlayFx, fxPx } from "./fx.ts";
 import { dress, dressPx, unitAsset } from "./looks.ts";
 
@@ -58,9 +59,8 @@ export function spellRef(setup: { readonly abilities?: Readonly<Record<string, r
 }
 type Walk = { path: readonly Sq[]; from: Sq; t0: number; dur: number };
 export function createPlay(docs?: PlayDocs, moveMs = 200, autoWait = true) {
-  const talk = docs?.talk ?? DEMO_TALK;
-  const body = docs === undefined ? DEMO_LOAD : { ...docs, talk };
-  const world = createWorld(docsToInput(body).input);
+  const body = docs ?? bundledDocs(), talk = body.talk ?? {}, chosen = body.chosen ?? [], tiles = body.tiles ?? [];
+  const world = createWorld(docsToInput({ ...body, talk, chosen, tiles }).input);
   const go = (e: Event): void => { const from = world.phases.battle; if (from === undefined) throw new Error("play: phase"); world.phases = { ...world.phases, battle: xGo(from, e) }; };
   go({ type: "BATTLE_READY" }); go({ type: "DEPLOY_DONE" }); go({ type: "ROUND_BEGIN" }); go({ type: "SIDE_BEGIN" });
   const installed = installOne(STEP_PATTERN, {});
