@@ -1,0 +1,142 @@
+[
+ {
+  "file": "shots/01-home.png",
+  "caption": "Home: Basic, Slash pre-picked from Cleave, live preset grid; Save & use is the 3-tap path."
+ },
+ {
+  "file": "shots/02-layer-sparks.png",
+  "caption": "A layer selected: only the Sparks layer's 3 sliders show, plus Take from / Roll this layer / Shelf it."
+ },
+ {
+  "file": "shots/03-beat-row-travel.png",
+  "caption": "Advanced beat row (Cast \u00b7 Travel \u00b7 Hit \u00b7 Linger). Travel shows a still path: 'Travel arrives in a later update'."
+ },
+ {
+  "file": "shots/03b-beat-hit-sheet.png",
+  "caption": "Hit beat sheet: take this beat from another effect, nudge \u00b130 ms, start here, tap the rhythm."
+ },
+ {
+  "file": "shots/04-drag-merge-mid.png",
+  "caption": "Mid-drag (touch): hold Frost shard, drag it onto Fireball; the target says 'Drop to blend'."
+ },
+ {
+  "file": "shots/05-blend-card.png",
+  "caption": "Default blend sheet: parent row with a leads marker and Swap, a Mix slider that snaps to 0/25/50/75/100, a slim Steam Try line, and Fine-tune parts. Per-part A/B/Both is not on this sheet."
+ },
+ {
+  "file": "shots/05c-blend-fine-tune.png",
+  "caption": "Fine-tune parts: framed A/B/Both with an inset selected pill (~4 px padding) and 8 px gaps between rows; all six parts fit; Layer/Beat uses the same pill."
+ },
+ {
+  "file": "shots/05d-blend-chip-pop.png",
+  "caption": "While blending, tapping the Colour chip opens a small A/B/Both popover with a live preview. The default blend sheet stays open."
+ },
+ {
+  "file": "shots/06a-over-budget.png",
+  "caption": "Shape and Trail set to Both: the meter turns amber, names the overflow, and offers one-tap 'Fit to budget'."
+ },
+ {
+  "file": "shots/06b-fit-trimmed.png",
+  "caption": "After Fit (rule 4): one line says \u201cTrimmed 2 linger steps, trail by 2 to fit\u201d with Undo. Particles were already in cap and were not cut by step. Never silent."
+ },
+ {
+  "file": "shots/07-take-menu.png",
+  "caption": "Long-press Thunder pillar: Take its sparks / colour / motion / timing, Blend into current, Shelf it."
+ },
+ {
+  "file": "shots/08a-prov-from.png",
+  "caption": "Taken layer keeps an origin chip: 'from Fireball'. It is a copy; nothing updates on its own."
+ },
+ {
+  "file": "shots/08b-prov-changed.png",
+  "caption": "Source edited: the chip reads 'Fireball changed \u00b7 Update?' and the layer chip gets an amber dot. One tap pulls it, one Undo."
+ },
+ {
+  "file": "shots/08c-prov-removed.png",
+  "caption": "Source deleted: 'source removed'. The effect keeps its own copy and still plays."
+ },
+ {
+  "file": "shots/09-shelf.png",
+  "caption": "Shelf (references only, 6 of 48, this project): hearted effects and a one-part Colour layer with from pointing at its source. Liking is not using."
+ },
+ {
+  "file": "shots/10-dice-history.png",
+  "caption": "Variation dice: seeded rerolls inside the layers' bounds; last 6 rolls on this device, tap one to step back."
+ },
+ {
+  "file": "shots/11-house-style.png",
+  "caption": "House style on Fireball: Moonlit @4 fire (no pink), chunky, motes. Particle meter reads 34/32 particles (preset cap) on one line with draws and steps, goes amber and offers Fit."
+ },
+ {
+  "file": "shots/11b-house-motes-fit.png",
+  "caption": "After Fit on the same Fireball: \u201cTrimmed particles 34\u219232 to fit\u201d with Undo. The preset cap holds."
+ },
+ {
+  "file": "shots/12-lab.png",
+  "caption": "Lab: bold ideas with a live budget pill each (fits / over \u2192 Fit). World-aware linger and Draw the spell marked later."
+ },
+ {
+  "file": "shots/12b-lab-lower.png",
+  "caption": "Lab, lower half: tiers, reactions, combo fusion, living linger, later ideas."
+ },
+ {
+  "file": "shots/13-breed.png",
+  "caption": "Breed Fireball \u00d7 Frost shard: 6 children, 3 at a time; each flips one or two discrete picks (kind, picture or ramp) from variant_seed so they look clearly different."
+ },
+ {
+  "file": "shots/14-combo-fusion.png",
+  "caption": "Combo fusion preview: two casters, and at the hit a ready-made fused look (Steam burst) swaps in. Not a live blend."
+ },
+ {
+  "file": "shots/15-living-linger-over.png",
+  "caption": "Living linger (visual only) spreads to 4 tiles and goes over 60 draws: flagged, with Fit to budget."
+ },
+ {
+  "file": "shots/16-tier-lv3.png",
+  "caption": "Power-up tier Lv3 of Fireball: extra steps switch on, 13/12 steps is flagged on the one-line meter and Fit is offered. Later: value scaling. Save is refused while over."
+ },
+ {
+  "file": "shots/16b-tier-lv3-fit.png",
+  "caption": "After Fit: \u201cTrimmed 1 linger step to fit\u201d with Undo. The meter reads 11/12 steps, so Lv3 can never save at 13."
+ },
+ {
+  "file": "shots/17-export-clean.png",
+  "caption": "Export: 8-frame sprite sheet, GIF later; 'Export clean' drops the 'from' links, the look stays."
+ },
+ {
+  "file": "shots/18-tap-rhythm.png",
+  "caption": "Tap the rhythm (Advanced): five taps set the beat lengths, snapped to 30 ms; the beat row shows the nudges."
+ },
+ {
+  "file": "shots/05v-blend-chips.png",
+  "caption": "Variant B (URL ?blend=chips): same Mix and parents, no Fine-tune row; the top chips are the only per-part control. One-time coach: \u201cTap a part to pick A, B or Both\u201d."
+ },
+ {
+  "file": "shots/01-home-dark.png",
+  "caption": "Home: Basic, Slash pre-picked from Cleave, live preset grid; Save & use is the 3-tap path."
+ },
+ {
+  "file": "shots/02-layer-sparks-dark.png",
+  "caption": "A layer selected: only the Sparks layer's 3 sliders show, plus Take from / Roll this layer / Shelf it."
+ },
+ {
+  "file": "shots/05-blend-card-dark.png",
+  "caption": "Default blend sheet: parent row with a leads marker and Swap, a Mix slider that snaps to 0/25/50/75/100, a slim Steam Try line, and Fine-tune parts. Per-part A/B/Both is not on this sheet."
+ },
+ {
+  "file": "shots/05c-blend-fine-tune-dark.png",
+  "caption": "Fine-tune parts, dark: the same framed A/B/Both control and inset selected pill, with 8 px gaps and all six rows on-screen."
+ },
+ {
+  "file": "shots/05v-blend-chips-dark.png",
+  "caption": "Variant B (URL ?blend=chips): same Mix and parents, no Fine-tune row; the top chips are the only per-part control. One-time coach: \u201cTap a part to pick A, B or Both\u201d."
+ },
+ {
+  "file": "shots/30-pc-1280x800.png",
+  "caption": "PC 1280\u00d7800: same pieces in two panes; preview, layers, beats and sheet on the left, library on the right."
+ },
+ {
+  "file": "shots/31-tablet-820x1180.png",
+  "caption": "Tablet 820\u00d71180: two panes, blend card docked under the controls."
+ }
+]

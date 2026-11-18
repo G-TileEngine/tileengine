@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>TileEngine — Effect Designer v3 (mock)</title>
+  <link rel="stylesheet" href="effects-v3.css" />
+</head>
+<body class="framed">
+  <div class="app" id="app" role="application" aria-label="TileEngine Effect Designer v3 mock">
+    <header class="topbar">
+      <button class="icon-btn" id="btn-back" aria-label="Back to Cleave">‹</button>
+      <div class="title-block">
+        <p class="eyebrow" id="eyebrow">Designing for Cleave</p>
+        <h1 id="fx-name">Fire slash</h1>
+      </div>
+      <button class="icon-btn" id="btn-theme" aria-label="Switch light or dark">◐</button>
+      <button class="icon-btn" id="btn-more" aria-label="More for this effect">⋯</button>
+    </header>
+
+    <div class="left" id="left">
+      <div class="strip" id="strip">
+        <canvas id="preview" class="px" width="130" height="56" aria-label="Live preview: caster, target and the effect"></canvas>
+        <div class="strip-over tl" id="strip-caps"></div>
+        <div class="strip-over br">
+          <button class="float-btn" id="btn-dice" aria-label="Roll a variation">🎲 Roll</button>
+        </div>
+      </div>
+      <div class="layers" id="layers" role="toolbar" aria-label="Layers"></div>
+      <div class="meter" id="meter" aria-live="polite"></div>
+      <div class="rolls" id="rolls" hidden></div>
+      <div class="beats" id="beats" hidden role="toolbar" aria-label="Beats"></div>
+    </div>
+
+    <main class="body" id="body">
+      <div class="row">
+        <div class="seg" role="group" aria-label="Mode">
+          <button id="mode-basic" aria-pressed="true">Basic</button>
+          <button id="mode-adv" aria-pressed="false">Advanced</button>
+        </div>
+        <span class="spacer"></span>
+        <button class="chip-btn" id="btn-style">House style</button>
+      </div>
+      <div id="pick-banner"></div>
+      <div class="label">What is it? <span class="hint" id="kind-hint">· picked from Cleave</span></div>
+      <div class="row scroll" id="kinds"></div>
+      <div class="label">Colour</div>
+      <div class="row scroll" id="ramps"></div>
+      <div id="shelf-wrap"></div>
+      <div class="label">Effects <span class="hint">· tap to use · hold to take a part or drag onto another to blend</span></div>
+      <div class="grid" id="grid"></div>
+    </main>
+
+    <div class="scrim" id="scrim" hidden></div>
+    <section class="sheet" id="sheet" hidden aria-modal="false"></section>
+    <div class="toast" id="toast" hidden role="status"></div>
+
+    <nav class="bottombar">
+      <button class="btn btn-ghost" id="btn-shelf">♥ Shelf <span class="count" id="shelf-count">0</span></button>
+      <button class="btn btn-ghost" id="btn-lab">✧ Lab</button>
+      <button class="btn btn-primary" id="btn-save">Save &amp; use</button>
+    </nav>
+  </div>
+  <script src="js/fx-render.js"></script>
+  <script src="js/fx-model.js"></script>
+  <script src="js/fx-ui.js"></script>
+</body>
+</html>
