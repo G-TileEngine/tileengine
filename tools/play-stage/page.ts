@@ -2,10 +2,11 @@ import { createDriver, type HostCanvas, type HostEnv } from "../../src/runtime/h
 import { createLighting, fitView } from "../../src/runtime/render/index.ts";
 import { createSceneLink } from "../../src/runtime/scene/world-scene.ts";
 import { boardBox, fit, TILE } from "./board.ts";
-import { centreOn, createCam, pan, seatCam, tickCam, zoomAt, type PlayCam } from "./camera-touch.ts";
+import { centreOn, clamp, createCam, seatCam, tickCam, type PlayCam } from "./camera-touch.ts";
 import { createHud } from "./hud.ts";
 import { litPlan, picturesOf, sourceOf } from "./looks.ts";
 import { createMatch } from "./match.ts";
+import { createTouch } from "./touch.ts";
 import { DEV } from "./dev.ts"; // dev-only
 
 const canvas = document.querySelector("#board");
@@ -32,9 +33,8 @@ const load = (id: string): Promise<OffscreenCanvas> => {
 };
 const hud = createHud({
   choose: (kind) => match.choose(kind), wait: () => match.wait(), endTurn: () => match.endTurn(), menu: () => undefined,
-  restart: () => location.reload(),
+  restart: () => location.reload(), closeTalk: () => match.closeTalk(), recentre: () => { const at = match.recentreTarget(); if (at === null) return; const b = band(), f = fitView(b.devW, b.devH, cam.s, TILE, TILE); centreOn(cam, at, f, 0, TILE, 0); clamp(cam, f, match.world.grid.cols, match.world.grid.rows); },
 });
-const placed = (): { s: number; padX: number; padY: number } => { const box = band(); return { s: cam.s, padX: box.padX, padY: box.padY }; };
 const driver = createDriver({
   env, canvas: canvas as HostCanvas, clock: match.world.clock, clear: "#0d1220", load, pixels,
   view: () => {
@@ -45,33 +45,8 @@ const driver = createDriver({
     return { scene: link.scene(match.scene(), { tMs: match.world.clock.now(), stepMs: match.world.clock.stepMs }), lights: litPlan(lighting, match.looks, link.lit), shake: link.shake, x: cam.x, y: cam.y, s: cam.s };
   },
 });
-const send = (kind: "down" | "move" | "up" | "cancel", e: PointerEvent): void => {
-  const box = placed(), ratio = dpr();
-  const pointer = e.pointerType === "pen" ? "pen" : e.pointerType === "touch" ? "touch" : "mouse";
-  match.pointer({ kind, id: e.pointerId, pointer, x: (e.offsetX * ratio - box.padX) / box.s, y: (e.offsetY * ratio - box.padY) / box.s, ms: Math.max(0, Math.round(e.timeStamp)) });
-};
-const pts = new Map<number, { x: number; y: number }>();
-let drag = false, anchor = { x: 0, y: 0 }, lastTap = 0;
-const centre = (e: PointerEvent): void => {
-  const box = band(), ratio = dpr(), x = (e.offsetX * ratio - box.padX) / cam.s, y = (e.offsetY * ratio - box.padY) / cam.s;
-  const unit = match.world.units.all().find((u) => u.alive && u.at.c === Math.floor(x / TILE) && u.at.r === Math.floor(y / TILE));
-  if (unit !== undefined) { centreOn(cam, unit.at, fitView(box.devW, box.devH, cam.s, TILE, TILE), 0, TILE, 0); match.followId = unit.id; }
-};
-canvas.addEventListener("pointerdown", (e) => { pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); drag = false; anchor = { x: e.clientX, y: e.clientY }; if (pts.size === 1) send("down", e); });
-canvas.addEventListener("pointermove", (e) => {
-  const prev = pts.get(e.pointerId); if (prev === undefined) return;
-  if (pts.size >= 2) {
-    const before = [...pts.values()]; pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); const after = [...pts.values()];
-    const a = before[0], b = before[1], c = after[0], d = after[1];
-    if (a !== undefined && b !== undefined && c !== undefined && d !== undefined) { const was = Math.hypot(a.x - b.x, a.y - b.y) || 1, now = Math.hypot(c.x - d.x, c.y - d.y) || 1, box = band(); zoomAt(cam, cam.s * (now / was), box.devW, box.devH, match.world.grid.cols * TILE, match.world.grid.rows * TILE, e.offsetX * dpr(), e.offsetY * dpr(), dpr()); }
-    return;
-  }
-  const dx = e.clientX - prev.x, dy = e.clientY - prev.y; pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  if (!drag && Math.hypot(e.clientX - anchor.x, e.clientY - anchor.y) > 8) { drag = true; send("cancel", e); }
-  if (drag) pan(cam, -dx, -dy); else send("move", e);
-});
-canvas.addEventListener("pointerup", (e) => { pts.delete(e.pointerId); if (!drag && e.timeStamp - lastTap < 280) { lastTap = 0; centre(e); } else if (!drag) { lastTap = e.timeStamp; send("up", e); } drag = false; });
-canvas.addEventListener("pointercancel", (e) => { pts.delete(e.pointerId); send("cancel", e); });
+const touch = createTouch({ match, cam, box: () => { const ratio = dpr(), rect = canvas.getBoundingClientRect(), raw = canvas.width === 300 && canvas.height === 150, devW = !raw && canvas.width > 0 ? canvas.width : canvas.clientWidth * ratio, devH = !raw && canvas.height > 0 ? canvas.height : canvas.clientHeight * ratio; return { devW, devH, kx: rect.width > 0 && !raw && canvas.width > 0 ? canvas.width / rect.width : ratio, ky: rect.height > 0 && !raw && canvas.height > 0 ? canvas.height / rect.height : ratio, cols: match.world.grid.cols, rows: match.world.grid.rows }; } });
+for (const k of ["pointerdown", "pointermove", "pointerup", "pointercancel", "lostpointercapture"] as const) canvas.addEventListener(k, (e) => { const p = { id: e.pointerId, offsetX: e.offsetX, offsetY: e.offsetY, clientX: e.clientX, clientY: e.clientY, timeStamp: e.timeStamp, pointerType: e.pointerType }; if (k === "pointerdown") { canvas.setPointerCapture(e.pointerId); touch.down(p); } else if (k === "pointermove") touch.move(p); else if (k === "pointerup") touch.up(p); else touch.cancel(p); });
 const place = (): void => { const box = boardBox(innerHeight); Object.assign(canvas.style, { position: "fixed", left: "0", right: "0", width: "100%", top: `${box.top}px`, height: `${box.height}px` }); };
 place(); addEventListener("resize", () => { place(); seated = false; });
 seat();

@@ -75,6 +75,7 @@ export function createPlay(docs?: PlayDocs, moveMs = 200, autoWait = true) {
   const gestures = createGestureMapper({ cellPx: TILE, tapMaxPx: 12, holdMs: 500 }, { cols: world.grid.cols, rows: world.grid.rows, unitAt: (at) => world.units.occupantAt(at) });
   const fx = createPlayFx(body.effects), looks = dress(world.grid, body.looks), worn = new Map<string, SceneAsset>();
   let selected: string | null = null, pending: Sq | null = null, reach: Sq[] = [], preview: Sq[] = [], walk: Walk | null = null, aims: Sq[] = [], aimKind: "basic" | "spell" = "basic", followId: string | null = null, onLand: (() => void) | null = null;
+  let route: (intent: DoorIntent) => unknown = (intent) => intend(intent);
   const mark = (): void => { reach = selected === null ? [] : reachCells(world.grid, world.units, selected, step.reach); };
   const sync = (): void => {
     if (walk === null || selected === null) return;
@@ -121,7 +122,8 @@ export function createPlay(docs?: PlayDocs, moveMs = 200, autoWait = true) {
     get aimKind() { return aimKind; }, set aimKind(v: "basic" | "spell") { aimKind = v; },
     get followId() { return followId; }, set followId(v: string | null) { followId = v; },
     get selected() { return selected; }, get reach() { return reach; }, get pending() { return pending; }, get walk() { return walk; },
-    pointer(sample: PointerSample): void { for (const intent of gestures(sample)) intend(intent); },
+    get feed() { return route; }, set feed(fn: (intent: DoorIntent) => unknown) { route = fn; },
+    pointer(sample: PointerSample): void { for (const intent of gestures(sample)) route(intent); },
     scene() {
       sync();
       const aimSheet = aimKind === "spell" ? AIM_S : AIM_A, aimOver = world.phases.battle === "targeting" ? aims.map((c) => ({ band: "fxGround" as const, sheet: aimSheet, x: c.c * TILE, y: c.r * TILE })) : [];
