@@ -1,0 +1,17 @@
+{
+  "kind": "unit",
+  "formatVersion": 2,
+  "id": "unit_01JDAN00000000000000000001",
+  "rev": 1,
+  "name": "Knight",
+  "sprite": null,
+  "setupIds": [],
+  "stats": {},
+  "history": {
+    "cap": 200,
+    "baseSeq": 1,
+    "ops": []
+  },
+  "createdAt": "2026-11-18T00:00:00Z",
+  "updatedAt": "2026-11-18T00:00:00Z"
+}
