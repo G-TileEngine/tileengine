@@ -1,0 +1,204 @@
+# TileEngine maker roadmap
+
+r2, 2026-11-18 (QA fixes applied), Editor & UX Designer (CEO ask 22:17 via Chief Of Staff). Behaviours, NPC and BTF rows come from the Behaviour Librarian (input 2026-11-18). Docs only: no code, nothing pushed or published. QA reviews this file, then CoS pushes it.
+
+This page lists every planned engine feature and assigns it to the five agreed stages. It gives each feature a proposed MS (maker spec) number and a step order. After the stage tables come the post-launch rows, the CEO decisions that still need a plan, and an audit of every existing plan doc. MS numbers and step orders are proposals until CoS and the step owners agree them. CoS agreed (2026-11-18) that the wizard sits in stage 5 and the stage editor starts stage 3. Where a source doc doesn't say something, the cell reads TBD.
+
+**Key sources** (main is `aa158fd`, PR #77):
+- Steps: `docs/maker/steps/`
+- Maker specs: `docs/maker/maker-spec/`
+- Style: `docs/maker/style-spec.md`
+- Cozy order: `docs/cozy/JOINT-MAP.md` r3 and `docs/cozy/GDD.md` v0.1
+- MS outline: `share/maker-spec/ux-plan-2026-11-18.md` (box only, not on main)
+- Behaviour catalogue: `behaviour-library/` (box only, not on main) rev 29 (`bba8c252`). It has 65 behaviours, 570 knobs and 40 presets. Each behaviour has defaults, limits, bans, BTF cites and a menu question order.
+
+## Rules
+1. **The maker only authors data, and the engine runs the rules.** No rule logic lives in a screen.
+2. **Nothing ships early.** No screen or button ships before the step that makes it work. A maker editor ships in the same slice as its data, reader and engine rule (JOINT-MAP r3, "Rule for every cozy slice").
+3. **The ui-shell is reference only and is never merged.** It is good for behaviour and screenshots, never for code.
+4. **Project-file shape (Librarian):**
+   - A setup stores only the knob values that differ from the default.
+   - The manifest pins `catalogueRev`.
+   - Setups attach through `setupIds` on stages, neutrals and units.
+5. **Standing lines for every maker step:**
+   - **Read first** includes `docs/maker/style-spec.md`.
+   - **Must NOT:**
+     - no new framework, starter template or app scaffold;
+     - no other theme or visual system.
+   - Build only inside the repo's existing stack, files and test gates, starting from current main.
+   - **Slices (every step):**
+     - 400 lines or fewer, with the gates on: `npm test` at floor+N, `scripts/check-law.sh` and `scripts/check-state.sh`;
+     - offline, no new dependencies;
+     - 48 px targets and AA contrast.
+   - **From Step 2 on (maker UI steps), Done when:** S0 and Step 1 are data-only, and `tools/maker/build.ts` isn't on main until Step 2.
+     - the step ships an openable app page built by `node tools/maker/build.ts <out>`;
+     - the page works at 390 px and matches its `docs/maker/shots/` reference;
+     - the handback attaches one 390×844 light-theme screenshot per screen.
+6. **Who builds and who approves.** Code is written by Grok Build and GrokHeavy; this team writes plans and docs only. Nothing goes public without the CEO's typed OK.
+7. **Behaviour editing:** every behaviour uses one generic **Behaviour panel** unless the Behaviour editors table below names its own editor. In the panel you pick a behaviour, then set sliders and pickers in the catalogue's menu question order. Banned combos are greyed out, and Reset to default is always there.
+
+## Stage 1: project format, reader and play-stage load
+| MS | Step order | Feature | Basic maker editor / screen | Depends on | Source doc |
+|---|---|---|---|---|---|
+| MS-00 | 0 (exists; merged PR #76) | **s0-play-input: S0 play-stage touch input, selection state and Talk panel** | Play stage only: tap, pan and pinch, a battle menu, End Turn and a Talk panel | P1-9 APK | `docs/maker/steps/step-00-play-input.md`, `docs/maker/maker-spec/MS-00-play-input-and-talk.md` |
+| — | 1 (exists; S1a merged PR #77, S1b TBD) | **Step 1: Project format, reader, validation, versioning (the play stage loads a project)** | None (data only). The play stage loads a project | S0 | `docs/maker/steps/step-01-project-format.md`, `docs/maker/data/s1-project-load.md`, `project-format.md`, `setup-format.md` |
+| — | 1 (with Step 1) | Phase 1 behaviours ready: step-pattern, talk, xp-levels, terrain, unit-roster, damage-resolution and win-condition (frozen and cited) | None yet. Editors come in stage 3 | B1 behaviour runtime | `behaviour-library/` rev 29, `docs/foundation/STATUS.md` |
+| — | 1 (with Step 1) | Demo extras basic-attack, line-shot and effect (ready, not frozen). In rev 30, `basic-attack.damage` becomes "= unit attack" (EA S1 Q5) | None | Step 1 | `behaviour-library/` rev 29 (rev 30 TBD) |
+
+## Stage 2: minimal maker (Home, save/load, Test)
+| MS | Step order | Feature | Basic maker editor / screen | Depends on | Source doc |
+|---|---|---|---|---|---|
+| MS-01 | 2 (exists, not built) | **Step 2: Home, save and load** | Home with project cards (New, Open, ⋯ Rename, Duplicate, Delete), Save, autosave | Step 1 | `docs/maker/steps/step-02-home-save-load.md`, `MS-01-home-and-projects.md`, shots 01, 18, 24 |
+| MS-01 | 3 (exists, not built) | **Step 3: Test opens the real play stage** | Test button. Validation errors in words (hard blocks), then the release play stage with `?project=<id>` | Steps 0 and 2 | `docs/maker/steps/step-03-test.md`, shots 39b, 68 |
+
+## Stage 3: cozy foundations (each with a basic maker editor)
+Every row ships the four parts named in JOINT-MAP r3: data, reader and validation, engine rule, and editor. Where a row would exceed 400 lines, it splits into "a: data + rule" and "b: editor". Cozy ids are shown in brackets.
+
+| MS | Step order | Feature | Basic maker editor / screen | Depends on | Source doc |
+|---|---|---|---|---|---|
+| MS-03 | 4 | Stage editor base: rooms and maps, tile painting (terrain) and placing units and neutrals | Stage editor with a **map/tile palette painter** | Step 3 | `ux/stage-grid-live-plan.md` (to rewrite), `MS-03` TBD |
+| MS-04 | 5 | Units and classes: unit-roster with the btf-warrior, archer, mage and cleric presets (hp and atk per unit). Generic Behaviour panel for setups | Unit/Class editor plus the Behaviour panel | 4 | `ux/screen-map.md` (unit-editor to use-preset), `behaviour-library/SCHEMA.md` |
+| MS-04 | 6 | Levels and win rules: xp-levels, win-condition | **Level curve editor** (a thresholds list plus level-set pickers). **Rules panel** per stage | 5 | `behaviour-library/` rev 29 |
+| MS-09 | 7 | Items, stacks, loot (35a) | Items list plus loot table form | 4 | `docs/cozy/JOINT-MAP.md` #1 |
+| MS-10 | 8 | Game time, day/night, timers (C1a) | Time settings form (with a night preview from 0 to 1) | 4 | JOINT-MAP #2. `ux/weather-time-backlog.md` is an IDEA only |
+| MS-03 | 9 | Session and stage links: doors, stairs, gates and safe-point rollover (C3a, C3b). **Two-floor shop**: shop downstairs, home upstairs | Link placer on the stage editor (door, stairs, gate) | 4 | JOINT-MAP #3, GDD "Pitch". **EA ruling (2026-11-18): two linked stages**, shop downstairs and home upstairs, joined by a stairs link through the world link (C3a/C3b). JOINT-MAP F1 makes stairs, shop door and gates one link type, and autosave-at-stairs (C8a) needs a link event. One map with a hidden floor would need storeys and roof hide (MS-05, `house-builder-renderer-needs.md` #1/#6/#7). Same-map roof hide stays for small single-storey houses later |
+| MS-03 | 10 | Autosave at doors, stairs and sleep (C8a) | Autosave toggle on a link, plus a bed prop in the palette | 9, Step 2 | JOINT-MAP #4, GDD "Saves" |
+| MS-11 | 11 | Gather and respawn (35b). tool-swing (gather) is an IDEA and needs a promote pass; CN-027 is accepted as a format, with no code yet | Place a node, plus a respawn field | 7 | JOINT-MAP #5, `behaviour-library/CATALOGUE.md` tool-swing |
+| MS-11 | 12 | Planting with a night boost (C2a) | Crops list | 7, 8 | JOINT-MAP #6 |
+| MS-12 | 13 | Alchemy recipes and tiers (C2b) | Recipes list | 7 | JOINT-MAP #7 |
+| MS-13 | 14 | NPC shops and the player counter (35c). talk is ready. npc-role (vendor) is an IDEA and is promoted at 35c | Shop stock form on a selected NPC. Talk panel gets a Shop slot (MS-00 §Talk) | 5, 7 | JOINT-MAP #8, `ux/npc-buildings-backlog.md` |
+| — | — | **Checkpoint: the first loop (shop, plant, craft, sell) plays from project data** | — | 7–14 | JOINT-MAP |
+| MS-14 | 15 | Quests: deadline, tier, optional run (35d) | Quest board editor | 7, 14 | JOINT-MAP #9 |
+| MS-15 | 16 | NPC walk, queue, schedules and visits (C4a, C4b). neutral-roamer (walk) and npc-role (visitor, schedule) need a promote pass | Schedule form on a selected NPC, plus the Behaviour panel | 14 | JOINT-MAP #10. Librarian to confirm the knob set |
+| MS-16 | 17 | Guild resolve, reputation and the results panel (C5a, C5b) | Guild odds form | 15 | JOINT-MAP #11 |
+| MS-10 | 18 | Offline closed form with an 8 h cap (C1b) | One field in Time settings | 8 | JOINT-MAP #12 |
+| MS-17 | 19 | Skill tree, gear and decor (C7a–c) | Tree node list. Decor uses the stage palette | 7 | JOINT-MAP #13 |
+| MS-07 | with any row | effect (ready) is used by cozy rows (Librarian) | Effect Designer (exists) | — | `ux/effect-designer-v3-ux.md` |
+
+## Stage 4: turn-based stealth
+This follows BTF you-go-I-go turns:
+- After the player's turn, each enemy moves one tile toward its objective tile.
+- If the player is caught, they flee and lose some of the loot they carry.
+- The game autosaves at doors, stairs and sleep.
+- Quitting mid-stealth restarts the stage.
+
+| MS | Step order | Feature | Basic maker editor / screen | Depends on | Source doc |
+|---|---|---|---|---|---|
+| MS-18 | 20 | Sight and noise, with parity tests (C6a). Ready: cone-sweep shape plus `wall_blocks_los`. Noise knobs TBD (Librarian to confirm) | Stealth settings in the Behaviour panel | 4, 5 | JOINT-MAP #14, `behaviour-library/` rev 29 |
+| MS-18 | 21 | Objective-tile walkers (C6b). **objective-walker is NOT in the catalogue yet**, so it needs a new mining pass (from the anniversary minigame's rules code, plus neutral-roamer act/prey). Being caught means fleeing and losing loot (`stealth.lossPct`) | Guard placer plus **objective/patrol tile placer**, shared with objective-contest (flasks) | 20, 7 | JOINT-MAP #15, GDD "Stealth" |
+| MS-18 | 22 | Cone and meter render (C6c). reveal-intent (ready) shows the guard's next tile. stun-hold is optional | Preview toggle in Test (TBD) | 21 | JOINT-MAP #16 |
+| MS-18 | 23 | Saves in stealth: autosave at links and sleep, and quitting mid-stealth restarts the stage | Uses the row-10 toggles. No new screen (TBD) | 10, 21 | GDD "Saves" |
+| — | 24 | The four stealth stages as project data. Themes are *Proposed* (forest edge, deep wood, cave, ruins) | Built with the stage editor | 20–23 | JOINT-MAP #17, GDD "World" |
+
+## Stage 5: the rest of the maker
+| MS | Step order | Feature | Basic maker editor / screen | Depends on | Source doc |
+|---|---|---|---|---|---|
+| MS-02 | 25 | New project wizard, trimmed to what the format supports | Wizard | Step 1, MS-03/04 | `ux/new-project-wizard.md` (to rewrite) |
+| MS-19 | 26 | Welcome quiz and starter presets | Quiz cards plus Skip | MS-02 | `ux/welcome-quiz-plan.md` (to rewrite) |
+| MS-05 | 27 | House builder: roof hide, wall cutaway, storeys, builder overlays | House builder tool | MS-03 | `ux/house-builder-renderer-needs.md` (items 1, 6, 7, 8 are "own step later") |
+| MS-06 | 28 | Sprite Studio (tidy) | Sprite Studio | Step 2 | `ux/pixel-editor-plan.md` |
+| MS-07 | 29 | Effect Designer (tidy, v3 layers, beats and merge) | Effect Designer | Step 2 | `ux/effect-designer-v3-ux.md`, `design-notes/effect-designer-v3.md` |
+| MS-20 | 30 | Art and backgrounds upload | Art upload flow | MS-03 | `ux/art-upload.md` |
+| MS-21 | 31 | Sound panel | Sound panel | TBD (local draft docs/audio-module.md, not on main) | `ux/sound-panel.md` |
+| MS-08 | 32 | Build game (export) | Build game screen | Stages 1–4 | TBD (no MS doc yet) |
+| MS-08 | 33 | Device-local save in exported games (C8c) | None (export option, TBD) | 32 | JOINT-MAP "After stage 4" |
+| — | 34 | Cozy template project: one day plus one stealth stage, then stages 2–4 (C8b), after Build game and the E7 phone OK | Shown as a New-project template | 32 | JOINT-MAP "After stage 4" |
+
+## Behaviour editors (Librarian)
+| Behaviour / system | Editor | MS | Stage |
+|---|---|---|---|
+| effect | Effect Designer (exists) | MS-07 | 3 (use), 5 (tidy) |
+| terrain | Map/tile palette painter | MS-03 | 3 |
+| unit-roster plus class presets (btf-warrior, archer, mage, cleric) | Unit/Class editor (hp and atk per unit) | MS-04 | 3 |
+| xp-levels | Level curve editor (a thresholds list plus level-set pickers) | MS-04 | 3 |
+| win-condition | Rules panel per stage | MS-04 | 3 |
+| objective-contest (flasks) and stealth patrol points | Objective tile placer on the map (shared tool) | MS-18 | 4 |
+| hand-and-draw | Deck editor (later) | TBD | Post-launch |
+| Everything else | Generic Behaviour panel (menu order, bans greyed out, reset to default) | MS-04 | 3 on |
+
+## Post-launch
+| MS | Step order | Feature | Basic maker editor / screen | Depends on | Source doc |
+|---|---|---|---|---|---|
+| TBD | TBD | About 50 BTF combat behaviours (line, radial, sky-drop, bounce, barriers, summons, sword-lifecycle, hand-and-draw and others). They are catalogued but have no engine code: a content layer, filled in as games need them | Behaviour panel. Deck editor for hand-and-draw | Engine code per behaviour | `behaviour-library/CATALOGUE.md`, `coverage.md` |
+| TBD | TBD | Unit "When it dies" (BTF orbs) | TBD | BTF behaviours | `ux/on-death-backlog.md` (IDEA) |
+| TBD | TBD | Weather and animated world (rivers, trees) | TBD | MS-10 | `ux/weather-time-backlog.md`, `design-notes/animated-world.md` |
+| TBD | TBD | Social hub, studio profile and achievements, coins, library and chart | TBD | Online layer | `ux/social-hub-plan.md`, `profile-achievements.md`, `coins-library-chart.md` |
+| TBD | TBD | Starter Pack v2 (free hub pack) | Hub listing | Asset hub | `ux/starter-pack-v2-plan.md` |
+| TBD | TBD | Sprite generator from keeps, and the Imagine-to-pixel converter | Inside Sprite Studio | MS-06 | `ux/gen-learn-plan.md` (on hold), `converter-quality-study.md` |
+| TBD | TBD | Online-play step (server-authoritative, with the 5 MUST items) | TBD | Online layer | `docs/chaos-player-outline.md` §10 |
+
+## CEO decisions with no repo doc yet (plan needed later)
+TileEngine is **not open source**.
+
+| Decision | When | Status |
+|---|---|---|
+| Publish the engine app (editor plus game export) on Google Play and the App Store. P1-9's APK is game-only | After P1-9 | Plan needed later |
+| AI extension kit plus connector (Roblox Studio-style): a user's AI adds NPCs, behaviours, stages and effects through our tools. Work is saved via our servers under HS Studio creator terms. Test with Grok 4.8 | TBD | Plan needed later |
+| Accessibility, prompted by a blind dev's audio-only games. `design-notes/editor-behaviours.md` (ARIA, reference only) is a starting point | Before launch | Plan needed later |
+| Translator and literature helpers | TBD | Plan needed later |
+| Paid asset store (e.g. a BTF combat sprite pack). Gold coins are earn-only, with no coins for visiting store pages, per Apple guideline 3.2.2 and Google Play rules | TBD | Plan needed later |
+| Optional online layer on the CEO's Fly.io: accounts, cloud saves, asset hub. The core stays offline-first | TBD | Plan needed later |
+| Two chaos players: game-side, and dev-side security and exploit testing. The engine outline exists in `docs/chaos-player-outline.md` §9 and `docs/qa/chaos-player-invariants.md`; the maker/product plan does not | Dev-side slice starts once the first save, import and reward events exist (§9) | Plan needed later |
+
+## Audit of existing plans
+Verdicts:
+- **Keep:** still good.
+- **Rewrite:** rewrite for the new maker (tools/maker, engine-native, style-spec only).
+- **Drop:** retire or archive it.
+
+Paths are under `docs/maker/ux/` on main unless the row says otherwise.
+
+| Doc | Verdict | Reason |
+|---|---|---|
+| `art-upload.md` (r6) | Rewrite | The flow and CEO rulings hold, but it is built on `ui-shell/mock-art` and `app.css`. It becomes MS-20 |
+| `coins-library-chart.md` | Keep (post-launch) | Profile-format-aligned draft. Recheck it against the earn-only coin rule (Apple 3.2.2) before use |
+| `converter-quality-study.md` | Keep (post-launch) | A study only. The findings stay valid for a later Sprite Studio import |
+| `effect-designer-v3-ux.md` | Keep | Current UX input for the Effect Designer (MS-07) |
+| `effect-designer.md` (r3) | Drop | Superseded by v3 and the ED-E steps, and built on `ui-shell/mock-effects` |
+| `effects-sprite-sync.md` | Keep | Research base for step 33 effects. It's engine-side and still valid |
+| `effects-v2-plan.md` | Keep | Scope accepted. Its data (setup-format r20 §2.10.2) is engine-native |
+| `game-settings-template.md` | Rewrite | A useful BTF in-game settings default. It needs an engine-native screen and current format refs |
+| `gen-learn-plan.md` | Keep (on hold) | Plan only, with a CEO hold (G8). Post-launch |
+| `home-globe-plan.md` | Rewrite | The r71 globe carousel is a ui-shell build. Fold it into a later MS-01 revision, with style-spec tokens only |
+| `house-builder-renderer-needs.md` | Keep | Renderer needs confirmed by the EA. It feeds MS-05 and the two-floor shop ruling (two linked stages) |
+| `ideas-backlog-2026-11-11.md` | Keep | Principles (Basic + Advanced on the same data) still apply. The ideas stay parked |
+| `new-project-wizard.md` | Rewrite | First draft against the ui-shell. Trim it to what the Step 1 format supports (MS-02). No redesign was found (CoS asked) |
+| `npc-buildings-backlog.md` | Rewrite | Fold it into MS-13 and MS-15 with npc-role and neutral-roamer from the catalogue |
+| `on-death-backlog.md` | Keep (post-launch) | IDEA, not v1 |
+| `pixel-editor-plan.md` | Rewrite | The Sprite Studio approach was approved, but the plan is ui-shell based. It becomes MS-06 |
+| `profile-achievements.md` | Keep (post-launch) | Short draft aligned with profile-format. It needs the online layer first |
+| `qol-plan-r69.md` | Rewrite | The behaviour picker and stage-type ideas carry into MS-04 and MS-03. The rest is shell QoL |
+| `r72-cleanup-plan.md` (ui-shell lessons) | Keep (as lessons) | Its lessons become rules for the new maker: no silent save failures, check uploads, one voice, even empty and error states, no XSS. Not a build plan |
+| `renderer-research-ux.md` | Keep | Research only, and still valid for the play stage and previews |
+| `screen-map.md` | Rewrite | The screen list and behaviour flow are the outline for MS-03 and MS-04. It still cites the ui-shell and catalogue rev 5 |
+| `social-hub-plan.md` | Keep (post-launch) | Accepted on 2026-11-12. Needs the optional online layer |
+| `sound-panel.md` | Rewrite | A draft tied to the shell, and its companion `audio-authoring.md` is missing. It becomes MS-21 |
+| `stage-grid-live-plan.md` (r65) | Rewrite | The live grid and tap-to-place ideas stay, along with the DSK and EA answers. It becomes MS-03, engine-native |
+| `starter-pack-contents.md` | Rewrite | The v1 contents list is superseded by v2's art decision (CEO Grok Imagine art) |
+| `starter-pack-v2-plan.md` | Keep (post-launch) | Accepted on 2026-11-12. The hub pack waits for the asset hub |
+| `validator-todo.md` | Keep | H1–H6 hard errors feed Step 1 validation and Step 3 hard blocks (shot 39b) |
+| `weather-time-backlog.md` | Keep (IDEA) | Day/night moves to C1a (MS-10). Weather stays post-launch |
+| `welcome-quiz-plan.md` | Rewrite | The r64 quiz on the ui-shell. It becomes MS-19 after MS-02. No redesign was found |
+| `design-notes/README.md` | Keep | Standing order to write design notes |
+| `design-notes/ai-sprites-and-ui-research.md` | Keep | Research for Sprite Studio |
+| `design-notes/animated-world.md` | Keep (post-launch) | No build until after H2 |
+| `design-notes/editor-behaviours.md` | Keep | Reference only, with no dependency. It is a seed for accessibility |
+| `design-notes/effect-designer-v3.md` | Keep | The v3 mock record for MS-07 |
+| `design-notes/effects-v2.md` | Keep | Short summary of the accepted Effects v2 |
+| `design-notes/home-globe.md` | Rewrite | Goes with home-globe-plan |
+| `design-notes/pixel-composer-reference.md` | Keep | Standing approach: borrow proven ideas, no node editor |
+| `design-notes/shell-and-look.md` | Rewrite | Its look rules now live in `style-spec.md`. Keep only the rules the style-spec doesn't cover |
+| `design-notes/sprites.md` | Keep (parked) | Generator parked at v7 |
+| `design-notes/turn-banner.md` | Keep | Style goal for the play stage banner |
+| `ux/design-notes/effect-ramps.md` plus `effect-ramps/` (local, not on main) | Keep | ED S0 colour stops. Held local by CoS (2026-11-18), outside this push; decide later |
+| `ux/design-notes/held-item-motions.md` (local, not on main) | Keep | A sketch for tool-swing (MS-11). Held local by CoS (2026-11-18), outside this push; decide later |
+| `design-notes/refs/` (6 files under `ai-sprites-ui/`) | Keep | Reference images only |
+| `ux/effects-v2-ref/`, `ux/ref-btf-acolyte-orbs.jpg` (local, not on main) | Keep | Reference images only. Held local by CoS (2026-11-18), outside this push; decide later |
+| `ui-shell/README.md` (local, not on main) | Keep (reference) | Describes the prototype. It is reference only and never merged |
+| `behaviour-library/behaviours.json`, `SCHEMA.md` (box only, not on main) | Keep | Source of truth for knob schemas. The maker reads these |
+| `behaviour-library/CATALOGUE.md`, `README.md` (box only, not on main) | Keep | Generated |
+| `behaviour-library/coverage.md` (box only, not on main) | Keep | BTF provenance |
+| `behaviour-library/gaps.md` (box only, not on main) | Keep, plus an index | Good, but long (804 lines). It needs an open-items index |
+| `behaviour-library/_audit/f8a451f5-audit.md` (box only, not on main) | Rewrite | Stale: written against an old main. Redo it against current main |
+| `behaviour-library/_audit/phase1-freeze.md` (box only, not on main) | Rewrite | Partly superseded (the CEO superseded phase1-recut at 01:31). Rewrite it as a per-stage behaviour list |
+| Menu question order data (catalogue) | Keep the data, rewrite the screens | Re-map its screens from the ui-shell to the engine-native maker |
