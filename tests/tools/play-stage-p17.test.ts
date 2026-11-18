@@ -4,8 +4,8 @@ import { test } from "node:test";
 import { fitView } from "../../src/runtime/render/index.ts";
 import { fit, MIN_CELL_CSS, spellRef, TILE } from "../../tools/play-stage/board.ts";
 import { centreOn, clamp, createCam, follow, pan, seatCam, tickCam, zoomAt } from "../../tools/play-stage/camera-touch.ts";
-import { DEMO_SETUP } from "../../tools/play-stage/load.ts";
 import { createMatch } from "../../tools/play-stage/match.ts";
+import { demoDocs, U } from "./demo-fixture.ts";
 
 const idOf = (m: ReturnType<typeof createMatch>, unitId: string): string => { const id = m.world.units.all().find((u) => u.unitId === unitId && u.alive)?.id; if (id === undefined) throw new Error(unitId); return id; };
 
@@ -27,12 +27,12 @@ test("camera keeps a 44 CSS px floor at 360 and 390 @3x after init and after zoo
   const cam = createCam(12); zoomAt(cam, 12, 1170, 2004, 96, 144, 200, 200, 3); check(cam.s, "repro");
 });
 test("spellRef uses Object.hasOwn, so constructor is not a spell row", () => {
-  const bag = Object.assign(Object.create({ constructor: [{ effectRef: "fake" }] }), DEMO_SETUP.abilities ?? {});
-  assert.equal(spellRef({ ...DEMO_SETUP, abilities: bag }, "constructor"), undefined);
-  assert.equal(spellRef(DEMO_SETUP, "archer"), "line-shot");
+  const rules = demoDocs().rules, bag = Object.assign(Object.create({ constructor: [{ effectRef: "fake" }] }), rules.abilities ?? {});
+  assert.equal(spellRef({ ...rules, abilities: bag }, "constructor"), undefined);
+  assert.equal(spellRef(rules, U.archer), "line-shot");
 });
 test("after a walk the action row is at actMenu; Wait returns to idle; Spell two-tap fires line-shot", () => {
-  const m = createMatch(undefined, 40), knight = idOf(m, "knight"), archer = idOf(m, "archer");
+  const m = createMatch(undefined, 40), knight = idOf(m, U.knight), archer = idOf(m, U.archer);
   m.intend({ type: "SelectUnit", unitId: knight });
   const dest = m.reach[0]; assert.ok(dest !== undefined);
   m.intend({ type: "TargetCell", at: dest }); m.intend({ type: "TargetCell", at: dest });
@@ -41,7 +41,7 @@ test("after a walk the action row is at actMenu; Wait returns to idle; Spell two
   assert.equal(m.view().actions.wait.on, true);
   m.wait();
   assert.equal(m.world.phases.battle, "idle");
-  const wolf = m.world.units.all().find((u) => u.unitId === "wolf" && u.alive); assert.ok(wolf !== undefined);
+  const wolf = m.world.units.all().find((u) => u.unitId === U.wolf && u.alive); assert.ok(wolf !== undefined);
   m.world.units.moveTo(archer, { c: wolf.at.c, r: wolf.at.r + 2 }, "move");
   m.intend({ type: "SelectUnit", unitId: archer });
   assert.equal(m.choose("spell"), null);
@@ -51,7 +51,7 @@ test("after a walk the action row is at actMenu; Wait returns to idle; Spell two
   assert.ok("action" in shot && shot.action?.kind === "ability" && shot.action.effects[0] === "line-shot");
 });
 test("Talk appears only when a villager is in reach and shows the bundled text", () => {
-  const m = createMatch(), knight = idOf(m, "knight"), villager = idOf(m, "villager"), at = m.world.units.get(knight)?.at;
+  const m = createMatch(), knight = idOf(m, U.knight), villager = idOf(m, U.villager), at = m.world.units.get(knight)?.at;
   m.intend({ type: "SelectUnit", unitId: knight });
   assert.equal(m.view().actions.talk.show, false);
   m.world.units.moveTo(villager, { c: at?.c ?? 0, r: (at?.r ?? 1) - 1 }, "move");
@@ -67,7 +67,7 @@ test("End turn runs the bot; Restart restores the demo; wiping the wolves is a w
   const m = createMatch(undefined, 20), start = m.world.units.all().map((u) => `${u.id}:${u.at.c},${u.at.r}`).join();
   const acts = m.view().actions; assert.ok(acts.end.show && !acts.basic.show && !acts.wait.show);
   assert.match(readFileSync(new URL("../../tools/play-stage/board.ts", import.meta.url), "utf8"), /botAbilityPriority\(\{ setup: body\.rules, stepReach: step\.reach, actionsPerTurn: budget\.actionsPerTurn \}\)/);
-  const knight = idOf(m, "knight");
+  const knight = idOf(m, U.knight);
   m.intend({ type: "SelectUnit", unitId: knight });
   const dest = m.reach[0]; assert.ok(dest !== undefined);
   m.intend({ type: "TargetCell", at: dest }); m.intend({ type: "TargetCell", at: dest });

@@ -4,6 +4,8 @@ import type { FrameSource } from "../../src/runtime/render/world-motion.ts";
 import type { SceneAsset } from "../../src/runtime/scene/world-scene.ts";
 import { RECIPES, TEAM, TILE, type Looks } from "./load.ts";
 
+export const DEMO_LOOKS: Looks = { canopy: [[4, 1], [5, 1], [5, 2]], braziers: [[1, 2], [5, 6]] };
+
 export const WATER_RAMP = ["#1b3a5c", "#2a5d8a", "#4f8fc0", "#cfe8f5"] as const;
 export const FLAME_RAMP = ["#b8401c", "#e8762a", "#f6c04a"] as const;
 export const WASH = 0.5, LIGHT_RES = 4;
@@ -41,7 +43,7 @@ type Grid = { readonly cols: number; readonly rows: number; tileTypeAt(at: { rea
 const cycle = (name: string, n: number) => ({ cycle: { ramp: { name, steps: Array.from({ length: n }, (_, i) => i) } } });
 export function dress(grid: Grid, looks?: Looks) {
   const n = grid.cols * grid.rows, tiles: number[] = [], blocks = new Uint8Array(n);
-  for (let i = 0; i < n; i += 1) { const id = grid.tileTypeAt({ c: i % grid.cols, r: (i / grid.cols) | 0 }).id, tile = id === "water" ? 1 : id === "rock" ? 2 : 0; tiles.push(tile); if (tile === 2) blocks[i] = 1; }
+  for (let i = 0; i < n; i += 1) { const id = grid.tileTypeAt({ c: i % grid.cols, r: (i / grid.cols) | 0 }).id, tile = id === "water" ? 1 : id === "wall-block" ? 2 : 0; tiles.push(tile); if (tile === 2) blocks[i] = 1; }
   const canopy = looks === undefined ? undefined : Array.from({ length: n }, () => null as number | null);
   if (looks !== undefined && canopy !== undefined) for (const [c, r] of looks.canopy) canopy[r * grid.cols + c] = 0;
   const assets: Record<string, SceneAsset> = { "play:ground": { sheet: { id: "play:ground", columns: 3, fw: TILE, fh: TILE }, styled: true, tileProps: { "1": { motion: cycle("water", 3) } } } };
