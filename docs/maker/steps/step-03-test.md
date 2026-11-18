@@ -1,6 +1,6 @@
 # Step 3: Test opens the real play stage
 
-r2, 2026-11-18, Editor & UX Designer (QA review `docs/qa/maker-steps-01-03-review.md` and DSK line edits applied). Needs Step 2 merged and Step 0 (S0 play input, `handoff/steps/s0-play-input.md`) merged. One builder run, 400 lines or fewer including tests, gates on.
+r3, 2026-11-18, Editor & UX Designer (QA review `docs/qa/maker-steps-01-03-review.md` and DSK line edits applied). Needs Step 2 merged and Step 0 (S0 play input, `handoff/steps/s0-play-input.md`) merged. One builder run, 400 lines or fewer including tests, gates on.
 
 ## Goal
 In an opened project, **Test** plays that project's first stage in the real play stage (`tools/play-stage`), from the saved project folder: no copy, no demo, no second rules engine. Exiting Test comes back to the same maker screen. Test never changes the project.
@@ -9,8 +9,9 @@ In an opened project, **Test** plays that project's first stage in the real play
 1. `docs/maker/maker-spec/MS-00-play-input-and-talk.md` (how play input must behave on a phone).
 2. `docs/maker/data/s1-project-load.md` §6 (reader report rows) and §8 (validation codes).
 3. `docs/maker/ux/design-notes/turn-banner.md` (banner text at screen resolution).
-4. Screenshot: `docs/maker/shots/68-test-battle-menu.png` (flow reference only).
+4. Screenshots: `docs/maker/shots/68-test-battle-menu.png` (Test flow), `39b-hard-blocked.png` (the "Can't play yet" banner and Fix button).
 5. Code: `tools/play-stage/page.ts`, `load.ts` (after Step 1), `tools/maker/project.ts` and `store.ts` (Step 2).
+6. `docs/maker/style-spec.md` (the only visual system).
 
 ## Build
 | File | Job | Cap |
@@ -23,7 +24,7 @@ In an opened project, **Test** plays that project's first stage in the real play
 | `tests/editor/test-gate.test.ts` and `tests/tools/play-stage-source.test.ts` | | 90 |
 | `tools/maker/build.ts` edit | Also run the play-stage `build()` in release mode into `<out>/play-stage/`, so the built app has Maker and Play side by side. The Test URL is relative (`../play-stage/index.html?project=…`), so it works in dev and when built. | 15 |
 | `tests/tools/maker-build.test.ts` edit | `play-stage/index.html` is in the output, and the built play page has no fixture fallback (QA hold: dev fallback absent from release). | 10 |
-| `tests/editor/maker-law.test.ts` edit | Add `tools/play-stage/project-source.ts` and `tools/maker/test-launch.ts` to the scanned files. | 5 |
+| `tests/editor/maker-law.test.ts` edit | Add `tools/play-stage/project-source.ts` and `tools/maker/test-launch.ts` to the scanned files. The Step 2 theme plant already covers any new `tools/maker/**` file, such as the blocked-Test sheet. The play stage's HUD is outside it. | 5 |
 
 ## Behaviour
 - Tap **Test**: save, then validate. Clean: the play stage opens on the project's first stage. Hard rows: a sheet lists them in words ("Stage 1 points at a map that's missing"), Test stays closed. Warnings don't block.
@@ -32,6 +33,7 @@ In an opened project, **Test** plays that project's first stage in the real play
 - Nothing in play writes to the project folder.
 
 ## Must NOT
+- **No other theme or visual system.** Use only the tokens, type, spacing, radii and components in `docs/maker/style-spec.md`: no template theme (no "dark paper"), no CSS framework, no web or icon fonts, no new colours.
 - **No new framework, starter template or app scaffold** (for example TanStack Start, a sandbox preview server, borrowed visual themes). Build only inside the repo's existing stack, files and test gates, starting from current main.
 - No game rules in the maker. The maker only saves and launches; the engine and play stage run the match.
 - No demo fallback when a project fails; show the failure.
@@ -39,6 +41,7 @@ In an opened project, **Test** plays that project's first stage in the real play
 - No play-input rework here (that's MS-00's step); no HUD restyle.
 
 ## Done when
+- **Look matches the shots at 390 px.** Each screen this step builds matches its reference in `docs/maker/shots/` (`68-test-battle-menu.png` for the Test entry and Back to maker; `39b-hard-blocked.png` for the blocked-Test banner. The play stage's own HUD is not restyled here) in colours, type, spacing, radii and components, per `docs/maker/style-spec.md`. Content follows the MS spec where the prototype screen differs, for example a project list instead of the old Home buttons. The handback attaches one 390×844 screenshot per screen, in light theme, for QA to compare side by side.
 - **Gates:** `npm test` passes with the test count at **floor = Step 2's merged floor + N** (N stated in the handback), plus `scripts/check-law.sh` and `scripts/check-state.sh`. **Line count:** `git diff --shortstat <run base>` is 400 or fewer.
 - Tests: a clean project gives "allowed"; each hard code from S1 §8 gives its sentence; launching with an unreadable project shows the error, not the demo; after a full match the project folder is byte-identical; the Step 1 parity golden still matches when Test runs the demo template. **Named test `test-launch: save fails, no launch`:** with the store's write forced to fail, tapping Test does not open the play stage and the project screen shows the `writeFailed` reason.
 - **TOUCH SMOKE PASS** (S0 `touch-smoke.mjs`) at 390 and 360 CSS width with the play stage opened by Test on the current project (`?project=<id>`), not the dev fixture. Handback quotes the PASS lines.
