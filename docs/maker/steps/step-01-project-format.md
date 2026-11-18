@@ -1,6 +1,6 @@
 # Step 1: Project format, reader, validation, versioning (the play stage loads a project)
 
-- **Date:** 2026-11-18 · **Owner:** Data & Save Keeper · **Status:** DRAFT r5 (r2: QA fixes for gates, floor and plants P1–P3, QA OK; r3: Q9 ruled; r4: EA rulings Q2/3/5/6/7; r5: Q2 build emits raw text, P2 has no exemptions (CoS)), pending remaining EA and QA · **Builds after:** S0 (1b on main after S0 merges)
+- **Date:** 2026-11-18 · **Owner:** Data & Save Keeper · **Status:** FINAL r6 (r2: QA fixes for gates, floor and plants P1–P3, QA OK; r3: Q9 ruled; r4: EA rulings Q2/3/5/6/7; r5: Q2 build emits raw text, P2 has no exemptions (CoS); r6: base main `8a737c5f` after S0, floor 1023); EA FINAL OK and QA FINAL OK on 2026-11-18 for b9a2b54a; only this status line changed) · **Base:** main `8a737c5f` (S0 merged, PR #76) · **Builds after:** S0 (1b on main after S0 merges)
 - **Sources:** this reuses `docs/maker/data/s1-project-load.md` r3 (560 lines, sha `f4e459c3`). Do not re-derive it. If this page and S1 disagree, S1 wins. Format docs live at `docs/maker/data/project-format.md` and `docs/maker/data/setup-format.md` (main `f2df5c40`, moved unedited).
 
 **This step is two builder runs: 1a, then 1b.** Each is one run, 400 lines or fewer including tests, gates on.
@@ -227,7 +227,7 @@ These steps stay data-first.
 
 ## Done when
 
-- **Gates:** `npm test` at floor **1014 + N** for 1a (N = the new tests 1a adds, stated in the run report), then **1a's merged floor + N** for 1b. Also `scripts/check-law.sh` and `scripts/check-state.sh` pass, and the line count is met.
+- **Gates:** `npm test` at floor **1023 + N** (main `8a737c5f` after S0, PR #76) for 1a (N = the new tests 1a adds, stated in the run report), then **1a's merged floor + N** for 1b. Also `scripts/check-law.sh` and `scripts/check-state.sh` pass, and the line count is met.
 - **Line count:** `git diff --shortstat <run base>..HEAD -- . ':!fixtures/**' ':!data/templates/**'` shows insertions plus deletions ≤ 400 per run (1a planned ≈ 355, 1b planned ≈ 220). Fixture and template JSON aren't counted (Q9 RULED), on two conditions:
   1. Only `.json` files go under `fixtures/**` and `data/templates/**`. A `.ts`, `.js` or `.mjs` file there fails the gate. The run report shows `git diff --name-only <run base>..HEAD -- fixtures data/templates | rg -v '\.json$'` returning nothing.
   2. Every fixture loads through `readProject`, either as `ok` or as the hard row it's meant to produce, in a named test, so no exempt file is dead data.
