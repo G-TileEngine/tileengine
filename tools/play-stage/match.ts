@@ -22,7 +22,8 @@ export function createMatch(docs?: PlayDocs, moveMs = 200) {
   const win = installOne(WIN_CONDITION, {});
   if (win.out === null) throw new Error("play: win-condition");
   const wiped = wipeRule(win.out, SIDES);
-  let side: Side = "player", outcome: Outcome | null = null, talk: Talk | null = null, round = 1, turns = 0, queue: Action[] = [];
+  let side: Side = "player", outcome: Outcome | null = null, talk: Talk | null = null, round = 1, turns = 0, queue: Action[] = [], armed: "unitSelected" | "actMenu" | null = null;
+  const spent = new Set<string>();
   const spellList = (id: string): { id: string }[] => {
     const actor = play.world.units.get(id), bag = rules.abilities;
     if (actor === undefined) return [];
@@ -42,7 +43,7 @@ export function createMatch(docs?: PlayDocs, moveMs = 200) {
     const i = SIDES.indexOf(side), last = i + 1 >= SIDES.length;
     go({ type: "CHECK_NONE", next: last ? "roundEnd" : "sideStart" });
     if (last) { go({ type: "ROUND_END" }); round += 1; go({ type: "ROUND_BEGIN" }); }
-    side = SIDES[(i + 1) % SIDES.length] ?? "player"; go({ type: "SIDE_BEGIN" }); return false;
+    side = SIDES[(i + 1) % SIDES.length] ?? "player"; if (side === "player") spent.clear(); go({ type: "SIDE_BEGIN" }); return false;
   };
   const landMove = (action: Action): boolean => {
     const at = action.target !== null && action.target.pipe === "tile" ? action.target.at : undefined, unit = play.world.units.get(action.actor);
@@ -67,6 +68,7 @@ export function createMatch(docs?: PlayDocs, moveMs = 200) {
   /** Ability confirm lands in `resolving`. Walk the legal edges back to `idle` (or `play.result` on a wipe) so the player can select again and End turn. Talk stays on `actMenu` and does not take `UNIT_DONE`. */
   const settle = (): void => {
     if (play.world.phases.battle !== "resolving") return;
+    if (play.selected !== null) spent.add(play.selected);
     go({ type: "RESOLVE_DONE" });
     const got = wiped(play.world, { round, side });
     if (got !== null) { go({ type: "CHECK_END", outcome: got }); outcome = got; return; }
@@ -75,6 +77,13 @@ export function createMatch(docs?: PlayDocs, moveMs = 200) {
     play.followId = null;
   };
   play.landed(() => { if (side !== "wolves") return; go({ type: "WAIT" }); go({ type: "UNIT_DONE", next: "idle" }); pump(); });
+  const wipe = (): void => { play.aims = []; talk = null; play.focus(null); play.followId = null; };
+  const back = (): "unitSelected" | "actMenu" | null => {
+    if (play.world.phases.battle !== "targeting") return null;
+    const from = armed === "unitSelected" ? "unitSelected" : "actMenu";
+    baseIntend({ type: "Cancel" }); if (from === "unitSelected") go({ type: "UNDO_MOVE" }); armed = null; return from;
+  };
+  const spend = (): void => { if (play.world.phases.battle !== "actMenu") return; if (play.selected !== null) spent.add(play.selected); go({ type: "WAIT" }); go({ type: "UNIT_DONE", next: "idle" }); play.followId = null; };
   const api = Object.assign(play, {
     intend(intent: DoorIntent) {
       const step = baseIntend(intent);
@@ -90,13 +99,29 @@ export function createMatch(docs?: PlayDocs, moveMs = 200) {
     sync() { baseSync(); },
     choose(kind: "basic" | "spell" | "talk"): string | null {
       const id = play.selected; if (id === null) return "noUnit";
+      const list = kind === "spell" ? spellList(id) : targetsFor(play.world.grid, play.world.units, id, kind === "talk" ? "interact" : "basic", rules);
+      if (list.length === 0) return "noTarget";
+      const from = play.world.phases.battle;
       const step = baseIntend({ type: "ChooseAction", actionId: kind === "talk" ? "interact" : kind, unitId: id });
       if (!("reject" in step) || step.reject !== null) return "reject" in step && step.reject !== null ? step.reject : "illegal";
-      const list = kind === "spell" ? spellList(id) : targetsFor(play.world.grid, play.world.units, id, kind === "talk" ? "interact" : "basic", rules);
+      armed = from === "unitSelected" ? "unitSelected" : "actMenu";
       play.aims = cells(list); play.aimKind = kind === "spell" ? "spell" : "basic"; return null;
     },
-    wait() { if (play.world.phases.battle !== "actMenu") return; go({ type: "WAIT" }); go({ type: "UNIT_DONE", next: "idle" }); play.followId = null; },
-    endTurn() { if (play.world.phases.battle === "actMenu") api.wait(); if (side === "player") turns += 1; if (finish()) return; if (side === "wolves") { queue = [...play.bot(play.world, side)]; pump(); } },
+    wait() { spend(); },
+    endTurn() {
+      if (play.walk !== null || side !== "player" || outcome !== null) return;
+      if (play.world.phases.battle === "targeting") back();
+      const now = play.world.phases.battle;
+      if (now === "actMenu") spend(); else if (now === "unitSelected") baseIntend({ type: "Cancel" });
+      wipe(); turns += 1; if (finish()) return; const next = ((): Side => side)(); if (next === "wolves") { queue = [...play.bot(play.world, next)]; pump(); }
+    },
+    closeTalk() { talk = null; if (play.world.phases.battle === "actMenu") spend(); play.focus(null); },
+    recentreTarget(): Sq | null {
+      const cur = play.selected === null ? undefined : play.world.units.get(play.selected);
+      if (cur !== undefined && cur.alive) return { c: cur.at.c, r: cur.at.r };
+      const own = play.world.units.all().find((u) => u.alive && u.side === "player");
+      return own === undefined ? null : { c: own.at.c, r: own.at.r };
+    },
     restart: () => createMatch(docs, moveMs),
     view() {
       const id = play.selected, unit = id === null ? undefined : play.world.units.get(id), phase = play.world.phases.battle, on = unit !== undefined && unit.alive;
@@ -115,5 +140,33 @@ export function createMatch(docs?: PlayDocs, moveMs = 200) {
   Object.defineProperty(api, "side", { get: () => side });
   Object.defineProperty(api, "outcome", { get: () => outcome });
   Object.defineProperty(api, "talk", { get: () => talk });
-  return api as typeof api & { readonly side: Side; readonly outcome: Outcome | null; readonly talk: Talk | null };
+  Object.defineProperty(api, "done", { get: () => spent });
+  const same = (a: Sq, b: Sq): boolean => a.c === b.c && a.r === b.r;
+  const listed = (list: readonly Sq[], at: Sq): boolean => list.some((c) => same(c, at));
+  const atOf = (intent: DoorIntent): Sq | null => {
+    if (intent.type === "TargetCell") return intent.at;
+    if (intent.type !== "SelectUnit") return null;
+    const u = play.world.units.get(intent.unitId); return u === undefined ? null : u.at;
+  };
+  const ready = (id: string): boolean => { const u = play.world.units.get(id); return u !== undefined && u.alive && u.side === "player" && !spent.has(id); };
+  const commit = (at: Sq): unknown => { const cell = { c: at.c, r: at.r }; api.intend({ type: "TargetCell", at: cell }); return api.intend({ type: "TargetCell", at: cell }); };
+  play.feed = (intent: DoorIntent): unknown => {
+    if (talk !== null || play.walk !== null || side !== "player" || outcome !== null) return undefined;
+    const phase = play.world.phases.battle, at = atOf(intent);
+    if (phase === "targeting" && at !== null && listed(play.aims, at)) return commit(at);
+    if (phase === "targeting") {
+      const from = back(); play.aims = []; talk = null; play.followId = null;
+      if (intent.type === "SelectUnit" && ready(intent.unitId) && intent.unitId !== play.selected) { if (from !== "unitSelected") spend(); return api.intend(intent); }
+      return undefined;
+    }
+    if (intent.type === "SelectUnit" && !ready(intent.unitId)) return undefined;
+    if (phase === "unitSelected" && intent.type === "TargetCell") {
+      if (at !== null && listed(play.reach, at)) return commit(at);
+      baseIntend({ type: "Cancel" }); wipe(); return undefined;
+    }
+    if (phase === "actMenu" && intent.type === "SelectUnit" && intent.unitId !== play.selected) { spend(); return api.intend(intent); }
+    if (phase === "actMenu" && intent.type === "SelectUnit") return undefined;
+    return api.intend(intent);
+  };
+  return api as typeof api & { readonly side: Side; readonly outcome: Outcome | null; readonly talk: Talk | null; readonly done: ReadonlySet<string> };
 }
