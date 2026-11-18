@@ -28,10 +28,11 @@ function kept(files: Record<string, unknown>): ProjectLoad {
 test("fixture clean, and slice-of is byte-equal to catalogue/slice.json", () => {
   const files = bag(), got = kept(files), text = readFileSync(join(root, "catalogue/slice.json"), "utf8");
   const raw = JSON.parse(text) as { schema_version: number; catalogue_rev: number; gates: unknown; behaviours: Record<string, unknown>[] };
-  const behaviours = raw.behaviours.map((b) => ({ ...b, sources: ["x"], knobs: Array.isArray(b["knobs"]) ? (b["knobs"] as Record<string, unknown>[]).map((knob) => ({ ...knob, default_source: "y", item_cites: [] })) : [] }));
+  const drop = { sources: ["x"], variants: [], used_by: [], conflicts: [], needs_reverify: true };
+  const behaviours = [...raw.behaviours.map((b) => ({ ...b, ...drop, knobs: Array.isArray(b["knobs"]) ? (b["knobs"] as Record<string, unknown>[]).map((knob) => ({ ...knob, default_source: "y", item_cites: [], item_sources: [] })) : [] })), { id: "effect", ...drop, knobs: [] }];
   const cat: CatalogueDoc = { schema_version: raw.schema_version, catalogue_rev: raw.catalogue_rev, gates: raw.gates, behaviours };
   assert.equal(got.ok, true); assert.equal(got.readOnly, false); assert.deepEqual([...got.report], []);
-  assert.equal(sliceOf(cat, raw.behaviours.map((b) => String(b["id"]))), text);
+  assert.equal(sliceOf(cat, IDS), text);
   assert.deepEqual(raw.behaviours.map((b) => b["id"]), IDS);
   assert.equal(Object.keys(files).every((path) => path.endsWith(".json")), true);
 });
