@@ -5,7 +5,7 @@ r6, 2026-11-19, Editor & UX Designer. r6 cites the DSK rulings doc at sha256 `24
 **This step is three builder runs: 4a, then 4b, then 4c.** The roadmap row (rooms and maps, terrain painting, placing units and neutrals, tap-to-add, Start new) does not fit one 400-line run. Each run is 400 counted lines or fewer including tests, gates on.
 - **4a: the stage editor screen and terrain painting.** The stage preview, the **Add here** sheet with paint rows, the painting chip, Undo, View, Start new, and Test on the edited stage, plus the D17 reader row. About 380 counted lines.
 - **4b: placing units and NPCs.** Your-team starts, NPCs and enemies through the same **Add here** sheet, the **What do they do?** sheet (Talk only), Move and Delete. About 300 counted lines. Needs 4a, **S0b** and **step 03b-slice-r29**.
-- **4c: stages and maps ("rooms and maps").** Add, rename and delete stages; rename, resize and delete maps. Needs 4b. 4c makes the two-floor shop possible (two stages, each with its own map); the stairs link between them is step 9. About 375 counted lines, with the D21 reader row.
+- **4c: stages and maps ("rooms and maps").** Add, rename and delete stages; rename, resize and delete maps. Needs 4b. 4c makes the two-floor shop possible (two stages, each with its own map); the stairs link between them is step 7. About 375 counted lines, with the D21 reader row.
 
 ## Header
 
@@ -24,7 +24,7 @@ CoS sends each go-line only when everything before it has merged. Each run names
 1. **Step 3** waits on the step 2 merge.
 2. **4a** waits on steps 2 and 3 (base: main at the step 3 merge).
 3. **4b** waits on 4a, **S0b** and **step 03b-slice-r29**. 03b swaps in the real rev 29 demo slice, re-answers the demo docs and keeps parity green (D18). Without it, 4b's talk-limit parity test fails on the old slice, so **D18 is a 4b go-line blocker**.
-4. **4c** waits on 4b. 4c may ship a reference check that covers `mapRef` only, if its hand-back names the step 9 carry (links add their targets to `refsTo` in step 9).
+4. **4c** waits on 4b. 4c may ship a reference check that covers `mapRef` only, if its hand-back names the step 7 carry (links add their targets to `refsTo` in step 7).
 
 ## Delivery (each run)
 Same shape as step 0 (`docs/maker/steps/step-00-play-input.md`, Delivery), step 2 and `handoff/HAND-BACK.md`.
@@ -68,7 +68,7 @@ In an opened project, the user taps a stage and gets the **stage editor**: a pho
 8. **Every change is saved, and every failure is shown (Standing lessons; step 2 Save rules).** Edits go through step 2's save plan and store: changed docs only, `rev + 1`, tmp then rename, `project.json` last. A failed save shows the typed error in words, and the old files stay intact.
 9. **Start new / Clear all ships with this tool (roadmap rule 8; shell-lessons #6 (a)).** The CEO's rule: a **Start new** button sits **beside View**, with a warning, in this tool. It ships in 4a, working. It is never shown before it works.
    - **Proposed UX answer (Editor & UX Designer, not a CEO rule):** Start new is one Undo step, so the user can take it back right away.
-10. **No unit on a closed cell (EA R-E4).** The editor never offers a closed type (`open: false` in the slice's `tile_types`) on a cell that has a unit, and never places or moves a unit onto a closed cell. The reader side (built in 4a, see **Reader side on main** below): `readProject` gives a **warning** row (not hard) for a placement on a closed cell or outside the map. The engine already skips that placement in memory. The row is **D17 `placementDropped`**: a warning, never hard, with `{stageId, list: "playerSpawns" | "neutrals" | "enemyPool", index, unitId?, sq, reason: "closedCell" | "outsideMap"}`. The reader skips that placement in memory and never writes back. The editor writes a drop only on a confirmed resize (4c), one row per entry. Step 9 link cells will add a reason value later, not a new code. A dropped NPC placement's talk setup stays on disk (D11).
+10. **No unit on a closed cell (EA R-E4).** The editor never offers a closed type (`open: false` in the slice's `tile_types`) on a cell that has a unit, and never places or moves a unit onto a closed cell. The reader side (built in 4a, see **Reader side on main** below): `readProject` gives a **warning** row (not hard) for a placement on a closed cell or outside the map. The engine already skips that placement in memory. The row is **D17 `placementDropped`**: a warning, never hard, with `{stageId, list: "playerSpawns" | "neutrals" | "enemyPool", index, unitId?, sq, reason: "closedCell" | "outsideMap"}`. The reader skips that placement in memory and never writes back. The editor writes a drop only on a confirmed resize (4c), one row per entry. Step 7 link cells will add a reason value later, not a new code. A dropped NPC placement's talk setup stays on disk (D11).
 11. **History is kept, not grown (D12 (was R-D3)).** Undo is session-only. Any `history` already in a stage, map or setup document is written back unchanged. The editor appends no ops. **Known gap:** setup-format §4 rule 2 asks for an op per change; appending ops is deferred to a later step.
 12. **Shared maps are painted in place (D15 (was R-D6)).** Many stages may share one map (`mapRef`). The editor paints that map, with a note that says how many stages use it. It never makes a silent per-stage copy. A "copy map for this stage" fork is later work.
 13. **Hostile stays off (shell-lessons #1 rule 4; EA R-E5).** The editor writes no `side` on a `neutrals[]` entry. An NPC with no `side` plays **neutral**: it can't be targeted, it doesn't act, and it isn't counted for a wipe. There is no Hostile control in step 4. A later Hostile toggle will write `side` on that `stage.neutrals` entry, set to `stage.sides.enemyPool ?? "rival"`, with no new field. It ships with or after S0b.
@@ -270,19 +270,19 @@ Look follows the shots (top bar, sheet, chip, buttons) in colours, type, spacing
 ## 4c: stages and maps
 
 ### 4c Goal
-The project screen lets the user add, rename and delete stages, and rename, resize and delete maps. A new stage can get its own new map, so a game can have two floors (for example a shop downstairs and a home upstairs). The stairs link that joins them is step 9. Every change is saved, and Test plays any stage.
+The project screen lets the user add, rename and delete stages, and rename, resize and delete maps. A new stage can get its own new map, so a game can have two floors (for example a shop downstairs and a home upstairs). The stairs link that joins them is step 7. Every change is saved, and Test plays any stage.
 
 ### 4c Read first
 Everything in the shared Read first, plus:
 1. `docs/maker/data/project-format.md` §3.1 (`project.stages`, `render.excludedStages`), §6.4 (`cols`, `rows`, `layers[].tiles` length `cols*rows`, `logic.terrain` length `cols*rows`, `logic.edges`, `logic.lanes?`; the editor warns above 256×256), §6.5 (`mapRef`: many stages may share a map).
-2. `docs/maker/roadmap.md` MS-03 step 9 row (doors, stairs, gates; the two-floor shop).
+2. `docs/maker/roadmap.md` MS-03 step 7 row (doors, stairs, gates; the two-floor shop).
 3. Step 2's `data/templates/empty.tileproj/` (its stage and map files are the skeletons for a new stage and map).
 
 ### 4c Rules
-**EA conditions (EA ruling, 2026-11-19).** EA set three conditions, and 4c is what makes the two-floor shop possible (two stages, each with its own map; the stairs are step 9):
+**EA conditions (EA ruling, 2026-11-19).** EA set three conditions, and 4c is what makes the two-floor shop possible (two stages, each with its own map; the stairs are step 7):
 1. **Rename changes the label only.** Renaming a stage or a map changes its `name`, never its id or file name.
-2. **Delete is refused while something points at it.** Deleting a map that any stage's `mapRef` uses is refused with a row that names the stages. Deleting a stage or map that a link targets is refused the same way. The format has no link field yet (links arrive in step 9), so 4c writes the check as one pure function, `refsTo(id)`. In 4c it covers `mapRef` only, and the hand-back names the step 9 carry: step 9 extends `refsTo` with link targets.
-3. **Resize warns, then drops with a row.** A resize that cuts off a placement (or, from step 9, a link cell) warns first and lists what will go. On confirm it drops those entries and writes one **D17 `placementDropped`** row per dropped placement, with `reason: "outsideMap"` (Rules 10). A dropped NPC placement's talk setup stays on disk (D11). `logic.edges` entries outside the new size are listed in the same warning. On confirm each one is dropped with one **D21 `mapEntryDropped`** row: a warning, never hard, with `{mapId, field: "edges", index, reason: "outsideMap"}` (D21 as amended, doc `24cba61e`), one row per entry. It works like D17: the editor drops entries only on a confirmed resize, and the reader skips an out-of-range entry in memory and never writes back. `logic.lanes` is a per-cell array, not a list (see **Reader side on main**), so it is cropped like terrain (Rule 7), with `0` in new cells, and gives no row (D21 as amended).
+2. **Delete is refused while something points at it.** Deleting a map that any stage's `mapRef` uses is refused with a row that names the stages. Deleting a stage or map that a link targets is refused the same way. The format has no link field yet (links arrive in step 7), so 4c writes the check as one pure function, `refsTo(id)`. In 4c it covers `mapRef` only, and the hand-back names the step 7 carry: step 7 extends `refsTo` with link targets.
+3. **Resize warns, then drops with a row.** A resize that cuts off a placement (or, from step 7, a link cell) warns first and lists what will go. On confirm it drops those entries and writes one **D17 `placementDropped`** row per dropped placement, with `reason: "outsideMap"` (Rules 10). A dropped NPC placement's talk setup stays on disk (D11). `logic.edges` entries outside the new size are listed in the same warning. On confirm each one is dropped with one **D21 `mapEntryDropped`** row: a warning, never hard, with `{mapId, field: "edges", index, reason: "outsideMap"}` (D21 as amended, doc `24cba61e`), one row per entry. It works like D17: the editor drops entries only on a confirmed resize, and the reader skips an out-of-range entry in memory and never writes back. `logic.lanes` is a per-cell array, not a list (see **Reader side on main**), so it is cropped like terrain (Rule 7), with `0` in new cells, and gives no row (D21 as amended).
 
 **UX choices (Editor & UX Designer, not EA conditions).** These are design choices for this run. They stay unless CoS or the CEO changes them:
 4. **The last stage can't be deleted.** The row says "A game needs at least one stage".
@@ -331,7 +331,7 @@ Everything in the shared Read first, plus:
 ### 4c Must NOT
 - Everything in 4a and 4b Must NOT, plus:
 - No change to any id or file name on rename (4c Rule 1).
-- No link fields, doors, stairs or gates (step 9).
+- No link fields, doors, stairs or gates (step 7).
 - No hard delete of a stage or map file (4c Rule 8). No auto-cleanup.
 - No silent drop on resize: every dropped entry gets a row (4c Rule 3).
 - No per-stage map copy ("copy map for this stage" is later work, D15).
@@ -359,7 +359,7 @@ Everything in the shared Read first, plus:
 
 ### 4c Rulings needed
 None open.
-- **Carry to step 9 (not open for 4c):** the Engine Architect / DSK link field shape that `refsTo` must cover (step 9, C3a/C3b). Not a 4c blocker: 4c ships `refsTo` for `mapRef` only, and its hand-back names the step 9 carry.
+- **Carry to step 7 (not open for 4c):** the Engine Architect / DSK link field shape that `refsTo` must cover (step 7, C3a/C3b). Not a 4c blocker: 4c ships `refsTo` for `mapRef` only, and its hand-back names the step 7 carry.
 
 ---
 
@@ -373,7 +373,7 @@ None open.
 - Buildings, map objects, Lair sets, edge-wall painting, autotile, the art look in the editor (with Sprite Studio), the rail tools.
 - NPC roles Wander, Seller and Quest giver: `npc-role` is still an IDEA (project-format §6.5, Librarian Q-L1). Starter Pack NPC templates (Villager, Merchant, Guard, Elder) are not on main as data.
 - Hostile (with or after S0b, EA R-E5), facing and side controls; weighted and waves enemy pools.
-- Links, doors, stairs and gates (step 9).
+- Links, doors, stairs and gates (step 7).
 - Editing a unit (MS-04, step 5); the Behaviour panel and + Add ability.
 
 ## Prototype lessons
