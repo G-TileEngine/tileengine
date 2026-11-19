@@ -3,7 +3,7 @@ import { installOne } from "../../src/rules/behaviours/registry.ts";
 import { TERRAIN } from "../../src/rules/behaviours/terrain.ts";
 import { STEP_PATTERN } from "../../src/rules/move/step-pattern.ts";
 import type { CoreTileType } from "../../src/types/core-types.ts";
-import { RECIPES, type PlayDocs, type Recipe } from "./load.ts";
+import { RECIPES, type Looks, type PlayDocs, type Recipe } from "./load.ts";
 import { DEMO_LOOKS } from "./looks.ts";
 import project from "../../fixtures/demo.tileproj/project.json" with { type: "json" }; import slice from "../../fixtures/demo.tileproj/catalogue/slice.json" with { type: "json" }; import mapFile from "../../fixtures/demo.tileproj/maps/map_01JDAM00000000000000000001.json" with { type: "json" }; import stageFile from "../../fixtures/demo.tileproj/stages/stage_01JDAS00000000000000000001.json" with { type: "json" };
 import u1 from "../../fixtures/demo.tileproj/units/unit_01JDAN00000000000000000001.json" with { type: "json" }; import u2 from "../../fixtures/demo.tileproj/units/unit_01JDAN00000000000000000002.json" with { type: "json" }; import u3 from "../../fixtures/demo.tileproj/units/unit_01JDAN00000000000000000003.json" with { type: "json" }; import u4 from "../../fixtures/demo.tileproj/units/unit_01JDAN00000000000000000004.json" with { type: "json" };
@@ -30,8 +30,8 @@ export function playDocsOf(store: ProjectStore, stageId?: string): PlayOut {
   const cat = store.slice, root = isObj(store.manifest["project"]) ? store.manifest["project"] : {};
   const stage = store.stages[stageId ?? strs(root["stages"])[0] ?? ""] ?? Object.values(store.stages)[0]; if (stage === undefined) throw new Error("play: stage");
   const map = store.maps[typeof stage["mapRef"] === "string" ? stage["mapRef"] : ""]; if (map === undefined) throw new Error("play: map");
-  const army = Object.values(store.setups).find((s) => s["behaviourId"] === "unit-roster"); if (army === undefined) throw new Error("play: army");
-  const hp0 = must(num(knob(army, cat, "unit-roster", "unit_hp")), "play: army"), atk0 = must(num(knob(army, cat, "unit-roster", "unit_atk")), "play: army");
+  const army = Object.values(store.setups).find((s) => s["behaviourId"] === "unit-roster");
+  const hp0 = army === undefined ? 1 : must(num(knob(army, cat, "unit-roster", "unit_hp")), "play: army"), atk0 = army === undefined ? 1 : must(num(knob(army, cat, "unit-roster", "unit_atk")), "play: army");
   const stepped = installOne(STEP_PATTERN, {}).out; if (stepped === null) throw new Error("play: step");
   const stats: Record<string, { hp: number; atk: number }> = {}, reach: Record<string, number> = {}, abilities: Record<string, { reach: number; damage: number; effectRef: string }[]> = {}, names: Record<string, string> = {};
   for (const [id, unit] of Object.entries(store.units)) {
@@ -55,10 +55,15 @@ export function playDocsOf(store: ProjectStore, stageId?: string): PlayOut {
   const host = typeof stage["seed"] === "number" ? stage["seed"] : undefined, cap = Math.min(typeof gear["size"] === "number" ? gear["size"] : chosen.length, Array.isArray(stage["playerSpawns"]) ? stage["playerSpawns"].length : chosen.length);
   return { manifest: store.manifest, map, stage, rules: { base: { hp: hp0, atk: atk0 }, stats, hitClass: "basic", ...(Object.keys(reach).length > 0 ? { reach } : {}), ...(Object.keys(abilities).length > 0 ? { abilities } : {}) }, ...(host === undefined ? {} : { hostSeed: host }), talk, chosen: chosen.slice(0, cap), tiles, names, recipes };
 }
-export function openProject(files: ProjectFiles): { docs: (PlayOut & { readonly looks: typeof DEMO_LOOKS }) | null; error: string } {
+export function openProject(files: ProjectFiles, stageId?: string): { docs: (PlayOut & { readonly looks: Looks }) | null; error: string } {
   const load = readProject(files), error = load.report.map((r) => [r.code, r.path, r.detail].filter((part) => part !== undefined).join(" ")).join("\n");
   if (!load.ok || load.readOnly || load.project === null) return { docs: null, error };
-  return { docs: { ...playDocsOf(load.project), looks: DEMO_LOOKS }, error };
+  const looks: Looks = { canopy: [], braziers: [] };
+  return { docs: { ...playDocsOf(load.project, stageId), looks }, error };
 }
-export const openBundled = (): ReturnType<typeof openProject> => openProject(bundledFiles());
+export function openBundled(): ReturnType<typeof openProject> {
+  const got = openProject(bundledFiles());
+  if (got.docs === null) return got;
+  return { docs: { ...got.docs, looks: DEMO_LOOKS }, error: got.error };
+}
 export const bundledDocs = (): NonNullable<ReturnType<typeof openBundled>["docs"]> => { const got = openBundled(); if (got.docs === null) throw new Error(got.error === "" ? "play: project" : got.error); return got.docs; };
