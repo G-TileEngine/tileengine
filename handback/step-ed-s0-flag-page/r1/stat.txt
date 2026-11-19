@@ -1,9 +1,0 @@
- docs/qa/device-runs/TEMPLATE.md  |  14 +++++
- tests/fixtures/ed-s0/ramps.json  |  49 ++++++++++++++++
- tests/tools/ed-s0-qa.test.ts     |  32 +++++++++++
- tests/tools/ed-s0.test.ts        |  80 ++++++++++++++++++++++++++
- tools/device-page/bold-stubs.ts  | 117 +++++++++++++++++++++++++++++++++++++++
- tools/device-page/bold-swatch.ts |  14 +++++
- tools/device-page/bold.ts        |  66 ++++++++++++++++++++++
- tools/device-page/page.ts        |  24 ++++++--
- 8 files changed, 392 insertions(+), 4 deletions(-)

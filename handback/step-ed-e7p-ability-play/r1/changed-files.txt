@@ -1,9 +1,0 @@
-M	docs/host-guide.md
-A	src/project/read/effect.ts
-M	src/project/read/index.ts
-A	src/runtime/scene/cast-fx.ts
-A	tests/project/read-effect-qa-e7p.test.ts
-A	tests/project/read-effect.test.ts
-A	tests/runtime/cast-fx.test.ts
-M	tests/runtime/scene/scene-fence.test.ts
-A	tools/host-example/match-fx.ts

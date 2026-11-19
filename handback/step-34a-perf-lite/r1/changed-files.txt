@@ -1,7 +1,0 @@
-M	src/runtime/canvas/canvas2d.ts
-M	src/runtime/host/raf-driver.ts
-M	src/runtime/render/light.ts
-M	src/runtime/scene/world-scene.ts
-A	tests/perf/stress-budget.ts
-M	tests/runtime/host/raf-driver.test.ts
-A	tests/runtime/scene/perf-34a.test.ts

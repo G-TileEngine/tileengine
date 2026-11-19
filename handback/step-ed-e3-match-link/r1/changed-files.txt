@@ -1,9 +1,0 @@
-M	docs/host-guide.md
-A	src/runtime/scene/match-link.ts
-M	src/runtime/scene/world-scene.ts
-A	tests/runtime/scene/match-link-qa.test.ts
-A	tests/runtime/scene/match-link.test.ts
-A	tests/runtime/scene/match-patch.test.ts
-A	tests/runtime/scene/scene-fence-qa.test.ts
-M	tests/runtime/scene/scene-fence.test.ts
-M	tools/host-example/match-picture.ts

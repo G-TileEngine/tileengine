@@ -1,9 +1,0 @@
-M	src/editor/effect/fit.ts
-A	src/editor/effect/merge.ts
-A	tests/editor/effect-e4-carries.test.ts
-A	tests/editor/effect-e4-qa.test.ts
-A	tests/editor/effect-e4-qa2.test.ts
-A	tests/editor/effect-e4-qa3.test.ts
-A	tests/editor/effect-e4-r2.test.ts
-A	tests/editor/effect-e4-r3.test.ts
-A	tests/editor/effect-e4.test.ts

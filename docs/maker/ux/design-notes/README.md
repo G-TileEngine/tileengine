@@ -1,19 +1,3 @@
-# Design notes — UI and art decisions (living docs)
+# README.md
 
-CEO standing order 2026-11-12 17:59 London: document the UI and art work so a future AI or builder can reproduce or extend the look without re-deriving it. Write as you go, one short entry per round. Full plans stay in `ux/*.md`; these notes are the distilled "what worked, what failed, why, what the CEO said".
-
-Each entry has: round/version, date, what changed, CEO feedback (quoted or close), what worked, what failed and why, the settings/commands/prompts that produced keeps, reference images.
-
-| Topic | Note | Full plan | Prototype / shots |
-|---|---|---|---|
-| Sprite generator (learn from keeps) | [sprites.md](sprites.md) | `ux/gen-learn-plan.md` | `ui-shell/mock-gen-learn/proto.py`, `share/gen-learn/` |
-| Home globe | [home-globe.md](home-globe.md) | `ux/home-globe-plan.md` | `ui-shell/screenshots/` |
-| Effects v2 | [effects-v2.md](effects-v2.md) | `ux/effects-v2-plan.md` | `ux/effects-v2-ref/` |
-| Effects ↔ sprites sync (step 33 base) | [effects-v2.md](effects-v2.md) (2026-11-13 entry) | `ux/effects-sprite-sync.md` | — |
-| Effect Designer v3 (step after 34b, early UX view) | [effects-v2.md](effects-v2.md) (2026-11-15 entry) | `ux/effect-designer-v3-ux.md` | — |
-| Shell and look (always applies) | [shell-and-look.md](shell-and-look.md) | `ux/screen-map.md` | r62 look, r72 live |
-| Turn banner (HUD kit) | [turn-banner.md](turn-banner.md) | `ux/effect-designer-v3-ux.md` | CEO goal 2026-11-15 (felnartstories) |
-| Animated tiles, objects, edge decoration | [animated-world.md](animated-world.md) | post-H2 / map editor | `painter-proto/atmosphere.js`, `share/animated-world/` |
-| Pixel Composer reference | [pixel-composer-reference.md](pixel-composer-reference.md) | frame loop, Effects v2 | — |
-| Editor behaviours (from Vercel UI SDK) | [editor-behaviours.md](editor-behaviours.md) | all editors | — |
-| AI-assisted sprites and game UI (research) | [ai-sprites-and-ui-research.md](ai-sprites-and-ui-research.md) | ideas only; Sprite Studio parked (G8 HOLD) | `refs/ai-sprites-ui/` |
+Moved to the private repo G-TileEngine/tileengine-private at `from-public/docs/maker/ux/design-notes/README.md`, sha256 `5797c2c85128dc4bc0b798fe83d727b1db8ca425f0de99808ec4c7cd8c6cfaff`, on 2026-11-19 at the CEO's request. Ask CoS for access.

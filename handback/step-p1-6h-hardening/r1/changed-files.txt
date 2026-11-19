@@ -1,9 +1,0 @@
-M	src/rules/battle/battle.ts
-M	src/rules/turns/bot-ability-priority.ts
-M	tests/rules/battle-p16-heavy.test.ts
-M	tests/rules/bot-p15.test.ts
-A	tests/rules/bot-p16h.test.ts
-M	tests/rules/bot-qa-p15.test.ts
-M	tests/tools/play-stage.test.ts
-M	tools/play-stage/board.ts
-M	tools/play-stage/page.ts

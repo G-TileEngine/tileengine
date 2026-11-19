@@ -1,6 +1,0 @@
-M	src/sim/driver-phase.ts
-M	src/sim/index.ts
-A	src/sim/player.ts
-M	src/sim/types.ts
-A	tests/sim/player.test.ts
-A	tests/sim/seats.ts

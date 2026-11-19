@@ -1,8 +1,0 @@
- handoff/steps/tests/s0-play-input/touch-smoke.mjs | 107 ++++++++++++++++++++++
- tests/tools/touch-play.test.ts                    |  78 ++++++++++++++++
- tools/play-stage/board.ts                         |   4 +-
- tools/play-stage/hud.ts                           |  11 ++-
- tools/play-stage/match.ts                         |  65 +++++++++++--
- tools/play-stage/page.ts                          |  35 +------
- tools/play-stage/touch.ts                         |  63 +++++++++++++
- 7 files changed, 321 insertions(+), 42 deletions(-)

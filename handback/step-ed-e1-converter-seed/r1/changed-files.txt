@@ -1,8 +1,0 @@
-A	src/editor/effect/fit.ts
-A	src/editor/effect/parts.ts
-A	src/runtime/render/fx-doc.ts
-M	src/runtime/render/fx-live.ts
-M	src/runtime/render/fx-particles.ts
-A	tests/editor/effect-e1-qa2.test.ts
-A	tests/editor/effect-e1.test.ts
-A	tests/runtime/render/fx-doc.test.ts

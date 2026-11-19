@@ -1,3 +1,0 @@
-A	src/core/rng/index.ts
-A	src/core/rng/rng.ts
-A	tests/core/rng.test.ts

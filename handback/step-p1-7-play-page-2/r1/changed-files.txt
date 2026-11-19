@@ -1,9 +1,0 @@
-M	src/sim/player.ts
-M	src/sim/types.ts
-A	tests/tools/play-stage-p17.test.ts
-M	tools/play-stage/board.ts
-A	tools/play-stage/camera-touch.ts
-A	tools/play-stage/hud.ts
-M	tools/play-stage/load.ts
-A	tools/play-stage/match.ts
-M	tools/play-stage/page.ts

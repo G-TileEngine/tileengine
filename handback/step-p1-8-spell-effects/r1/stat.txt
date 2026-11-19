@@ -1,8 +1,0 @@
- tests/tools/play-stage-looks.test.ts | 80 +++++++++++++++++++++++++++++++++
- tests/tools/play-stage-p18.test.ts   | 85 ++++++++++++++++++++++++++++++++++++
- tools/play-stage/board.ts            | 19 ++++----
- tools/play-stage/fx.ts               | 51 ++++++++++++++++++++++
- tools/play-stage/load.ts             | 12 ++---
- tools/play-stage/looks.ts            | 59 +++++++++++++++++++++++++
- tools/play-stage/page.ts             | 13 +++---
- 7 files changed, 301 insertions(+), 18 deletions(-)

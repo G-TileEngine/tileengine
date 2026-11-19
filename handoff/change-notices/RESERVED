@@ -1,6 +1,0 @@
-# Reserved change-notice numbers (read by cos-tools dsk-cn-new.sh).
-# One CN-NNN per line. Owner: Data & Save Keeper. Scope: Effect Designer scope §7.
-CN-023
-CN-024
-CN-025
-CN-028  # EA: delivery via builder-pushed step branches (supersedes CN-003), reserved 2026-11-17 00:2x

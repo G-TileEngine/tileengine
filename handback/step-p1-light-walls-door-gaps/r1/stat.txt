@@ -1,9 +1,0 @@
- src/core/clock/clock.ts                  | 32 ++++++++++-----
- src/core/log/log.ts                      |  2 +-
- src/runtime/render/index.ts              |  2 +-
- src/runtime/render/visibility.ts         | 31 ++++++++++++++-
- src/sim/actions.ts                       |  1 +
- src/sim/run.ts                           | 32 +++++++++++----
- tests/runtime/render/light-walls.test.ts | 48 +++++++++++++++++++++++
- tests/sim/door-gaps.test.ts              | 67 ++++++++++++++++++++++++++++++++
- 8 files changed, 193 insertions(+), 22 deletions(-)

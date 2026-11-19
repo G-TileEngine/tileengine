@@ -1,7 +1,0 @@
-A	handoff/steps/tests/s0-play-input/touch-smoke.mjs
-A	tests/tools/touch-play.test.ts
-M	tools/play-stage/board.ts
-M	tools/play-stage/hud.ts
-M	tools/play-stage/match.ts
-M	tools/play-stage/page.ts
-A	tools/play-stage/touch.ts

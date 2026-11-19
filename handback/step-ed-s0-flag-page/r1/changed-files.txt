@@ -1,8 +1,0 @@
-M	docs/qa/device-runs/TEMPLATE.md
-A	tests/fixtures/ed-s0/ramps.json
-A	tests/tools/ed-s0-qa.test.ts
-A	tests/tools/ed-s0.test.ts
-A	tools/device-page/bold-stubs.ts
-A	tools/device-page/bold-swatch.ts
-A	tools/device-page/bold.ts
-M	tools/device-page/page.ts

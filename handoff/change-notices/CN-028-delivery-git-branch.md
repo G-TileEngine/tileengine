@@ -1,35 +1,3 @@
-# CN-028: from ED-E6 on, the builder pushes its own step branch; Chief Of Staff opens the PR (supersedes CN-003)
-Date: 2026-11-17   Raised by: CEO decision 2026-11-17 00:20 (via Chief Of Staff); one builder per step, CEO 2026-11-17 ~01:33 London (via Chief Of Staff); ruled by Engine Architect. Number reserved by DSK in `handoff/change-notices/RESERVED` ("EA: delivery via builder-pushed step branches (supersedes CN-003)").
-Old (CN-003): Grok Build reads the repo and never pushes. It finishes with a git bundle of `<base>..step/<step-id>-r<N>`, uploads it plus a copy of HANDBACK.md to the CEO's Drive, and Chief Of Staff pushes the branch and opens the PR. Two builder chats (A/B) could run per step, with QA picking one.
-New: each step has **one builder chat (ChatA), one QA review, and a rework round (r2, r3…) if QA finds must-fixes**; no A/B builds and no pick. The builder pushes ONE branch of its own to `G-TileEngine/tileengine` and nothing else:
-- Branch: `step/<step-id>-r<N>-chatA`, made from the step's Base commit (e.g. `step/step-ed-e6-designer-page-r1-chatA`). A rework after a REJECT is a new branch `step/<step-id>-r<N+1>-chatA` from the `r<N>` head; the old branch is left alone. (The `chatA` suffix stays in the name so the pattern never needs to change again.)
-- `handback/<step-id>/r<N>/HANDBACK.md` (and its usual output files) is committed on that branch as the last commit.
-- Push once, with the builder token through a one-shot credential helper (§ Token below): `git -c credential.helper= -c credential.helper='!f() { echo username=GTileEngineHelpers; echo "password=${GH_BUILDER_TOKEN}"; }; f' push https://github.com/G-TileEngine/tileengine.git HEAD:refs/heads/step/<step-id>-r<N>-chatA` (keep the single quotes so the token is read only when git asks; it never appears on the command line). Never push to `main`, never push any other branch or tag, never force-push, never delete a branch, never open, merge or close a PR.
-- The hand-back message quotes: the branch name, the tip sha (full 40 characters), its tree, the Base sha, the test counts (`pass N fail 0`, with the floor from the step doc), and any smoke the step doc requires (E6: the browser smoke).
-- HANDBACK.md's PR line reads `PR: opened by Chief Of Staff from the branch`.
-- Chief Of Staff verifies straight from the remote branch (verify-bundle adapted to fetch the ref), QA reviews that one branch, and Chief Of Staff opens the PR to `main` from it. The Architect's G6 adopt, verify-merge and merge-time doc are unchanged.
-Setup the CEO does once, before the first kit under this CN is sent (Chief Of Staff gives him the steps). The paste rule alone is not enough; the settings are what stop a token. Status at 2026-11-17 (CoS report, with the CEO's OK):
-- **Done:** ruleset `27424037` on `main` and `gh-pages`: PR only, 1 approving review, require last-push approval, merge commits only, no force-push or deletion.
-- **Done:** ruleset `27424039` on `step/**`: no force-push or deletion, so a pushed step branch is never rewritten or removed.
-- **Done:** ruleset `27424042` on tags: no create, update or delete.
-- The only bypass on all three is the admin role, so Chief Of Staff's `merge-pr.sh` and `publish-ghpages.sh` still push directly.
-- **Done: token issued 2026-11-17.** The builder token comes from a **separate builder GitHub account**, added to `G-TileEngine/tileengine` as a collaborator with the **Write** role only. The token is a **classic personal access token** on that builder account (a collaborator on `tileengine` only), scope `public_repo`, so its repo permissions are push, triage and pull only. It never comes from `G-TileEngine` (the owner, a user account and an admin) or from any admin account, because admins bypass the rulesets.
-Token (how the builder uses it, from ED-E6):
-- The CEO gives the builder chat the token in chat, once, at the start of the step.
-- The builder keeps it as `GH_BUILDER_TOKEN`, set with `export GH_BUILDER_TOKEN=...` in the shell that runs git (without `export` the credential helper sees nothing; never write a real value), and never prints, echoes, logs or commits it, and never stores it in `.git/config` or a saved remote.
-- Push once, through a one-shot credential helper: `git -c credential.helper= -c credential.helper='!f() { echo username=GTileEngineHelpers; echo "password=${GH_BUILDER_TOKEN}"; }; f' push https://github.com/G-TileEngine/tileengine.git HEAD:refs/heads/step/<step-id>-r<N>-chatA` (keep the single quotes so the token is read only when git asks; it never appears on the command line) (e.g. `step/step-ed-e6-designer-page-r1-chatA`).
-- Commits stay authored and committed as `G-TileEngine <G-TileEngine@users.noreply.github.com>`.
-- Only `step/**` branches are pushed: never `main`, never a tag, never a force-push (the rulesets block all three).
-- If the token ever appears in output, the builder says so and the CEO revokes and reissues it.
-- Never write the builder account's numeric id, and never write a token value anywhere (files, messages, logs).
-- HANDBACK.md is committed on the branch as its last commit; the hand-back quotes the tip sha, tree, test counts and the step's required smoke.
-Unchanged: base/head rules, the hand-back folder layout, QA's `<base>..<head>` review, gates, floors, the noreply identity `G-TileEngine <G-TileEngine@users.noreply.github.com>`, that builder pastes go through the CEO, and that gh-pages needs RaiKynn's own typed OK naming the commit.
-Affected steps already done: none. ED-E5 and earlier were delivered under CN-003, as the CEO ruled. CN-003 stays in the repo, marked "Superseded by CN-028 from ED-E6".
-Action: process change, no code. Carried by the ED-E6 step doc and paste (Delivery line, § Delivery and Acceptance, short form of § Token), the first step under it.
-Kit files updated (pushed with this CN, before ED-E6 is sent; line numbers as in this kit; the five files are unchanged on main from `6add89b6` to `41ac9bcc`):
-- BUILD_GUIDE.md (root) §8 Branch/Delivery line (L119): the CN-003 text replaced by the branch push (one-shot credential helper with the token) and the one-builder rule above.
-- handoff/HAND-BACK.md: L7 (Branch/Delivery, one builder, the credential-helper push), L8 (Token, new), L25 (QA reviews the pushed branch; the hand-back message quotes branch, tip, tree, Base, counts and any required smoke), L31 template line (`-chatA` branch, Tree, PR from the branch), L40 template § Smoke (new), L67 (ACCEPT: one QA review, no A/B file), L69 (REJECT: the rework round on a new `-r<N+1>-chatA` branch).
-- handoff/STEP-TEMPLATE.md: L9 (Repo: you push your own branch only), L11 (Branch `-chatA`), L12 (Delivery line, the credential-helper push), L16 (Kit line names the Architect's proto bundle only).
-- handoff/README.md: L8 (Per step) and L83 (QA's clean checkout): the CN-003 text replaced (added to the CN draft's list so no delivery text keeps the old route); L9 "Issued" CN list brought up to date (CN-017 to CN-022, CN-026, CN-027 as on main, plus CN-028; CN-023 to CN-025 stay reserved).
-- handoff/change-notices/CN-003-delivery-bundle.md: one header line added, "Superseded by CN-028 from ED-E6".
-Not changed: the per-step docs of finished steps (history), docs/pastes for E2–E5, and `handoff/change-notices/RESERVED` (DSK's file; DSK removes the CN-028 line once this notice is filed).
+# CN-028-delivery-git-branch.md
+
+Moved to the private repo G-TileEngine/tileengine-private at `from-public/handoff/change-notices/CN-028-delivery-git-branch.md`, sha256 `eeee77234487f44629cc19b46f737fd9f880f80f3651fb9eb797c45b4adbac0d`, on 2026-11-19 at the CEO's request. Ask CoS for access.
