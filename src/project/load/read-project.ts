@@ -1,4 +1,5 @@
 import { readManifest, readMap, readSetup, readStage, readUnit, type ReadResult } from "../read/index.ts";
+import { placementDrops } from "./drops.ts";
 import { migrateProject, versionRows } from "./migrate.ts";
 import { knownKind, type Doc, type ProjectFiles, type ProjectLoad, type ProjectStore, type ReportRow, type Severity } from "./types.ts";
 
@@ -104,6 +105,7 @@ export function readProject(files: ProjectFiles): ProjectLoad {
   const project = isObj(manifestDoc) && isObj(manifestDoc["project"]) ? manifestDoc["project"] : {};
   refs(isObj(manifestDoc) ? manifestDoc : {}, stageAt, maps, stages, units, setups, rows);
   warns(slice, project["catalogueRev"], maps, setups, rows);
+  rows.push(...placementDrops(stages, stageAt, maps, slice));
   const hard = rows.some((r) => r.severity === "hard");
   const store: ProjectStore = { manifest, slice, maps, stages, units, setups, unknownFiles };
   return { ok: !hard, readOnly: false, project: store, report: sort(rows) };
