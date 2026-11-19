@@ -40,6 +40,15 @@ Priority order (CEO, 2026-11-09), never reordered: **1. grid tactics** (Fire Emb
 - **MODES-v2 hooks (no idle/TD features in v1 steps):** `play.running` is the shared tick mode; map-level `paths[]` and a future `src/core/path` must not be precluded; occupancy is a policy (v1 implements `strict1` only; `softStack`, `laneSlots` later); the event bus takes a mode-registered typed event map; step 09 defines `SimSnapshot` and headless `replayTicks(n)` / `advance(ms)`.
 - **M9 Presentation (menu vs cards) stays outside core.** Same ability via menu or cards gives an identical `submit` payload apart from `via`.
 
+### 2.2 Optimisation laws (CEO-approved 2026-11-19 14:42, via CoS; also engine law)
+14. **The sim has one thread and one clock.** No sim on workers or threads, no second or real-time clock for performance, and no cache across the sim/render boundary that lets render drive gameplay. Workers only do non-authoritative asset prep that can't change sim order or outcome.
+15. **Sim caches are disposable derived data.** Every sim cache (reach, sight, path, occupancy) is never saved in a project, is always rebuildable, and is invalidated on every move, wall edit, death, push and door, ideally through one mutation funnel or rev counter per domain. Each cache has a parity test proving cached == uncached.
+16. **Stages not being viewed use closed-form catch-up**, never skipped rules.
+17. **Lazy loading never skips validation.** It may defer tile pictures, but every stage is still validated, and a hard error anywhere blocks Test and export.
+18. **No silent image downscale or reject.** The maker says which limit was hit.
+19. **One frame loop, one redraw check.** Reuse the render-on-change check in `src/runtime/render/dirty.ts` (`needsDraw` L3–10, `present` L12–21), called by the single frame loop in `src/runtime/host/raf-driver.ts` (L84, L88). No second dirty-rect system.
+20. **No optimising AI that isn't built yet.**
+
 ## 3. Folder layout and layers
 One npm package for now (layers are folders; a later Change Notice may split them into workspace packages).
 ```
