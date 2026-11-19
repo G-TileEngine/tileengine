@@ -40,8 +40,11 @@ async function copy(): Promise<void> { if (store === null || state.menu === null
 async function remove(): Promise<void> { if (store === null || state.menu === null) return; const id = state.menu; await movePrefix(store, prefix(id), prefix(id, true)); toastId = id; state.toast = "Deleted · Undo"; state.screen = "home"; window.clearTimeout(timer); timer = window.setTimeout(() => { state.toast = null; paint(); }, 6000); await refresh(); paint(); }
 async function restore(id: string): Promise<void> { if (store === null || id === "") return; const taken = (await store.list(LIVE)).includes(id), text = await readTree(store, prefix(id, true)), plan = restorePlan(id, taken, text, projectId(Date.now(), bytes()), nowIso(), state.rows.map((row) => row.name)); if (taken) { const got = await commitWrites(store, prefix(plan.id), asWrites(plan.files)); if (!got.ok) { say(got.message); return; } for (const rel of Object.keys(text)) await store.remove(`${prefix(id, true)}${rel}`); } else await movePrefix(store, prefix(id, true), prefix(id)); window.clearTimeout(timer); state.toast = null; state.screen = "home"; state.banner = null; await refresh(); paint(); }
 function enterPlay(docs: PlayReady, scroll: number): void {
-  const root = app(); root.hidden = true; const canvas = document.createElement("canvas"); canvas.id = "board"; document.body.append(canvas);
-  startMatch(docs, () => { canvas.remove(); document.querySelector("#hud")?.remove(); root.hidden = false; const from = new URLSearchParams(location.search).get("from"); state.screen = from === "home" || from === "trash" ? from : "project"; state.problems = []; history.pushState(null, "", location.pathname); paint(); const body = document.querySelector(".body"); if (body instanceof HTMLElement) body.scrollTop = scroll; });
+  const root = app(), canvas = document.createElement("canvas"); canvas.id = "board"; document.body.append(canvas);
+  try {
+    startMatch(docs, () => { canvas.remove(); document.querySelector("#hud")?.remove(); root.hidden = false; const from = new URLSearchParams(location.search).get("from"); state.screen = from === "home" || from === "trash" ? from : "project"; state.problems = []; history.pushState(null, "", location.pathname); paint(); const body = document.querySelector(".body"); if (body instanceof HTMLElement) body.scrollTop = scroll; });
+    root.hidden = true;
+  } catch (e) { canvas.remove(); throw e; }
 }
 async function beginTest(): Promise<void> {
   if (store === null || state.current === null) return;

@@ -28,13 +28,34 @@ function readDir(rel: string): Record<string, string> {
 function readJson(rel: string): Record<string, unknown> {
   return Object.fromEntries(Object.entries(readDir(rel)).map(([path, text]) => [path, JSON.parse(text) as unknown]));
 }
-test("openProject on the empty template has no demo dressing", () => {
-  const got = openProject(readJson("data/templates/empty.tileproj"));
-  assert.equal(got.docs?.looks.canopy.length, 0); assert.equal(got.docs?.looks.braziers.length, 0);
+test("openProject on a saved demo has no demo dressing and Empty cannot open", () => {
+  const saved = openProject(readJson("data/templates/demo.tileproj"));
+  assert.equal(saved.docs?.looks.canopy.length, 0); assert.equal(saved.docs?.looks.braziers.length, 0);
+  const empty = openProject(readJson("data/templates/empty.tileproj"));
+  assert.equal(empty.docs, null); assert.equal(empty.error, "play: army");
   const demo = openBundled();
   assert.deepEqual(demo.docs?.looks.canopy, DEMO_LOOKS.canopy); assert.deepEqual(demo.docs?.looks.braziers, DEMO_LOOKS.braziers);
   const staged = openProject(loadFixture(), "stage_01JDAS00000000000000000001");
   const stage = staged.docs?.stage; assert.equal(typeof stage === "object" && stage !== null && "id" in stage && stage.id, "stage_01JDAS00000000000000000001");
+});
+test("test-launch: Empty stays in the maker", async () => {
+  const id = "project_01JDEM00000000000000000001", store = memoryStore(), stored = readDir("data/templates/empty.tileproj");
+  for (const [path, text] of Object.entries(stored)) await store.write(`${prefix(id)}${path}`, text);
+  let started = false;
+  const got = await launchTest({ store, id, stored, next: stored, rev: storedRev(readJson("data/templates/empty.tileproj")), from: "project", now: NOW, start() { started = true; } });
+  assert.equal(started, false); assert.equal(got.ok, false); if (got.ok) return;
+  assert.equal(got.lines[0], "This project has no unit roster yet, so it can't be played");
+});
+test("test-launch: start throws, maker stays", async () => {
+  const id = "project_01JDAP00000000000000000001", store = memoryStore(), stored = readDir("data/templates/demo.tileproj");
+  for (const [path, text] of Object.entries(stored)) await store.write(`${prefix(id)}${path}`, text);
+  const pushed: string[] = [], loc = globalThis as { history?: { pushState(state: null, title: string, url: string): void } }, prev = loc.history;
+  loc.history = { pushState(_state, _title, url) { pushed.push(url); } };
+  try {
+    const got = await launchTest({ store, id, stored, next: stored, rev: storedRev(readJson("data/templates/demo.tileproj")), from: "project", now: NOW, start() { throw new Error("play: seed"); } });
+    assert.equal(got.ok, false); if (got.ok) return;
+    assert.equal(got.lines[0], "Stage 1 has no seed yet, so it can't be played"); assert.deepEqual(pushed, []);
+  } finally { if (prev === undefined) delete loc.history; else loc.history = prev; }
 });
 test("test-launch: save fails, no launch", async () => {
   const id = "project_01JDAP00000000000000000001", store = memoryStore(), stored = readDir("data/templates/demo.tileproj");

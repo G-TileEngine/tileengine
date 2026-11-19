@@ -1,6 +1,6 @@
 import { prefix, storedRev, type DocText } from "../../src/editor/project/home.ts";
 import { planSave } from "../../src/editor/project/save.ts";
-import { testGate } from "../../src/editor/project/test-gate.ts";
+import { testGate, playLine } from "../../src/editor/project/test-gate.ts";
 import { readProject } from "../../src/project/load/index.ts";
 import type { Looks } from "../play-stage/load.ts";
 import { openProject, type PlayOut } from "../play-stage/project.ts";
@@ -19,8 +19,9 @@ function play(input: LaunchBag, text: DocText): Launch {
   const load = readProject(parsed.files), gate = testGate(load.report, load.readOnly), rev = storedRev(parsed.files);
   if (!gate.allowed) return fail(gate.lines, text, rev);
   const opened = input.stageId === undefined ? openProject(parsed.files) : openProject(parsed.files, input.stageId);
-  if (opened.docs === null) return fail([opened.error === "" ? "Can't play this project" : opened.error], text, rev);
-  showUrl(input.id, stageOf(opened.docs), input.from); input.start(opened.docs); return { ok: true, files: text, rev };
+  if (opened.docs === null) return fail([playLine(opened.error)], text, rev);
+  try { input.start(opened.docs); } catch (e) { if (!(e instanceof Error)) throw e; return fail([playLine(e.message)], text, rev); }
+  showUrl(input.id, stageOf(opened.docs), input.from); return { ok: true, files: text, rev };
 }
 /** Read a saved folder and start its stage. No demo fallback. */
 export async function openSaved(input: LaunchBag): Promise<Launch> {
