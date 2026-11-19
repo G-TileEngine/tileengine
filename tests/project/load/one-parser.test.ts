@@ -13,3 +13,12 @@ test("P2: load has one parser, and play-stage grows no JSON.parse, formatVersion
   assert.deepEqual(hits("src/project/load", (name) => name === "migrate.ts"), []);
   assert.deepEqual(hits("tools/play-stage", () => false).filter((hit) => !ALLOW.includes(hit)), []);
 });
+test("P2 maker: one JSON.parse in project-files.ts, no formatVersion or kind ===, and play-stage does not import maker", () => {
+  const names = readdirSync("tools/maker").filter((name) => name.endsWith(".ts"));
+  const lines = names.flatMap((name) => readFileSync(join("tools/maker", name), "utf8").split("\n").map((line) => `${name}\t${line}`));
+  const parses = lines.filter((line) => line.includes("JSON.parse"));
+  assert.equal(parses.length, 1); assert.match(parses[0] ?? "", /^project-files\.ts/);
+  assert.deepEqual(lines.filter((line) => /formatVersion|kind === /.test(line)), []);
+  const imported = readdirSync("tools/play-stage").filter((name) => name.endsWith(".ts") && /tools\/maker|\.\.\/maker\//.test(readFileSync(join("tools/play-stage", name), "utf8")));
+  assert.deepEqual(imported, []);
+});

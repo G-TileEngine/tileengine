@@ -1,4 +1,5 @@
 .app { height: 100dvh; min-height: 100dvh; background: var(--bg); color: var(--ink); display: flex; flex-direction: column; }
+.app[hidden] { display: none; }
 .topbar { min-height: var(--header-h); display: flex; align-items: center; gap: 8px; padding: 10px 16px 8px; background: var(--surface); border-bottom: 1px solid var(--line); }
 .topbar h1 { flex: 1; margin: 0; font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .body { flex: 1; min-height: 0; overflow: auto; padding: 16px 16px calc(20px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 12px; }
@@ -15,7 +16,7 @@
 .btn.danger { background: var(--danger-soft); color: var(--danger); border-color: var(--danger-line); }
 .btn.icon { width: 48px; padding: 0; background: var(--surface); border-color: var(--line); color: var(--ink); }
 .badge { display: inline-flex; padding: 3px 9px; border-radius: 999px; border: 1.5px solid var(--warn-line); background: var(--warn-soft); color: var(--warn); font-size: 0.78rem; font-weight: 800; }
-.banner { margin: 0; padding: 12px; border-radius: var(--radius); background: var(--warn-soft); border: 1px solid var(--warn-line); color: var(--warn); font-weight: 700; }
+.banner { margin: 0; padding: 12px; border-radius: var(--radius); background: var(--warn-soft); border: 1px solid var(--warn-line); color: var(--warn); font-weight: 700; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .banner.bad { background: var(--danger-soft); border-color: var(--danger-line); color: var(--danger); }
 .toast { position: fixed; left: 16px; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-radius: 14px; background: var(--ink); color: var(--bg); font-weight: 650; }
 .toast .btn { background: transparent; color: var(--bg); border-color: transparent; }
@@ -26,8 +27,8 @@ input.name-field { min-height: 48px; border: 2px solid var(--line); border-radiu
 .test-wrap { margin-top: auto; padding-top: 24px; }
 .test-wrap .btn { width: 100%; min-height: 56px; }
 .dot { display: inline-block; width: 8px; height: 8px; margin-left: 6px; border-radius: 999px; background: var(--accent); }
-.row { display: flex; gap: 8px; }
-.row .btn { flex: 1; }
+.project .sheet { position: static; width: auto; max-height: none; box-shadow: none; padding: 0; border-radius: 0; background: transparent; }
+.project .sheet p { margin: 0; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 @media (min-width: 421px) {
   body { min-height: 100dvh; display: grid; place-items: center; }

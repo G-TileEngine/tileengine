@@ -4,10 +4,12 @@ import { tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
 import { test } from "node:test";
 import { build } from "../../tools/maker/build.ts";
+import { openSaved } from "../../tools/maker/test-launch.ts";
+import { memoryStore } from "../../tools/maker/store.ts";
 import { ROOT } from "../../tools/play-stage/build.ts";
 const SHA = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const walk = (dir: string): string[] => readdirSync(dir).flatMap((name) => { const path = join(dir, name); return statSync(path).isDirectory() ? walk(path) : [path]; });
-test("maker build stamps, refuses a collision, drops stale folders, and audits the output", () => {
+test("maker build stamps, refuses a collision, drops stale folders, and audits the output", async () => {
   const out = mkdtempSync(join(tmpdir(), "maker-")), out2 = mkdtempSync(join(tmpdir(), "maker-"));
   build(out, SHA); build(out2, SHA);
   const maker = join(out, "maker"), stamp = readdirSync(maker).find((name) => name !== "index.html") ?? "";
@@ -20,11 +22,14 @@ test("maker build stamps, refuses a collision, drops stale folders, and audits t
   const temps = walk(join(maker, stamp, "templates")).map((path) => relative(join(maker, stamp), path).replaceAll("\\", "/")).filter((path) => path !== "templates/files.json").sort();
   assert.deepEqual([...listed.files].sort(), temps);
   for (const file of walk(join(maker, stamp))) { const rel = relative(join(maker, stamp), file).replaceAll("\\", "/"), text = readFileSync(file, "utf8"); assert.equal(rel.endsWith(".ts") || rel.endsWith(".map") || rel.includes("ui-shell") || rel.endsWith("dev.js"), false); if (/\.(js|css|html)$/.test(rel)) assert.equal(/\/\/ dev-only|\bDEV\b|sourceMappingURL|window\.__/.test(text), false); if (rel.endsWith(".js")) for (const spec of text.matchAll(/(?:from|import)\s+"(\.[^"]+)"/g)) assert.equal(statSync(join(dirname(file), spec[1] ?? "")).isFile(), true); }
-  const src = mkdtempSync(join(tmpdir(), "maker-src-")); for (const dir of ["src", "tools", "data"]) cpSync(join(ROOT, dir), join(src, dir), { recursive: true });
+  const src = mkdtempSync(join(tmpdir(), "maker-src-")); for (const dir of ["src", "tools", "data", "fixtures"]) cpSync(join(ROOT, dir), join(src, dir), { recursive: true });
   const proj = join(src, "data/templates/empty.tileproj/project.json"); writeFileSync(proj, readFileSync(proj, "utf8") + "\n");
   const out3 = mkdtempSync(join(tmpdir(), "maker-")); build(out3, SHA, src); const next = readdirSync(join(out3, "maker")).find((name) => name !== "index.html");
   assert.notEqual(next, stamp); writeFileSync(join(maker, stamp, "tokens.css"), "changed"); assert.throws(() => build(out, SHA), /different files/);
   build(out, SHA, src); assert.deepEqual(readdirSync(maker).filter((name) => name !== "index.html"), [next]);
   assert.match(readFileSync(join(ROOT, "tools/maker/home.ts"), "utf8"), /This browser can't save projects here\. Open the app from its web address\./);
+  assert.equal(statSync(join(out, "play-stage", next ?? "", "index.html")).isFile(), true);
+  let started = false; const missing = await openSaved({ store: memoryStore(), id: "missing", from: "project", start() { started = true; } });
+  assert.equal(started, false); assert.equal(missing.ok, false); if (!missing.ok) assert.match(missing.lines.join("\n"), /no project missing/);
   for (const dir of [out, out2, out3, src]) rmSync(dir, { recursive: true });
 });
