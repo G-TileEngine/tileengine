@@ -33,3 +33,9 @@ export function clearGround(map: Obj): Obj {
   const cells = terrain.map((_, i) => ({ c: i % cols, r: Math.floor(i / cols) }));
   return paintCells(map, cells, "floor");
 }
+export function startNew(map: Obj, stage: Obj): { readonly map: Obj; readonly stage: Obj } {
+  const next = structuredClone(stage) as Obj, pool = isObj(next["enemyPool"]) ? { ...next["enemyPool"] } : null;
+  next["neutrals"] = [];
+  if (pool !== null && pool["mode"] === "fixed") next["enemyPool"] = { ...pool, entries: [] };
+  return { map: clearGround(map), stage: next };
+}
