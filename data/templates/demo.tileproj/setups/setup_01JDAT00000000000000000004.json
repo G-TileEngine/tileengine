@@ -6,7 +6,7 @@
   "name": "Archer basic attack",
   "behaviourId": "basic-attack",
   "catalogue": {
-    "rev": 28
+    "rev": 29
   },
   "createdAt": "2026-11-18T00:00:00Z",
   "updatedAt": "2026-11-18T00:00:00Z",
@@ -56,8 +56,9 @@
       "needsReask": null
     },
     "enemy_basic_crosses_barrier": {
-      "source": "default",
-      "rev": 0,
+      "source": "user",
+      "value": false,
+      "rev": 1,
       "defaultRef": {
         "rev": 1
       },

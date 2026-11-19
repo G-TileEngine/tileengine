@@ -2,372 +2,2894 @@
   "kind": "catalogue-slice",
   "formatVersion": 1,
   "schema_version": 3,
-  "catalogue_rev": 28,
+  "catalogue_rev": 29,
   "gates": {
     "uses-card-hand": {
-      "id": "uses-card-hand"
+      "any": [
+        {
+          "knob": "ability-presentation.shortcut",
+          "eq": "all-cards"
+        },
+        {
+          "all": [
+            {
+              "knob": "ability-presentation.shortcut",
+              "eq": "custom"
+            },
+            {
+              "any": [
+                {
+                  "knob": "ability-presentation.basic_style",
+                  "eq": "card-hand"
+                },
+                {
+                  "knob": "ability-presentation.spells_style",
+                  "eq": "card-hand"
+                },
+                {
+                  "knob": "ability-presentation.custom_groups",
+                  "some": {
+                    "field": "style",
+                    "eq": "card-hand"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
     },
     "uses-menu": {
-      "id": "uses-menu"
+      "any": [
+        {
+          "knob": "ability-presentation.shortcut",
+          "eq": "all-menu"
+        },
+        {
+          "all": [
+            {
+              "knob": "ability-presentation.shortcut",
+              "eq": "custom"
+            },
+            {
+              "any": [
+                {
+                  "knob": "ability-presentation.basic_style",
+                  "eq": "unit-action-menu"
+                },
+                {
+                  "knob": "ability-presentation.spells_style",
+                  "eq": "unit-action-menu"
+                },
+                {
+                  "knob": "ability-presentation.custom_groups",
+                  "some": {
+                    "field": "style",
+                    "eq": "unit-action-menu"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   },
   "behaviours": [
     {
       "id": "ability-presentation",
-      "closure": "when-used",
+      "name": "Ability Presentation",
+      "group": "Presentation",
+      "summary": "How abilities are shown and picked, per ability group. Groups (Architecture v0.2 §3.4): `basic` (move, basic attack, wait) and `spells` (every ability a behaviour registers). Each group uses a unit action menu or a card hand; styles may be mixed in one project (CEO 2026-11-09). This is presentation only: abilities cost, target and resolve the same either way.",
+      "scope": "grid-tactics",
+      "starter_safe": true,
       "knobs": [
         {
           "id": "shortcut",
+          "label": "How do players pick abilities?",
           "type": "picker",
-          "rev": 1,
           "default": "all-menu",
+          "min": null,
+          "max": null,
+          "step": null,
           "options": [
-            "all-menu",
-            "basic-only"
-          ]
+            {
+              "value": "all-menu",
+              "label": "All menu",
+              "renamed_from": [
+                "unit-action-menu"
+              ]
+            },
+            {
+              "value": "all-cards",
+              "label": "All cards",
+              "renamed_from": [
+                "card-hand"
+              ]
+            },
+            {
+              "value": "custom",
+              "label": "Custom per group"
+            }
+          ],
+          "proposed": [],
+          "status": {
+            "default": "CEO-ruling",
+            "min": null,
+            "max": null,
+            "options": "CEO-ruling",
+            "step": null
+          },
+          "rev": 6,
+          "default_history": [
+            {
+              "rev": 4,
+              "default": "all-menu"
+            }
+          ],
+          "renamed_from": [
+            "style"
+          ],
+          "depends_on": [],
+          "required": true,
+          "ask_in_wizard": true,
+          "ruling": {
+            "by": "CEO (relayed by Chief Of Staff)",
+            "date": "2026-11-09",
+            "note": "CEO ruling 2026-11-09, relayed by CoS: presentation styles may be mixed within one project (per ability group)"
+          },
+          "default_note": "Required wizard question. 'All menu' is a fallback for docs and tests only; it is never picked silently for a user. All menu / All cards set every group; Custom shows the per-group pickers."
         },
         {
           "id": "basic_style",
+          "label": "Basic actions (move, basic attack, wait): how are they picked?",
           "type": "picker",
-          "rev": 1,
-          "default": "button",
+          "default": "unit-action-menu",
+          "min": null,
+          "max": null,
+          "step": null,
           "options": [
-            "button"
-          ]
+            {
+              "value": "unit-action-menu",
+              "label": "Unit action menu"
+            },
+            {
+              "value": "card-hand",
+              "label": "Card hand"
+            }
+          ],
+          "proposed": [],
+          "status": {
+            "default": "CEO-ruling",
+            "min": null,
+            "max": null,
+            "options": "CEO-ruling",
+            "step": null
+          },
+          "rev": 6,
+          "default_history": [
+            {
+              "rev": 6,
+              "default": "unit-action-menu"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "shortcut"
+          ],
+          "required": true,
+          "ask_in_wizard": true,
+          "ruling": {
+            "by": "CEO (relayed by Chief Of Staff)",
+            "date": "2026-11-09",
+            "note": "CEO ruling 2026-11-09, relayed by CoS: presentation styles may be mixed within one project (per ability group)"
+          },
+          "active_when": {
+            "knob": "shortcut",
+            "eq": "custom"
+          },
+          "default_note": "Required only while shortcut = Custom (inactive answers are never asked or validated)."
         },
         {
           "id": "spells_style",
+          "label": "Spells and abilities: how are they picked?",
           "type": "picker",
-          "rev": 1,
-          "default": "button",
+          "default": "unit-action-menu",
+          "min": null,
+          "max": null,
+          "step": null,
           "options": [
-            "button"
-          ]
+            {
+              "value": "unit-action-menu",
+              "label": "Unit action menu"
+            },
+            {
+              "value": "card-hand",
+              "label": "Card hand"
+            }
+          ],
+          "proposed": [],
+          "status": {
+            "default": "CEO-ruling",
+            "min": null,
+            "max": null,
+            "options": "CEO-ruling",
+            "step": null
+          },
+          "rev": 6,
+          "default_history": [
+            {
+              "rev": 6,
+              "default": "unit-action-menu"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "shortcut"
+          ],
+          "required": true,
+          "ask_in_wizard": true,
+          "ruling": {
+            "by": "CEO (relayed by Chief Of Staff)",
+            "date": "2026-11-09",
+            "note": "CEO ruling 2026-11-09, relayed by CoS: presentation styles may be mixed within one project (per ability group)"
+          },
+          "active_when": {
+            "knob": "shortcut",
+            "eq": "custom"
+          },
+          "default_note": "Required only while shortcut = Custom (inactive answers are never asked or validated)."
         },
         {
           "id": "custom_groups",
+          "label": "Extra ability groups",
           "type": "list",
-          "rev": 1,
-          "default": []
+          "default": [],
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [
+            "default"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 7,
+          "default_history": [
+            {
+              "rev": 7,
+              "default": []
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "item": {
+            "style": {
+              "type": "picker",
+              "options": [
+                {
+                  "value": "unit-action-menu",
+                  "label": "Unit action menu"
+                },
+                {
+                  "value": "card-hand",
+                  "label": "Card hand"
+                }
+              ],
+              "default": "unit-action-menu"
+            }
+          },
+          "reserved_ids": [
+            "basic",
+            "spells"
+          ]
         },
         {
           "id": "hand_placement",
+          "label": "Where does the hand show?",
           "type": "picker",
-          "rev": 1,
-          "default": "bottom",
+          "default": "hand-docked",
+          "min": null,
+          "max": null,
+          "step": null,
           "options": [
-            "bottom"
-          ]
+            {
+              "value": "hand-docked",
+              "label": "Always visible"
+            },
+            {
+              "value": "hand-in-menu",
+              "label": "Cards entry in the unit menu"
+            }
+          ],
+          "proposed": [
+            "default",
+            "options"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": "PROPOSED",
+            "step": null
+          },
+          "rev": 6,
+          "default_history": [
+            {
+              "rev": 6,
+              "default": "hand-docked"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "ability-presentation.shortcut",
+            "ability-presentation.basic_style",
+            "ability-presentation.spells_style",
+            "ability-presentation.custom_groups"
+          ],
+          "proposed_options": [
+            "hand-in-menu"
+          ],
+          "active_when": {
+            "gate": "uses-card-hand"
+          }
         },
         {
           "id": "team_colours",
+          "label": "Team colours (code-drawn tokens)",
           "type": "list",
-          "rev": 1,
-          "default": []
+          "default": [
+            {
+              "id": "player",
+              "label": "Player side",
+              "colour": "#badcff"
+            },
+            {
+              "id": "rival",
+              "label": "Rival side",
+              "colour": "#c44a3a"
+            },
+            {
+              "id": "neutral",
+              "label": "Neutral side",
+              "colour": "#8a8f98"
+            }
+          ],
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [
+            "default"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 13,
+          "default_history": [
+            {
+              "rev": 8,
+              "default": [
+                {
+                  "id": "player",
+                  "label": "Player side",
+                  "colour": "#badcff"
+                },
+                {
+                  "id": "rival",
+                  "label": "Rival side",
+                  "colour": "#c44a3a"
+                }
+              ]
+            },
+            {
+              "rev": 13,
+              "default": [
+                {
+                  "id": "player",
+                  "label": "Player side",
+                  "colour": "#badcff"
+                },
+                {
+                  "id": "rival",
+                  "label": "Rival side",
+                  "colour": "#c44a3a"
+                },
+                {
+                  "id": "neutral",
+                  "label": "Neutral side",
+                  "colour": "#8a8f98"
+                }
+              ]
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "description": "One colour per side id. player = the loadout, rival = enemy pools, neutral = neutrals, unless a stage reassigns them (stage.sides). A user entry whose id no stage uses is kept and gets the warning sideUnassigned, never an error.",
+          "keyed_by": "side",
+          "item_rulings": {
+            "neutral": {
+              "by": "Engine Architect",
+              "date": "2026-11-09",
+              "note": "side id 'neutral' is reserved; team_colours items are keyed by side id (project-format r13 section 6.5 stage.sides)"
+            }
+          },
+          "item": {
+            "colour": {
+              "type": "colour",
+              "default": "#badcff"
+            }
+          },
+          "reserved_ids": [
+            "player",
+            "rival",
+            "neutral"
+          ],
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "freedom principle: project default, army override"
+          }
         }
-      ]
+      ],
+      "presets": [
+        {
+          "id": "btf-card-hand",
+          "label": "Before The Fall (menu for basics, cards for spells)",
+          "deck": "Before The Fall",
+          "cards": "all",
+          "overrides": {
+            "shortcut": "custom",
+            "basic_style": "unit-action-menu",
+            "spells_style": "card-hand",
+            "hand_placement": "hand-docked"
+          },
+          "status": "src",
+          "source": "/workspace/tileengine/docs/ARCHITECTURE-v0.md §3.4 / §11 C11: BTF basic -> action-menu, spells -> card-hand, hand always on screen; /workspace/g-tile-engine/src/chess/game/towerChessHand.ts (spells are dealt as cards)"
+        }
+      ],
+      "renamed_from": [],
+      "retired_knobs": [],
+      "menu_order": [
+        {
+          "question": "How do players pick abilities?",
+          "knob_ids": [
+            "shortcut"
+          ]
+        },
+        {
+          "question": "Custom: how is each ability group picked?",
+          "knob_ids": [
+            "basic_style",
+            "spells_style"
+          ]
+        },
+        {
+          "question": "Any extra ability groups, and how is each picked?",
+          "knob_ids": [
+            "custom_groups"
+          ]
+        },
+        {
+          "question": "Card hand: where does the hand show?",
+          "knob_ids": [
+            "hand_placement"
+          ]
+        },
+        {
+          "question": "Team colours for code-drawn tokens",
+          "knob_ids": [
+            "team_colours"
+          ]
+        }
+      ],
+      "banned_combos": [],
+      "bans_note": "None known: the rev-13 coverage audit found no invalid knob combination in src or the docs (not an exhaustive proof).",
+      "composable_as": []
     },
     {
       "id": "basic-attack",
-      "closure": "when-used",
+      "name": "Basic Attack (reach and damage)",
+      "group": "Attacks & Shots",
+      "summary": "A piece's free-of-mana attack. By default it hits the tiles that piece could step to, for the piece's attack value. Some classes have their own reach (Cleric reaches farther east-west, Acolytes step diagonally but hit only straight).",
+      "scope": "grid-tactics",
+      "starter_safe": true,
       "knobs": [
         {
           "id": "reach_mode",
+          "label": "Reach",
           "type": "picker",
-          "rev": 1,
           "default": "same-as-step",
+          "min": null,
+          "max": null,
+          "step": null,
           "options": [
-            "same-as-step",
-            "one-tile-straight",
-            "custom-cross"
-          ]
+            {
+              "value": "same-as-step",
+              "label": "Same tiles it can step to"
+            },
+            {
+              "value": "custom-cross",
+              "label": "Custom reach (set north-south and east-west)"
+            },
+            {
+              "value": "orth-only-1",
+              "label": "One tile straight only"
+            }
+          ],
+          "proposed": [
+            "default",
+            "options"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": "PROPOSED",
+            "step": null
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": "same-as-step"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "ability_field": "targeting",
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          }
         },
         {
           "id": "custom_ns",
+          "label": "Custom reach north-south",
           "type": "slider",
-          "rev": 1,
-          "default": 1,
+          "default": 2,
           "min": 1,
-          "max": 9,
-          "step": 1
+          "max": 3,
+          "step": 1,
+          "options": null,
+          "proposed": [
+            "default",
+            "min"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": "PROPOSED",
+            "max": "ai-match",
+            "options": null,
+            "step": "ai-match"
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": 2
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "reach_mode"
+          ],
+          "ability_field": "targeting",
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          },
+          "active_when": {
+            "knob": "reach_mode",
+            "eq": "custom-cross"
+          }
         },
         {
           "id": "custom_ew",
+          "label": "Custom reach east-west",
           "type": "slider",
-          "rev": 1,
-          "default": 1,
+          "default": 3,
           "min": 1,
-          "max": 9,
-          "step": 1
+          "max": 3,
+          "step": 1,
+          "options": null,
+          "proposed": [
+            "default",
+            "min"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": "PROPOSED",
+            "max": "ai-match",
+            "options": null,
+            "step": "ai-match"
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": 3
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "reach_mode"
+          ],
+          "ability_field": "targeting",
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          },
+          "active_when": {
+            "knob": "reach_mode",
+            "eq": "custom-cross"
+          }
         },
         {
           "id": "damage",
+          "label": "Damage = attack value",
           "type": "slider",
-          "rev": 1,
           "default": 1,
           "min": 0,
-          "max": 9,
-          "step": 1
+          "max": 16,
+          "step": 1,
+          "options": null,
+          "proposed": [
+            "default",
+            "min"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": "PROPOSED",
+            "max": "ai-match",
+            "options": null,
+            "step": "ai-match"
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": 1
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          }
         },
         {
           "id": "blocked_by_bodies",
+          "label": "Bodies block a ranged basic",
           "type": "toggle",
+          "default": true,
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [
+            "default"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
           "rev": 1,
-          "default": true
+          "default_history": [
+            {
+              "rev": 1,
+              "default": true
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          }
         },
         {
           "id": "enemy_basic_crosses_barrier",
+          "label": "Enemy basic crossing a barrier hits the barrier instead",
           "type": "toggle",
+          "default": true,
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [
+            "default"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
           "rev": 1,
-          "default": false
+          "default_history": [
+            {
+              "rev": 1,
+              "default": true
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          }
         },
         {
           "id": "ability_group",
-          "type": "picker",
-          "rev": 1,
+          "label": "Ability group",
+          "type": "ref",
           "default": "basic",
-          "options": [
-            "basic"
-          ]
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [
+            "default"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 7,
+          "default_history": [
+            {
+              "rev": 7,
+              "default": "basic"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "ability-presentation.custom_groups"
+          ],
+          "ability_field": "group",
+          "ref": {
+            "list": "ability-presentation.custom_groups",
+            "builtin": [
+              "basic",
+              "spells"
+            ]
+          }
         },
         {
           "id": "effect",
+          "label": "Effect",
           "type": "ref",
-          "rev": 1,
-          "default": "none"
+          "default": "none",
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [
+            "default"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 8,
+          "default_history": [
+            {
+              "rev": 7,
+              "default": "none"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "ability_field": "effect",
+          "ref": {
+            "docs": "effect",
+            "builtin": [
+              "none",
+              "btf-purple-drop",
+              "btf-holy-blade",
+              "btf-cut",
+              "btf-wrath-cone",
+              "btf-heaven-sword",
+              "btf-chain-hook",
+              "btf-feather",
+              "btf-spike",
+              "btf-spin-fly-together",
+              "btf-spin-split"
+            ]
+          }
         }
+      ],
+      "presets": [],
+      "renamed_from": [],
+      "retired_knobs": [],
+      "menu_order": [
+        {
+          "question": "Does the attack reach the same tiles as the step?",
+          "knob_ids": [
+            "reach_mode"
+          ]
+        },
+        {
+          "question": "If not, set its reach",
+          "knob_ids": [
+            "custom_ns",
+            "custom_ew"
+          ]
+        },
+        {
+          "question": "How much damage?",
+          "knob_ids": [
+            "damage"
+          ]
+        },
+        {
+          "question": "What can block it?",
+          "knob_ids": [
+            "blocked_by_bodies",
+            "enemy_basic_crosses_barrier"
+          ]
+        },
+        {
+          "question": "Which ability group is it in?",
+          "knob_ids": [
+            "ability_group"
+          ]
+        },
+        {
+          "question": "Which effect does it play?",
+          "knob_ids": [
+            "effect"
+          ]
+        }
+      ],
+      "banned_combos": [
+        {
+          "id": "basic-attack.reach-mode-eq-custom-cross",
+          "when": {
+            "knob": "reach_mode",
+            "op": "eq",
+            "value": "custom-cross"
+          },
+          "disable": {
+            "knob": "reach_mode",
+            "value": "custom-cross"
+          },
+          "reason": "Acolytes hit orthogonally only; a custom reach with diagonals breaks that.",
+          "note": "applies only to Acolyte pieces; piece class is not a knob here"
+        }
+      ],
+      "composable_as": [
+        "primary"
+      ],
+      "target_pipes": [
+        "unit"
+      ],
+      "numeric_inputs": [
+        "damage"
       ]
     },
     {
       "id": "line-shot",
-      "closure": "when-used",
+      "name": "Line Shot (stops on first hit)",
+      "group": "Attacks & Shots",
+      "summary": "A shot travels in a straight line up to a set range and hits the first body it meets. Can be limited to certain directions, can need a living caster class, and can double when the caster has the right neighbour.",
+      "scope": "grid-tactics",
+      "starter_safe": false,
       "knobs": [
         {
           "id": "directions",
+          "label": "Directions",
           "type": "picker",
-          "rev": 1,
           "default": "orthogonal",
+          "min": null,
+          "max": null,
+          "step": null,
           "options": [
-            "orthogonal"
-          ]
+            {
+              "value": "orthogonal",
+              "label": "Straight lines (N, E, S, W)"
+            },
+            {
+              "value": "east-west",
+              "label": "East or west only"
+            },
+            {
+              "value": "diagonal",
+              "label": "Diagonals only"
+            }
+          ],
+          "proposed": [],
+          "status": {
+            "default": "src",
+            "min": null,
+            "max": null,
+            "options": "src",
+            "step": null
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": "orthogonal"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "ability_field": "targeting"
         },
         {
           "id": "range",
+          "label": "Range (tiles)",
           "type": "slider",
-          "rev": 1,
           "default": 3,
           "min": 1,
-          "max": 9,
-          "step": 1
+          "max": 4,
+          "step": 1,
+          "options": null,
+          "proposed": [
+            "min",
+            "max"
+          ],
+          "status": {
+            "default": "src",
+            "min": "PROPOSED",
+            "max": "PROPOSED",
+            "options": null,
+            "step": "src"
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": 3
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "ability_field": "targeting"
         },
         {
           "id": "damage",
+          "label": "Damage",
           "type": "slider",
+          "default": 2,
+          "min": 1,
+          "max": 3,
+          "step": 1,
+          "options": null,
+          "proposed": [
+            "min",
+            "max"
+          ],
+          "status": {
+            "default": "src",
+            "min": "PROPOSED",
+            "max": "PROPOSED",
+            "options": null,
+            "step": "src"
+          },
           "rev": 1,
-          "default": 1,
-          "min": 0,
-          "max": 9,
-          "step": 1
+          "default_history": [
+            {
+              "rev": 1,
+              "default": 2
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": []
         },
         {
           "id": "stops_on_first",
+          "label": "Stops on first body",
           "type": "toggle",
+          "default": true,
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [
+            "default"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
           "rev": 1,
-          "default": true
+          "default_history": [
+            {
+              "rev": 1,
+              "default": true
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          }
         },
         {
           "id": "barrier_blocks",
+          "label": "Earth lines stop the shot",
           "type": "toggle",
-          "rev": 1,
-          "default": true
+          "default": true,
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [],
+          "status": {
+            "default": "src",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 3,
+          "default_history": [
+            {
+              "rev": 3,
+              "default": true
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "@barrier-line"
+          ],
+          "proposed_options": [
+            false
+          ],
+          "depends_note": "earth lines are edges, not tiles (towerTerrain.ts EarthSeam); they live in Barrier Line"
         },
         {
           "id": "caster_class",
+          "label": "Needs living class",
           "type": "picker",
-          "rev": 1,
-          "default": "any",
+          "default": "mage",
+          "min": null,
+          "max": null,
+          "step": null,
           "options": [
-            "any",
-            "archer"
-          ]
+            {
+              "value": "warrior",
+              "label": "Warrior"
+            },
+            {
+              "value": "cleric",
+              "label": "Cleric"
+            },
+            {
+              "value": "mage",
+              "label": "Mage"
+            },
+            {
+              "value": "archer",
+              "label": "Archer"
+            }
+          ],
+          "proposed": [
+            "default",
+            "options"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": "PROPOSED",
+            "step": null
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": "mage"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          }
         },
         {
           "id": "pair_doubles",
+          "label": "Doubles with a neighbour pair",
           "type": "toggle",
+          "default": false,
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [
+            "default"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
           "rev": 1,
-          "default": false
+          "default_history": [
+            {
+              "rev": 1,
+              "default": false
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "@adjacency-synergy"
+          ],
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          },
+          "depends_note": "needs the Adjacency Synergy behaviour for the neighbour check"
         },
         {
           "id": "neutrals_legal",
+          "label": "Can target neutral guardians",
           "type": "toggle",
+          "default": true,
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [],
+          "status": {
+            "default": "src",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
           "rev": 1,
-          "default": false
+          "default_history": [
+            {
+              "rev": 1,
+              "default": true
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": []
         },
         {
           "id": "hit_class",
+          "label": "Counts as",
           "type": "picker",
-          "rev": 1,
-          "default": "basic",
+          "default": "spell",
+          "min": null,
+          "max": null,
+          "step": null,
           "options": [
-            "basic"
-          ]
+            {
+              "value": "spell",
+              "label": "Spell hit"
+            },
+            {
+              "value": "basic",
+              "label": "Basic hit"
+            }
+          ],
+          "proposed": [
+            "default",
+            "options"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": "PROPOSED",
+            "step": null
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": "spell"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          }
         },
         {
           "id": "mana_cost",
+          "label": "Mana cost",
           "type": "slider",
-          "rev": 1,
-          "default": 0,
+          "default": 2,
           "min": 0,
-          "max": 9,
-          "step": 1
+          "max": 14,
+          "step": 1,
+          "options": null,
+          "proposed": [],
+          "status": {
+            "default": "src",
+            "min": "src",
+            "max": "src",
+            "options": null,
+            "step": "src"
+          },
+          "rev": 13,
+          "default_history": [
+            {
+              "rev": 13,
+              "default": 2
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "ability_field": "cost"
         },
         {
           "id": "ability_group",
-          "type": "picker",
-          "rev": 1,
-          "default": "spell",
-          "options": [
-            "spell"
-          ]
+          "label": "Ability group",
+          "type": "ref",
+          "default": "spells",
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [
+            "default"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 7,
+          "default_history": [
+            {
+              "rev": 7,
+              "default": "spells"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "ability-presentation.custom_groups"
+          ],
+          "ability_field": "group",
+          "ref": {
+            "list": "ability-presentation.custom_groups",
+            "builtin": [
+              "basic",
+              "spells"
+            ]
+          }
         },
         {
           "id": "effect",
+          "label": "Effect",
           "type": "ref",
-          "rev": 1,
-          "default": "none"
+          "default": "none",
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [
+            "default"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 8,
+          "default_history": [
+            {
+              "rev": 7,
+              "default": "none"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "ability_field": "effect",
+          "ref": {
+            "docs": "effect",
+            "builtin": [
+              "none",
+              "btf-purple-drop",
+              "btf-holy-blade",
+              "btf-cut",
+              "btf-wrath-cone",
+              "btf-heaven-sword",
+              "btf-chain-hook",
+              "btf-feather",
+              "btf-spike",
+              "btf-spin-fly-together",
+              "btf-spin-split"
+            ]
+          }
         }
+      ],
+      "presets": [
+        {
+          "id": "btf-fireball",
+          "label": "Fireball (BTF)",
+          "deck": "Before The Fall",
+          "cards": "Fireball",
+          "overrides": {
+            "barrier_blocks": true
+          },
+          "status": "src",
+          "source": "/workspace/g-tile-engine/src/chess/game/towerTerrain.ts earthStops()"
+        }
+      ],
+      "renamed_from": [],
+      "retired_knobs": [],
+      "menu_order": [
+        {
+          "question": "Which directions, and how far?",
+          "knob_ids": [
+            "directions",
+            "range"
+          ]
+        },
+        {
+          "question": "How much damage, and what kind of hit?",
+          "knob_ids": [
+            "damage",
+            "hit_class"
+          ]
+        },
+        {
+          "question": "Does it stop on the first body, and do earth lines stop it?",
+          "knob_ids": [
+            "stops_on_first",
+            "barrier_blocks"
+          ]
+        },
+        {
+          "question": "Which class uses it?",
+          "knob_ids": [
+            "caster_class"
+          ]
+        },
+        {
+          "question": "Any neighbour bonus?",
+          "knob_ids": [
+            "pair_doubles"
+          ]
+        },
+        {
+          "question": "Can it hit neutral guardians?",
+          "knob_ids": [
+            "neutrals_legal"
+          ]
+        },
+        {
+          "question": "How much mana does it cost?",
+          "knob_ids": [
+            "mana_cost"
+          ]
+        },
+        {
+          "question": "Which ability group is it in?",
+          "knob_ids": [
+            "ability_group"
+          ]
+        },
+        {
+          "question": "Which effect does it play?",
+          "knob_ids": [
+            "effect"
+          ]
+        }
+      ],
+      "banned_combos": [],
+      "bans_note": "None known: the rev-13 coverage audit found no invalid knob combination in src or the docs (not an exhaustive proof).",
+      "composable_as": [
+        "primary"
+      ],
+      "target_pipes": [
+        "unit"
+      ],
+      "numeric_inputs": [
+        "damage",
+        "mana_cost"
       ]
     },
     {
       "id": "barrier-line",
-      "closure": "when-used",
+      "name": "Barrier Line on a Tile Seam (earth) and Cage",
+      "group": "Control (stun/trap/push/pull)",
+      "summary": "A wall sits on the edge between two tiles, not on a tile. A seam blocks only the side it sits on. It blocks steps for both sides and soaks enemy shots that would cross it; your own shots pass. Variants grow one wall facing an enemy, scatter walls round enemies, or box an enemy in on three sides. It joins a project's closure only through a setup (the ordinary rule); a map's edges alone never pull it in, and without it authored walls are indestructible.",
+      "scope": "grid-tactics",
+      "starter_safe": false,
       "knobs": [
         {
-          "id": "length",
-          "type": "slider",
+          "id": "placement",
+          "label": "Placed",
+          "type": "picker",
+          "default": "facing-edge",
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": [
+            {
+              "value": "facing-edge",
+              "label": "On the edge facing the enemy"
+            },
+            {
+              "value": "random-enemy-seams",
+              "label": "On random edges around enemies"
+            },
+            {
+              "value": "cage",
+              "label": "A three-sided cage"
+            }
+          ],
+          "proposed": [
+            "default",
+            "options"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": "PROPOSED",
+            "step": null
+          },
           "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": "facing-edge"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "ability_field": "targeting",
+          "description": "Edges go through the TILE pipe as a cell plus an edge side (N/E/S/W) (Engine Architect 2026-11-09).",
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          }
+        },
+        {
+          "id": "line_hp",
+          "label": "Wall health",
+          "type": "slider",
           "default": 1,
           "min": 1,
-          "max": 9,
-          "step": 1
+          "max": 2,
+          "step": 1,
+          "options": null,
+          "proposed": [
+            "default",
+            "max"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": "ai-match",
+            "max": "PROPOSED",
+            "options": null,
+            "step": "ai-match"
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": 1
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          }
+        },
+        {
+          "id": "blocks_steps",
+          "label": "Blocks steps (both sides)",
+          "type": "toggle",
+          "default": true,
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [
+            "default"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": true
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "description": "A seam blocks only the side it sits on.",
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          }
+        },
+        {
+          "id": "soaks_enemy_shots",
+          "label": "Soaks enemy shots crossing it",
+          "type": "toggle",
+          "default": true,
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [
+            "default"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": true
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "description": "A seam blocks only the side it sits on.",
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          }
+        },
+        {
+          "id": "own_shots_pass",
+          "label": "Own shots pass",
+          "type": "toggle",
+          "default": true,
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [
+            "default"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": true
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "description": "A seam blocks only the side it sits on.",
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          }
+        },
+        {
+          "id": "max_lines",
+          "label": "Lines per use",
+          "type": "slider",
+          "default": 3,
+          "min": 1,
+          "max": 3,
+          "step": 1,
+          "options": null,
+          "proposed": [
+            "default",
+            "min"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": "PROPOSED",
+            "max": "card-list",
+            "options": null,
+            "step": "card-list"
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": 3
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          }
+        },
+        {
+          "id": "cage_distance",
+          "label": "Cage target distance (exact)",
+          "type": "slider",
+          "default": 2,
+          "min": 1,
+          "max": 3,
+          "step": 1,
+          "options": null,
+          "proposed": [
+            "default",
+            "min",
+            "max"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": "PROPOSED",
+            "max": "PROPOSED",
+            "options": null,
+            "step": "card-list"
+          },
+          "rev": 14,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": 2
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "placement"
+          ],
+          "ruling_note": "CoS 2026-11-09 ruling 7: docs-only default accepted as a PROPOSED adjustable design value.",
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "locked range widened, default stays the BTF value"
+          },
+          "default_note": "BTF uses 2. Range 1-3 is PROPOSED (CoS 2026-11-09, freedom principle): 1 = adjacent cage; 3 = half the 6-wide board. Other values are allowed; the editor warns (outsideBtf), never blocks."
+        },
+        {
+          "id": "cage_turns",
+          "label": "Cage lasts (your turns)",
+          "type": "slider",
+          "default": 2,
+          "min": 1,
+          "max": 3,
+          "step": 1,
+          "options": null,
+          "proposed": [
+            "default",
+            "min",
+            "max"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": "PROPOSED",
+            "max": "PROPOSED",
+            "options": null,
+            "step": "ai-match"
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": 2
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "placement"
+          ],
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          }
+        },
+        {
+          "id": "mana_cost",
+          "label": "Mana cost",
+          "type": "slider",
+          "default": 2,
+          "min": 0,
+          "max": 14,
+          "step": 1,
+          "options": null,
+          "proposed": [],
+          "status": {
+            "default": "src",
+            "min": "src",
+            "max": "src",
+            "options": null,
+            "step": "src"
+          },
+          "rev": 13,
+          "default_history": [
+            {
+              "rev": 13,
+              "default": 2
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "ability_field": "cost"
+        },
+        {
+          "id": "ability_group",
+          "label": "Ability group",
+          "type": "ref",
+          "default": "spells",
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [
+            "default"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 7,
+          "default_history": [
+            {
+              "rev": 7,
+              "default": "spells"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "ability-presentation.custom_groups"
+          ],
+          "ability_field": "group",
+          "ref": {
+            "list": "ability-presentation.custom_groups",
+            "builtin": [
+              "basic",
+              "spells"
+            ]
+          }
+        },
+        {
+          "id": "effect",
+          "label": "Effect",
+          "type": "ref",
+          "default": "none",
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [
+            "default"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 8,
+          "default_history": [
+            {
+              "rev": 7,
+              "default": "none"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "ability_field": "effect",
+          "ref": {
+            "docs": "effect",
+            "builtin": [
+              "none",
+              "btf-purple-drop",
+              "btf-holy-blade",
+              "btf-cut",
+              "btf-wrath-cone",
+              "btf-heaven-sword",
+              "btf-chain-hook",
+              "btf-feather",
+              "btf-spike",
+              "btf-spin-fly-together",
+              "btf-spin-split"
+            ]
+          }
         }
+      ],
+      "presets": [],
+      "renamed_from": [],
+      "retired_knobs": [],
+      "menu_order": [
+        {
+          "question": "How is the wall placed, and how many?",
+          "knob_ids": [
+            "placement",
+            "max_lines"
+          ]
+        },
+        {
+          "question": "How tough is it?",
+          "knob_ids": [
+            "line_hp"
+          ]
+        },
+        {
+          "question": "What does it block?",
+          "knob_ids": [
+            "blocks_steps",
+            "soaks_enemy_shots",
+            "own_shots_pass"
+          ]
+        },
+        {
+          "question": "Cage options",
+          "knob_ids": [
+            "cage_distance",
+            "cage_turns"
+          ]
+        },
+        {
+          "question": "How much mana does it cost?",
+          "knob_ids": [
+            "mana_cost"
+          ]
+        },
+        {
+          "question": "Which ability group is it in?",
+          "knob_ids": [
+            "ability_group"
+          ]
+        },
+        {
+          "question": "Which effect does it play?",
+          "knob_ids": [
+            "effect"
+          ]
+        }
+      ],
+      "banned_combos": [
+        {
+          "id": "barrier-line.placement-eq-cage",
+          "when": {
+            "knob": "placement",
+            "op": "eq",
+            "value": "cage"
+          },
+          "disable": {
+            "knob": "cage_distance"
+          },
+          "reason": "The cage can't be aimed south (source text: N, E or W only).",
+          "note": "direction rule, not a knob"
+        }
+      ],
+      "rulings": [
+        {
+          "by": "CEO",
+          "date": "2026-11-10",
+          "note": "direct; seams block only their facing edge",
+          "applies_to": [
+            "placement",
+            "blocks_steps",
+            "soaks_enemy_shots",
+            "own_shots_pass"
+          ]
+        }
+      ],
+      "composable_as": [
+        "primary"
+      ],
+      "target_pipes": [
+        "tile"
+      ],
+      "numeric_inputs": [
+        "line_hp",
+        "max_lines",
+        "cage_distance",
+        "cage_turns",
+        "mana_cost"
+      ],
+      "invariants": [
+        "A seam blocks only the side it sits on. A seam cuts only the one side neighbour across its edge; tiles on its other sides and corners are not blocked, so with a seam to a unit's left or right, attacks aimed from the north or south still hit (CEO 2026-11-10, direct; /workspace/g-tile-engine/src/chess/game/towerTerrain.ts seamBlocks() lines 1251-1263 (per edge: a seam cuts only the one side neighbour across it; corners return false))."
       ]
     },
     {
       "id": "adjacency-synergy",
-      "closure": "when-used",
+      "name": "Adjacency Synergy (1 or 2 neighbours)",
+      "group": "Adjacency",
+      "summary": "'Beside' means one tile N, S, E or W, never diagonal. Abilities check who is beside whom: some need one neighbour of a named class (a gate), some scale per neighbour, some need two pieces beside each other, and some copy or spread to neighbours.",
+      "scope": "grid-tactics",
+      "starter_safe": false,
       "knobs": [
         {
-          "id": "bonus",
-          "type": "slider",
+          "id": "shape",
+          "label": "What counts as beside",
+          "type": "picker",
+          "default": "nesw",
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": [
+            {
+              "value": "nesw",
+              "label": "N, E, S or W (never diagonal)"
+            },
+            {
+              "value": "king-8",
+              "label": "All 8 surrounding tiles"
+            }
+          ],
+          "proposed": [],
+          "status": {
+            "default": "src",
+            "min": null,
+            "max": null,
+            "options": "src",
+            "step": null
+          },
+          "rev": 5,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": "nesw"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "proposed_options": [
+            "king-8"
+          ]
+        },
+        {
+          "id": "mode",
+          "label": "How it uses neighbours",
+          "type": "picker",
+          "default": "gate",
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": [
+            {
+              "value": "gate",
+              "label": "Needs a neighbour to work"
+            },
+            {
+              "value": "per-neighbour",
+              "label": "For each neighbour"
+            },
+            {
+              "value": "two-beside-each-other",
+              "label": "Two of your pieces side by side"
+            },
+            {
+              "value": "copy-to-neighbours",
+              "label": "Neighbours copy its stats"
+            },
+            {
+              "value": "self-and-beside-area",
+              "label": "Affects it and everyone beside it"
+            },
+            {
+              "value": "hop-to-target-neighbours",
+              "label": "Hops to the target's neighbours"
+            }
+          ],
+          "proposed": [
+            "default",
+            "options"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": "PROPOSED",
+            "step": null
+          },
           "rev": 1,
-          "default": 0,
-          "min": 0,
-          "max": 9,
-          "step": 1
+          "default_history": [
+            {
+              "rev": 1,
+              "default": "gate"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          }
+        },
+        {
+          "id": "min_neighbours",
+          "label": "Neighbours needed",
+          "type": "slider",
+          "default": 1,
+          "min": 1,
+          "max": 2,
+          "step": 1,
+          "options": null,
+          "proposed": [
+            "max"
+          ],
+          "status": {
+            "default": "src",
+            "min": "src",
+            "max": "PROPOSED",
+            "options": null,
+            "step": "src"
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": 1
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": []
+        },
+        {
+          "id": "class_filter",
+          "label": "Neighbour must be",
+          "type": "picker",
+          "default": "any-ally",
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": [
+            {
+              "value": "any-ally",
+              "label": "Any ally"
+            },
+            {
+              "value": "warrior",
+              "label": "Warrior"
+            },
+            {
+              "value": "cleric",
+              "label": "Cleric"
+            },
+            {
+              "value": "mage",
+              "label": "Mage"
+            },
+            {
+              "value": "archer",
+              "label": "Archer"
+            },
+            {
+              "value": "enemy",
+              "label": "An enemy"
+            }
+          ],
+          "proposed": [],
+          "status": {
+            "default": "src",
+            "min": null,
+            "max": null,
+            "options": "src",
+            "step": null
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": "any-ally"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": []
+        },
+        {
+          "id": "measured_from",
+          "label": "Count around",
+          "type": "picker",
+          "default": "own-piece",
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": [
+            {
+              "value": "own-piece",
+              "label": "Around your piece"
+            },
+            {
+              "value": "target-enemy",
+              "label": "Around the target enemy"
+            }
+          ],
+          "proposed": [],
+          "status": {
+            "default": "src",
+            "min": null,
+            "max": null,
+            "options": "src",
+            "step": null
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": "own-piece"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": []
+        },
+        {
+          "id": "per_neighbour",
+          "label": "Bonus per neighbour",
+          "type": "slider",
+          "default": 1,
+          "min": 1,
+          "max": 2,
+          "step": 1,
+          "options": null,
+          "proposed": [
+            "max"
+          ],
+          "status": {
+            "default": "src",
+            "min": "src",
+            "max": "PROPOSED",
+            "options": null,
+            "step": "src"
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": 1
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": []
+        },
+        {
+          "id": "counts_self",
+          "label": "Piece counts itself",
+          "type": "toggle",
+          "default": false,
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [],
+          "status": {
+            "default": "src",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": false
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": []
         }
+      ],
+      "presets": [],
+      "renamed_from": [],
+      "retired_knobs": [],
+      "menu_order": [
+        {
+          "question": "What counts as beside?",
+          "knob_ids": [
+            "shape",
+            "counts_self"
+          ]
+        },
+        {
+          "question": "How does the ability use neighbours?",
+          "knob_ids": [
+            "mode"
+          ]
+        },
+        {
+          "question": "Beside which class, and around whom?",
+          "knob_ids": [
+            "class_filter",
+            "measured_from"
+          ]
+        },
+        {
+          "question": "How many neighbours, and how much each?",
+          "knob_ids": [
+            "min_neighbours",
+            "per_neighbour"
+          ]
+        }
+      ],
+      "banned_combos": [
+        {
+          "id": "adjacency-synergy.counts-self-eq-true",
+          "when": {
+            "knob": "counts_self",
+            "op": "eq",
+            "value": true
+          },
+          "disable": {
+            "knob": "counts_self",
+            "value": true
+          },
+          "reason": "Every source rule excludes the piece itself."
+        }
+      ],
+      "composable_as": [
+        "scaler"
+      ],
+      "adjusts": [
+        "damage",
+        "base_damage",
+        "amount",
+        "bonus"
       ]
     },
     {
       "id": "unit-roster",
-      "closure": "when-used",
+      "name": "Army Roster and Opening Formation",
+      "group": "Objectives & Win",
+      "summary": "Which pieces a side starts with, their health and attack, and where they stand on turn one (own back rank, or front rank).",
+      "scope": "grid-tactics",
+      "starter_safe": true,
       "knobs": [
         {
           "id": "board_cols",
+          "label": "Board columns",
           "type": "slider",
-          "rev": 1,
           "default": 6,
-          "min": 1,
-          "max": 64,
-          "step": 1
+          "min": 4,
+          "max": 9,
+          "step": 1,
+          "options": null,
+          "proposed": [
+            "min",
+            "max"
+          ],
+          "status": {
+            "default": "src",
+            "min": "PROPOSED",
+            "max": "PROPOSED",
+            "options": null,
+            "step": "src"
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": 6
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": []
         },
         {
           "id": "board_rows",
+          "label": "Board rows",
           "type": "slider",
-          "rev": 1,
           "default": 9,
-          "min": 1,
-          "max": 64,
-          "step": 1
+          "min": 6,
+          "max": 12,
+          "step": 1,
+          "options": null,
+          "proposed": [
+            "default",
+            "min",
+            "max"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": "PROPOSED",
+            "max": "PROPOSED",
+            "options": null,
+            "step": "ai-match"
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": 9
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          }
         },
         {
           "id": "piece_count",
+          "label": "Pieces per side",
           "type": "slider",
-          "rev": 1,
-          "default": 3,
+          "default": 6,
           "min": 1,
-          "max": 9,
-          "step": 1
+          "max": 12,
+          "step": 1,
+          "options": null,
+          "proposed": [
+            "default"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": "ai-match",
+            "max": "ai-match",
+            "options": null,
+            "step": "ai-match"
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": 6
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "board_cols"
+          ],
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          }
         },
         {
           "id": "unit_hp",
+          "label": "Health",
           "type": "slider",
-          "rev": 1,
           "default": 9,
           "min": 1,
-          "max": 99,
-          "step": 1
+          "max": 21,
+          "step": 1,
+          "options": null,
+          "proposed": [
+            "default",
+            "min"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": "PROPOSED",
+            "max": "ai-match",
+            "options": null,
+            "step": "ai-match"
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": 9
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "description": "Set per unit: the roster value is the default for every unit, and a unit can override it in that unit's own stats. L5 difficulty marker l5:'hp' (runtime difficulty.hp; B1 / P1-2).",
+          "per_unit": true,
+          "l5": "hp",
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          }
         },
         {
           "id": "unit_atk",
+          "label": "Attack",
           "type": "slider",
-          "rev": 1,
           "default": 1,
           "min": 0,
-          "max": 99,
-          "step": 1
+          "max": 2,
+          "step": 1,
+          "options": null,
+          "proposed": [
+            "default",
+            "min",
+            "max"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": "PROPOSED",
+            "max": "PROPOSED",
+            "options": null,
+            "step": "ai-match"
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": 1
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "description": "Set per unit: the roster value is the default for every unit, and a unit can override it in that unit's own stats.",
+          "per_unit": true,
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          }
         },
         {
           "id": "opening_row",
+          "label": "Opening row",
           "type": "picker",
-          "rev": 1,
-          "default": "bottom",
+          "default": "back",
+          "min": null,
+          "max": null,
+          "step": null,
           "options": [
-            "bottom"
-          ]
+            {
+              "value": "back",
+              "label": "Six on the far rank"
+            },
+            {
+              "value": "second",
+              "label": "Six on the second rank"
+            },
+            {
+              "value": "front",
+              "label": "Five on the front rank (deck shape)",
+              "reads": {
+                "from": "deck",
+                "ref": "deck.openingFront",
+                "deck_from": "hand-and-draw.deck",
+                "type": "UnitId[]",
+                "length": 5,
+                "order": "west-to-east",
+                "optional": true,
+                "malformed": "not an array, or not exactly 5 entries",
+                "if_missing": {
+                  "use": "back",
+                  "warning": "openingShapeMissing",
+                  "once_per": "deck",
+                  "warning_source": "/workspace/tileengine/data/project-format.md §6.8 (openingFront row line 1126; rules lines 1135-1144; warning table line 1539); /workspace/tileengine/data/setup-format.md §12.4i (lines 2211-2216) and §12.5 L44 (line 2223)"
+                },
+                "bad_id": {
+                  "warning": "unknownRef",
+                  "slot": "empty",
+                  "note": "the other four are placed"
+                },
+                "type_source": "/workspace/tileengine/data/core-types.ts CoreDeck (line 194, MAY-MOVE): openingFront?: ReadonlyArray<UnitId> (line 203); UnitId = string (line 39)"
+              }
+            }
+          ],
+          "proposed": [],
+          "status": {
+            "default": "CEO-ruling",
+            "min": null,
+            "max": null,
+            "options": "CEO-ruling",
+            "step": null
+          },
+          "rev": 16,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": "back"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "description": "front reads the deck field openingFront (exactly five unit ids, west to east) of the bot side's deck (its effective hand-and-draw.deck). No deck, no openingFront, or a malformed one (not an array, or not exactly 5 entries) opens back with the warning openingShapeMissing, once per deck (once in total with no deck). An id that isn't a unit is unknownRef and that slot stays empty; the other four are placed. back and second ignore openingFront. Source: DSK project-format r14 §6.8, setup-format §12.4i/§12.5 (L44); type UnitId[] in core-types.ts CoreDeck (MAY-MOVE). DSK docs pinned to catalogue rev 17 / 544 knobs.",
+          "ruling_note": "rev 17: field and warning named by DSK (project-format r14 §6.8; setup-format §12.5 L44), replacing PENDING-DSK-NAME and the PROPOSED name frontShapeMissing.",
+          "ruling": {
+            "by": "CEO",
+            "date": "2026-11-09",
+            "note": "relayed via CoS/DSK L44; user's choice"
+          }
         },
         {
           "id": "clip_cues",
-          "type": "list",
-          "rev": 1,
-          "default": []
+          "label": "Hit flash and attack lunge for units without clips",
+          "type": "toggle",
+          "default": true,
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [
+            "default"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 8,
+          "default_history": [
+            {
+              "rev": 8,
+              "default": true
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "proposed_options": [
+            false
+          ]
         },
         {
           "id": "team_colour",
-          "type": "picker",
-          "rev": 1,
-          "default": "side",
-          "options": [
-            "side"
+          "label": "Team colour",
+          "type": "colour",
+          "default": null,
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [
+            "default"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 9,
+          "default_history": [
+            {
+              "rev": 8,
+              "default": "#badcff"
+            },
+            {
+              "rev": 9,
+              "default": null
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "ability-presentation.team_colours"
+          ],
+          "nullable": true,
+          "ruling": {
+            "by": "DSK",
+            "date": "2026-11-09",
+            "note": "L30: nullable, default null = palette; one source of truth (CoS ruling 'project default, army override' unchanged in substance)"
+          }
+        }
+      ],
+      "presets": [
+        {
+          "id": "btf-warrior",
+          "label": "Warrior (BTF)",
+          "deck": "Before The Fall",
+          "cards": "-",
+          "overrides": {
+            "unit_hp": 9,
+            "unit_atk": 1
+          },
+          "status": "src",
+          "source": "/workspace/g-tile-engine/src/chess/game/towerChess.ts:92 WARRIOR_HP = 9, stampTowerArmy :931-933 hp/ad; towerStrike.ts:33 WARRIOR_DMG = 1, statueStrike :214"
+        },
+        {
+          "id": "btf-archer",
+          "label": "Archer (BTF)",
+          "deck": "Before The Fall",
+          "cards": "-",
+          "overrides": {
+            "unit_hp": 6,
+            "unit_atk": 2
+          },
+          "status": "src",
+          "source": "/workspace/g-tile-engine/src/chess/game/towerChess.ts:92 BACK_HP = 6, stampTowerArmy :934-937 isArcher hp/ad; towerStrike.ts:34 RANGER_DMG = 2, statueStrike :218"
+        },
+        {
+          "id": "btf-mage",
+          "label": "Mage (BTF)",
+          "deck": "Before The Fall",
+          "cards": "-",
+          "overrides": {
+            "unit_hp": 6,
+            "unit_atk": 2
+          },
+          "status": "src",
+          "source": "/workspace/g-tile-engine/src/chess/game/towerChess.ts:92 BACK_HP = 6, stampTowerArmy :934-937 isMage hp/ad; towerStrike.ts:35 BACK_DMG = 2, statueStrike :219"
+        },
+        {
+          "id": "btf-cleric",
+          "label": "Cleric (BTF)",
+          "deck": "Before The Fall",
+          "cards": "-",
+          "overrides": {
+            "unit_hp": 5,
+            "unit_atk": 1
+          },
+          "status": "src",
+          "source": "/workspace/g-tile-engine/src/chess/game/towerChess.ts:92 CLERIC_HP = 5, stampTowerArmy :927-929 hp/ad; towerStrike.ts statueStrike :217 return 1 (cleric is not in the :33-35 damage constants)"
+        }
+      ],
+      "renamed_from": [],
+      "retired_knobs": [
+        {
+          "id": "team_colour_override",
+          "since_rev": 9,
+          "reason": "Folded into the nullable team_colour (null = palette) (setup-format r8 §12.7 Q5, L30).",
+          "fold": {
+            "into": "team_colour",
+            "when_false": "reset"
+          }
+        },
+        {
+          "id": "one_unit_per_tile",
+          "since_rev": 15,
+          "reason": "Cell density lives in the project setting settings.occupancy (project-format r14 §3.1; Engine Architect 2026-11-09).",
+          "convert": {
+            "to_setting": "settings.occupancy",
+            "map": {
+              "true": "strict1",
+              "false": "softStack"
+            },
+            "scope": "project-level unit-roster setup only; stage values kept inactive with occupancyStageValueIgnored",
+            "old_answer": "kept-inactive"
+          }
+        }
+      ],
+      "menu_order": [
+        {
+          "question": "Board size?",
+          "knob_ids": [
+            "board_cols",
+            "board_rows"
           ]
+        },
+        {
+          "question": "How many pieces?",
+          "knob_ids": [
+            "piece_count"
+          ]
+        },
+        {
+          "question": "Health and attack?",
+          "knob_ids": [
+            "unit_hp",
+            "unit_atk"
+          ]
+        },
+        {
+          "question": "Where do they start?",
+          "knob_ids": [
+            "opening_row"
+          ]
+        },
+        {
+          "question": "Flash and lunge units that have no hit or attack clips?",
+          "knob_ids": [
+            "clip_cues"
+          ]
+        },
+        {
+          "question": "Team colour for this army (blank = project palette)",
+          "knob_ids": [
+            "team_colour"
+          ]
+        }
+      ],
+      "banned_combos": [
+        {
+          "id": "unit-roster.piece-count-gt-board-cols",
+          "when": {
+            "knob": "piece_count",
+            "op": "gt",
+            "value": "$board_cols"
+          },
+          "disable": {
+            "knob": "piece_count"
+          },
+          "reason": "Pieces can't fit on one opening row.",
+          "note": "value refers to another knob ($board_cols)"
+        }
+      ],
+      "composable_as": [],
+      "resolved_conflicts": [
+        {
+          "text": "Bot opening: BA 'five front A,M,C,C,W' and Terrain 'five front W,W,W,M,M' vs match-levels 'opens six on far rank'.",
+          "ruling": {
+            "by": "CEO",
+            "date": "2026-11-09",
+            "note": "relayed via CoS/DSK L44; user's choice: unit-roster.opening_row back (default) | second | front (per-deck five-piece shape)"
+          }
         }
       ]
     },
     {
       "id": "talk",
-      "closure": "when-used",
+      "name": "Talk",
+      "group": "UI & Feedback",
+      "summary": "A short spoken line on a stage neutral, with an optional effect when the line plays. Attached via stage.neutrals[].setupIds (project-format §6.5). Phase 1 interact. Not an ability owner: no ability_group; composable_as is empty. The npc-role IDEA (idle / wander / quest-giver / seller) stays an idea and may share a later placement's setupIds.",
+      "scope": "grid-tactics",
+      "starter_safe": true,
       "knobs": [
         {
           "id": "line",
+          "label": "What they say",
           "type": "text",
-          "rev": 1,
-          "default": "",
-          "max_len": 128
+          "default": "Hello, traveller.",
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [],
+          "status": {
+            "default": "CONFIRMED",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 28,
+          "default_history": [
+            {
+              "rev": 28,
+              "default": "Hello, traveller."
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "description": "The line this person says when talked to. max_len 140 is a Unicode code-point count. Missing or empty line shows nothing (D2). Status CONFIRMED: DSK D5 decided the exact default 'Hello, traveller.' (sha256 cf0c9d3b). There is no DSK-ruling status value; CONFIRMED is the status used elsewhere for DSK-accepted decided values (effect.parts). Used on stage.neutrals[].setupIds (project-format §6.5). Related IDEA: npc-role (idle / wander / quest-giver / seller) stays an idea; talk is the Phase 1 placement greet line. A later placement may carry both in setupIds. Rev 29: setup-format r30 (sha256 96929177) — text max_len is a Unicode code-point count (`TextKnobExtras` in §9; r30 length unit). `strayValue` is a §2.5 warning (source \"default\" with a stored value), not a §2.9 rule (§2.9 is list and ref knobs; r30 also counts list labels in code points). project-format r40 (sha256 f4427708) — stage.neutrals[].setupIds is DECIDED (§6.5).",
+          "max_len": 140,
+          "ruling": {
+            "by": "DSK",
+            "date": "2026-11-17",
+            "note": "2026-11-17-phase1.md D2/D5 (sha256 cf0c9d3b): talk is a setup answer on stage.neutrals[].setupIds (project-format §6.5); line max_len 140 Unicode code points, default \"Hello, traveller.\"; fx.talk maps to talk.effect (default none = house default). There is no DSK-ruling status value; line/default uses CONFIRMED, the status used for DSK-accepted decided values (e.g. effect.parts)."
+          }
         },
         {
           "id": "effect",
+          "label": "Effect",
           "type": "ref",
-          "rev": 1,
-          "default": "none"
+          "default": "none",
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [
+            "default"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 28,
+          "default_history": [
+            {
+              "rev": 28,
+              "default": "none"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "description": "Which effect plays when this person is talked to (D5 fx.talk). Default 'none' is the house default (the game's own drawing). PROPOSED, like the other presentation effect knobs.",
+          "ref": {
+            "docs": "effect",
+            "builtin": [
+              "none",
+              "btf-purple-drop",
+              "btf-holy-blade",
+              "btf-cut",
+              "btf-wrath-cone",
+              "btf-heaven-sword",
+              "btf-chain-hook",
+              "btf-feather",
+              "btf-spike",
+              "btf-spin-fly-together",
+              "btf-spin-split"
+            ]
+          },
+          "ruling": {
+            "by": "DSK",
+            "date": "2026-11-17",
+            "note": "2026-11-17-phase1.md D2/D5 (sha256 cf0c9d3b): talk is a setup answer on stage.neutrals[].setupIds (project-format §6.5); line max_len 140 Unicode code points, default \"Hello, traveller.\"; fx.talk maps to talk.effect (default none = house default). There is no DSK-ruling status value; line/default uses CONFIRMED, the status used for DSK-accepted decided values (e.g. effect.parts)."
+          }
         }
-      ]
+      ],
+      "presets": [],
+      "renamed_from": [],
+      "retired_knobs": [],
+      "menu_order": [
+        {
+          "question": "What does this person say?",
+          "knob_ids": [
+            "line"
+          ]
+        },
+        {
+          "question": "Which effect does it play?",
+          "knob_ids": [
+            "effect"
+          ]
+        }
+      ],
+      "banned_combos": [],
+      "bans_note": "None: no knob combination is banned.",
+      "composable_as": []
     },
     {
       "id": "terrain",
-      "closure": "always",
+      "name": "Terrain (what each tile id means)",
+      "group": "Map & Terrain",
+      "summary": "The single home for tile meanings: for each logic tile id, whether units can stand, land or spawn there, whether landing kills, whether a push can enter, and whether it slows or trips. Edge walls (earth lines) are not tiles in the code: they sit on a tile's n/e/s/w edge and live in Barrier Line. Walls on tile edges (the map's logic.edges) always block movement and adjacency across that edge: that is core grid behaviour with no knob. The two wall knobs only decide whether walls also block line of sight and shots.",
+      "scope": "grid-tactics",
+      "starter_safe": true,
       "knobs": [
         {
           "id": "tile_types",
+          "label": "Tile types",
           "type": "list",
           "default": [
             {
@@ -521,96 +3043,1127 @@
               "buildable": false
             }
           ],
-          "item": {
-            "open": true,
-            "kills_on_landing": false,
-            "push_can_enter": true,
-            "slows_move": false,
-            "trips": false,
-            "buildable": false
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [],
+          "status": {
+            "default": "src",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
           },
-          "reserved": true
-        },
-        {
-          "id": "lethal_landing_scope",
-          "type": "picker",
-          "default": "any",
-          "options": [
-            "any",
-            "forced_only"
+          "rev": 23,
+          "default_history": [
+            {
+              "rev": 7,
+              "default": [
+                {
+                  "id": "floor",
+                  "label": "Floor",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "fallen",
+                  "label": "Fallen tile (abyss)",
+                  "open": false,
+                  "kills_on_landing": true,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "flask",
+                  "label": "Flask tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "rising",
+                  "label": "Rising tile (a unit is coming back here)",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "tide",
+                  "label": "Tide mark",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "warp-mark",
+                  "label": "Warp mark",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "sword-mark",
+                  "label": "Sword fade-in tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "boss-cover",
+                  "label": "Portal boss tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "vines",
+                  "label": "Vines",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": true,
+                  "trips": false
+                },
+                {
+                  "id": "trap",
+                  "label": "Trap",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": true
+                }
+              ]
+            },
+            {
+              "rev": 9,
+              "default": [
+                {
+                  "id": "floor",
+                  "label": "Floor",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "fallen",
+                  "label": "Fallen tile (abyss)",
+                  "open": false,
+                  "kills_on_landing": true,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "flask",
+                  "label": "Flask tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "rising",
+                  "label": "Rising tile (a unit is coming back here)",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "tide",
+                  "label": "Tide mark",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "warp-mark",
+                  "label": "Warp mark",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "sword-mark",
+                  "label": "Sword fade-in tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "boss-cover",
+                  "label": "Portal boss tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "vines",
+                  "label": "Vines",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": true,
+                  "trips": false
+                },
+                {
+                  "id": "trap",
+                  "label": "Trap",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": true
+                },
+                {
+                  "id": "water",
+                  "label": "Water",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "lava",
+                  "label": "Lava",
+                  "open": true,
+                  "kills_on_landing": true,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "wall-block",
+                  "label": "Wall block",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false
+                }
+              ]
+            },
+            {
+              "rev": 10,
+              "default": [
+                {
+                  "id": "floor",
+                  "label": "Floor",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "fallen",
+                  "label": "Fallen tile (abyss)",
+                  "open": false,
+                  "kills_on_landing": true,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "flask",
+                  "label": "Flask tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "rising",
+                  "label": "Rising tile (a unit is coming back here)",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "tide",
+                  "label": "Tide mark",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "warp-mark",
+                  "label": "Warp mark",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "sword-mark",
+                  "label": "Sword fade-in tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "boss-cover",
+                  "label": "Portal boss tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "vines",
+                  "label": "Vines",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": true,
+                  "trips": false
+                },
+                {
+                  "id": "trap",
+                  "label": "Trap",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": true
+                },
+                {
+                  "id": "water",
+                  "label": "Water",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "lava",
+                  "label": "Lava",
+                  "open": true,
+                  "kills_on_landing": true,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "wall-block",
+                  "label": "Wall block",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                }
+              ]
+            },
+            {
+              "rev": 15,
+              "default": [
+                {
+                  "id": "floor",
+                  "label": "Floor",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "fallen",
+                  "label": "Fallen tile (abyss)",
+                  "open": false,
+                  "kills_on_landing": true,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "flask",
+                  "label": "Flask tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "rising",
+                  "label": "Rising tile (a unit is coming back here)",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "tide",
+                  "label": "Tide mark",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "warp-mark",
+                  "label": "Warp mark",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "sword-mark",
+                  "label": "Sword fade-in tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "boss-cover",
+                  "label": "Portal boss tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "vines",
+                  "label": "Vines",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": true,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "trap",
+                  "label": "Trap",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": true,
+                  "buildable": false
+                },
+                {
+                  "id": "water",
+                  "label": "Water",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "lava",
+                  "label": "Lava",
+                  "open": true,
+                  "kills_on_landing": true,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "wall-block",
+                  "label": "Wall block",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                }
+              ]
+            },
+            {
+              "rev": 23,
+              "default": [
+                {
+                  "id": "floor",
+                  "label": "Floor",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "fallen",
+                  "label": "Fallen tile (abyss)",
+                  "open": false,
+                  "kills_on_landing": true,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "flask",
+                  "label": "Flask tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "rising",
+                  "label": "Rising tile (a unit is coming back here)",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "tide",
+                  "label": "Tide mark",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "warp-mark",
+                  "label": "Warp mark",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "sword-mark",
+                  "label": "Sword fade-in tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "boss-cover",
+                  "label": "Portal boss tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "vines",
+                  "label": "Vines",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": true,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "trap",
+                  "label": "Trap",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": true,
+                  "buildable": false
+                },
+                {
+                  "id": "water",
+                  "label": "Water",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "lava",
+                  "label": "Lava",
+                  "open": true,
+                  "kills_on_landing": true,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "wall-block",
+                  "label": "Wall block",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "path",
+                  "label": "Path",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "dirt",
+                  "label": "Dirt",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                }
+              ]
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "description": "Built-ins water, lava and wall-block are CONFIRMED engine defaults (Engine Architect 2026-11-09, L27) and the defaultTileType targets of the procedural recipes (project-format r13 section 6.2.2 / 6.4): water@2 and murk@1 give water, lava@2 gives lava, wall gives wall-block, ice@1 gives floor in v1 (slippery ice is a future tile type), the rest give floor. buildable (item field, rev 15, PROPOSED, modes: td; v1: false): whether a structure may be placed on the tile. False on every built-in, floor included: grid tactics has no building and BTF never places structures, so false keeps tactics unchanged; a TD project sets it on its own tile types (Engine Architect / Modes Designer MODES-v2 §3, DSK L41). An added item field, so stored lists are not flagged. Rev 23 (DSK L45): built-ins path and dirt (walkable land, like floor, not buildable); 15 reserved items. wall-block stays the only catalogue spelling; wall_block is a reader alias in the format only (setup-format §2.9.3 rule 7). Existing answers drift by §2.9.3 rules 4 and 6 (appended to the effective value, nothing written).",
+          "item_rulings": {
+            "water": {
+              "by": "Engine Architect",
+              "date": "2026-11-09",
+              "note": "L27 confirmed: open false, kills_on_landing false, push_can_enter false, slows_move false, trips false"
+            },
+            "lava": {
+              "by": "Engine Architect",
+              "date": "2026-11-09",
+              "note": "L27 confirmed: open true, kills_on_landing true, push_can_enter true, slows_move false, trips false"
+            },
+            "wall-block": {
+              "by": "Engine Architect",
+              "date": "2026-11-09",
+              "note": "L27 confirmed: open false, kills_on_landing false, push_can_enter false, slows_move false, trips false"
+            },
+            "path": {
+              "by": "Engine Architect",
+              "date": "2026-11-12",
+              "note": "L45: built-in walkable land path and dirt (EUX r65 Q-A1/Q-A4); same walkability as floor, not buildable"
+            },
+            "dirt": {
+              "by": "Engine Architect",
+              "date": "2026-11-12",
+              "note": "L45: built-in walkable land path and dirt (EUX r65 Q-A1/Q-A4); same walkability as floor, not buildable"
+            }
+          },
+          "item": {
+            "open": {
+              "type": "toggle",
+              "default": true
+            },
+            "kills_on_landing": {
+              "type": "toggle",
+              "default": false
+            },
+            "push_can_enter": {
+              "type": "toggle",
+              "default": true
+            },
+            "slows_move": {
+              "type": "toggle",
+              "default": false
+            },
+            "trips": {
+              "type": "toggle",
+              "default": false
+            },
+            "buildable": {
+              "type": "toggle",
+              "default": false
+            }
+          },
+          "reserved_ids": [
+            "floor",
+            "fallen",
+            "flask",
+            "rising",
+            "tide",
+            "warp-mark",
+            "sword-mark",
+            "boss-cover",
+            "vines",
+            "trap",
+            "water",
+            "lava",
+            "wall-block",
+            "path",
+            "dirt"
           ]
         },
         {
+          "id": "lethal_landing_scope",
+          "label": "Deadly tiles kill on",
+          "type": "picker",
+          "default": "any",
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": [
+            {
+              "value": "any",
+              "label": "Any landing"
+            },
+            {
+              "value": "forced_only",
+              "label": "Only forced landings (push, pull)"
+            }
+          ],
+          "proposed": [
+            "default",
+            "options"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": "PROPOSED",
+            "step": null
+          },
+          "rev": 14,
+          "default_history": [
+            {
+              "rev": 14,
+              "default": "any"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "tile_types"
+          ],
+          "description": "Which landings on a kills_on_landing tile kill. UX: the move highlight marks lethal cells and asks to confirm; the AI avoids them unless the scope or rules make it worthwhile.",
+          "ruling": {
+            "by": "Engine Architect",
+            "date": "2026-11-09",
+            "note": "lethal landing scope: any (default) or forced_only; shipped as DSK L36"
+          }
+        },
+        {
           "id": "wall_blocks_los",
+          "label": "Walls block line of sight",
           "type": "toggle",
-          "default": true
+          "default": true,
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [],
+          "status": {
+            "default": "src",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 8,
+          "default_history": [
+            {
+              "rev": 8,
+              "default": true
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "proposed_options": [
+            false
+          ]
         },
         {
           "id": "wall_blocks_shots",
+          "label": "Walls block shots",
           "type": "toggle",
-          "default": true
+          "default": true,
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [],
+          "status": {
+            "default": "src",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 8,
+          "default_history": [
+            {
+              "rev": 8,
+              "default": true
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "proposed_options": [
+            false
+          ]
         },
         {
           "id": "push_into_walls",
+          "label": "Forced moves slam into walls",
           "type": "toggle",
-          "default": false
+          "default": false,
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [
+            "default"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 10,
+          "default_history": [
+            {
+              "rev": 10,
+              "default": false
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "description": "Slams into walls. On: a forced move that meets a wall-block or an edge wall stops on the last open cell and the core emits pushBlocked {unit, blocker: wall-block | edge | unit, cellsRemaining}; push-knockback's wall_slam_damage applies. Off: it still stops short, with no event.",
+          "ruling_note": "Engine Architect 2026-11-09 supersedes the rev-10 'wall-block tiles only' reading: push_into_walls now covers edge walls too (for the event). No unit enters a closed tile either way (invariant).",
+          "ruling": {
+            "by": "DSK",
+            "date": "2026-11-09",
+            "note": "L34: wall-block blocks ordinary moves and all forced movement"
+          }
         },
         {
           "id": "lanes_enabled",
+          "label": "Board has lanes",
           "type": "toggle",
-          "default": false
+          "default": false,
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [],
+          "status": {
+            "default": "CoS-default",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 14,
+          "default_history": [
+            {
+              "rev": 14,
+              "default": false
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "lanes are an optional tile-region tag plus a rule hook, off by default"
+          }
         },
         {
           "id": "lane_axis",
+          "label": "Lanes run along",
           "type": "picker",
           "default": "row",
+          "min": null,
+          "max": null,
+          "step": null,
           "options": [
-            "row",
-            "column"
+            {
+              "value": "row",
+              "label": "Rows (left to right)"
+            },
+            {
+              "value": "column",
+              "label": "Columns (top to bottom)"
+            }
           ],
-          "when": {
+          "proposed": [],
+          "status": {
+            "default": "src",
+            "min": null,
+            "max": null,
+            "options": "src",
+            "step": null
+          },
+          "rev": 14,
+          "default_history": [
+            {
+              "rev": 14,
+              "default": "row"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "lanes_enabled"
+          ],
+          "active_when": {
             "knob": "lanes_enabled",
             "eq": true
           }
         },
         {
           "id": "lane_count",
+          "label": "Number of lanes",
           "type": "slider",
           "default": 3,
           "min": 1,
           "max": 9,
           "step": 1,
-          "when": {
+          "options": null,
+          "proposed": [
+            "min"
+          ],
+          "status": {
+            "default": "src",
+            "min": "PROPOSED",
+            "max": "ai-match",
+            "options": null,
+            "step": "ai-match"
+          },
+          "rev": 14,
+          "default_history": [
+            {
+              "rev": 14,
+              "default": 3
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "lanes_enabled"
+          ],
+          "active_when": {
             "knob": "lanes_enabled",
             "eq": true
           }
         },
         {
           "id": "lane_field_lanes",
+          "label": "Lane fields can land on",
           "type": "picker",
           "default": "centre-only",
+          "min": null,
+          "max": null,
+          "step": null,
           "options": [
-            "centre-only",
-            "any"
+            {
+              "value": "centre-only",
+              "label": "The middle lane only"
+            },
+            {
+              "value": "any",
+              "label": "Any lane"
+            }
           ],
-          "when": {
+          "proposed": [],
+          "status": {
+            "default": "src",
+            "min": null,
+            "max": null,
+            "options": "src",
+            "step": null
+          },
+          "rev": 14,
+          "default_history": [
+            {
+              "rev": 14,
+              "default": "centre-only"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "lanes_enabled"
+          ],
+          "description": "With an even lane_count, 'centre-only' covers both centre lanes (n/2 and n/2+1) (Engine Architect, DSK L43).",
+          "active_when": {
             "knob": "lanes_enabled",
             "eq": true
           }
         },
         {
           "id": "centre_lane",
+          "label": "Centre lane (even lane counts)",
           "type": "picker",
           "default": "lower",
+          "min": null,
+          "max": null,
+          "step": null,
           "options": [
-            "lower",
-            "upper"
+            {
+              "value": "lower",
+              "label": "Lower (n/2)"
+            },
+            {
+              "value": "upper",
+              "label": "Upper (n/2 + 1)"
+            }
           ],
-          "when": {
+          "proposed": [
+            "default",
+            "options"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": "PROPOSED",
+            "step": null
+          },
+          "rev": 15,
+          "default_history": [
+            {
+              "rev": 15,
+              "default": "lower"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "lanes_enabled",
+            "lane_count"
+          ],
+          "description": "Used where a behaviour needs one centre lane. lane_field_lanes 'centre-only' covers both centre lanes.",
+          "ruling": {
+            "by": "Engine Architect",
+            "date": "2026-11-09",
+            "note": "L43 even lane counts: a single-centre picker, default lower"
+          },
+          "active_when": {
             "knob": "lanes_enabled",
             "eq": true
           }
         }
+      ],
+      "presets": [],
+      "events": [
+        {
+          "id": "landedOn",
+          "when": "a move ends on a tile (normal, forced, warp/teleport, summon/placement); passing over never counts (EA 2026-11-09)"
+        },
+        {
+          "id": "pushBlocked",
+          "when": "push_into_walls on and a forced move meets a wall-block, an edge wall or a unit: {unit, blocker, cellsRemaining} (EA 2026-11-09)"
+        },
+        {
+          "id": "enteredLane",
+          "when": "lanes_enabled and a unit's move ends in another lane: {unit, lane} (rule hook, CoS 2026-11-09)"
+        }
+      ],
+      "renamed_from": [],
+      "retired_knobs": [],
+      "menu_order": [
+        {
+          "question": "What does each tile type mean?",
+          "knob_ids": [
+            "tile_types",
+            "lethal_landing_scope"
+          ]
+        },
+        {
+          "question": "Do walls block line of sight, shots and forced moves?",
+          "knob_ids": [
+            "wall_blocks_los",
+            "wall_blocks_shots",
+            "push_into_walls"
+          ]
+        },
+        {
+          "question": "Does the board have lanes?",
+          "knob_ids": [
+            "lanes_enabled"
+          ]
+        },
+        {
+          "question": "How are the lanes laid out?",
+          "knob_ids": [
+            "lane_axis",
+            "lane_count",
+            "lane_field_lanes",
+            "centre_lane"
+          ]
+        }
+      ],
+      "banned_combos": [],
+      "closure": "always",
+      "bans_note": "None known: the rev-13 coverage audit found no invalid knob combination in src or the docs (not an exhaustive proof).",
+      "composable_as": [],
+      "invariants": [
+        "No unit ever occupies a tile with open: false (Engine Architect 2026-11-09)."
       ]
     }
   ]

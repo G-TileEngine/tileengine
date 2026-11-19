@@ -6,7 +6,7 @@
   "name": "Archer line shot",
   "behaviourId": "line-shot",
   "catalogue": {
-    "rev": 28
+    "rev": 29
   },
   "createdAt": "2026-11-18T00:00:00Z",
   "updatedAt": "2026-11-18T00:00:00Z",
@@ -72,24 +72,27 @@
       "needsReask": null
     },
     "neutrals_legal": {
-      "source": "default",
-      "rev": 0,
+      "source": "user",
+      "value": false,
+      "rev": 1,
       "defaultRef": {
         "rev": 1
       },
       "needsReask": null
     },
     "hit_class": {
-      "source": "default",
-      "rev": 0,
+      "source": "user",
+      "value": "basic",
+      "rev": 1,
       "defaultRef": {
         "rev": 1
       },
       "needsReask": null
     },
     "mana_cost": {
-      "source": "default",
-      "rev": 0,
+      "source": "user",
+      "value": 0,
+      "rev": 1,
       "defaultRef": {
         "rev": 13
       },
