@@ -7,7 +7,7 @@ import type { DoorIntent } from "../../src/sim/types.ts";
 import type { Outcome } from "../../src/state/index.ts";
 import type { Sq } from "../../src/types/core-types.ts";
 import { createPlay, spellRef } from "./board.ts";
-import { recipeIn, type PlayDocs } from "./load.ts";
+import { recipeOf, type PlayDocs } from "./load.ts";
 import { bundledDocs } from "./project.ts";
 
 /** Orthogonal reach of the demo line-shot when a row omits reach. Not an engine rule. */
@@ -92,7 +92,7 @@ export function createMatch(docs?: PlayDocs, moveMs = 200) {
         const target = step.action.target, id = target !== null && target.pipe === "unit" ? target.unitId : undefined, u = id === undefined ? undefined : play.world.units.get(id);
         const key = u === undefined ? "" : `talk-${u.unitId}`;
         const text = key !== "" && Object.hasOwn(lines, key) ? lines[key] ?? "" : "";
-        talk = { name: u === undefined ? "" : names[u.unitId] ?? recipeIn(body.recipes, u.unitId).name, text };
+        talk = { name: u === undefined ? "" : names[u.unitId] ?? recipeOf(u.unitId).name, text };
         play.world.phases = { ...play.world.phases, battle: "actMenu" };
       } else if (typeof step === "object" && step !== null && "action" in step && step.action?.kind === "ability") settle();
       return step;
@@ -133,7 +133,7 @@ export function createMatch(docs?: PlayDocs, moveMs = 200) {
       const btn = (show: boolean, hot: boolean): Btn => ({ show, on: hot });
       const spellOn = on && spellRef(rules, unit.unitId) !== undefined;
       return {
-        turn: side === "player" ? "YOUR TURN" : "ENEMY TURN", side, name: on ? names[unit.unitId] ?? recipeIn(body.recipes, unit.unitId).name : "", hp, max, selected: on, outcome, turns, talk,
+        turn: side === "player" ? "YOUR TURN" : "ENEMY TURN", side, name: on ? names[unit.unitId] ?? recipeOf(unit.unitId).name : "", hp, max, selected: on, outcome, turns, talk,
         actions: { basic: btn(menu, basic.length > 0), spell: btn(menu && spellOn, spells.length > 0), talk: btn(on && interact.length > 0, interact.length > 0), wait: btn(phase === "actMenu", phase === "actMenu"), end: btn(true, true) },
       };
     },

@@ -8,7 +8,7 @@ const collect = (root: string): Map<string, string> => {
   const bag = new Map<string, string>(), seen = new Set<string>(), temps: string[] = [];
   const walk = (rel: string): void => { if (seen.has(rel)) return; seen.add(rel); const raw = readFileSync(join(root, rel), "utf8"); if (rel.endsWith(".json")) bag.set(`${rel}.js`, `export default ${raw.replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029")}`); else bag.set(rel.replace(/\.ts$/, ".js"), toJs(rel, release(raw, rel), walk)); };
   const walkDir = (dir: string, rel: string): void => { for (const name of readdirSync(dir).sort()) { const path = join(dir, name), next = rel === "" ? name : `${rel}/${name}`; if (statSync(path).isDirectory()) walkDir(path, next); else { const key = `templates/${next}`; bag.set(key, readFileSync(path, "utf8")); temps.push(key); } } };
-  walk(ENTRY); bag.set("tokens.css", readFileSync(join(root, "tools/maker/tokens.css"), "utf8")); walkDir(join(root, "data/templates"), ""); bag.set("templates/files.json", `${JSON.stringify({ files: temps }, null, 2)}\n`); return bag;
+  walk(ENTRY); bag.set("tokens.css", readFileSync(join(root, "tools/maker/tokens.css"), "utf8")); bag.set("app.css", readFileSync(join(root, "tools/maker/app.css"), "utf8")); walkDir(join(root, "data/templates"), ""); bag.set("templates/files.json", `${JSON.stringify({ files: temps }, null, 2)}\n`); return bag;
 };
 /** `<out>/maker/index.html` is the only unstamped file. The stamp is 12 hex chars of the sorted path+sha list. */
 export function build(out: string, commit: string, root: string = ROOT): string {
