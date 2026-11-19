@@ -194,11 +194,32 @@ Source: Outside reviews (GrokHeavy, Grok Build and Gemini), shared by the CEO an
 | hand-and-draw | Deck editor (later) | TBD | Post-launch: **POST-LAUNCH, DO NOT BUILD** |
 | Everything else | Generic Behaviour panel, shown as abilities (browse by goal with tile diagrams, menu order, bans greyed out, reset to default, wired only, a real Test per ability) | MS-04 | 3 on |
 
-## Post-launch and CEO decisions
+## Post-launch: POST-LAUNCH, DO NOT BUILD
+No row in this table is a build instruction. Each row is marked **POST-LAUNCH, DO NOT BUILD**.
 
-The post-launch table (POST-LAUNCH, DO NOT BUILD) and the “CEO decisions with no repo doc yet” section were moved to the private repo G-TileEngine/tileengine-private at `from-public/docs/maker/roadmap.md`, sha256 `0913ccdf832b9ea2c410a18bff4aea9f1a645f8a2f666b3c19a9d405b1fc605c`, on 2026-11-19 at the CEO's request. Ask CoS for access.
+| MS | Step order | Feature | Basic maker editor / screen | Depends on | Source doc |
+|---|---|---|---|---|---|
+| TBD | **POST-LAUNCH, DO NOT BUILD** | About 50 BTF combat behaviours (line, radial, sky-drop, bounce, barriers, summons, sword-lifecycle, hand-and-draw and others). They are catalogued but have no engine code: a content layer, filled in as games need them | Behaviour panel. Deck editor for hand-and-draw | Engine code per behaviour | `behaviour-library/CATALOGUE.md`, `coverage.md` |
+| TBD | **POST-LAUNCH, DO NOT BUILD** | Unit "When it dies" (BTF orbs) | TBD | BTF behaviours | `ux/on-death-backlog.md` (IDEA) |
+| TBD | **POST-LAUNCH, DO NOT BUILD** | 'UI export with purpose' (CEO 2026-11-13): save just the UI as Personal use, Own game or AI-made game (browser, PC, mobile); PNGs plus a 9-slice sheet, engine exports (Godot, Unity, Phaser, HTML/CSS), and an AI guide plus prompt (Grok Build first) | Export sheet in the UI kit | MS-22 | Not yet documented (plan needed later) |
+| TBD | **POST-LAUNCH, DO NOT BUILD** | Weather and animated world (rivers, trees) | TBD | MS-10 | `ux/weather-time-backlog.md`, `design-notes/animated-world.md` |
+| TBD | **POST-LAUNCH, DO NOT BUILD** | Social hub, studio profile and achievements, coins, library and chart. Keep the tested hub layout and flows (`shell-lessons.md` #3) | Hub tabs: Shop, Games, Creators, Requests | Online layer | `ux/social-hub-plan.md`, `profile-achievements.md`, `coins-library-chart.md` |
+| TBD | **POST-LAUNCH, DO NOT BUILD** | Starter Pack v2 (free hub pack) | Hub listing | Asset hub | `ux/starter-pack-v2-plan.md` |
+| TBD | **POST-LAUNCH, DO NOT BUILD** | Sprite generator from keeps, and the Imagine-to-pixel converter | Inside Sprite Studio | MS-06 | `ux/gen-learn-plan.md` (on hold), `converter-quality-study.md` |
+| TBD | **POST-LAUNCH, DO NOT BUILD** | Online-play step (server-authoritative, with the 5 MUST items) | TBD | Online layer | `docs/chaos-player-outline.md` §10 |
 
-Do not build any post-launch row. Those plans are private. This public roadmap keeps the AGREED stages, rules, and the audit of existing plans.
+## CEO decisions with no repo doc yet (plan needed later)
+TileEngine is **not open source**.
+
+| Decision | When | Status |
+|---|---|---|
+| Publish the engine app (editor plus game export) on Google Play and the App Store. P1-9's APK is game-only | After P1-9 | Plan needed later |
+| AI extension kit plus connector (Roblox Studio-style): a user's AI adds NPCs, behaviours, stages and effects through our tools. Work is saved via our servers under HS Studio creator terms. Test with Grok 4.8 | TBD | Plan needed later |
+| Accessibility, prompted by a blind dev's audio-only games. `design-notes/editor-behaviours.md` (ARIA, reference only) is a starting point | Before launch | Plan needed later |
+| Translator and literature helpers | TBD | Plan needed later |
+| Paid asset store (e.g. a BTF combat sprite pack). Gold coins are earn-only, with no coins for visiting store pages, per Apple guideline 3.2.2 and Google Play rules | TBD | Plan needed later |
+| Optional online layer on the CEO's Fly.io: accounts, cloud saves, asset hub. The core stays offline-first | TBD | Plan needed later |
+| Two chaos players: game-side, and dev-side security and exploit testing. The engine outline exists in `docs/chaos-player-outline.md` §9 and `docs/qa/chaos-player-invariants.md`; the maker/product plan does not | Dev-side slice starts once the first save, import and reward events exist (§9) | Plan needed later |
 
 ## Audit of existing plans
 Verdicts:
