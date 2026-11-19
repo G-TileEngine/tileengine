@@ -9,9 +9,9 @@ const fail = (error: "staleRev" | "readOnly" | "writeFailed", path: string, mess
 export function planSave(stored: DocText, next: DocText, expectedRev: number, now: string): SavePlan {
   const parsed: Record<string, unknown> = {};
   for (const [path, text] of Object.entries(stored)) { if (!path.endsWith(".json")) continue; try { parsed[path] = JSON.parse(text) as unknown; } catch { return fail("writeFailed", path, `Can't open: ${path} invalid JSON`); } }
-  if (versionRows(parsed as ProjectFiles).some((row) => row.code === "formatNewer")) return fail("readOnly", "project.json", MSG.readOnly);
   const root = parsed["project.json"], project = isObj(root) && isObj(root["project"]) ? root["project"] : null, rev = project !== null && typeof project["rev"] === "number" ? project["rev"] : null;
   if (rev !== expectedRev) return fail("staleRev", "project.json", MSG.staleRev);
+  if (versionRows(parsed as ProjectFiles).some((row) => row.code === "formatNewer")) return fail("readOnly", "project.json", MSG.readOnly);
   const changed = [...new Set([...Object.keys(stored), ...Object.keys(next)])].filter((path) => (stored[path] ?? null) !== (next[path] ?? null));
   if (changed.length === 0) return { ok: true, writes: [] };
   const render = (path: string, manifestDoc: boolean): string => {

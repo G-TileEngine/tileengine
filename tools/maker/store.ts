@@ -27,4 +27,6 @@ export async function movePrefix(store: MakerStore, from: string, to: string): P
   const files = await readTree(store, from), src = from.endsWith("/") ? from : `${from}/`, dest = to.endsWith("/") ? to : `${to}/`, wrote: string[] = [];
   for (const [rel, text] of Object.entries(files)) { try { await store.write(`${dest}${rel}`, text); wrote.push(rel); } catch (e) { for (const relDone of wrote) await store.remove(`${dest}${relDone}`); throw e; } }
   for (const rel of Object.keys(files)) await store.remove(`${src}${rel}`);
+  const drop = async (dir: string): Promise<void> => { const pre = dir.endsWith("/") ? dir : `${dir}/`; for (const name of await store.list(pre)) await drop(`${pre}${name}`); await store.remove(pre.slice(0, -1)); };
+  await drop(src);
 }

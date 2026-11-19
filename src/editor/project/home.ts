@@ -25,6 +25,7 @@ export function duplicate(files: DocText, newId: string, now: string, taken: rea
 }
 export function rowBlocked(id: string, message: string): Row { const error = message.startsWith("Can't open:") ? message : `Can't open: ${message}`; return { id, name: "Project", updatedAt: "", stages: 0, readOnly: false, fixing: 0, error, badge: null }; }
 export function rowFrom(id: string, files: ProjectFiles): Row {
+  if (!isObj(files["project.json"])) return rowBlocked(id, "Can't open: project.json missing");
   const load = readProject(files), root = files["project.json"], project = isObj(root) && isObj(root["project"]) ? root["project"] : null, hard = load.report.filter((item) => item.severity === "hard").length;
   return { id, name: project !== null && typeof project["name"] === "string" ? project["name"] : "Project", updatedAt: project !== null && typeof project["updatedAt"] === "string" ? project["updatedAt"] : "", stages: project !== null && Array.isArray(project["stages"]) ? project["stages"].length : 0, readOnly: load.readOnly, fixing: load.readOnly ? 0 : hard, error: null, badge: load.readOnly ? "Newer version" : hard > 0 ? `Needs fixing (${hard})` : null };
 }
