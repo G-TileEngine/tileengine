@@ -1,0 +1,39 @@
+.app { height: 100dvh; min-height: 100dvh; background: var(--bg); color: var(--ink); display: flex; flex-direction: column; }
+.topbar { min-height: var(--header-h); display: flex; align-items: center; gap: 8px; padding: 10px 16px 8px; background: var(--surface); border-bottom: 1px solid var(--line); }
+.topbar h1 { flex: 1; margin: 0; font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.body { flex: 1; min-height: 0; overflow: auto; padding: 16px 16px calc(20px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 12px; }
+.card, .choice { display: flex; align-items: center; gap: 10px; min-height: 72px; padding: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); text-align: left; color: var(--ink); }
+.card-hit { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px; flex: 1; min-height: 48px; background: transparent; color: var(--ink); border: 0; box-shadow: none; padding: 0; text-align: left; }
+.card.new, .choice[aria-pressed="true"] { background: var(--accent-soft); border: 2px solid var(--accent); }
+.card .grow, .choice { flex: 1; }
+.card .grow { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.name { font-weight: 700; font-size: 16px; }
+.sub, .hint { margin: 0; color: var(--muted); font-size: 0.82rem; line-height: 1.4; }
+.btn { min-height: 48px; min-width: 48px; border-radius: 14px; border: 2px solid transparent; padding: 0 14px; font-weight: 700; background: var(--accent); color: var(--accent-ink); }
+.btn.ghost { background: var(--surface); border-color: var(--line); color: var(--ink); }
+.btn.soon, .btn:disabled { background: var(--soon); color: var(--soon-ink); border-color: transparent; }
+.btn.danger { background: var(--danger-soft); color: var(--danger); border-color: var(--danger-line); }
+.btn.icon { width: 48px; padding: 0; background: var(--surface); border-color: var(--line); color: var(--ink); }
+.badge { display: inline-flex; padding: 3px 9px; border-radius: 999px; border: 1.5px solid var(--warn-line); background: var(--warn-soft); color: var(--warn); font-size: 0.78rem; font-weight: 800; }
+.banner { margin: 0; padding: 12px; border-radius: var(--radius); background: var(--warn-soft); border: 1px solid var(--warn-line); color: var(--warn); font-weight: 700; }
+.banner.bad { background: var(--danger-soft); border-color: var(--danger-line); color: var(--danger); }
+.toast { position: fixed; left: 16px; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-radius: 14px; background: var(--ink); color: var(--bg); font-weight: 650; }
+.toast .btn { background: transparent; color: var(--bg); border-color: transparent; }
+.scrim { position: fixed; inset: 0; background: var(--scrim); display: flex; align-items: flex-end; justify-content: center; }
+.sheet { width: min(390px, 100%); max-height: 85vh; overflow: auto; background: var(--surface); color: var(--ink); border-radius: 16px 16px 12px 12px; box-shadow: var(--sheet-shadow); padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.sheet h2, .project h2 { margin: 0; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.25; }
+input.name-field { min-height: 48px; border: 2px solid var(--line); border-radius: 12px; padding: 0 12px; background: var(--surface); color: var(--ink); }
+.test-wrap { margin-top: auto; padding-top: 24px; }
+.test-wrap .btn { width: 100%; min-height: 56px; }
+.dot { display: inline-block; width: 8px; height: 8px; margin-left: 6px; border-radius: 999px; background: var(--accent); }
+.row { display: flex; gap: 8px; }
+.row .btn { flex: 1; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+@media (min-width: 421px) {
+  body { min-height: 100dvh; display: grid; place-items: center; }
+  .app { width: 390px; height: 844px; min-height: 0; border-radius: 28px; overflow: hidden; box-shadow: var(--frame-shadow); }
+  .toast { position: absolute; }
+}
+@media (max-width: 420px) {
+  .app { border-radius: 0; height: 100dvh; }
+}

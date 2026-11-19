@@ -1,0 +1,17 @@
+{
+  "kind": "tile-project",
+  "formatVersion": 6,
+  "project": {
+    "id": "project_01JDEM00000000000000000001",
+    "rev": 1,
+    "name": "Empty",
+    "createdAt": "2026-11-18T00:00:00Z",
+    "updatedAt": "2026-11-18T00:00:00Z",
+    "copiedFrom": null,
+    "catalogueRev": 1,
+    "settings": { "wrapEdges": false },
+    "stages": ["stage_01JDEM00000000000000000003"],
+    "rules": [],
+    "loadout": { "roster": [], "size": 1, "required": [] }
+  }
+}

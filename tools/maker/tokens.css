@@ -1,0 +1,80 @@
+:root {
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --surface-2: #f8f9fb;
+  --ink: #12141a;
+  --muted: #5c6578;
+  --line: #d8dde8;
+  --accent: #2f5bff;
+  --accent-ink: #ffffff;
+  --accent-soft: #e8edff;
+  --danger: #b42318;
+  --danger-soft: #fef3f2;
+  --warn: #93370d;
+  --warn-soft: #fffaeb;
+  --warn-line: #fedf89;
+  --ok: #1d6b3a;
+  --ok-soft: #ecfdf3;
+  --soon: #98a2b3;
+  --focus: #1a3fd4;
+  --seg-line: #7a8394;
+  --shadow: 0 8px 24px rgba(18,20,26,.08);
+  --hero: linear-gradient(160deg, #1a3fd4, #2f5bff 55%, #6b8cff);
+  --hero-ink: #fff;
+  --scrim: rgba(15,23,42,.45);
+  --sheet-shadow: 0 -8px 32px rgba(0,0,0,.18);
+  --danger-line: #fecdca;
+  --soon-ink: #fff;
+  --frame-bg: #0e1118;
+  --frame-shadow: 0 20px 60px rgba(0,0,0,.45);
+  --header-h: 56px;
+  --radius: 16px;
+}
+html[data-theme="dark"] {
+  --bg: #0f1218;
+  --surface: #1a1f2a;
+  --surface-2: #151a23;
+  --ink: #e8ecf5;
+  --muted: #9aa3b5;
+  --line: #2c3444;
+  --accent: #6b8cff;
+  --accent-ink: #0b1020;
+  --accent-soft: #1e2a4a;
+  --danger: #ff8a7a;
+  --danger-soft: #3a1c1a;
+  --warn: #f5c26b;
+  --warn-soft: #3a2e14;
+  --warn-line: #6b5420;
+  --ok: #7bd99a;
+  --ok-soft: #14301f;
+  --soon: #6b7385;
+  --focus: #8aa4ff;
+  --seg-line: #8a92a3;
+  --shadow: 0 8px 24px rgba(0,0,0,.45);
+}
+@media (prefers-color-scheme: dark) {
+  html[data-appearance="system"] {
+    --bg: #0f1218;
+    --surface: #1a1f2a;
+    --surface-2: #151a23;
+    --ink: #e8ecf5;
+    --muted: #9aa3b5;
+    --line: #2c3444;
+    --accent: #6b8cff;
+    --accent-ink: #0b1020;
+    --accent-soft: #1e2a4a;
+    --danger: #ff8a7a;
+    --danger-soft: #3a1c1a;
+    --warn: #f5c26b;
+    --warn-soft: #3a2e14;
+    --warn-line: #6b5420;
+    --ok: #7bd99a;
+    --ok-soft: #14301f;
+    --soon: #6b7385;
+    --focus: #8aa4ff;
+    --seg-line: #8a92a3;
+    --shadow: 0 8px 24px rgba(0,0,0,.45);
+  }
+}
+body { margin: 0; background: var(--frame-bg); color: var(--ink); font-family: "Segoe UI", system-ui, -apple-system, sans-serif; font-size: 16px; }
+button, input { font: inherit; }
