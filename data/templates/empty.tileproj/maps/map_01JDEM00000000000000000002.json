@@ -1,0 +1,10 @@
+{
+  "kind": "map",
+  "formatVersion": 5,
+  "id": "map_01JDEM00000000000000000002",
+  "rev": 1,
+  "name": "Blank",
+  "cols": 1,
+  "rows": 1,
+  "logic": { "terrain": [0], "palette": { "0": "floor" }, "edges": [] }
+}

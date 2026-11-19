@@ -1,0 +1,13 @@
+{
+  "kind": "stage",
+  "formatVersion": 2,
+  "id": "stage_01JDEM00000000000000000003",
+  "rev": 1,
+  "name": "Blank",
+  "mapRef": "map_01JDEM00000000000000000002",
+  "playerSpawns": [],
+  "neutrals": [],
+  "enemyPool": { "mode": "fixed", "entries": [] },
+  "loadout": null,
+  "rules": []
+}
