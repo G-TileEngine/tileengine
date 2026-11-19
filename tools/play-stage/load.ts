@@ -3,17 +3,17 @@ import type { SimInput } from "../../src/sim/types.ts";
 import type { CoreTileType } from "../../src/types/core-types.ts";
 
 export const TILE = 16;
-export const TEAM = { player: 0x2f6fad, wolves: 0xb23b32, neutral: 0xc6a15a } as const;
-export type Recipe = { readonly id: string; readonly name: string; readonly team: keyof typeof TEAM };
-const fallback = (id: string): Recipe => ({ id: `starter:unknown-${id}`, name: "Unknown", team: "neutral" });
+export const TEAM = { player: 0x2f6fad, enemy: 0xb23b32, neutral: 0xc6a15a } as const;
+export type Recipe = { readonly id: string; readonly name: string };
+const fallback = (id: string): Recipe => ({ id: `starter:unknown-${id}`, name: "Unknown" });
 export const RECIPES: Readonly<Record<string, Recipe>> = Object.freeze({
-  knight: { id: "starter:hero-sword", name: "Knight", team: "player" },
-  archer: { id: "starter:hero-staff", name: "Archer", team: "player" },
-  cleric: { id: "starter:hero-cleric", name: "Cleric", team: "player" },
-  crate: { id: "starter:prop-crate", name: "Crate", team: "neutral" },
-  merchant: { id: "starter:npc-merchant", name: "Merchant", team: "player" },
-  villager: { id: "starter:npc-villager", name: "Villager", team: "neutral" },
-  wolf: { id: "starter:enemy-wolf", name: "Wolf", team: "wolves" },
+  knight: { id: "starter:hero-sword", name: "Knight" },
+  archer: { id: "starter:hero-staff", name: "Archer" },
+  cleric: { id: "starter:hero-cleric", name: "Cleric" },
+  crate: { id: "starter:prop-crate", name: "Crate" },
+  merchant: { id: "starter:npc-merchant", name: "Merchant" },
+  villager: { id: "starter:npc-villager", name: "Villager" },
+  wolf: { id: "starter:enemy-wolf", name: "Wolf" },
 });
 export const recipeIn = (map: Readonly<Record<string, Recipe>>, id: string): Recipe => (Object.hasOwn(map, id) ? map[id] ?? fallback(id) : fallback(id));
 export const recipeOf = (id: string): Recipe => (Object.hasOwn(RECIPES, id) ? RECIPES[id] ?? fallback(id) : fallback(id));

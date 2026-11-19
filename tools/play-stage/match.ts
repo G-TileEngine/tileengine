@@ -12,8 +12,6 @@ import { bundledDocs } from "./project.ts";
 
 /** Orthogonal reach of the demo line-shot when a row omits reach. Not an engine rule. */
 export const DEFAULT_SPELL_REACH = 3;
-const SIDES = ["player", "wolves"] as const;
-type Side = (typeof SIDES)[number];
 type Talk = { readonly name: string; readonly text: string };
 type Btn = { readonly show: boolean; readonly on: boolean };
 
@@ -22,8 +20,8 @@ export function createMatch(docs?: PlayDocs, moveMs = 200) {
   const baseIntend = play.intend, baseSync = play.sync;
   const win = installOne(WIN_CONDITION, {});
   if (win.out === null) throw new Error("play: win-condition");
-  const wiped = wipeRule(win.out, SIDES);
-  let side: Side = "player", outcome: Outcome | null = null, talk: Talk | null = null, round = 1, turns = 0, queue: Action[] = [], armed: "unitSelected" | "actMenu" | null = null;
+  const me = play.sides.me, order = play.sides.order, wiped = play.sides.contest ? wipeRule(win.out, order) : null;
+  let side = me, outcome: Outcome | null = null, talk: Talk | null = null, round = 1, turns = 0, queue: Action[] = [], armed: "unitSelected" | "actMenu" | null = null;
   const spent = new Set<string>();
   const spellList = (id: string): { id: string }[] => {
     const actor = play.world.units.get(id), bag = rules.abilities;
@@ -39,12 +37,12 @@ export function createMatch(docs?: PlayDocs, moveMs = 200) {
     const from = play.world.phases.battle;
     if (from !== "idle" && from !== "unitSelected") return false;
     go({ type: "END_TURN" }); go({ type: "SIDE_END" });
-    const got = wiped(play.world, { round, side });
+    const got = wiped?.(play.world, { round, side }) ?? null;
     if (got !== null) { go({ type: "CHECK_END", outcome: got }); outcome = got; return true; }
-    const i = SIDES.indexOf(side), last = i + 1 >= SIDES.length;
+    const i = order.indexOf(side), last = i + 1 >= order.length;
     go({ type: "CHECK_NONE", next: last ? "roundEnd" : "sideStart" });
     if (last) { go({ type: "ROUND_END" }); round += 1; go({ type: "ROUND_BEGIN" }); }
-    side = SIDES[(i + 1) % SIDES.length] ?? "player"; if (side === "player") spent.clear(); go({ type: "SIDE_BEGIN" }); return false;
+    side = order[(i + 1) % order.length] ?? me; if (side === me) spent.clear(); go({ type: "SIDE_BEGIN" }); return false;
   };
   const landMove = (action: Action): boolean => {
     const at = action.target !== null && action.target.pipe === "tile" ? action.target.at : undefined, unit = play.world.units.get(action.actor);
@@ -64,20 +62,20 @@ export function createMatch(docs?: PlayDocs, moveMs = 200) {
       if (action.kind === "move" && landMove(action)) return;
       if (action.kind !== "move") submit(play.world, action);
     }
-    if (queue.length === 0 && play.walk === null && side === "wolves" && !finish() && side === "wolves") { queue = [...play.bot(play.world, "wolves")]; pump(); }
+    if (queue.length === 0 && play.walk === null && side !== me && !finish() && side !== me) { queue = [...play.bot(play.world, side)]; pump(); }
   };
   /** Ability confirm lands in `resolving`. Walk the legal edges back to `idle` (or `play.result` on a wipe) so the player can select again and End turn. Talk stays on `actMenu` and does not take `UNIT_DONE`. */
   const settle = (): void => {
     if (play.world.phases.battle !== "resolving") return;
     if (play.selected !== null) spent.add(play.selected);
     go({ type: "RESOLVE_DONE" });
-    const got = wiped(play.world, { round, side });
+    const got = wiped?.(play.world, { round, side }) ?? null;
     if (got !== null) { go({ type: "CHECK_END", outcome: got }); outcome = got; return; }
     go({ type: "CHECK_NONE", next: "unitDone" });
     go({ type: "UNIT_DONE", next: "idle" });
     play.followId = null;
   };
-  play.landed(() => { if (side !== "wolves") return; go({ type: "WAIT" }); go({ type: "UNIT_DONE", next: "idle" }); pump(); });
+  play.landed(() => { if (side === me) return; go({ type: "WAIT" }); go({ type: "UNIT_DONE", next: "idle" }); pump(); });
   const wipe = (): void => { play.aims = []; talk = null; play.focus(null); play.followId = null; };
   const back = (): "unitSelected" | "actMenu" | null => {
     if (play.world.phases.battle !== "targeting") return null;
@@ -110,17 +108,17 @@ export function createMatch(docs?: PlayDocs, moveMs = 200) {
     },
     wait() { spend(); },
     endTurn() {
-      if (play.walk !== null || side !== "player" || outcome !== null) return;
+      if (play.walk !== null || side !== me || outcome !== null) return;
       if (play.world.phases.battle === "targeting") back();
       const now = play.world.phases.battle;
       if (now === "actMenu") spend(); else if (now === "unitSelected") baseIntend({ type: "Cancel" });
-      wipe(); turns += 1; if (finish()) return; const next = ((): Side => side)(); if (next === "wolves") { queue = [...play.bot(play.world, next)]; pump(); }
+      wipe(); turns += 1; if (finish()) return; if (side !== me) { queue = [...play.bot(play.world, side)]; pump(); }
     },
     closeTalk() { talk = null; if (play.world.phases.battle === "actMenu") spend(); play.focus(null); },
     recentreTarget(): Sq | null {
       const cur = play.selected === null ? undefined : play.world.units.get(play.selected);
       if (cur !== undefined && cur.alive) return { c: cur.at.c, r: cur.at.r };
-      const own = play.world.units.all().find((u) => u.alive && u.side === "player");
+      const own = play.world.units.all().find((u) => u.alive && u.side === me);
       return own === undefined ? null : { c: own.at.c, r: own.at.r };
     },
     restart: () => createMatch(docs, moveMs),
@@ -133,7 +131,7 @@ export function createMatch(docs?: PlayDocs, moveMs = 200) {
       const btn = (show: boolean, hot: boolean): Btn => ({ show, on: hot });
       const spellOn = on && spellRef(rules, unit.unitId) !== undefined;
       return {
-        turn: side === "player" ? "YOUR TURN" : "ENEMY TURN", side, name: on ? names[unit.unitId] ?? recipeIn(body.recipes, unit.unitId).name : "", hp, max, selected: on, outcome, turns, talk,
+        turn: side === me ? "YOUR TURN" : "ENEMY TURN", side, mine: side === me, name: on ? names[unit.unitId] ?? recipeIn(body.recipes, unit.unitId).name : "", hp, max, selected: on, outcome, turns, talk,
         actions: { basic: btn(menu, basic.length > 0), spell: btn(menu && spellOn, spells.length > 0), talk: btn(on && interact.length > 0, interact.length > 0), wait: btn(phase === "actMenu", phase === "actMenu"), end: btn(true, true) },
       };
     },
@@ -149,10 +147,10 @@ export function createMatch(docs?: PlayDocs, moveMs = 200) {
     if (intent.type !== "SelectUnit") return null;
     const u = play.world.units.get(intent.unitId); return u === undefined ? null : u.at;
   };
-  const ready = (id: string): boolean => { const u = play.world.units.get(id); return u !== undefined && u.alive && u.side === "player" && !spent.has(id); };
+  const ready = (id: string): boolean => { const u = play.world.units.get(id); return u !== undefined && u.alive && u.side === me && !spent.has(id); };
   const commit = (at: Sq): unknown => { const cell = { c: at.c, r: at.r }; api.intend({ type: "TargetCell", at: cell }); return api.intend({ type: "TargetCell", at: cell }); };
   play.feed = (intent: DoorIntent): unknown => {
-    if (talk !== null || play.walk !== null || side !== "player" || outcome !== null) return undefined;
+    if (talk !== null || play.walk !== null || side !== me || outcome !== null) return undefined;
     const phase = play.world.phases.battle, at = atOf(intent);
     if (phase === "targeting" && at !== null && listed(play.aims, at)) return commit(at);
     if (phase === "targeting") {
@@ -169,5 +167,5 @@ export function createMatch(docs?: PlayDocs, moveMs = 200) {
     if (phase === "actMenu" && intent.type === "SelectUnit") return undefined;
     return api.intend(intent);
   };
-  return api as typeof api & { readonly side: Side; readonly outcome: Outcome | null; readonly talk: Talk | null; readonly done: ReadonlySet<string> };
+  return api as typeof api & { readonly side: string; readonly outcome: Outcome | null; readonly talk: Talk | null; readonly done: ReadonlySet<string>; readonly sides: typeof play.sides };
 }

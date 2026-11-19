@@ -1,6 +1,6 @@
 import { HUD_TOP, PLATE_H, ROW_FOOT } from "./board.ts";
 export type HudView = {
-  readonly turn: string; readonly side: string; readonly name: string; readonly hp: number; readonly max: number; readonly selected: boolean;
+  readonly turn: string; readonly side: string; readonly mine: boolean; readonly name: string; readonly hp: number; readonly max: number; readonly selected: boolean;
   readonly outcome: "win" | "lose" | "draw" | null; readonly turns: number; readonly talk: { readonly name: string; readonly text: string } | null;
   readonly actions: { readonly basic: Btn; readonly spell: Btn; readonly talk: Btn; readonly wait: Btn; readonly end: Btn };
 };
@@ -22,10 +22,10 @@ export function createHud(act: Act): { hideBanner(): void; render(view: HudView)
   q("restart").addEventListener("click", () => act.restart()); q("back").addEventListener("click", () => act.restart());
   window.setTimeout(hideBanner, 1260);
   const render = (view: HudView): void => {
-    q("pill").textContent = view.turn; banner.textContent = view.turn; banner.style.background = view.side === "player" ? "#14213d" : "#6b1d2a";
+    q("pill").textContent = view.turn; banner.textContent = view.turn; banner.style.background = view.mine ? "#14213d" : "#6b1d2a";
     q("plate").style.display = view.selected ? "flex" : "none"; q("who").textContent = view.name; q("hpText").textContent = `${view.hp}/${view.max}`;
     const bar = q("hp").querySelector("i"); if (bar instanceof HTMLElement) bar.style.width = `${view.max <= 0 ? 0 : Math.max(0, Math.min(120, Math.round((120 * view.hp) / view.max)))}px`;
-    q("end").style.outlineColor = view.side === "player" ? "#2f6fad" : "#b23b32";
+    q("end").style.outlineColor = view.mine ? "#2f6fad" : "#b23b32";
     for (const key of ["basic", "spell", "talk", "wait", "end"] as const) { const b = buttons[key], row = view.actions[key]; b.style.display = row.show ? "block" : "none"; b.style.opacity = row.on ? "1" : "0.4"; }
     const said = view.talk; sheet.style.display = said === null ? "none" : "block"; if (said !== null) { const name = sheet.querySelector("b"), text = sheet.querySelector("span"); if (name !== null) name.textContent = said.name; if (text !== null) text.textContent = said.text === "" ? "…" : said.text; }
     const over = view.outcome !== null; veil.style.display = over ? "flex" : "none";

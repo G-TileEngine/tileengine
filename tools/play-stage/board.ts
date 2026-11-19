@@ -17,6 +17,7 @@ import { RECIPES, TEAM, TILE, docsToInput, recipeIn, recipeOf, type PlayDocs } f
 import { bundledDocs } from "./project.ts";
 import { createPlayFx, fxPx } from "./fx.ts";
 import { dress, dressPx, unitAsset } from "./looks.ts";
+import { paintOf, sidesOf } from "./sides.ts";
 
 export { recipeOf, TILE };
 const FONT: Readonly<Record<string, readonly number[]>> = {
@@ -42,7 +43,7 @@ export function pixelsOf(id: string): Pixels | undefined {
   if (id === "play:path-player") return bake(id, 0xf0c14a, "");
   if (id === "play:aim-attack") return bake(id, 0xe04848, "");
   if (id === "play:aim-spell") return bake(id, 0xf08a30, "");
-  for (const recipe of Object.values(RECIPES)) if (recipe.id === id) return bake(id, TEAM[recipe.team], recipe.name.slice(0, 1));
+  for (const recipe of Object.values(RECIPES)) if (recipe.id === id) return bake(id, TEAM.neutral, recipe.name.slice(0, 1));
   return id.startsWith("starter:unknown-") ? bake(id, TEAM.neutral, "?") : undefined;
 }
 export const MIN_CELL_CSS = 44;
@@ -61,6 +62,7 @@ type Walk = { path: readonly Sq[]; from: Sq; t0: number; dur: number };
 export function createPlay(docs?: PlayDocs, moveMs = 200, autoWait = true) {
   const body = docs ?? bundledDocs(), talk = body.talk ?? {}, chosen = body.chosen ?? [], tiles = body.tiles ?? [];
   const world = createWorld(docsToInput({ ...body, talk, chosen, tiles }).input);
+  const sides = sidesOf(body.stage, world.units.all());
   const go = (e: Event): void => { const from = world.phases.battle; if (from === undefined) throw new Error("play: phase"); world.phases = { ...world.phases, battle: xGo(from, e) }; };
   go({ type: "BATTLE_READY" }); go({ type: "DEPLOY_DONE" }); go({ type: "ROUND_BEGIN" }); go({ type: "SIDE_BEGIN" });
   const installed = installOne(STEP_PATTERN, {});
@@ -70,10 +72,11 @@ export function createPlay(docs?: PlayDocs, moveMs = 200, autoWait = true) {
   const spent = installOne(ACTION_BUDGET, {});
   if (spent.out === null) throw new Error("play: action-budget");
   const budget = spent.out;
-  const player = createPlayer(world, { side: "player", moveMs, nextId: () => `p${n += 1}`, step, spellOf: (id) => { const u = world.units.get(id); return u === undefined ? undefined : spellRef(body.rules, u.unitId); } });
+  const player = createPlayer(world, { side: sides.me, moveMs, nextId: () => `p${n += 1}`, step, spellOf: (id) => { const u = world.units.get(id); return u === undefined ? undefined : spellRef(body.rules, u.unitId); } });
   const bot = botAbilityPriority({ setup: body.rules, stepReach: step.reach, actionsPerTurn: budget.actionsPerTurn });
   const gestures = createGestureMapper({ cellPx: TILE, tapMaxPx: 12, holdMs: 500 }, { cols: world.grid.cols, rows: world.grid.rows, unitAt: (at) => world.units.occupantAt(at) });
-  const fx = createPlayFx(body.effects), looks = dress(world.grid, body.looks), worn = new Map<string, SceneAsset>();
+  const fx = createPlayFx(body.effects), looks = dress(world.grid, body.looks), paint = new Map<string, { readonly sprite: string; readonly asset: SceneAsset }>(), seen = new Map<string, string>();
+  for (const u of world.units.all()) { const recipeId = recipeIn(body.recipes, u.unitId).id, tone = paintOf(u.side, sides.me), prior = seen.get(recipeId); if (prior === undefined) seen.set(recipeId, tone); paint.set(u.id, { sprite: prior === undefined || prior === tone ? recipeId : `${recipeId}@${tone}`, asset: unitAsset(`${recipeId}@${tone}`) }); }
   let selected: string | null = null, pending: Sq | null = null, reach: Sq[] = [], preview: Sq[] = [], walk: Walk | null = null, aims: Sq[] = [], aimKind: "basic" | "spell" = "basic", followId: string | null = null, onLand: (() => void) | null = null;
   let route: (intent: DoorIntent) => unknown = (intent) => intend(intent);
   const mark = (): void => { reach = selected === null ? [] : reachCells(world.grid, world.units, selected, step.reach); };
@@ -114,7 +117,7 @@ export function createPlay(docs?: PlayDocs, moveMs = 200, autoWait = true) {
     return stepped;
   };
   return {
-    world, step, intend, sync, bot, pixels: pixelsOf, autoWait, go, fx, looks,
+    world, step, intend, sync, bot, pixels: pixelsOf, autoWait, go, fx, looks, sides,
     focus(id: string | null): void { selected = id; pending = null; preview = []; mark(); },
     arm(next: Walk): void { walk = next; sync(); },
     landed(fn: (() => void) | null): void { onLand = fn; },
@@ -129,7 +132,7 @@ export function createPlay(docs?: PlayDocs, moveMs = 200, autoWait = true) {
       const aimSheet = aimKind === "spell" ? AIM_S : AIM_A, aimOver = world.phases.battle === "targeting" ? aims.map((c) => ({ band: "fxGround" as const, sheet: aimSheet, x: c.c * TILE, y: c.r * TILE })) : [];
       const overlays = selected === null ? aimOver : [...reach.map((c) => ({ band: "fxGround" as const, sheet: REACH, x: c.c * TILE, y: c.r * TILE })), ...preview.map((c) => ({ band: "fxGround" as const, sheet: PATH, x: c.c * TILE, y: c.r * TILE })), ...aimOver];
       const assets: Record<string, SceneAsset> = { ...looks.assets, "play:fx": { sheet: { id: "play:fx", columns: 4, fw: TILE, fh: TILE } } };
-      const units = world.units.all().map((u) => { const id = recipeIn(body.recipes, u.unitId).id; const asset = worn.get(id) ?? unitAsset(id); worn.set(id, asset); assets[id] = asset; return { id: u.id, sprite: id, at: { c: u.at.c, r: u.at.r }, offset: u.offset, facing: u.facing, alive: u.alive }; });
+      const units = world.units.all().map((u) => { const row = paint.get(u.id); if (row === undefined) throw new Error("play: paint"); assets[row.sprite] = row.asset; return { id: u.id, sprite: row.sprite, at: { c: u.at.c, r: u.at.r }, offset: u.offset, facing: u.facing, alive: u.alive }; });
       return { cols: world.grid.cols, rows: world.grid.rows, tileW: TILE, tileH: TILE, mapSeed: world.seed, assets, layers: looks.layers, units, objects: looks.objects, overlays, effects: fx.ingest(world.log, world.clock.stepMs, world.clock.now()), style: looks.style, waterTiles: looks.waterTiles, seeThroughCanopy: true as const };
     },
   };

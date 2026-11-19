@@ -36,8 +36,9 @@ export function dressPx(id: string): Pixels | undefined {
   if (id === "play:canopy") return strip([0x1e6b3a]);
   if (id === "play:brazier") return strip([hex(FLAME_RAMP[0])]);
   if (!id.startsWith("play:anim:")) return undefined;
-  const recipe = Object.values(RECIPES).find((row) => animId(row.id) === id);
-  return recipe === undefined ? undefined : animPx(TEAM[recipe.team]);
+  const body = id.slice("play:anim:".length), cut = body.lastIndexOf("@"), recipeId = cut < 0 ? body : body.slice(0, cut), paint = cut < 0 ? "neutral" : body.slice(cut + 1);
+  if (!Object.values(RECIPES).some((row) => row.id === recipeId) || !Object.hasOwn(TEAM, paint)) return undefined;
+  return animPx(paint === "player" ? TEAM.player : paint === "enemy" ? TEAM.enemy : TEAM.neutral);
 }
 type Grid = { readonly cols: number; readonly rows: number; tileTypeAt(at: { readonly c: number; readonly r: number }): { readonly id: string } };
 const cycle = (name: string, n: number) => ({ cycle: { ramp: { name, steps: Array.from({ length: n }, (_, i) => i) } } });
