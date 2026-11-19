@@ -1,9 +1,23 @@
 # Step 1: Project format, reader, validation, versioning (the play stage loads a project)
 
-- **Date:** 2026-11-18 · **Owner:** Data & Save Keeper · **Status:** FINAL r6 (r2: QA fixes for gates, floor and plants P1–P3, QA OK; r3: Q9 ruled; r4: EA rulings Q2/3/5/6/7; r5: Q2 build emits raw text, P2 has no exemptions (CoS); r6: base main `8a737c5f` after S0, floor 1023); EA FINAL OK and QA FINAL OK on 2026-11-18 for b9a2b54a; only this status line changed) · **Base:** main `8a737c5f` (S0 merged, PR #76) · **Builds after:** S0 (1b on main after S0 merges)
+- **Date:** 2026-11-18 · **Owner:** Data & Save Keeper · **Status:** r7, 2026-11-18. r6 was FINAL (EA FINAL OK and QA FINAL OK on 2026-11-18 for b9a2b54a). r7 is the CoS step-guide audit fixes by Editor & UX Designer: status split, Delivery block, file-name rule, floors, Q4/Q8 marked, P2 allowlist, line numbers. History: r2 QA fixes for gates, floor and plants P1–P3; r3 Q9 ruled; r4 EA rulings Q2/3/5/6/7; r5 Q2 build emits raw text, P2 has no exemptions (CoS); r6 base main `8a737c5f` after S0, floor 1023. · **Builds after:** S0 (PR #76)
+- **1a status: SHIPPED.** PR #77, merge `aa158fda`. 1a based on `f137ca26` and landed at **1034** tests.
+- **1b status: shipped.** 1b merged as PR #78, merge `57af7135f6d2d636f0bf81a5de2a348931305022`, at **1036** tests. It was built on base main `aa158fda` (1a merged), floor 1034 + N, with r1 tip `ef29b514` and N = 2.
+- **Test ladder (history, not a current floor):** P1-9 = 1014, S0 = 1023, 1a = 1034, 1b = 1036. Step 2 starts from the 1b merge at 1036.
 - **Sources:** this reuses `docs/maker/data/s1-project-load.md` r3 (560 lines, sha `f4e459c3`). Do not re-derive it. If this page and S1 disagree, S1 wins. Format docs live at `docs/maker/data/project-format.md` and `docs/maker/data/setup-format.md` (main `f2df5c40`, moved unedited).
 
-**This step is two builder runs: 1a, then 1b.** Each is one run, 400 lines or fewer including tests, gates on.
+**This step is two builder runs: 1a, then 1b.** Each is one run, 400 lines or fewer including tests, gates on. The 400-line total is the hard gate. The per-file caps in Build are plans: a file may go over its cap if the run total stays at 400 or fewer, and the handback says which file went over and why.
+
+## Delivery
+
+Same shape as step 0 (`docs/maker/steps/step-00-play-input.md`, Delivery) and `handoff/HAND-BACK.md`.
+- Branch, from the base above: 1a was `step/step-s1a-project-format-r<N>-chatA` (r2 shipped). 1b was `step/step-s1b-play-stage-switch-r<N>-chatA` (r1 shipped as PR #78). Never commit to main.
+- Commit as `G-TileEngine <G-TileEngine@users.noreply.github.com>`. The last commit adds the hand-back at `handback/s1a-project-format/r<N>/HANDBACK.md` (1a) or `handback/s1b-play-stage-switch/r<N>/HANDBACK.md` (1b), in the shape `handoff/HAND-BACK.md` gives.
+- Gate: `npm ci && npm run green` exits 0. `npm run green` runs `npm test`, typecheck, lint, deps, `check:state` and `check:law`. `npm test` alone is not enough.
+- Push once, that branch only, with the one-shot credential helper that `handoff/HAND-BACK.md` gives (it reads `GH_BUILDER_TOKEN` from the shell; keep the single quotes).
+- Never push main or a tag. No force-push, no branch delete, no PR actions.
+- Never print, echo, log, commit or store the token, including in `.git/config`. No token value may appear in any output, file or message. If it ever does, say so in the hand-back.
+- Chief Of Staff opens the PR. The hand-back message quotes the branch, the full tip sha, the base sha and the test counts.
 
 ## Goal
 
@@ -28,6 +42,8 @@ One game is one folder. `files` keys are POSIX paths relative to that folder. An
 
 **Absent means today's behaviour.** When a deferred field or file is missing, there is no migration.
 
+**File names (must keep).** Every document file is named `<kind>_<ULID>.json` (Crockford ULID, 26 characters), for example `maps/map_01JDAM00000000000000000001.json`. Never `map.json` or `stage.json`. Only `project.json` and `catalogue/slice.json` have fixed names. See S1 §3 and `docs/maker/data/project-format.md` §2.
+
 The exact demo fixture JSON is in the S1 spec, §4. That section is the source of truth. Do not copy or rewrite it here. Layout and ids are in S1 §3.
 
 ## Read first
@@ -37,6 +53,7 @@ The exact demo fixture JSON is in the S1 spec, §4. That section is the source o
 3. `docs/maker/data/setup-format.md` §2.1–2.5, §2.9, §9.
 4. `handoff/dsk-rulings/2026-11-17-phase1.md` (D2–D5).
 5. Existing code to reuse, not replace: `src/project/read/*` (per-document readers), `tools/play-stage/load.ts`, `tests/rules/bot-p15.test.ts` (match harness).
+6. `docs/maker/style-spec.md` (the only visual system; this step has no screen, so it applies only to any error text the play stage shows).
 
 No ui-shell screenshots: this step has no screen.
 
@@ -72,7 +89,7 @@ export function playDocsOf(p: ProjectStore, stageId?: string): PlayDocs & { chos
 - Rows are sorted by path, then code, so the report is deterministic.
 - `playDocsOf` uses the first `project.stages` entry by default. It throws only if handed a store whose load was not `ok`. Hosts must check `ok` first. It may call `readProject` output but must not `JSON.parse` or read `formatVersion` / `kind ===` itself (P2).
 - 1b boot: `tools/play-stage` runs `readProject` synchronously at boot. If the load isn't `ok` or is `readOnly`, it shows the report rows, starts no match and never throws.
-- Seams: `docsToInput` (`load.ts:36-38`) gains `chosen` and `tiles` inputs. 1b builds on main after S0 merges (both edit `match.ts` and `board.ts`). `createMatch()` with no docs must keep working for S0's tests. 1b deletes the villager fallback at `match.ts:84` (D2).
+- Seams: `docsToInput` (in `tools/play-stage/load.ts`) gains `chosen` and `tiles` inputs. On the 1b tip it is at `load.ts:21`. 1b builds on main after S0 merges (both edit `match.ts` and `board.ts`). `createMatch()` with no docs must keep working for S0's tests. 1b deletes the villager `talk-villager` fallback in `match.ts` (D2); on the 1b tip it is gone. Line numbers in this guide were taken on the 1a-era files and are hints only.
 
 ### Versions and migration
 
@@ -142,11 +159,11 @@ Full notes are in the S1 spec, §5. Short map:
 | Q1 | **RULED (CoS)** | — | Canopy and braziers stay as a view-only play-stage constant in `looks.ts` until map objects exist. The two looks tests stay. |
 | Q2 | **RULED (EA)** | EA | Inline the JSON. One play-stage module imports the fixture with `with {type:"json"}`. `tools/play-stage/build.ts` follows `.json` imports and writes `<file>.json.js` as `export default ` + the raw file text (no `JSON.parse`, no shape reads; all parsing and validation stays in `src/project/read/*`, and P2 gets no exemptions; CoS ruling 2026-11-18), so loading stays sync and offline with no fetch. The APK picks it up via `tools/apk/build.ts:6`. Add `resolveJsonModule` to tsconfig. One path for Node, browser, gh-pages and WebView: minSdk 26 doesn't guarantee JSON modules. No load or fixture path may contain `editor` (`tools/apk/build.ts:11`). |
 | Q3 | **RULED (EA)** | EA | Align `src/project/read/unit.ts` to project-format §6.3 in 1a. It takes `stats` as `{knob:{value,rev}}`, flattens them to values, and reads `name`. Keep the `hasOwn`/`SKIP` key safety. `readProject` calls it, so there's one parser per document. `tests/project/unit-setup.test.ts` lines 10 and 16 change by this ruling. |
-| Q4 | as written | EA | Defer tile-project 005 re-id and emit `migrationDeferred`. OK? |
+| Q4 | **accepted as written (deferred); not a blocker** | EA | Defer tile-project 005 re-id and emit `migrationDeferred`. OK? |
 | Q5 | **RULED (EA)** | EA | `unit_atk` is the only source. The adapter never reads `basic-attack.damage`. If a setup moves it off its default, warn `layerNotApplied` (`detail` points to `unit_atk`). Recommend the Librarian mark it `= unit attack` in the next catalogue rev. |
 | Q6 | **RULED (EA)** | EA | `same-as-step` is the step-pattern reach, exact, with no warning (the engine plays orthogonal-1 and 2). `one-tile-straight` is 1. `custom-cross` with `ns = ew` uses that value. With `ns ≠ ew`, warn `layerNotApplied` and use `min(ns,ew)` (not 1). Per-axis reach is a later `src/rules` slice. |
-| Q7 | **RULED (EA)** | EA | OK as written (keyed by unit, first wins, `layerNotApplied`). Per-placement talk needs a placement key on `ResolvedPlacement`, a future DSK CN with the maker NPC slice. 1b deletes the villager fallback at `match.ts:84` (D2). An empty talk line showing the name plus `…` is a UX matter for later and doesn't block this step. |
-| Q8 | as written | EA | Leave unread `line-shot.mana_cost` with no warning, because the engine ignores mana today. OK? |
+| Q7 | **RULED (EA)** | EA | OK as written (keyed by unit, first wins, `layerNotApplied`). Per-placement talk needs a placement key on `ResolvedPlacement`, a future DSK CN with the maker NPC slice. 1b deletes the villager fallback in `match.ts` (D2). An empty talk line showing the name plus `…` is a UX matter for later and doesn't block this step. |
+| Q8 | **accepted as written; not a blocker** | EA | Leave unread `line-shot.mana_cost` with no warning, because the engine ignores mana today. OK? |
 | Q9 | RULED (QA 2026-11-18) | QA | Fixture and template JSON under `fixtures/**` and `data/templates/**` isn't counted, on the two conditions in Done when. |
 | Q10 | as written | DSK, after EA/QA sign-off | Record **D9**: the load layer runs §12 in memory, the sim never migrates, and add the PROPOSED codes to project-format §13 as r41. |
 
@@ -200,7 +217,7 @@ Delete `DEMO_MANIFEST`, `DEMO_MAP`, `DEMO_STAGE`, `DEMO_SETUP`, `DEMO_TALK`, `DE
 Tests:
 
 - (a) Parity, in `tests/tools/play-stage-parity.test.ts`: seed 24301, bot versus bot, hashes must equal the 1a golden (fixture unit ids rewritten to slugs before hashing).
-- (h) Play stage fed from the fixture: `board.ts` and `match.ts` default to `demoDocs()`. Existing play-stage tests stay, with the id and talk updates listed in the S1 spec, §9. New assertions: the seven units' `hp`/`atk` match today, `chosen` is knight and archer, and `tiles` blocks water and wall-block. The two looks tests stay (Q1 RULED). `rock` checks read `wall-block`. `tools/play-stage` runs `readProject` synchronously at boot; if the load isn't `ok` or is `readOnly`, it shows the report rows, starts no match and never throws. `createMatch()` with no docs still works for S0's tests. The villager fallback at `match.ts:84` is deleted (D2).
+- (h) Play stage fed from the fixture: `board.ts` and `match.ts` default to `demoDocs()`. Existing play-stage tests stay, with the id and talk updates listed in the S1 spec, §9. New assertions: the seven units' `hp`/`atk` match today, `chosen` is knight and archer, and `tiles` blocks water and wall-block. The two looks tests stay (Q1 RULED). `rock` checks read `wall-block`. `tools/play-stage` runs `readProject` synchronously at boot; if the load isn't `ok` or is `readOnly`, it shows the report rows, starts no match and never throws. `createMatch()` with no docs still works for S0's tests. The villager `talk-villager` fallback in `match.ts` is deleted (D2).
 
 ## Must NOT
 
@@ -227,13 +244,13 @@ These steps stay data-first.
 
 ## Done when
 
-- **Gates:** `npm test` at floor **1023 + N** (main `8a737c5f` after S0, PR #76) for 1a (N = the new tests 1a adds, stated in the run report), then **1a's merged floor + N** for 1b. Also `scripts/check-law.sh` and `scripts/check-state.sh` pass, and the line count is met.
+- **Gates:** `npm ci && npm run green` exits 0. 1a's floor was 1023 + N on its base and it landed at **1034**. 1b's floor is **1034 + N** on base `aa158fda` (N = the new tests 1b adds, stated in the hand-back; r1 has N = 2, so 1036). `npm run green` includes `scripts/check-law.sh` and `scripts/check-state.sh`. The line count is met.
 - **Line count:** `git diff --shortstat <run base>..HEAD -- . ':!fixtures/**' ':!data/templates/**'` shows insertions plus deletions ≤ 400 per run (1a planned ≈ 355, 1b planned ≈ 220). Fixture and template JSON aren't counted (Q9 RULED), on two conditions:
   1. Only `.json` files go under `fixtures/**` and `data/templates/**`. A `.ts`, `.js` or `.mjs` file there fails the gate. The run report shows `git diff --name-only <run base>..HEAD -- fixtures data/templates | rg -v '\.json$'` returning nothing.
   2. Every fixture loads through `readProject`, either as `ok` or as the hard row it's meant to produce, in a named test, so no exempt file is dead data.
 - **Plants (each must fail its named test if the bad code is put back):**
   - P1 `tests/project/load/law12.test.ts`: a document that makes a reader fail (non-object, broken field) gives a hard row with code and path, never a default or an empty project. `check-law.sh` also flags any empty `catch` under `src/project/` and `tools/play-stage/`.
-  - P2 `tests/project/load/one-parser.test.ts`: scans `tools/play-stage/*.ts` and `src/project/load/*.ts` (except `migrate.ts`) and fails on `JSON.parse`, `formatVersion` or `kind ===` there. No exemptions: `tools/play-stage/build.ts` emits raw JSON text and never parses it, so it passes this scan too. `tools/play-stage/project.ts` may call `readProject` output but still must not `JSON.parse` or read `formatVersion` / `kind ===`.
+  - P2 `tests/project/load/one-parser.test.ts`: scans `tools/play-stage/*.ts` and `src/project/load/*.ts` (except `migrate.ts`) and fails on `JSON.parse`, `formatVersion` or `kind ===` there. No exemptions: `tools/play-stage/build.ts` emits raw JSON text and never parses it, so it passes this scan too. 1a left a line-text-keyed allowlist in this test for the play-stage hits it could not yet remove. 1b must empty that allowlist to `[]`, and the test must pass with it empty. `tools/play-stage/project.ts` may call `readProject` output but still must not `JSON.parse` or read `formatVersion` / `kind ===`.
   - P3 `tests/project/load/version-reject.test.ts`: `formatVersion` missing, `"6"`, `6.5`, `3` and `7` each give a hard row (`invalidValue`, `formatOlder` or `formatNewer`) with `project: null`, never the current version. In 1b, `play-stage` fed a rejected project shows the error text and doesn't fall back to the demo.
 - Parity: seed 24301 bot-vs-bot equals the golden (outcome, snapshot, log and bus hashes).
 - v4 project upgrades in memory to the v6 store and is never written back; v7 is refused read-only (`formatNewer`) without throwing.

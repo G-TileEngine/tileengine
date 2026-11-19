@@ -1,6 +1,6 @@
 # TileEngine maker roadmap
 
-r9, 2026-11-18 (QA fixes plus CEO feedback #1 to #7, HUD kit row), Editor & UX Designer (CEO ask 22:17 via Chief Of Staff). Behaviours, NPC and BTF rows come from the Behaviour Librarian (input 2026-11-18). Docs only: no code, nothing pushed or published. QA reviews this file, then CoS pushes it.
+r10, 2026-11-18 (r10: rule 2 names the greyed-Test exception, to match the step guides; r9: QA fixes plus CEO feedback #1 to #7, HUD kit row), Editor & UX Designer (CEO ask 22:17 via Chief Of Staff). Behaviours, NPC and BTF rows come from the Behaviour Librarian (input 2026-11-18). Docs only: no code, nothing pushed or published. QA reviews this file, then CoS pushes it.
 
 This page lists every planned engine feature and assigns it to the five agreed stages. It gives each feature a proposed MS (maker spec) number and a step order. After the stage tables come the post-launch rows, the CEO decisions that still need a plan, and an audit of every existing plan doc. MS numbers and step orders are proposals until CoS and the step owners agree them. CoS agreed (2026-11-18) that the wizard sits in stage 5 and the stage editor starts stage 3. Where a source doc doesn't say something, the cell reads TBD.
 
@@ -15,6 +15,7 @@ This page lists every planned engine feature and assigns it to the five agreed s
 ## Rules
 1. **The maker only authors data, and the engine runs the rules.** No rule logic lives in a screen.
 2. **Nothing ships early.** No screen or button ships before the step that makes it work. A maker editor ships in the same slice as its data, reader and engine rule (JOINT-MAP r3, "Rule for every cozy slice").
+   - Named exception: the **greyed Test** button on step 2's project screen. It is visible, styled `--soon`, not clickable, and step 3 wires it (`docs/maker/steps/step-02-home-save-load.md`, Rules 1). No other exception.
 3. **The ui-shell is reference only and is never merged.** It is good for behaviour and screenshots, never for code.
 4. **Project-file shape (Librarian):**
    - A setup stores only the knob values that differ from the default.

@@ -1,6 +1,6 @@
 # ui-shell lessons for the new maker
 
-r7, 2026-11-18, Editor & UX Designer. Docs only. The ui-shell is a prototype: reference only, never merged. This note keeps what the CEO's prototype testing taught us, so the real maker (tools/maker, engine-native, style-spec only) keeps the good patterns and drops the bad habits. New CEO feedback is added as numbered entries.
+r8, 2026-11-18, Editor & UX Designer (r8: feedback #1 rule 2 names the greyed-Test exception). Docs only. The ui-shell is a prototype: reference only, never merged. This note keeps what the CEO's prototype testing taught us, so the real maker (tools/maker, engine-native, style-spec only) keeps the good patterns and drops the bad habits. New CEO feedback is added as numbered entries.
 
 ## Standing lessons (from `docs/maker/ux/r72-cleanup-plan.md`)
 - No silent save failures: every load or save error is shown, typed and visible.
@@ -20,6 +20,7 @@ r7, 2026-11-18, Editor & UX Designer. Docs only. The ui-shell is a prototype: re
 **Rules for the real stage editor (roadmap stage 3, step 4 on):**
 1. Tap-to-add is the pattern: tap tile, then the **Add here** sheet, then place, then the **What do they do?** sheet.
 2. Every option in both sheets is wired to real data and a real engine rule before it ships. An option that isn't wired yet is not shown (no dead buttons, no greyed 'soon' rows in the shipped maker).
+   - Named exception: step 2's **Test** button is shown greyed (`--soon`), not clickable, until step 3 wires it (roadmap rule 2). It is the only one.
 3. The follow-up sheet's options are behaviour presets from the catalogue (e.g. Wander = neutral-roamer, Seller = npc-role vendor, Quest giver = quest slice). Each one writes `setupIds` on the placed unit or neutral. Fine-tuning opens the generic Behaviour panel.
 4. Hostile stays off by default. NPCs are friendly until the user opts in.
 5. The sheets follow `docs/maker/style-spec.md`, with 48 px targets, and work at 390 px. The visual polish can improve on the prototype.

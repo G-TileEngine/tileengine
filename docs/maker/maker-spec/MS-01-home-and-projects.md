@@ -2,6 +2,8 @@
 
 Feeds builder Step 2 (`docs/maker/steps/step-02-home-save-load.md`) and Step 3 (`step-03-test.md`). Save rules come from DSK, project-format §11.2 and §2. The base phone is 390×844 CSS (S21 Ultra, Red Magic 9 Pro), in the r62 look.
 
+r3, 2026-11-19, Editor & UX Designer. r3 (QA recheck): §5 save-failure copy matches step 2, and Loading is text in step 2 with skeletons later. r2 (CoS step-guide audit): the Test row says what ships in step 2 (greyed, not clickable) and in step 3 (wired), and §9 points at `docs/maker/shots/`. Step 2 ships only part of this spec; `step-02-home-save-load.md` Behaviour lists what is in scope now (for example, Empty trash and deep links come later).
+
 ## 1. Purpose and keep/drop
 The maker's front door: see my games, make one, open one, test it. One game is one project folder.
 - **Keep from ui-shell:**
@@ -41,7 +43,7 @@ Deep links: `#home`, `#project/<projectId>`, `#trash`.
 | ⋯ **Delete** | Basic | none | Moves the folder to `.deleted/<projectId>/` | No confirm step; an Undo toast shows for 6 s |
 | **Trash** link (bottom of the list, only when trash isn't empty) | Basic | none | Lists `.deleted/` | **Empty trash** asks once, with a danger button |
 | Project screen **Save** | Basic | none | The save rules. A dot shows when there are unsaved changes. | Disabled on readOnly, with the reason |
-| Project screen **Test** | Basic | none | Step 3 | A blocked sheet lists the hard rows in words |
+| Project screen **Test** | Basic | none | Step 2: shown greyed (`--soon`), not clickable, not wired. Step 3: wired to the real play stage | Step 3: a blocked sheet lists the hard rows in words |
 
 ## 4. Phone layout
 - A 56 px top bar. Its title is "My games" on Home, or the project name on the project screen. Back sits on the left and Save on the right.
@@ -52,12 +54,12 @@ Deep links: `#home`, `#project/<projectId>`, `#trash`.
 
 ## 5. States
 - **Empty:** one big New project card, plus "Your games live on this device."
-- **Loading:** card skeletons. The screen is never blank for more than 300 ms.
+- **Loading:** Step 2 ships the text "Loading your games…". Card skeletons come in a later step. The screen is never blank for more than 300 ms.
 - **Unsaved:** a dot on Save. Autosave runs after each change and on `visibilitychange`.
 - **Save failed** (typed error). The banner stays until it's dismissed or the next save works.
   - `writeFailed`: "Couldn't save <file>. Your phone may be full. Your last save is safe."
-  - `staleRev`: "This game changed somewhere else. Reopen it to see the latest."
-  - `readOnly`: "Made with a newer TileEngine. Update the app to open it."
+  - `staleRev`: "This project changed somewhere else. Reopen it to see the latest."
+  - `readOnly`: "Made with a newer TileEngine. Open only."
 - **Unreadable project:** the card shows "Can't open: <reason>". Its ⋯ menu still offers Duplicate (if the project is readable) and Delete.
 
 ## 6. Engine and data calls
@@ -71,7 +73,7 @@ Deep links: `#home`, `#project/<projectId>`, `#trash`.
 3. Rename, then Duplicate: "X copy" appears, and the original is unchanged byte for byte.
 4. Delete then Undo within 6 s restores it. Delete, then Trash, then Restore also restores it.
 5. Fill the storage (test hook): Save shows `writeFailed` with the file name, and the last save still opens.
-6. A v7 project shows **Newer version**. Save and Test are disabled, each with the reason, and there is no demo fallback.
+6. A v7 project shows **Newer version**. Save and Test are disabled, each with the reason, and there is no demo fallback. (In step 2 Test is always greyed; the readOnly reason on Test applies from step 3.)
 7. Every target is 48 px or more and passes AA contrast in light and dark.
 
 ## 8. Out of scope
@@ -81,6 +83,6 @@ Deep links: `#home`, `#project/<projectId>`, `#trash`.
 - Map thumbnails (a plain colour block for now).
 
 ## 9. Shell reference (behaviour only, never code)
-- `ui-shell/screenshots/01-home.png` and `24-project-settings.png` (these will be under `docs/maker/shots/`).
+- `docs/maker/shots/01-home.png` and `docs/maker/shots/24-project-settings.png`.
 - `docs/maker/ux/home-globe-plan.md`, List view section.
 - `docs/maker/ux/design-notes/home-globe.md`.
