@@ -23,8 +23,7 @@ A	src/editor/project/save.ts
 A	tests/editor/maker-law.test.ts
 A	tests/editor/project-home.test.ts
 A	tests/tools/maker-build.test.ts
-A	tests/tools/play-stage-carries.test.ts
-M	tests/tools/touch-play.test.ts
+A	tools/maker/app.css
 A	tools/maker/build.ts
 A	tools/maker/home.ts
 A	tools/maker/index.html
@@ -32,8 +31,3 @@ A	tools/maker/project-files.ts
 A	tools/maker/project.ts
 A	tools/maker/store.ts
 A	tools/maker/tokens.css
-M	tools/play-stage/board.ts
-M	tools/play-stage/build.ts
-M	tools/play-stage/load.ts
-M	tools/play-stage/match.ts
-M	tools/play-stage/project.ts

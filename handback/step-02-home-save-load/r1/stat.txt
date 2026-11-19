@@ -23,18 +23,12 @@
  tests/editor/maker-law.test.ts                     |  34 ++
  tests/editor/project-home.test.ts                  |  46 ++
  tests/tools/maker-build.test.ts                    |  30 +
- tests/tools/play-stage-carries.test.ts             |  28 +
- tests/tools/touch-play.test.ts                     |   7 +-
+ tools/maker/app.css                                |  39 ++
  tools/maker/build.ts                               |  34 ++
  tools/maker/home.ts                                |  57 ++
  tools/maker/index.html                             |   9 +
  tools/maker/project-files.ts                       |  12 +
  tools/maker/project.ts                             |   8 +
  tools/maker/store.ts                               |  32 ++
- tools/maker/tokens.css                             | 119 ++++
- tools/play-stage/board.ts                          |   4 +-
- tools/play-stage/build.ts                          |   2 +-
- tools/play-stage/load.ts                           |   6 +-
- tools/play-stage/match.ts                          |   6 +-
- tools/play-stage/project.ts                        |   6 +-
- 39 files changed, 2037 insertions(+), 15 deletions(-)
+ tools/maker/tokens.css                             |  80 +++
+ 33 files changed, 1993 insertions(+)
