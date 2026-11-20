@@ -3,3 +3,4 @@ export { CATALOGUE, GATE_DEFAULTS, TERRAIN_KNOBS, TILE_TYPES, XP_LEVELS_KNOBS } 
 export { createRegistry, installOne, installSetups, outOf, resolveKnob } from "./registry.ts";
 export { XP_LEVELS } from "./xp-levels.ts";
 export { TERRAIN, type TerrainOut } from "./terrain.ts";
+export { WIRED } from "./wired.ts";

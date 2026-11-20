@@ -1,3 +1,4 @@
+import { badge, stageFor } from "../../src/editor/unit/panel.ts";
 import { prefix, ulid, type DocText } from "../../src/editor/project/home.ts";
 import { planSave } from "../../src/editor/project/save.ts";
 import { paintCells, startNew } from "../../src/editor/stage/paint.ts";
@@ -11,10 +12,10 @@ import { askSheet, moveChip, placeButtons, talkSheet, unitButtons, unitPicker } 
 import { commitWrites, readTree, type MakerStore } from "./store.ts";
 type Obj = Record<string, unknown>;
 type Cell = { readonly c: number; readonly r: number };
-type Mark = { readonly c: number; readonly r: number; readonly letter: string; readonly pill: string; readonly name: string; readonly list: PlaceList; readonly index: number };
+type Mark = { readonly c: number; readonly r: number; readonly letter: string; readonly pill: string; readonly name: string; readonly list: PlaceList; readonly index: number; readonly id: string; readonly n: number };
 type Spot = { list: PlaceList; index: number; name: string };
 export type Host = { readonly files: DocText; readonly rev: number; readonly readOnly: boolean; readonly banner: string | null; readonly dirty: boolean };
-export type StageOut = Host & { readonly leave: boolean; readonly test: boolean };
+export type StageOut = Host & { readonly leave: boolean; readonly test: boolean; readonly unitId?: string; readonly stageId?: string };
 export type Io = { readonly store: MakerStore; readonly id: string; readonly now: string; readonly bytes?: () => Uint8Array };
 export type Saved = { readonly ok: true; readonly files: DocText; readonly rev: number; readonly dirty: boolean } | { readonly ok: false; readonly error: "writeFailed" | "staleRev" | "readOnly"; readonly message: string; readonly files: DocText; readonly rev: number; readonly dirty: true };
 const isObj = (v: unknown): v is Obj => typeof v === "object" && v !== null && !Array.isArray(v);
@@ -28,8 +29,8 @@ export function bindStage(id: string, project: string): void { if (sess.id !== i
 export function rememberTalk(doc: unknown): void { if (isObj(doc)) skeleton = doc; }
 export function stageLine(value: string, max: number): string { const next = Number.isInteger(max) && max >= 0 ? [...value].slice(0, max).join("") : value; sess.line = next; return next; }
 function same(a: Cell, b: Cell): boolean { return a.c === b.c && a.r === b.r; }
-function docAt(files: ProjectFiles, kind: string, id: string): { readonly path: string; readonly doc: Obj } | null {
-  for (const [path, doc] of Object.entries(files)) if (path.startsWith(`${kind}/`) && isObj(doc) && doc["id"] === id) return { path, doc };
+function docAt(files: ProjectFiles, folder: string, id: string): { readonly path: string; readonly doc: Obj } | null {
+  for (const [path, doc] of Object.entries(files)) if (path.startsWith(`${folder}/`) && isObj(doc) && doc["id"] === id) return { path, doc };
   return null;
 }
 function chosen(files: ProjectFiles, stage: Obj): readonly string[] {
@@ -40,13 +41,13 @@ function chosen(files: ProjectFiles, stage: Obj): readonly string[] {
   return out.slice(0, cap);
 }
 function marks(files: ProjectFiles, stage: Obj): readonly Mark[] {
-  const names = new Map<string, string>();
-  for (const [path, doc] of Object.entries(files)) if (path.startsWith("units/") && isObj(doc) && typeof doc["id"] === "string") names.set(doc["id"], typeof doc["name"] === "string" ? doc["name"] : "Unit");
-  const face = (id: string | undefined): { letter: string; name: string } => { const name = id === undefined ? "Unit" : names.get(id) ?? "Unit"; return { letter: name.slice(0, 1), name }; };
+  const names = new Map<string, string>(), counts = new Map<string, number>();
+  for (const [path, doc] of Object.entries(files)) if (path.startsWith("units/") && isObj(doc) && typeof doc["id"] === "string") { names.set(doc["id"], typeof doc["name"] === "string" ? doc["name"] : "Unit"); counts.set(doc["id"], badge(doc)); }
+  const face = (id: string | undefined): { letter: string; name: string; id: string; n: number } => { const name = id === undefined ? "Unit" : names.get(id) ?? "Unit"; return { letter: name.slice(0, 1), name, id: id ?? "", n: id === undefined ? 0 : counts.get(id) ?? 0 }; };
   const out: Mark[] = [], team = chosen(files, stage);
-  list(stage["playerSpawns"]).forEach((entry, i) => { if (!isObj(entry) || typeof entry["c"] !== "number" || typeof entry["r"] !== "number") return; const who = face(team[i]); out.push({ c: entry["c"], r: entry["r"], letter: who.letter, pill: "You", name: who.name, list: "spawn", index: i }); });
+  list(stage["playerSpawns"]).forEach((entry, i) => { if (!isObj(entry) || typeof entry["c"] !== "number" || typeof entry["r"] !== "number") return; const who = face(team[i]); out.push({ c: entry["c"], r: entry["r"], letter: who.letter, pill: "You", name: who.name, list: "spawn", index: i, id: who.id, n: who.n }); });
   const pill = (entry: Obj, foe: boolean): string => { if (foe) return "Enemy"; const side = entry["side"]; return side === "player" ? "You" : typeof side === "string" && side !== "" && side !== "neutral" ? "Enemy" : "NPC"; };
-  const put = (entry: unknown, foe: boolean, listName: PlaceList, index: number): void => { if (!isObj(entry) || !isObj(entry["at"]) || typeof entry["at"]["c"] !== "number" || typeof entry["at"]["r"] !== "number") return; const who = face(typeof entry["unitId"] === "string" ? entry["unitId"] : undefined); out.push({ c: entry["at"]["c"], r: entry["at"]["r"], letter: who.letter, pill: pill(entry, foe), name: who.name, list: listName, index }); };
+  const put = (entry: unknown, foe: boolean, listName: PlaceList, index: number): void => { if (!isObj(entry) || !isObj(entry["at"]) || typeof entry["at"]["c"] !== "number" || typeof entry["at"]["r"] !== "number") return; const who = face(typeof entry["unitId"] === "string" ? entry["unitId"] : undefined); out.push({ c: entry["at"]["c"], r: entry["at"]["r"], letter: who.letter, pill: pill(entry, foe), name: who.name, list: listName, index, id: who.id, n: who.n }); };
   list(stage["neutrals"]).forEach((entry, i) => put(entry, false, "npc", i));
   const pool = stage["enemyPool"]; if (isObj(pool) && pool["mode"] === "fixed") list(pool["entries"]).forEach((entry, i) => put(entry, true, "enemy", i));
   return out;
@@ -98,7 +99,8 @@ function cellsHtml(map: Obj, slice: Obj, placed: readonly Mark[], sel: Cell | nu
     const id = tileId(map, c, r), label = typeLabel(slice, id), mark = placed.find((item) => item.c === c && item.r === r) ?? null;
     const text = mark !== null || label.length > 5 ? label.slice(0, 1) : label, on = sel !== null && sel.c === c && sel.r === r ? " on" : "";
     const who = mark === null ? "" : `<span class="who">${esc(mark.letter)}</span><span class="pill">${esc(mark.pill)}</span>`;
-    html += `<button type="button" class="cell t-${tone(id)}${on}" data-act="s:cell:${c},${r}" data-tile="${esc(id)}" aria-label="${esc(label)}${mark === null ? "" : `, ${mark.name}, ${mark.pill}`}"><span>${esc(text)}</span>${who}</button>`;
+    const star = mark !== null && mark.n >= 1 ? `<span class="star">✦${mark.n}</span>` : "";
+    html += `<button type="button" class="cell t-${tone(id)}${on}" data-act="s:cell:${c},${r}" data-tile="${esc(id)}" aria-label="${esc(label)}${mark === null ? "" : `, ${mark.name}, ${mark.pill}`}"><span>${esc(text)}</span>${who}${star}</button>`;
   }
   return `${html}</div>`;
 }
@@ -144,7 +146,7 @@ export function stageScreen(stageId: string, host: Host): string {
   const cell = sess.sheet, mark = cell === null ? null : placed.find((item) => same(item, cell)) ?? null;
   const rows = sheetRows(got.slice, mark !== null);
   const group = (title: SheetRow["group"]): string => { const mine = rows.filter((row) => row.group === title); return mine.length === 0 ? "" : `<p class="sub">${title}</p>${mine.map((row) => `<button type="button" class="choice" data-act="s:type:${esc(row.id)}">${esc(row.label)}</button>`).join("")}`; };
-  const stood = mark === null ? "" : `<p>A unit stands here</p>${unitButtons(mark.pill === "NPC")}`;
+  const stood = mark === null ? "" : `<p>A unit stands here</p>${unitButtons(mark.pill === "NPC", mark.id !== "" && stageFor(got.parsed, mark.id) !== null)}`;
   const place = mark === null && cell !== null && !closedType(got.slice, tileId(got.map, cell.c, cell.r)) ? placeButtons(placeRows(got.stage)) : "";
   const title = mark === null ? "Add here" : `${esc(mark.name)} · ${esc(teamOf(mark.pill))}`;
   const where = mark === null && cell !== null ? `<p class="sub">Tile ${cell.c},${cell.r}</p>` : "";
@@ -248,6 +250,12 @@ export async function stageClick(act: string, stageId: string, host: Host, io: I
     return commitStage(io, host, attachTalk(got.stage, index, id), got.stage, { [`setups/${id}.json`]: fillTalk(skeleton, id, name, rev, line, talkKnobs(got.slice)) });
   }
   if (act === "s:ask") { const mark = here(); if (mark === null || mark.list !== "npc") return kept(host); sess.ask = mark.index; sess.sheet = null; sess.talking = false; sess.line = lineOf(got.parsed, got.stage, mark.index); return kept(host); }
+  if (act === "s:edit" || act === "s:try") {
+    const mark = here(); if (mark === null || mark.id === "") return kept(host);
+    if (act === "s:edit") { sess.sheet = null; return { ...kept(host), unitId: mark.id }; }
+    const found = stageFor(got.parsed, mark.id); if (found === null) return kept(host);
+    sess.sheet = null; return { ...host, leave: false, test: true, unitId: mark.id, stageId: found };
+  }
   if (act === "s:move") { const mark = here(); if (mark === null) return kept(host); sess.moving = { list: mark.list, index: mark.index, name: mark.name }; sess.sheet = null; sess.note = null; return kept(host); }
   if (act === "s:move-cancel") { sess.moving = null; sess.note = null; return kept(host); }
   if (act === "s:delete") { const mark = here(); if (mark === null) return kept(host); sess.sheet = null; return commitStage(io, host, removeEntry(got.stage, mark), got.stage); }

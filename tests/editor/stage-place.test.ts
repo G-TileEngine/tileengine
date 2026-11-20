@@ -50,7 +50,7 @@ test("place rows, moves, talk and start new", async () => {
   const docRe = /\bformatVersion\b|["']?\bkind["']?\s*:/;
   const srcFiles = ["src/editor/stage/talk.ts", "src/editor/stage/place.ts", "src/editor/stage/paint.ts", "tools/maker/stage.ts", "tools/maker/stage-sheets.ts"];
   const hits = srcFiles.flatMap((rel) => readFileSync(join(root, rel), "utf8").split("\n").flatMap((line, i) => (docRe.test(line) ? [`${rel}:${i + 1}: ${line.trim()}`] : [])));
-  assert.deepEqual(hits, ["tools/maker/stage.ts:31: function docAt(files: ProjectFiles, kind: string, id: string): { readonly path: string; readonly doc: Obj } | null {"]);
+  assert.deepEqual(hits, []);
   const text = readDir("fixtures/demo.tileproj"), parsed = parseProject(text); assert.equal(parsed.ok, true); if (!parsed.ok) return;
   const bare = structuredClone(parsed.files[MAP]) as Obj; bare["playerSpawns"] = []; bare["neutrals"] = []; bare["enemyPool"] = { mode: "fixed", entries: [] };
   bindStage(STAGE, "none"); const quiet = stageScreen(STAGE, { files: { ...text, [MAP]: JSON.stringify(bare) }, rev: storedRev(parsed.files), readOnly: false, banner: null, dirty: false });
