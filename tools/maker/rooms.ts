@@ -38,10 +38,11 @@ async function commit(io: RoomIo, stored: DocText, rev: number, next: DocText): 
   return { ok: true, files: await readTree(io.store, prefix(io.id)), rev: plan.writes.length > 0 ? rev + 1 : rev };
 }
 const kept = (host: Host, banner: string | null): RoomHit => ({ files: host.files, rev: host.rev, banner, dirty: host.dirty, stageId: null });
-function say(row: Drop, ask: boolean): string {
-  if (row.code === "mapEntryDropped") return ask ? `Edge ${row.index} will go` : `mapEntryDropped edges ${row.index} outsideMap`;
+const who = (list: string): string => (list === "playerSpawns" ? "Your team start" : list === "neutrals" ? "NPC" : "Enemy");
+export function say(row: Drop, ask: boolean): string {
+  if (row.code === "mapEntryDropped") return ask ? "A wall edge outside the new size will be removed" : "A wall edge was outside the map and was removed";
   const at = row.sq === null ? "" : ` at ${row.sq.c},${row.sq.r}`;
-  return ask ? `${row.list} ${row.index}${at} will go` : `placementDropped ${row.list} ${row.index} outsideMap`;
+  return ask ? `${who(row.list)}${at} will be removed` : `${who(row.list)}${at} was outside the map and was removed`;
 }
 async function save(io: RoomIo, host: Host, before: Record<string, Obj>, after: Record<string, Obj>, toast: string): Promise<RoomHit> {
   const prev = sess.stack; sess.stack = [{ files: host.files, hidden: [...sess.hidden] }];
@@ -82,7 +83,7 @@ function titleOf(files: DocText): string {
 }
 async function undo(io: RoomIo, host: Host): Promise<RoomHit> {
   const snap = sess.stack.pop(); if (snap === undefined) return { ...kept(host, null), toast: null };
-  const next: DocText = { ...host.files }; for (const [path, text] of Object.entries(snap.files)) next[path] = text;
+  const next: Record<string, string> = { ...host.files }; for (const [path, text] of Object.entries(snap.files)) next[path] = text;
   const wrote = await commit(io, host.files, host.rev, next);
   if (!wrote.ok) { sess.stack = [snap]; return { files: host.files, rev: host.rev, banner: wrote.message, dirty: true, stageId: null }; }
   sess.hidden = [...snap.hidden]; for (const path of Object.keys(host.files)) if (snap.files[path] === undefined && path.startsWith("maps/") && path.endsWith(".json")) sess.hidden.push(path.slice("maps/".length, -".json".length));

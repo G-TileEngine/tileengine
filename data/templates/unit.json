@@ -1,0 +1,17 @@
+{
+  "kind": "unit",
+  "formatVersion": 2,
+  "id": "unit_00000000000000000000000000",
+  "rev": 0,
+  "name": "New unit",
+  "sprite": null,
+  "setupIds": [],
+  "stats": {},
+  "history": {
+    "cap": 200,
+    "baseSeq": 0,
+    "ops": []
+  },
+  "createdAt": "2026-11-18T00:00:00Z",
+  "updatedAt": "2026-11-18T00:00:00Z"
+}

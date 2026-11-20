@@ -7,6 +7,7 @@ import { addStage, deleteMap, deleteStage, docsIn, refsTo, renameDoc } from "../
 import { resizeMap, type Drop } from "../../src/editor/stage/resize.ts";
 import { readProject } from "../../src/project/load/index.ts";
 import { parseProject } from "../../tools/maker/project-files.ts";
+import { say } from "../../tools/maker/rooms.ts";
 import { playDocsOf } from "../../tools/play-stage/project.ts";
 const root = fileURLToPath(new URL("../..", import.meta.url));
 type Obj = Record<string, unknown>;
@@ -74,4 +75,14 @@ test("stages and maps", () => {
   const grown = resizeMap("maps/m.json", bare, [], 2, 1), grownLogic = grown.map["logic"] as Obj;
   assert.deepEqual(grownLogic["terrain"], [0, 1]); assert.equal((grownLogic["palette"] as Obj)["0"], "water"); assert.equal((grownLogic["palette"] as Obj)["1"], "floor");
   assert.deepEqual(((grown.map["layers"] as Obj[])[0] ?? {})["tiles"], ["keep", null]); assert.deepEqual(bare.logic.terrain, [0]); assert.equal(grown.rows.length, 0);
+});
+test("resize rows use plain words", () => {
+  const edge: Drop = { code: "mapEntryDropped", mapId: "m", field: "edges", index: 1, reason: "outsideMap", path: "p" };
+  const place = (list: "playerSpawns" | "neutrals" | "enemyPool", sq: { c: number; r: number } | null): Drop => ({ code: "placementDropped", stageId: "s", list, index: 0, reason: "outsideMap", path: "p", sq });
+  const rows = [edge, place("playerSpawns", { c: 0, r: 8 }), place("neutrals", { c: 3, r: 4 }), place("enemyPool", null)];
+  const text = rows.flatMap((row) => [say(row, true), say(row, false)]).join("\n");
+  for (const bad of ["placementDropped", "mapEntryDropped", "playerSpawns", "neutrals", "enemyPool", "outsideMap"]) assert.equal(text.includes(bad), false, bad);
+  assert.equal(say(edge, true), "A wall edge outside the new size will be removed"); assert.equal(say(edge, false), "A wall edge was outside the map and was removed");
+  assert.equal(say(place("playerSpawns", { c: 0, r: 8 }), true), "Your team start at 0,8 will be removed"); assert.equal(say(place("playerSpawns", { c: 0, r: 8 }), false), "Your team start at 0,8 was outside the map and was removed");
+  assert.equal(say(place("neutrals", { c: 3, r: 4 }), false), "NPC at 3,4 was outside the map and was removed"); assert.equal(say(place("enemyPool", null), true), "Enemy will be removed");
 });
