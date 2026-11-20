@@ -5,6 +5,7 @@
   "rev": 1,
   "name": "Blank",
   "mapRef": "map_01JDEM00000000000000000002",
+  "seed": 24301,
   "playerSpawns": [],
   "neutrals": [],
   "enemyPool": { "mode": "fixed", "entries": [] },

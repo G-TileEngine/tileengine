@@ -24,7 +24,7 @@ try {
     const shot = async (name) => { if (width === 390) await page.screenshot({ path: join(shots, `${name}.png`) }); };
     const big = async () => page.evaluate(() => [...document.querySelectorAll("button, input")].filter((el) => { const b = el.getBoundingClientRect(); return b.width > 0 && b.height > 0 && (b.width < 48 || b.height < 48); }).map((el) => `${el.getAttribute("data-act") ?? el.getAttribute("aria-label") ?? ""} ${Math.round(el.getBoundingClientRect().width)}x${Math.round(el.getBoundingClientRect().height)}`));
     const open = async (act, mark) => { await tap(page, act); await page.waitForFunction((m) => document.querySelector(`[data-act="${m}"]`) !== null, mark, { timeout: 15000 }); sheetTiny.push(...await big()); };
-    const drop = async () => { await tap(page, "r:apply"); await waitText(page, "will go"); sheetTiny.push(...await big()); };
+    const drop = async () => { await tap(page, "r:apply"); await waitText(page, "will be removed"); sheetTiny.push(...await big()); };
     const step = async (name, fn) => { try { await fn(); const tiny = await big(); check(`${name} @${width}`, errs.length === 0 && tiny.length === 0, errs.length === 0 && tiny.length === 0 ? "ok" : [...errs, ...tiny].join(" | ")); } catch (e) { check(`${name} @${width}`, false, String(e && e.message ? e.message : e).split("\n")[0]); } };
     const nudge = async (axis, from, to) => { const dir = to < from ? -1 : 1, label = axis === "c" ? "Columns" : "Rows"; for (let n = from; n !== to; n += dir) { await tap(page, `r:step:${axis}:${dir}`); await waitText(page, `${label} ${n + dir}`); } };
     await page.goto(`${origin}/maker/`, { waitUntil: "load" });
@@ -45,7 +45,7 @@ try {
       await waitText(page, "0,8"); await shot("04-resize"); await tap(page, "r:close"); await gone(page, "Resize anyway"); await press(page, "Demo stage");
       await page.waitForFunction(() => document.querySelectorAll(".cell").length === 54, null, { timeout: 15000 }); await tap(page, "s:back"); await waitText(page, "Maps");
       await open(`r:menu:map:${MAP}`, "r:resize"); await open("r:resize", "r:apply"); await nudge("c", 6, 4); await nudge("r", 9, 4); await drop();
-      await tap(page, "r:anyway"); await waitText(page, "placementDropped"); await press(page, "Demo stage");
+      await tap(page, "r:anyway"); await waitText(page, "was outside the map and was removed"); await press(page, "Demo stage");
       await page.waitForFunction(() => document.querySelectorAll(".cell").length === 16, null, { timeout: 15000 }); await tap(page, "s:back"); await waitText(page, "Maps");
     });
     await step("4 refuse map", async () => { await open(`r:menu:map:${MAP}`, "r:delete"); await tap(page, "r:delete"); await waitText(page, "Used by: Demo stage"); await shot("05-refuse"); await tap(page, "r:close"); });
