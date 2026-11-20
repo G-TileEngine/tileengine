@@ -163,7 +163,7 @@ Look follows the shots (top bar, sheet, chip, buttons) in colours, type, spacing
 - Offline, no network, no new dependencies. Every target 48 px or more, AA contrast in light and dark.
 
 ### 4a Done when
-- **Gates:** `npm ci && npm run green` exits 0 at the floor (step 3's final count + N) or more. **Line count:** `git diff --shortstat <base>..HEAD -- . ':!data/templates/**' ':!fixtures/**' ':!tools/maker/tokens.css' ':!handoff/steps/tests/s4a-stage-paint/**'` is 400 or fewer, and the smoke script is 130 lines or fewer.
+- **Gates:** `npm ci && npm run green` exits 0 at the floor (step 3's final count + N) or more. **Line count:** `git diff --shortstat <base>..HEAD -- . ':!data/templates/**' ':!fixtures/**' ':!tools/maker/tokens.css' ':!handback/**' ':!handoff/steps/tests/s4a-stage-paint/**'` is 400 or fewer, and the smoke script is 130 lines or fewer.
 - **Model tests (`stage-editor.test.ts`):**
   - Painting Water on the demo map changes only those `logic.terrain` cells, keeps the palette ints it had, and leaves every other field (including `history`) byte-equal. Painting a type not yet in the palette adds it under the smallest unused int.
   - `clearGround` sets every cell to the Floor int and adds `floor` if the palette lacked it.
