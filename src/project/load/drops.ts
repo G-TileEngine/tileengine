@@ -35,3 +35,17 @@ export function placementDrops(stages: Readonly<Record<string, Doc>>, stageAt: R
   }
   return rows;
 }
+/** One warning per logic.edges entry outside the map. Reads only. Lanes are not entries. */
+export function mapEntryDrops(maps: Readonly<Record<string, Doc>>, mapAt: Readonly<Record<string, string>>): ReportRow[] {
+  const rows: ReportRow[] = [];
+  for (const [id, map] of Object.entries(maps)) {
+    if (!isObj(map)) continue;
+    const file = mapAt[id] ?? `maps/${id}.json`, cols = typeof map["cols"] === "number" ? map["cols"] : 0, rowsN = typeof map["rows"] === "number" ? map["rows"] : 0;
+    const logic = isObj(map["logic"]) ? map["logic"] : {};
+    list(logic["edges"]).forEach((edge, i) => {
+      const c = isObj(edge) ? edge["c"] : undefined, r = isObj(edge) ? edge["r"] : undefined;
+      if (typeof c !== "number" || typeof r !== "number" || !Number.isInteger(c) || !Number.isInteger(r) || c < 0 || r < 0 || c >= cols || r >= rowsN) rows.push({ code: "mapEntryDropped", severity: "warning", path: `${file}#/logic/edges/${i}`, detail: "outsideMap" });
+    });
+  }
+  return rows;
+}
