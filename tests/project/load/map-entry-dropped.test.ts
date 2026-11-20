@@ -1,0 +1,23 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { readProject } from "../../../src/project/load/index.ts";
+import { createWorld } from "../../../src/sim/world.ts";
+import { docsToInput } from "../../../tools/play-stage/load.ts";
+import { openProject } from "../../../tools/play-stage/project.ts";
+import { loadFixture } from "../../tools/demo-fixture.ts";
+const MAP = "maps/map_01JDAM00000000000000000001.json";
+type Obj = Record<string, unknown>;
+const isObj = (v: unknown): v is Obj => typeof v === "object" && v !== null && !Array.isArray(v);
+test("mapEntryDropped: warns, skips in memory, writes nothing back", () => {
+  const files = loadFixture(), map = files[MAP];
+  if (!isObj(map) || !isObj(map["logic"]) || !Array.isArray(map["logic"]["edges"])) throw new Error("demo map");
+  map["logic"]["edges"] = [{ c: 0, r: 0, side: "e" }, { c: 99, r: 1, side: "n" }];
+  const before = structuredClone(files), got = readProject(files);
+  assert.equal(got.ok, true); assert.equal(got.report.some((row) => row.severity === "hard"), false);
+  assert.deepEqual(got.report.map((row) => [row.code, row.severity, row.path, row.detail]), [["mapEntryDropped", "warning", `${MAP}#/logic/edges/1`, "outsideMap"]]);
+  const opened = openProject(files); assert.notEqual(opened.docs, null); if (opened.docs === null) return;
+  const world = createWorld(docsToInput(opened.docs).input);
+  assert.equal(world.notices.some((note) => note.code === "edgeOffMap" && note.at?.c === 99 && note.at.r === 1), true);
+  assert.equal(world.grid.hasWall({ c: 0, r: 0 }, "e"), true);
+  assert.deepEqual(files, before); assert.equal(Array.isArray(map["logic"]["edges"]) && map["logic"]["edges"].length, 2);
+});

@@ -1,5 +1,5 @@
 import { readManifest, readMap, readSetup, readStage, readUnit, type ReadResult } from "../read/index.ts";
-import { placementDrops } from "./drops.ts";
+import { mapEntryDrops, placementDrops } from "./drops.ts";
 import { migrateProject, versionRows } from "./migrate.ts";
 import { knownKind, type Doc, type ProjectFiles, type ProjectLoad, type ProjectStore, type ReportRow, type Severity } from "./types.ts";
 
@@ -79,7 +79,7 @@ export function readProject(files: ProjectFiles): ProjectLoad {
   let migrated: { files: ProjectFiles; report: readonly ReportRow[] };
   try { migrated = migrateProject(files); } catch { return { ok: false, readOnly: true, project: null, report: [row("invalidValue", "hard", "project.json", "unreadable")] }; }
   const docs = migrated.files, rows: ReportRow[] = [...migrated.report];
-  const maps: Record<string, Doc> = {}, stages: Record<string, Doc> = {}, units: Record<string, Doc> = {}, setups: Record<string, Doc> = {}, unknownFiles: Record<string, unknown> = {}, stageAt: Record<string, string> = {};
+  const maps: Record<string, Doc> = {}, stages: Record<string, Doc> = {}, units: Record<string, Doc> = {}, setups: Record<string, Doc> = {}, unknownFiles: Record<string, unknown> = {}, stageAt: Record<string, string> = {}, mapAt: Record<string, string> = {};
   let slice: Doc = {}, manifest: Doc = {};
   for (const path of Object.keys(docs)) {
     const doc = docs[path], slot = knownKind(path);
@@ -89,7 +89,7 @@ export function readProject(files: ProjectFiles): ProjectLoad {
     if (slot === "tile-project") { manifest = doc; if ("index" in doc) rows.push(row("indexIgnored", "info", `${path}#/index`)); note(readManifest(doc), path, rows); }
     else if (slot === "catalogue-slice") slice = doc;
     else if (slot === "map") {
-      if (id !== null) maps[id] = doc;
+      if (id !== null) { maps[id] = doc; mapAt[id] = path; }
       const n = typeof doc["cols"] === "number" && typeof doc["rows"] === "number" ? doc["cols"] * doc["rows"] : -1;
       const terrain = isObj(doc["logic"]) && Array.isArray(doc["logic"]["terrain"]) ? doc["logic"]["terrain"] : null;
       const badLen = terrain !== null && terrain.length !== n;
@@ -105,7 +105,7 @@ export function readProject(files: ProjectFiles): ProjectLoad {
   const project = isObj(manifestDoc) && isObj(manifestDoc["project"]) ? manifestDoc["project"] : {};
   refs(isObj(manifestDoc) ? manifestDoc : {}, stageAt, maps, stages, units, setups, rows);
   warns(slice, project["catalogueRev"], maps, setups, rows);
-  rows.push(...placementDrops(stages, stageAt, maps, slice));
+  rows.push(...placementDrops(stages, stageAt, maps, slice), ...mapEntryDrops(maps, mapAt));
   const hard = rows.some((r) => r.severity === "hard");
   const store: ProjectStore = { manifest, slice, maps, stages, units, setups, unknownFiles };
   return { ok: !hard, readOnly: false, project: store, report: sort(rows) };
