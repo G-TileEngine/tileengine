@@ -1,0 +1,23 @@
+# QA review: DSK rulings Phase 1 (D22–D24 add)
+
+**Verdict: NOT OK.** One must-fix, text-only. The four new rulings and the D6.1 correction check out. I did not edit the rulings file.
+
+Draft: `/workspace/tileengine/handoff/dsk-rulings/2026-11-17-phase1.md`, 72 lines, sha256 `cb087871f330757af2cc66bf62437f5953c8deb0a511ebc3d5f1919fbebd3fe5` (checked), hash-object `b4afc8924d7dd366e2b6476a12a5eb3431f5b25d`. Checked against main `a6538ee18dfdf198a96c79634314d6683c7172b2` in `/workspace/tileengine-repo` (`git fetch -q origin`, `git show a6538ee1:<path>`). 2026-11-20 03:00 GMT (Europe/London).
+
+On main the same path is 68 lines, sha256 `aacb7e01c4a2baba3a9eae5fd14ca1b2a25a5f4cac6e3d1f32ee82b8d3fe164c`, blob `0c93c3aa`. The draft differs in three places: D6.1 (L37) strikes `setup_<ULID>` and points at D22; D17 (L63) changes "Step 7" to "Step 9"; and D22, D22b, D23 and D24 are appended (L69–72).
+
+## Must-fix
+
+1. **L63, D17 step number.** The draft changes the already-correct "Step 7 link cells" back to "Step 9 link cells". That reverts commit `594ea8ae` (roadmap r13b, CEO 2026-11-19 01:41, step-04/DSK renumber 9→7). At `a6538ee1` the roadmap is r15 and step 7 is still "session and stage links" (r13: 7; r12: 9); step 9 is art upload. The step-04 guide on main already says "Step 7 link cells" (L71, L285). Restore the main wording. In the D17 sentence, replace `Step 9 link cells add a reason value later, under a CN, not a new code.` with `Step 7 link cells add a reason value later, under a CN, not a new code.`
+
+## Checked OK
+
+- **D22 cites and current code.** project-format §2 L298 is "Ids are `<kind>_<ULID>`." §6.7 L1145 is id `effect_<ULID>`. setup-format §2.10 L453 is `id`: `effect_<ULID>`. `src/editor/effect/save.ts` L3 is still `SAVE.id = /^setup_[0-9A-HJKMNP-TV-Z]{26}$/`, L35 is still "a new effect needs a fresh setup_<ULID> at effects/<id>.json", and `tools/effect-designer/page.ts:82` still mints `mint("setup_")`. E6 save test 39 is `tests/editor/effect-e6-save.test.ts:39`, pinned to `setup_`. The prescribed `SAVE.id` regex keeps the same Crockford set and only changes the prefix. Duplicate already has `effect_<ULID>` at project-format §6.7 L1157; no prefix-stripping resolver exists, so exact-id refs keep legacy `setup_` docs working. `legacyEffectId` / `badEffectId` are new codes (r41). "Never refused" matches §2.10 L458 ("Presentation only"; checks are warnings except `invalidValue`). D6.1 is withdrawn in place; D10's `setup_<ULID>` is for talk setups and is untouched.
+- **D22b and readProject today.** `knownKind` and `ProjectStore` live in `src/project/load/types.ts`, not core-types, so no CN is right. Today `SLOTS` has no `effects` entry, so `effects/*.json` is `unknownFile`. The ruling adds kind `behaviour-setup`, `effects: Record<id, BehaviourSetup>` beside `setups`, wrong `behaviourId` stays `unknownFile` (detail `behaviourId`), and `effects/.deleted/**` is skipped with no row (the load-side of §6.7 L1186 "never in the closure"). None of that is claimed as already shipped. r41 is to take the slot, the two codes and the trash rule.
+- **D23.** `goal` is not in box `behaviour-library/behaviours.json` (rev 29, 65 behaviours, 0 `goal` keys), so "next L request, catalogue rev 30" is right. setup-format §1 Terms L191 is `question` (`menu_order`, "A UI grouping only", catalogue-owned); that is the right neighbour. `sliceOf` in `tools/project/slice-of.ts` does not list `goal` in `DROP`, so a future field is carried. `composable_as` values match setup-format §2.11. `tools/maker` has no id-to-goal table. `menu_order` is not read under `src/`, `tools/maker` or `tools/play-stage` on main.
+- **D24.** Path `behaviour-library/behaviours.json` is the box catalogue (roadmap L21, L280: box only, not on main; "The maker reads these"). `project.catalogueRev` is "The single catalogue pin" at project-format §3.1 L310. Play-stage reads `catalogue/slice.json`; no code on main reads the bundled catalogue into a game bundle. The newer-engine "+ Add ability is off" line is marked "r41 adds this line; no code today".
+- **Attribution.** The new lines are DSK, with CoS, EA, Librarian and UX named where they apply. None is labelled a CEO ruling, and no CEO source is invented. The L63 "Step 9" wording is the error; it is not a new CEO recut.
+
+## Pre-existing, not blocking
+
+D3's §12 line cites (unchanged in this draft) are off by one at `a6538ee1`: tile-project 005 is L1583 (cited 1582), map 004 is L1605 (cited 1604), tile-project 004 is L1613 (cited 1612). Each cited line is blank; the heading is the next line. Fix later if the file is already open.
