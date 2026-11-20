@@ -6,7 +6,7 @@
   "name": "Army",
   "behaviourId": "unit-roster",
   "catalogue": {
-    "rev": 29
+    "rev": 30
   },
   "createdAt": "2026-11-18T00:00:00Z",
   "updatedAt": "2026-11-18T00:00:00Z",
@@ -62,8 +62,9 @@
       "needsReask": null
     },
     "clip_cues": {
-      "source": "default",
-      "rev": 0,
+      "source": "user",
+      "value": false,
+      "rev": 1,
       "defaultRef": {
         "rev": 8
       },

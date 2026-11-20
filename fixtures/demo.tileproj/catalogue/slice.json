@@ -2,7 +2,7 @@
   "kind": "catalogue-slice",
   "formatVersion": 1,
   "schema_version": 3,
-  "catalogue_rev": 29,
+  "catalogue_rev": 30,
   "gates": {
     "uses-card-hand": {
       "any": [
@@ -639,7 +639,7 @@
         },
         {
           "id": "damage",
-          "label": "Damage = attack value",
+          "label": "Damage = unit attack",
           "type": "slider",
           "default": 1,
           "min": 0,
@@ -666,6 +666,8 @@
           ],
           "renamed_from": [],
           "depends_on": [],
+          "description": "Damage is '= unit attack': an alias of unit-roster.unit_atk, not a separate value (EA S1 Q5 / DSK D18 update). The engine reads the unit's attack (unit_atk). The catalogue default stays 1, the same as unit_atk. A stored answer off that default is not applied; the loader warns layerNotApplied.",
+          "alias_of": "unit-roster.unit_atk",
           "ruling": {
             "by": "CoS",
             "date": "2026-11-09",
@@ -893,7 +895,8 @@
       ],
       "numeric_inputs": [
         "damage"
-      ]
+      ],
+      "goal": "attack"
     },
     {
       "id": "line-shot",
@@ -1431,7 +1434,8 @@
       "numeric_inputs": [
         "damage",
         "mana_cost"
-      ]
+      ],
+      "goal": "attack"
     },
     {
       "id": "barrier-line",
@@ -1952,7 +1956,8 @@
       ],
       "invariants": [
         "A seam blocks only the side it sits on. A seam cuts only the one side neighbour across its edge; tiles on its other sides and corners are not blocked, so with a seam to a unit's left or right, attacks aimed from the north or south still hit (CEO 2026-11-10, direct; /workspace/g-tile-engine/src/chess/game/towerTerrain.ts seamBlocks() lines 1251-1263 (per edge: a seam cuts only the one side neighbour across it; corners return false))."
-      ]
+      ],
+      "goal": "defend"
     },
     {
       "id": "adjacency-synergy",
