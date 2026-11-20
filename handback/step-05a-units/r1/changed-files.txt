@@ -1,0 +1,15 @@
+M	data/templates/empty.tileproj/stages/stage_01JDEM00000000000000000003.json
+A	data/templates/unit.json
+M	handoff/steps/tests/s4c-stages-maps/smoke.mjs
+A	handoff/steps/tests/s5a-units/smoke.mjs
+A	src/editor/unit/units.ts
+M	tests/editor/maker-law.test.ts
+M	tests/editor/stage-rooms.test.ts
+A	tests/editor/units.test.ts
+A	tests/tools/knob-widgets.test.ts
+M	tools/maker/app.css
+M	tools/maker/home.ts
+M	tools/maker/project.ts
+M	tools/maker/rooms.ts
+A	tools/maker/units.ts
+A	tools/maker/widgets.ts
