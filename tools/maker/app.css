@@ -39,9 +39,13 @@ input.name-field { min-height: 48px; border: 2px solid var(--line); border-radiu
   .app { border-radius: 0; height: 100dvh; }
 }
 .topbar.wrap { flex-wrap: wrap; } .topbar.wrap h1 { flex: 1 1 auto; min-width: 8.5rem; max-width: 100%; } .stage-row { width: 100%; min-height: 48px; flex: none; } .grid { display: grid; width: max-content; }
-.cell { box-sizing: border-box; width: 48px; height: 48px; min-width: 48px; min-height: 48px; padding: 2px; border: 1px solid var(--line); color: var(--ink); font-size: 11px; font-weight: 700; line-height: 1.1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.cell { position: relative; box-sizing: border-box; width: 48px; height: 48px; min-width: 48px; min-height: 48px; padding: 2px; border: 1px solid var(--line); color: var(--ink); font-size: 11px; font-weight: 700; line-height: 1.1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
 .grid.off .cell { border-color: transparent; } .cell.on { outline: 3px solid var(--accent); outline-offset: -3px; } .t-floor { background: var(--surface); } .t-water { background: var(--accent-soft); } .t-wall { background: var(--line); } .t-other { background: var(--surface-2); }
 .cell .who, .cell .pill { font-size: 10px; font-weight: 800; } .pill { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); padding: 1px 3px; }
+.cell .star { position: absolute; top: 0; left: 1px; font-size: 10px; font-weight: 800; line-height: 1.2; color: var(--ink); background: var(--surface); }
+.ability, .ability summary { min-height: 48px; max-width: 100%; display: block; }
+details.ability:not([open]) > :not(summary) { display: none; }
+.toast.above { top: 16px; bottom: auto; z-index: 6; }
 .dock { display: flex; flex-direction: column; gap: 8px; padding: 8px 16px calc(8px + env(safe-area-inset-bottom)); background: var(--surface); border-top: 1px solid var(--line); } .undo { width: 100%; }
 .chip { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 48px; padding: 6px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--ink); font-size: 0.78rem; font-weight: 600; }
 input.knob { box-sizing: border-box; display: block; width: 100%; height: 48px; min-height: 48px; min-width: 48px; accent-color: var(--accent); }

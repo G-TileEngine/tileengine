@@ -1,16 +1,18 @@
 import { createDriver, type HostCanvas, type HostEnv } from "../../src/runtime/host/raf-driver.ts";
 import { createLighting, fitView } from "../../src/runtime/render/index.ts";
 import { createSceneLink } from "../../src/runtime/scene/world-scene.ts";
+import { inOrthogonalReach } from "../../src/rules/battle/range.ts";
 import { boardBox, fit, TILE } from "./board.ts";
 import { centreOn, clamp, createCam, seatCam, tickCam, type PlayCam } from "./camera-touch.ts";
 import { createHud } from "./hud.ts";
 import { litPlan, picturesOf, sourceOf } from "./looks.ts";
-import { createMatch } from "./match.ts";
+import { createMatch, DEFAULT_SPELL_REACH } from "./match.ts";
 import { openBundled } from "./project.ts";
 import { createTouch } from "./touch.ts";
 import { DEV } from "./dev.ts"; // dev-only
 
-export function startMatch(docs: NonNullable<ReturnType<typeof openBundled>["docs"]>, back?: () => void): void {
+export type StartAim = { readonly unitId?: string; readonly abilityId?: string; readonly aim?: "basic" | "spell" };
+export function startMatch(docs: NonNullable<ReturnType<typeof openBundled>["docs"]>, back?: () => void, aim?: StartAim): void {
 const canvas = document.querySelector("#board");
 if (!(canvas instanceof HTMLCanvasElement)) throw new Error("play: #board");
 const match = createMatch(docs);
@@ -52,6 +54,24 @@ for (const k of ["pointerdown", "pointermove", "pointerup", "pointercancel", "lo
 const place = (): void => { const box = boardBox(innerHeight); Object.assign(canvas.style, { position: "fixed", left: "0", right: "0", width: "100%", top: `${box.top}px`, height: `${box.height}px`, touchAction: "none" }); };
 place(); addEventListener("resize", () => { place(); seated = false; });
 seat();
+if (aim?.unitId !== undefined) {
+  const mine = match.world.units.all().find((u) => u.alive && u.unitId === aim.unitId && u.side === match.sides.me);
+  if (mine === undefined) {
+    const body = match.world.units.all().find((u) => u.alive && u.unitId === aim.unitId);
+    if (body !== undefined) { const b = band(), shown = fitView(b.devW, b.devH, cam.s, TILE, TILE); centreOn(cam, body.at, shown, 0, TILE, 0); clamp(cam, shown, match.world.grid.cols, match.world.grid.rows); }
+  } else {
+    match.feed({ type: "SelectUnit", unitId: mine.id });
+    if (aim.aim === "basic" || aim.aim === "spell") {
+      const kind = aim.aim;
+      if (match.choose(kind) !== null) match.intend({ type: "ChooseAction", actionId: kind, unitId: mine.id });
+      const table = kind === "spell" ? docs.rules.abilities?.[mine.unitId]?.[0]?.reach : docs.rules.reach?.[mine.unitId];
+      const reach = typeof table === "number" && Number.isInteger(table) && table >= 1 ? table : kind === "spell" ? DEFAULT_SPELL_REACH : match.step.reach;
+      const cells: { c: number; r: number }[] = [];
+      for (let r = 0; r < match.world.grid.rows; r += 1) for (let c = 0; c < match.world.grid.cols; c += 1) if (inOrthogonalReach(mine.at, { c, r }, reach)) cells.push({ c, r });
+      match.aims = cells; match.aimKind = kind;
+    }
+  }
+}
 if (DEV) Object.assign(window, { __play: match, __driver: driver, __cam: cam, __hud: hud, __fx: match.fx, __link: link, __docs: docs }); // dev-only
 if (back !== undefined) { const btn = document.createElement("button"); btn.id = "back-maker"; btn.type = "button"; btn.textContent = "Back to maker"; btn.addEventListener("click", () => { driver.dispose(); back(); }); const top = document.querySelector("#top"); if (top !== null) top.prepend(btn); }
 driver.start();

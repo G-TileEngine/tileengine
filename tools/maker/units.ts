@@ -1,3 +1,4 @@
+import { abilityAct, abilityShut, abilityView, type AbilityPlay } from "./ability-panel.ts";
 import { planSave } from "../../src/editor/project/save.ts";
 import { prefix, ulid } from "../../src/editor/project/home.ts";
 import { applyRole, deleteUnit, newUnit, renameUnit, resetStat, setStat, shown, unitNameError } from "../../src/editor/unit/units.ts";
@@ -9,7 +10,7 @@ type DocText = Readonly<Record<string, string>>;
 type Snap = { readonly files: DocText; readonly hidden: readonly string[] };
 type Sess = { project: string; mode: "add" | "rename" | "role" | "menu" | "note" | "edit" | null; unit: string; name: string; hint: string; lines: string[]; hidden: string[]; stack: Snap[] };
 type Host = { readonly files: DocText; readonly rev: number; readonly readOnly: boolean; readonly dirty: boolean };
-export type UnitHit = { readonly files: DocText; readonly rev: number; readonly banner: string | null; readonly dirty: boolean; readonly toast?: string | null; readonly shown?: string };
+export type UnitHit = { readonly files: DocText; readonly rev: number; readonly banner: string | null; readonly dirty: boolean; readonly toast?: string | null; readonly shown?: string; readonly play?: AbilityPlay };
 export type UnitIo = { readonly store: MakerStore; readonly id: string; readonly now: string; readonly bytes: () => Uint8Array };
 const amp = String.fromCharCode(38);
 const esc = (t: string): string => t.replace(/[&<>"']/g, (ch) => ch === amp ? amp + "amp;" : ch === "<" ? amp + "lt;" : ch === ">" ? amp + "gt;" : ch === '"' ? amp + "quot;" : amp + "#39;");
@@ -21,6 +22,7 @@ export function rememberUnit(doc: unknown): void { if (!isObj(doc)) throw new Er
 export function bindUnits(id: string): void { if (sess.project !== id) sess = blank(id); }
 export function unitLine(value: string): void { sess.name = value; }
 export function unitEditing(): boolean { return sess.mode === "edit" || sess.mode === "rename" || sess.mode === "role"; }
+export function openUnit(id: string): void { abilityShut(); sess.unit = id; sess.mode = "edit"; sess.hint = ""; }
 function bagOf(files: DocText): Record<string, Obj> | null {
   const got = parseProject(files); if (!got.ok) return null; const bag: Record<string, Obj> = {};
   for (const [path, doc] of Object.entries(got.files)) if (isObj(doc)) bag[path] = doc; return bag;
@@ -33,7 +35,7 @@ async function commit(io: UnitIo, stored: DocText, rev: number, next: DocText): 
   const wrote = await commitWrites(io.store, prefix(io.id), plan.writes); if (!wrote.ok) return { ok: false, message: wrote.message };
   return { ok: true, files: await readTree(io.store, prefix(io.id)), rev: plan.writes.length > 0 ? rev + 1 : rev };
 }
-function roster(bag: Record<string, Obj>): { readonly knobs: Obj[]; readonly presets: unknown[]; readonly army: Obj | null } {
+function roster(bag: Record<string, Obj>): { readonly knobs: readonly Obj[]; readonly presets: readonly unknown[]; readonly army: Obj | null } {
   const slice = bag["catalogue/slice.json"], behaviours = isObj(slice) ? list(slice["behaviours"]) : [], beh = behaviours.find((b) => isObj(b) && b["id"] === "unit-roster");
   const knobs = isObj(beh) ? list(beh["knobs"]).filter(isObj) : [], presets = isObj(beh) ? list(beh["presets"]) : [];
   const army = Object.values(bag).find((doc) => doc["behaviourId"] === "unit-roster");
@@ -49,8 +51,8 @@ function rolesOf(knobs: readonly Obj[], presets: readonly unknown[]): { readonly
   const per = perKeys(knobs), out: { id: string; label: string; overrides: Record<string, number> }[] = [];
   for (const item of presets) {
     if (!isObj(item) || typeof item["id"] !== "string" || typeof item["label"] !== "string" || !isObj(item["overrides"])) continue;
-    const keys = Object.keys(item["overrides"]); if (keys.length === 0 || keys.some((key) => !per.has(key) || typeof item["overrides"][key] !== "number")) continue;
-    const overrides: Record<string, number> = {}; for (const key of keys) { const n = item["overrides"][key]; if (typeof n === "number") overrides[key] = n; }
+    const over = item["overrides"], keys = Object.keys(over); if (keys.length === 0 || keys.some((key) => !per.has(key) || typeof over[key] !== "number")) continue;
+    const overrides: Record<string, number> = {}; for (const key of keys) { const n = over[key]; if (typeof n === "number") overrides[key] = n; }
     out.push({ id: item["id"], label: item["label"], overrides });
   }
   return out;
@@ -94,11 +96,12 @@ export function unitPage(files: DocText, readOnly: boolean, banner: string | nul
   const bag = bagOf(files), hit = bag === null ? null : unitDoc(bag, sess.unit); if (bag === null || hit === null) return "";
   const { knobs, presets, army } = roster(bag), roles = rolesOf(knobs, presets), name = typeof hit.doc["name"] === "string" ? hit.doc["name"] : "Unit";
   const stats = knobs.filter((knob) => knob["per_unit"] === true && knob["type"] === "slider").map((knob) => statBlock(hit.doc, knob, army)).join("");
+  const abilities = abilityView(bag, hit.doc, readOnly);
   const roleBtn = readOnly || roles.length === 0 ? "" : `<button type="button" class="btn" data-act="u:role">Start from a role</button>`;
   const roleSheet = sess.mode !== "role" ? "" : `<div class="scrim"><div class="sheet" role="dialog"><h2>Start from a role</h2>${roles.map((role) => `<button type="button" class="btn" data-act="u:apply:${esc(role.id)}">${esc(role.label)}</button>`).join("")}<button type="button" class="btn ghost" data-act="u:close">Close</button></div></div>`;
   const note = banner === null ? "" : `<p class="banner bad" role="alert">${esc(banner)}</p>`;
   const rename = readOnly ? "" : `<p class="sub">Name</p><button type="button" class="btn ghost" data-act="u:rename">${esc(name)}</button>`;
-  return `<header class="topbar"><button type="button" class="btn ghost" data-act="u:back">Back</button><h1>${esc(name)}</h1></header><div class="body">${note}${rename}${roleBtn}${stats}</div>${sess.mode === "rename" ? sheet() : ""}${roleSheet}`;
+  return `<header class="topbar"><button type="button" class="btn ghost" data-act="u:back">Back</button><h1>${esc(name)}</h1></header><div class="body">${note}${rename}${roleBtn}${stats}${abilities}</div>${sess.mode === "rename" ? sheet() : ""}${roleSheet}`;
 }
 async function undo(io: UnitIo, host: Host): Promise<UnitHit> {
   const snap = sess.stack.pop(); if (snap === undefined) return { ...kept(host), toast: null };
@@ -118,10 +121,17 @@ export async function unitClick(act: string, host: Host, io: UnitIo): Promise<Un
   if (act === "u:back") { sess.mode = null; sess.hint = ""; return kept(host); }
   if (act === "u:undo") return undo(io, host);
   if (host.readOnly) return { ...kept(host), banner: "Made with a newer TileEngine. Open only." };
+  if (act.startsWith("a:") || act.startsWith("k:")) {
+    const live = bagOf(host.files); if (live === null) return { ...kept(host), banner: "Can't open this project" };
+    const hit = abilityAct(act, live, sess.unit);
+    if ("play" in hit) return { ...kept(host), play: hit.play };
+    if ("bag" in hit) return save(io, host, live, hit.bag, hit.toast);
+    return kept(host);
+  }
   if (act === "u:add") { sess.mode = "add"; sess.name = "New unit"; sess.hint = ""; return kept(host); }
   if (act === "u:role") { sess.mode = "role"; return kept(host); }
   if (act === "u:rename") { const bag = bagOf(host.files), hit = bag === null ? null : unitDoc(bag, sess.unit); sess.name = hit !== null && typeof hit.doc["name"] === "string" ? hit.doc["name"] : ""; sess.hint = ""; sess.mode = "rename"; return kept(host); }
-  if (act.startsWith("u:open:")) { sess.unit = act.slice(7); sess.mode = "edit"; sess.hint = ""; return kept(host); }
+  if (act.startsWith("u:open:")) { abilityShut(); sess.unit = act.slice(7); sess.mode = "edit"; sess.hint = ""; return kept(host); }
   if (act.startsWith("u:menu:")) { const bag = bagOf(host.files), id = act.slice(7), hit = bag === null ? null : unitDoc(bag, id); sess.unit = id; sess.name = hit !== null && typeof hit.doc["name"] === "string" ? hit.doc["name"] : "Unit"; sess.mode = "menu"; return kept(host); }
   const bag = bagOf(host.files); if (bag === null) return { ...kept(host), banner: "Can't open this project" };
   if (act === "u:create" || act === "u:save-name") {

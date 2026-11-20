@@ -1,0 +1,21 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { test } from "node:test";
+import { fileURLToPath } from "node:url";
+import { panelOf } from "../../src/editor/unit/panel.ts";
+import { panelHtml } from "../../tools/maker/ability-panel.ts";
+const root = fileURLToPath(new URL("../..", import.meta.url));
+type Obj = Record<string, unknown>;
+test("panel layout: 18 knobs, 7 questions, 5 in one, at 360", () => {
+  const doc = JSON.parse(readFileSync(join(root, "tests/fixtures/maker/big-ability.json"), "utf8")) as Obj;
+  const ids = Array.isArray(doc["knobs"]) ? doc["knobs"].flatMap((knob) => typeof knob === "object" && knob !== null && "id" in knob && typeof knob.id === "string" ? [knob.id] : []) : [];
+  const model = panelOf({ behaviours: [doc] }, { big: ids }, "big", {}), html = panelHtml(model), order = model.sections.flatMap((section) => section.knobs.map((knob) => knob.id));
+  assert.equal(model.sections.length, 7); assert.equal(model.sections[0]?.open, true); assert.equal(model.sections[0]?.knobs.length, 5);
+  assert.equal(model.sections.some((section) => section.knobs.length === 5), true); assert.deepEqual(order, ids);
+  assert.equal((html.match(/<details/g) ?? []).length, 7); assert.equal(html.startsWith('<div class="ability"><details class="ability" open>'), true);
+  assert.equal(ids.every((id, i) => i === 0 || html.indexOf(`data-knob="${id}"`) > html.indexOf(`data-knob="${ids[i - 1] ?? id}"`)), true);
+  const css = readFileSync(join(root, "tools/maker/app.css"), "utf8");
+  for (const rule of css.split("}")) if (rule.includes(".ability")) assert.equal(/position\s*:\s*fixed|max-height/.test(rule), false, rule);
+  assert.match(css, /\.ability[^{]*\{[^}]*max-width:\s*100%/); assert.equal(html.includes("width:"), false);
+});
