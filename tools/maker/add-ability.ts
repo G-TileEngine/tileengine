@@ -1,7 +1,7 @@
 import { addAbility, addCase, addable, byGoal, updateProject, type AddCase } from "../../src/editor/unit/add.ts";
 import { WIRED } from "../../src/rules/behaviours/wired.ts";
 import { BUNDLED } from "./catalogue.ts";
-import { diagramCells, diagramHtml } from "./unit-diagram.ts";
+import { diagramHtml, diagramOf } from "./unit-diagram.ts";
 type Obj = Record<string, unknown>;
 const isObj = (v: unknown): v is Obj => typeof v === "object" && v !== null && !Array.isArray(v);
 const amp = String.fromCharCode(38);
@@ -25,7 +25,7 @@ function goals(bag: Obj, unit: Obj): string {
 function cards(bag: Obj, unit: Obj): string {
   const bin = binsOf(bag, unit)[picked]; if (bin === undefined) return goals(bag, unit);
   const id = typeof unit["id"] === "string" ? unit["id"] : "", q = query.toLowerCase();
-  const rows = bin.cards.filter((card) => q === "" || `${card.name} ${card.summary}`.toLowerCase().includes(q)).map((card) => `<button type="button" class="card ability-add" data-act="g:add:${esc(card.id)}" data-add="${esc(`${card.name} ${card.summary}`)}">${diagramHtml(diagramCells(bag, id, card.id, null))}<span class="name">${esc(card.name)}</span><span class="sub">${esc(card.summary)}</span></button>`).join("");
+  const rows = bin.cards.filter((card) => q === "" || `${card.name} ${card.summary}`.toLowerCase().includes(q)).map((card) => `<button type="button" class="card ability-add" data-act="g:add:${esc(card.id)}" data-add="${esc(`${card.name} ${card.summary}`)}">${diagramHtml(diagramOf(bag, id, card.id, null))}<span class="name">${esc(card.name)}</span><span class="sub">${esc(card.summary)}</span></button>`).join("");
   return `<div class="scrim" data-sheet="cards"><div class="sheet" role="dialog"><h2>${esc(bin.title)}</h2><input class="name-field" data-find value="${esc(query)}" aria-label="Tap a card to add it with defaults"><p class="hint">Tap a card to add it with defaults</p>${rows}<button type="button" class="btn ghost" data-act="g:back">Back</button></div></div>`;
 }
 export function addChrome(bag: Obj, unit: Obj, readOnly: boolean): string {

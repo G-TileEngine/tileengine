@@ -1,7 +1,7 @@
 import { aimKind, detach, panelOf, resetAnswer, setAnswer, stageFor, type PanelKnob, type PanelModel } from "../../src/editor/unit/panel.ts";
 import { WIRED } from "../../src/rules/behaviours/wired.ts";
 import { addChrome } from "./add-ability.ts";
-import { diagramCells, diagramHtml } from "./unit-diagram.ts";
+import { diagramHtml, diagramOf } from "./unit-diagram.ts";
 import { knobWidget, type KnobSpec } from "./widgets.ts";
 type Obj = Record<string, unknown>;
 const isObj = (v: unknown): v is Obj => typeof v === "object" && v !== null && !Array.isArray(v);
@@ -36,7 +36,7 @@ export function abilityView(bag: Record<string, Obj>, unit: Obj, readOnly: boole
   const open = bag[`setups/${openId}.json`];
   if (openId !== "" && isObj(open) && typeof open["behaviourId"] === "string") {
     const model = panelOf(slice, WIRED, open["behaviourId"], isObj(open["answers"]) ? open["answers"] : {});
-    const marks = diagramHtml(diagramCells(bag, id, open["behaviourId"], isObj(open["answers"]) ? open["answers"] : null));
+    const marks = diagramHtml(diagramOf(bag, id, open["behaviourId"], isObj(open["answers"]) ? open["answers"] : null));
     return `<h2>Abilities</h2><button type="button" class="btn ghost" data-act="a:shut">Back</button><h2>${esc(model.name)}</h2>${panelHtml(model)}${marks}${rowsOf(bag, unit, slice, openId)}`;
   }
   const cards = ids.flatMap((sid) => {

@@ -11,7 +11,7 @@ import { WIRED } from "../../src/rules/behaviours/wired.ts";
 import { BUNDLED, revCase } from "../../tools/maker/catalogue.ts";
 import { addChrome } from "../../tools/maker/add-ability.ts";
 import { abilityAct } from "../../tools/maker/ability-panel.ts";
-import { diagramCells } from "../../tools/maker/unit-diagram.ts";
+import { diagramCells, diagramHtml, diagramOf } from "../../tools/maker/unit-diagram.ts";
 import { parseProject } from "../../tools/maker/project-files.ts";
 import { openProject, playDocsOf } from "../../tools/play-stage/project.ts";
 import { sliceOf } from "../../tools/project/slice-of.ts";
@@ -90,4 +90,10 @@ test("diagram comes from the engine", () => {
   live["behaviours"] = live["behaviours"].filter((row) => !(isObj(row) && row["id"] === "line-shot"));
   const held = bare[`setups/${LINE}.json`]; if (isObj(held)) held["answers"] = { range: { source: "default" }, damage: { source: "default" } };
   assert.deepEqual(diagramCells(bare, KNIGHT, "line-shot", null).filter((cell) => cell.on).map((cell) => `${cell.c},${cell.r}`), on(3));
+});
+test("the Empty template gives that visible reason line", () => {
+  const parsed = parseProject(walk("data/templates/empty.tileproj")); assert.equal(parsed.ok, true); if (!parsed.ok) return;
+  const html = diagramHtml(diagramOf(parsed.files, "unit_missing", "line-shot", null));
+  assert.equal(html.includes("play: army"), true); assert.equal(html.includes("reach-grid"), false); assert.equal(html.includes("data-diagram=\"off\""), true);
+  assert.throws(() => diagramCells(parsed.files, "unit_missing", "line-shot", null), (e: unknown) => e instanceof Error && e.message === "play: army");
 });
