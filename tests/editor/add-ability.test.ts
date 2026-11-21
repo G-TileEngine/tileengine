@@ -88,5 +88,6 @@ test("diagram comes from the engine", () => {
   assert.deepEqual(mark(null), on(3)); assert.deepEqual(mark({ range: { source: "user", value: 2, rev: 1 } }), on(2)); assert.notDeepEqual(mark(null), mark({ range: { source: "user", value: 2, rev: 1 } }));
   const bare = demo(), live = bare["catalogue/slice.json"]; if (!isObj(live) || !Array.isArray(live["behaviours"])) return;
   live["behaviours"] = live["behaviours"].filter((row) => !(isObj(row) && row["id"] === "line-shot"));
+  const held = bare[`setups/${LINE}.json`]; if (isObj(held)) held["answers"] = { range: { source: "default" }, damage: { source: "default" } };
   assert.deepEqual(diagramCells(bare, KNIGHT, "line-shot", null).filter((cell) => cell.on).map((cell) => `${cell.c},${cell.r}`), on(3));
 });

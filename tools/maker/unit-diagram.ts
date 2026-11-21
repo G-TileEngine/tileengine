@@ -18,7 +18,7 @@ function withSlice(bag: Record<string, unknown>, behaviourId: string): void {
 function withCandidate(files: ProjectFiles, unitId: string, behaviourId: string, answers: Obj | null, on: boolean): ProjectFiles {
   const bag: Record<string, unknown> = structuredClone(files), path = `units/${unitId}.json`, unit = bag[path]; if (!isObj(unit)) return bag;
   const drop = new Set<string>(); for (const sid of list(unit["setupIds"])) { const setup = typeof sid === "string" ? bag[`setups/${sid}.json`] : undefined; if (typeof sid === "string" && isObj(setup) && setup["behaviourId"] === behaviourId) drop.add(sid); }
-  const ids = list(unit["setupIds"]).filter((id) => typeof id === "string" && !drop.has(id)); if (!on) { bag[path] = { ...unit, setupIds: ids }; return bag; }
+  const ids = list(unit["setupIds"]).filter((id) => typeof id === "string" && !drop.has(id)); if (!on) { bag[path] = { ...unit, setupIds: ids }; withSlice(bag, behaviourId); return bag; }
   const base = shell(files); if (base === null) return bag;
   const id = "setup_diagram", catalogue = isObj(base["catalogue"]) ? { ...base["catalogue"] } : {}, empty: Obj = {};
   catalogue["rev"] = 0; base["id"] = id; base["behaviourId"] = behaviourId; base["answers"] = answers === null ? empty : answers; base["catalogue"] = catalogue;
