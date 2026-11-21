@@ -28,11 +28,11 @@ function readDir(rel: string): Record<string, string> {
 function readJson(rel: string): Record<string, unknown> {
   return Object.fromEntries(Object.entries(readDir(rel)).map(([path, text]) => [path, JSON.parse(text) as unknown]));
 }
-test("openProject on a saved demo has no demo dressing and Empty cannot open", () => {
+test("openProject on a saved demo has no demo dressing and the empty template plays", () => {
   const saved = openProject(readJson("data/templates/demo.tileproj"));
   assert.equal(saved.docs?.looks.canopy.length, 0); assert.equal(saved.docs?.looks.braziers.length, 0);
   const empty = openProject(readJson("data/templates/empty.tileproj"));
-  assert.equal(empty.docs, null); assert.equal(empty.error, "play: army");
+  assert.equal(empty.docs === null, false); assert.equal(empty.error, "");
   const demo = openBundled();
   assert.deepEqual(demo.docs?.looks.canopy, DEMO_LOOKS.canopy); assert.deepEqual(demo.docs?.looks.braziers, DEMO_LOOKS.braziers);
   const staged = openProject(loadFixture(), "stage_01JDAS00000000000000000001");
@@ -44,7 +44,7 @@ test("test-launch: Empty stays in the maker", async () => {
   let started = false;
   const got = await launchTest({ store, id, stored, next: stored, rev: storedRev(readJson("data/templates/empty.tileproj")), from: "project", now: NOW, start() { started = true; } });
   assert.equal(started, false); assert.equal(got.ok, false); if (got.ok) return;
-  assert.equal(got.lines[0], "This project has no unit roster yet, so it can't be played");
+  assert.equal(got.lines[0], "Place a unit on this stage to test it.");
 });
 test("test-launch: start throws, maker stays", async () => {
   const id = "project_01JDAP00000000000000000001", store = memoryStore(), stored = readDir("data/templates/demo.tileproj");

@@ -1,4 +1,5 @@
 import { readProject, type ProjectFiles } from "../../src/project/load/index.ts";
+import { playLine } from "../../src/editor/project/test-gate.ts";
 import { inOrthogonalReach } from "../../src/rules/battle/range.ts";
 import { sliceDoc } from "../project/slice-of.ts";
 import { playDocsOf } from "../play-stage/project.ts";
@@ -39,4 +40,4 @@ export function diagramOf(files: ProjectFiles, unitId: string, behaviourId: stri
 }
 export function diagramCells(files: ProjectFiles, unitId: string, behaviourId: string, answers: Obj | null): readonly ReachCell[] { const view = diagramOf(files, unitId, behaviourId, answers); if ("reason" in view) throw new Error(view.reason); return view.cells; }
 const amp = String.fromCharCode(38), esc = (t: string): string => t.replace(/[&<>"']/g, (ch) => ch === amp ? amp + "amp;" : ch === "<" ? amp + "lt;" : ch === ">" ? amp + "gt;" : ch === '"' ? amp + "quot;" : amp + "#39;");
-export function diagramHtml(view: DiagramView): string { return "reason" in view ? `<p class="sub" data-diagram="off">${esc(view.reason)}</p>` : `<div class="reach-grid" role="img" aria-label="Reach">${view.cells.map((cell) => `<span${cell.on ? ' class="on"' : ""}>${cell.on ? "reach" : ""}</span>`).join("")}</div>`; }
+export function diagramHtml(view: DiagramView): string { return "reason" in view ? `<p class="sub" data-diagram="off">${esc(playLine(view.reason))}</p>` : `<div class="reach-grid" role="img" aria-label="Reach">${view.cells.map((cell) => `<span${cell.on ? ' class="on"' : ""}>${cell.on ? "reach" : ""}</span>`).join("")}</div>`; }

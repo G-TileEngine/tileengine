@@ -4,4 +4,5 @@ export const WIRED: Readonly<Record<string, readonly string[]>> = {
   "basic-attack": ["reach_mode", "custom_ns", "custom_ew"],
   "line-shot": ["range", "damage"],
   talk: ["line"],
+  "win-condition": ["wipe_wins"],
 };

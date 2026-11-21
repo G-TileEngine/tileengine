@@ -1,6 +1,1839 @@
 {
   "kind": "catalogue-slice",
   "formatVersion": 1,
-  "catalogue_rev": 1,
-  "behaviours": []
+  "schema_version": 3,
+  "catalogue_rev": 30,
+  "gates": {
+    "uses-card-hand": {
+      "any": [
+        {
+          "knob": "ability-presentation.shortcut",
+          "eq": "all-cards"
+        },
+        {
+          "all": [
+            {
+              "knob": "ability-presentation.shortcut",
+              "eq": "custom"
+            },
+            {
+              "any": [
+                {
+                  "knob": "ability-presentation.basic_style",
+                  "eq": "card-hand"
+                },
+                {
+                  "knob": "ability-presentation.spells_style",
+                  "eq": "card-hand"
+                },
+                {
+                  "knob": "ability-presentation.custom_groups",
+                  "some": {
+                    "field": "style",
+                    "eq": "card-hand"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "uses-menu": {
+      "any": [
+        {
+          "knob": "ability-presentation.shortcut",
+          "eq": "all-menu"
+        },
+        {
+          "all": [
+            {
+              "knob": "ability-presentation.shortcut",
+              "eq": "custom"
+            },
+            {
+              "any": [
+                {
+                  "knob": "ability-presentation.basic_style",
+                  "eq": "unit-action-menu"
+                },
+                {
+                  "knob": "ability-presentation.spells_style",
+                  "eq": "unit-action-menu"
+                },
+                {
+                  "knob": "ability-presentation.custom_groups",
+                  "some": {
+                    "field": "style",
+                    "eq": "unit-action-menu"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "behaviours": [
+    {
+      "id": "unit-roster",
+      "name": "Army Roster and Opening Formation",
+      "group": "Objectives & Win",
+      "summary": "Which pieces a side starts with, their health and attack, and where they stand on turn one (own back rank, or front rank).",
+      "scope": "grid-tactics",
+      "starter_safe": true,
+      "knobs": [
+        {
+          "id": "board_cols",
+          "label": "Board columns",
+          "type": "slider",
+          "default": 6,
+          "min": 4,
+          "max": 9,
+          "step": 1,
+          "options": null,
+          "proposed": [
+            "min",
+            "max"
+          ],
+          "status": {
+            "default": "src",
+            "min": "PROPOSED",
+            "max": "PROPOSED",
+            "options": null,
+            "step": "src"
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": 6
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": []
+        },
+        {
+          "id": "board_rows",
+          "label": "Board rows",
+          "type": "slider",
+          "default": 9,
+          "min": 6,
+          "max": 12,
+          "step": 1,
+          "options": null,
+          "proposed": [
+            "default",
+            "min",
+            "max"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": "PROPOSED",
+            "max": "PROPOSED",
+            "options": null,
+            "step": "ai-match"
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": 9
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          }
+        },
+        {
+          "id": "piece_count",
+          "label": "Pieces per side",
+          "type": "slider",
+          "default": 6,
+          "min": 1,
+          "max": 12,
+          "step": 1,
+          "options": null,
+          "proposed": [
+            "default"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": "ai-match",
+            "max": "ai-match",
+            "options": null,
+            "step": "ai-match"
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": 6
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "board_cols"
+          ],
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          }
+        },
+        {
+          "id": "unit_hp",
+          "label": "Health",
+          "type": "slider",
+          "default": 9,
+          "min": 1,
+          "max": 21,
+          "step": 1,
+          "options": null,
+          "proposed": [
+            "default",
+            "min"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": "PROPOSED",
+            "max": "ai-match",
+            "options": null,
+            "step": "ai-match"
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": 9
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "description": "Set per unit: the roster value is the default for every unit, and a unit can override it in that unit's own stats. L5 difficulty marker l5:'hp' (runtime difficulty.hp; B1 / P1-2).",
+          "per_unit": true,
+          "l5": "hp",
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          }
+        },
+        {
+          "id": "unit_atk",
+          "label": "Attack",
+          "type": "slider",
+          "default": 1,
+          "min": 0,
+          "max": 2,
+          "step": 1,
+          "options": null,
+          "proposed": [
+            "default",
+            "min",
+            "max"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": "PROPOSED",
+            "max": "PROPOSED",
+            "options": null,
+            "step": "ai-match"
+          },
+          "rev": 1,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": 1
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "description": "Set per unit: the roster value is the default for every unit, and a unit can override it in that unit's own stats.",
+          "per_unit": true,
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "Ruling 7: docs-only default accepted as a PROPOSED adjustable design value (source doc kept)."
+          }
+        },
+        {
+          "id": "opening_row",
+          "label": "Opening row",
+          "type": "picker",
+          "default": "back",
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": [
+            {
+              "value": "back",
+              "label": "Six on the far rank"
+            },
+            {
+              "value": "second",
+              "label": "Six on the second rank"
+            },
+            {
+              "value": "front",
+              "label": "Five on the front rank (deck shape)",
+              "reads": {
+                "from": "deck",
+                "ref": "deck.openingFront",
+                "deck_from": "hand-and-draw.deck",
+                "type": "UnitId[]",
+                "length": 5,
+                "order": "west-to-east",
+                "optional": true,
+                "malformed": "not an array, or not exactly 5 entries",
+                "if_missing": {
+                  "use": "back",
+                  "warning": "openingShapeMissing",
+                  "once_per": "deck",
+                  "warning_source": "/workspace/tileengine/data/project-format.md §6.8 (openingFront row line 1126; rules lines 1135-1144; warning table line 1539); /workspace/tileengine/data/setup-format.md §12.4i (lines 2211-2216) and §12.5 L44 (line 2223)"
+                },
+                "bad_id": {
+                  "warning": "unknownRef",
+                  "slot": "empty",
+                  "note": "the other four are placed"
+                },
+                "type_source": "/workspace/tileengine/data/core-types.ts CoreDeck (line 194, MAY-MOVE): openingFront?: ReadonlyArray<UnitId> (line 203); UnitId = string (line 39)"
+              }
+            }
+          ],
+          "proposed": [],
+          "status": {
+            "default": "CEO-ruling",
+            "min": null,
+            "max": null,
+            "options": "CEO-ruling",
+            "step": null
+          },
+          "rev": 16,
+          "default_history": [
+            {
+              "rev": 1,
+              "default": "back"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "description": "front reads the deck field openingFront (exactly five unit ids, west to east) of the bot side's deck (its effective hand-and-draw.deck). No deck, no openingFront, or a malformed one (not an array, or not exactly 5 entries) opens back with the warning openingShapeMissing, once per deck (once in total with no deck). An id that isn't a unit is unknownRef and that slot stays empty; the other four are placed. back and second ignore openingFront. Source: DSK project-format r14 §6.8, setup-format §12.4i/§12.5 (L44); type UnitId[] in core-types.ts CoreDeck (MAY-MOVE). DSK docs pinned to catalogue rev 17 / 544 knobs.",
+          "ruling_note": "rev 17: field and warning named by DSK (project-format r14 §6.8; setup-format §12.5 L44), replacing PENDING-DSK-NAME and the PROPOSED name frontShapeMissing.",
+          "ruling": {
+            "by": "CEO",
+            "date": "2026-11-09",
+            "note": "relayed via CoS/DSK L44; user's choice"
+          }
+        },
+        {
+          "id": "clip_cues",
+          "label": "Hit flash and attack lunge for units without clips",
+          "type": "toggle",
+          "default": true,
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [
+            "default"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 8,
+          "default_history": [
+            {
+              "rev": 8,
+              "default": true
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "proposed_options": [
+            false
+          ]
+        },
+        {
+          "id": "team_colour",
+          "label": "Team colour",
+          "type": "colour",
+          "default": null,
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [
+            "default"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 9,
+          "default_history": [
+            {
+              "rev": 8,
+              "default": "#badcff"
+            },
+            {
+              "rev": 9,
+              "default": null
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "ability-presentation.team_colours"
+          ],
+          "nullable": true,
+          "ruling": {
+            "by": "DSK",
+            "date": "2026-11-09",
+            "note": "L30: nullable, default null = palette; one source of truth (CoS ruling 'project default, army override' unchanged in substance)"
+          }
+        }
+      ],
+      "presets": [
+        {
+          "id": "btf-warrior",
+          "label": "Warrior (BTF)",
+          "deck": "Before The Fall",
+          "cards": "-",
+          "overrides": {
+            "unit_hp": 9,
+            "unit_atk": 1
+          },
+          "status": "src",
+          "source": "/workspace/g-tile-engine/src/chess/game/towerChess.ts:92 WARRIOR_HP = 9, stampTowerArmy :931-933 hp/ad; towerStrike.ts:33 WARRIOR_DMG = 1, statueStrike :214"
+        },
+        {
+          "id": "btf-archer",
+          "label": "Archer (BTF)",
+          "deck": "Before The Fall",
+          "cards": "-",
+          "overrides": {
+            "unit_hp": 6,
+            "unit_atk": 2
+          },
+          "status": "src",
+          "source": "/workspace/g-tile-engine/src/chess/game/towerChess.ts:92 BACK_HP = 6, stampTowerArmy :934-937 isArcher hp/ad; towerStrike.ts:34 RANGER_DMG = 2, statueStrike :218"
+        },
+        {
+          "id": "btf-mage",
+          "label": "Mage (BTF)",
+          "deck": "Before The Fall",
+          "cards": "-",
+          "overrides": {
+            "unit_hp": 6,
+            "unit_atk": 2
+          },
+          "status": "src",
+          "source": "/workspace/g-tile-engine/src/chess/game/towerChess.ts:92 BACK_HP = 6, stampTowerArmy :934-937 isMage hp/ad; towerStrike.ts:35 BACK_DMG = 2, statueStrike :219"
+        },
+        {
+          "id": "btf-cleric",
+          "label": "Cleric (BTF)",
+          "deck": "Before The Fall",
+          "cards": "-",
+          "overrides": {
+            "unit_hp": 5,
+            "unit_atk": 1
+          },
+          "status": "src",
+          "source": "/workspace/g-tile-engine/src/chess/game/towerChess.ts:92 CLERIC_HP = 5, stampTowerArmy :927-929 hp/ad; towerStrike.ts statueStrike :217 return 1 (cleric is not in the :33-35 damage constants)"
+        }
+      ],
+      "renamed_from": [],
+      "retired_knobs": [
+        {
+          "id": "team_colour_override",
+          "since_rev": 9,
+          "reason": "Folded into the nullable team_colour (null = palette) (setup-format r8 §12.7 Q5, L30).",
+          "fold": {
+            "into": "team_colour",
+            "when_false": "reset"
+          }
+        },
+        {
+          "id": "one_unit_per_tile",
+          "since_rev": 15,
+          "reason": "Cell density lives in the project setting settings.occupancy (project-format r14 §3.1; Engine Architect 2026-11-09).",
+          "convert": {
+            "to_setting": "settings.occupancy",
+            "map": {
+              "true": "strict1",
+              "false": "softStack"
+            },
+            "scope": "project-level unit-roster setup only; stage values kept inactive with occupancyStageValueIgnored",
+            "old_answer": "kept-inactive"
+          }
+        }
+      ],
+      "menu_order": [
+        {
+          "question": "Board size?",
+          "knob_ids": [
+            "board_cols",
+            "board_rows"
+          ]
+        },
+        {
+          "question": "How many pieces?",
+          "knob_ids": [
+            "piece_count"
+          ]
+        },
+        {
+          "question": "Health and attack?",
+          "knob_ids": [
+            "unit_hp",
+            "unit_atk"
+          ]
+        },
+        {
+          "question": "Where do they start?",
+          "knob_ids": [
+            "opening_row"
+          ]
+        },
+        {
+          "question": "Flash and lunge units that have no hit or attack clips?",
+          "knob_ids": [
+            "clip_cues"
+          ]
+        },
+        {
+          "question": "Team colour for this army (blank = project palette)",
+          "knob_ids": [
+            "team_colour"
+          ]
+        }
+      ],
+      "banned_combos": [
+        {
+          "id": "unit-roster.piece-count-gt-board-cols",
+          "when": {
+            "knob": "piece_count",
+            "op": "gt",
+            "value": "$board_cols"
+          },
+          "disable": {
+            "knob": "piece_count"
+          },
+          "reason": "Pieces can't fit on one opening row.",
+          "note": "value refers to another knob ($board_cols)"
+        }
+      ],
+      "composable_as": [],
+      "resolved_conflicts": [
+        {
+          "text": "Bot opening: BA 'five front A,M,C,C,W' and Terrain 'five front W,W,W,M,M' vs match-levels 'opens six on far rank'.",
+          "ruling": {
+            "by": "CEO",
+            "date": "2026-11-09",
+            "note": "relayed via CoS/DSK L44; user's choice: unit-roster.opening_row back (default) | second | front (per-deck five-piece shape)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "terrain",
+      "name": "Terrain (what each tile id means)",
+      "group": "Map & Terrain",
+      "summary": "The single home for tile meanings: for each logic tile id, whether units can stand, land or spawn there, whether landing kills, whether a push can enter, and whether it slows or trips. Edge walls (earth lines) are not tiles in the code: they sit on a tile's n/e/s/w edge and live in Barrier Line. Walls on tile edges (the map's logic.edges) always block movement and adjacency across that edge: that is core grid behaviour with no knob. The two wall knobs only decide whether walls also block line of sight and shots.",
+      "scope": "grid-tactics",
+      "starter_safe": true,
+      "knobs": [
+        {
+          "id": "tile_types",
+          "label": "Tile types",
+          "type": "list",
+          "default": [
+            {
+              "id": "floor",
+              "label": "Floor",
+              "open": true,
+              "kills_on_landing": false,
+              "push_can_enter": true,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "fallen",
+              "label": "Fallen tile (abyss)",
+              "open": false,
+              "kills_on_landing": true,
+              "push_can_enter": true,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "flask",
+              "label": "Flask tile",
+              "open": false,
+              "kills_on_landing": false,
+              "push_can_enter": false,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "rising",
+              "label": "Rising tile (a unit is coming back here)",
+              "open": false,
+              "kills_on_landing": false,
+              "push_can_enter": false,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "tide",
+              "label": "Tide mark",
+              "open": false,
+              "kills_on_landing": false,
+              "push_can_enter": false,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "warp-mark",
+              "label": "Warp mark",
+              "open": false,
+              "kills_on_landing": false,
+              "push_can_enter": false,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "sword-mark",
+              "label": "Sword fade-in tile",
+              "open": false,
+              "kills_on_landing": false,
+              "push_can_enter": false,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "boss-cover",
+              "label": "Portal boss tile",
+              "open": false,
+              "kills_on_landing": false,
+              "push_can_enter": false,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "vines",
+              "label": "Vines",
+              "open": true,
+              "kills_on_landing": false,
+              "push_can_enter": true,
+              "slows_move": true,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "trap",
+              "label": "Trap",
+              "open": true,
+              "kills_on_landing": false,
+              "push_can_enter": true,
+              "slows_move": false,
+              "trips": true,
+              "buildable": false
+            },
+            {
+              "id": "water",
+              "label": "Water",
+              "open": false,
+              "kills_on_landing": false,
+              "push_can_enter": false,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "lava",
+              "label": "Lava",
+              "open": true,
+              "kills_on_landing": true,
+              "push_can_enter": true,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "wall-block",
+              "label": "Wall block",
+              "open": false,
+              "kills_on_landing": false,
+              "push_can_enter": false,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "path",
+              "label": "Path",
+              "open": true,
+              "kills_on_landing": false,
+              "push_can_enter": true,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            },
+            {
+              "id": "dirt",
+              "label": "Dirt",
+              "open": true,
+              "kills_on_landing": false,
+              "push_can_enter": true,
+              "slows_move": false,
+              "trips": false,
+              "buildable": false
+            }
+          ],
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [],
+          "status": {
+            "default": "src",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 23,
+          "default_history": [
+            {
+              "rev": 7,
+              "default": [
+                {
+                  "id": "floor",
+                  "label": "Floor",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "fallen",
+                  "label": "Fallen tile (abyss)",
+                  "open": false,
+                  "kills_on_landing": true,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "flask",
+                  "label": "Flask tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "rising",
+                  "label": "Rising tile (a unit is coming back here)",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "tide",
+                  "label": "Tide mark",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "warp-mark",
+                  "label": "Warp mark",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "sword-mark",
+                  "label": "Sword fade-in tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "boss-cover",
+                  "label": "Portal boss tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "vines",
+                  "label": "Vines",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": true,
+                  "trips": false
+                },
+                {
+                  "id": "trap",
+                  "label": "Trap",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": true
+                }
+              ]
+            },
+            {
+              "rev": 9,
+              "default": [
+                {
+                  "id": "floor",
+                  "label": "Floor",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "fallen",
+                  "label": "Fallen tile (abyss)",
+                  "open": false,
+                  "kills_on_landing": true,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "flask",
+                  "label": "Flask tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "rising",
+                  "label": "Rising tile (a unit is coming back here)",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "tide",
+                  "label": "Tide mark",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "warp-mark",
+                  "label": "Warp mark",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "sword-mark",
+                  "label": "Sword fade-in tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "boss-cover",
+                  "label": "Portal boss tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "vines",
+                  "label": "Vines",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": true,
+                  "trips": false
+                },
+                {
+                  "id": "trap",
+                  "label": "Trap",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": true
+                },
+                {
+                  "id": "water",
+                  "label": "Water",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "lava",
+                  "label": "Lava",
+                  "open": true,
+                  "kills_on_landing": true,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "wall-block",
+                  "label": "Wall block",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false
+                }
+              ]
+            },
+            {
+              "rev": 10,
+              "default": [
+                {
+                  "id": "floor",
+                  "label": "Floor",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "fallen",
+                  "label": "Fallen tile (abyss)",
+                  "open": false,
+                  "kills_on_landing": true,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "flask",
+                  "label": "Flask tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "rising",
+                  "label": "Rising tile (a unit is coming back here)",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "tide",
+                  "label": "Tide mark",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "warp-mark",
+                  "label": "Warp mark",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "sword-mark",
+                  "label": "Sword fade-in tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "boss-cover",
+                  "label": "Portal boss tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "vines",
+                  "label": "Vines",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": true,
+                  "trips": false
+                },
+                {
+                  "id": "trap",
+                  "label": "Trap",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": true
+                },
+                {
+                  "id": "water",
+                  "label": "Water",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "lava",
+                  "label": "Lava",
+                  "open": true,
+                  "kills_on_landing": true,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false
+                },
+                {
+                  "id": "wall-block",
+                  "label": "Wall block",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false
+                }
+              ]
+            },
+            {
+              "rev": 15,
+              "default": [
+                {
+                  "id": "floor",
+                  "label": "Floor",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "fallen",
+                  "label": "Fallen tile (abyss)",
+                  "open": false,
+                  "kills_on_landing": true,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "flask",
+                  "label": "Flask tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "rising",
+                  "label": "Rising tile (a unit is coming back here)",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "tide",
+                  "label": "Tide mark",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "warp-mark",
+                  "label": "Warp mark",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "sword-mark",
+                  "label": "Sword fade-in tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "boss-cover",
+                  "label": "Portal boss tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "vines",
+                  "label": "Vines",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": true,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "trap",
+                  "label": "Trap",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": true,
+                  "buildable": false
+                },
+                {
+                  "id": "water",
+                  "label": "Water",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "lava",
+                  "label": "Lava",
+                  "open": true,
+                  "kills_on_landing": true,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "wall-block",
+                  "label": "Wall block",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                }
+              ]
+            },
+            {
+              "rev": 23,
+              "default": [
+                {
+                  "id": "floor",
+                  "label": "Floor",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "fallen",
+                  "label": "Fallen tile (abyss)",
+                  "open": false,
+                  "kills_on_landing": true,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "flask",
+                  "label": "Flask tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "rising",
+                  "label": "Rising tile (a unit is coming back here)",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "tide",
+                  "label": "Tide mark",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "warp-mark",
+                  "label": "Warp mark",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "sword-mark",
+                  "label": "Sword fade-in tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "boss-cover",
+                  "label": "Portal boss tile",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "vines",
+                  "label": "Vines",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": true,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "trap",
+                  "label": "Trap",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": true,
+                  "buildable": false
+                },
+                {
+                  "id": "water",
+                  "label": "Water",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "lava",
+                  "label": "Lava",
+                  "open": true,
+                  "kills_on_landing": true,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "wall-block",
+                  "label": "Wall block",
+                  "open": false,
+                  "kills_on_landing": false,
+                  "push_can_enter": false,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "path",
+                  "label": "Path",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                },
+                {
+                  "id": "dirt",
+                  "label": "Dirt",
+                  "open": true,
+                  "kills_on_landing": false,
+                  "push_can_enter": true,
+                  "slows_move": false,
+                  "trips": false,
+                  "buildable": false
+                }
+              ]
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "description": "Built-ins water, lava and wall-block are CONFIRMED engine defaults (Engine Architect 2026-11-09, L27) and the defaultTileType targets of the procedural recipes (project-format r13 section 6.2.2 / 6.4): water@2 and murk@1 give water, lava@2 gives lava, wall gives wall-block, ice@1 gives floor in v1 (slippery ice is a future tile type), the rest give floor. buildable (item field, rev 15, PROPOSED, modes: td; v1: false): whether a structure may be placed on the tile. False on every built-in, floor included: grid tactics has no building and BTF never places structures, so false keeps tactics unchanged; a TD project sets it on its own tile types (Engine Architect / Modes Designer MODES-v2 §3, DSK L41). An added item field, so stored lists are not flagged. Rev 23 (DSK L45): built-ins path and dirt (walkable land, like floor, not buildable); 15 reserved items. wall-block stays the only catalogue spelling; wall_block is a reader alias in the format only (setup-format §2.9.3 rule 7). Existing answers drift by §2.9.3 rules 4 and 6 (appended to the effective value, nothing written).",
+          "item_rulings": {
+            "water": {
+              "by": "Engine Architect",
+              "date": "2026-11-09",
+              "note": "L27 confirmed: open false, kills_on_landing false, push_can_enter false, slows_move false, trips false"
+            },
+            "lava": {
+              "by": "Engine Architect",
+              "date": "2026-11-09",
+              "note": "L27 confirmed: open true, kills_on_landing true, push_can_enter true, slows_move false, trips false"
+            },
+            "wall-block": {
+              "by": "Engine Architect",
+              "date": "2026-11-09",
+              "note": "L27 confirmed: open false, kills_on_landing false, push_can_enter false, slows_move false, trips false"
+            },
+            "path": {
+              "by": "Engine Architect",
+              "date": "2026-11-12",
+              "note": "L45: built-in walkable land path and dirt (EUX r65 Q-A1/Q-A4); same walkability as floor, not buildable"
+            },
+            "dirt": {
+              "by": "Engine Architect",
+              "date": "2026-11-12",
+              "note": "L45: built-in walkable land path and dirt (EUX r65 Q-A1/Q-A4); same walkability as floor, not buildable"
+            }
+          },
+          "item": {
+            "open": {
+              "type": "toggle",
+              "default": true
+            },
+            "kills_on_landing": {
+              "type": "toggle",
+              "default": false
+            },
+            "push_can_enter": {
+              "type": "toggle",
+              "default": true
+            },
+            "slows_move": {
+              "type": "toggle",
+              "default": false
+            },
+            "trips": {
+              "type": "toggle",
+              "default": false
+            },
+            "buildable": {
+              "type": "toggle",
+              "default": false
+            }
+          },
+          "reserved_ids": [
+            "floor",
+            "fallen",
+            "flask",
+            "rising",
+            "tide",
+            "warp-mark",
+            "sword-mark",
+            "boss-cover",
+            "vines",
+            "trap",
+            "water",
+            "lava",
+            "wall-block",
+            "path",
+            "dirt"
+          ]
+        },
+        {
+          "id": "lethal_landing_scope",
+          "label": "Deadly tiles kill on",
+          "type": "picker",
+          "default": "any",
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": [
+            {
+              "value": "any",
+              "label": "Any landing"
+            },
+            {
+              "value": "forced_only",
+              "label": "Only forced landings (push, pull)"
+            }
+          ],
+          "proposed": [
+            "default",
+            "options"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": "PROPOSED",
+            "step": null
+          },
+          "rev": 14,
+          "default_history": [
+            {
+              "rev": 14,
+              "default": "any"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "tile_types"
+          ],
+          "description": "Which landings on a kills_on_landing tile kill. UX: the move highlight marks lethal cells and asks to confirm; the AI avoids them unless the scope or rules make it worthwhile.",
+          "ruling": {
+            "by": "Engine Architect",
+            "date": "2026-11-09",
+            "note": "lethal landing scope: any (default) or forced_only; shipped as DSK L36"
+          }
+        },
+        {
+          "id": "wall_blocks_los",
+          "label": "Walls block line of sight",
+          "type": "toggle",
+          "default": true,
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [],
+          "status": {
+            "default": "src",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 8,
+          "default_history": [
+            {
+              "rev": 8,
+              "default": true
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "proposed_options": [
+            false
+          ]
+        },
+        {
+          "id": "wall_blocks_shots",
+          "label": "Walls block shots",
+          "type": "toggle",
+          "default": true,
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [],
+          "status": {
+            "default": "src",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 8,
+          "default_history": [
+            {
+              "rev": 8,
+              "default": true
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "proposed_options": [
+            false
+          ]
+        },
+        {
+          "id": "push_into_walls",
+          "label": "Forced moves slam into walls",
+          "type": "toggle",
+          "default": false,
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [
+            "default"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 10,
+          "default_history": [
+            {
+              "rev": 10,
+              "default": false
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "description": "Slams into walls. On: a forced move that meets a wall-block or an edge wall stops on the last open cell and the core emits pushBlocked {unit, blocker: wall-block | edge | unit, cellsRemaining}; push-knockback's wall_slam_damage applies. Off: it still stops short, with no event.",
+          "ruling_note": "Engine Architect 2026-11-09 supersedes the rev-10 'wall-block tiles only' reading: push_into_walls now covers edge walls too (for the event). No unit enters a closed tile either way (invariant).",
+          "ruling": {
+            "by": "DSK",
+            "date": "2026-11-09",
+            "note": "L34: wall-block blocks ordinary moves and all forced movement"
+          }
+        },
+        {
+          "id": "lanes_enabled",
+          "label": "Board has lanes",
+          "type": "toggle",
+          "default": false,
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": null,
+          "proposed": [],
+          "status": {
+            "default": "CoS-default",
+            "min": null,
+            "max": null,
+            "options": null,
+            "step": null
+          },
+          "rev": 14,
+          "default_history": [
+            {
+              "rev": 14,
+              "default": false
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [],
+          "ruling": {
+            "by": "CoS",
+            "date": "2026-11-09",
+            "note": "lanes are an optional tile-region tag plus a rule hook, off by default"
+          }
+        },
+        {
+          "id": "lane_axis",
+          "label": "Lanes run along",
+          "type": "picker",
+          "default": "row",
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": [
+            {
+              "value": "row",
+              "label": "Rows (left to right)"
+            },
+            {
+              "value": "column",
+              "label": "Columns (top to bottom)"
+            }
+          ],
+          "proposed": [],
+          "status": {
+            "default": "src",
+            "min": null,
+            "max": null,
+            "options": "src",
+            "step": null
+          },
+          "rev": 14,
+          "default_history": [
+            {
+              "rev": 14,
+              "default": "row"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "lanes_enabled"
+          ],
+          "active_when": {
+            "knob": "lanes_enabled",
+            "eq": true
+          }
+        },
+        {
+          "id": "lane_count",
+          "label": "Number of lanes",
+          "type": "slider",
+          "default": 3,
+          "min": 1,
+          "max": 9,
+          "step": 1,
+          "options": null,
+          "proposed": [
+            "min"
+          ],
+          "status": {
+            "default": "src",
+            "min": "PROPOSED",
+            "max": "ai-match",
+            "options": null,
+            "step": "ai-match"
+          },
+          "rev": 14,
+          "default_history": [
+            {
+              "rev": 14,
+              "default": 3
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "lanes_enabled"
+          ],
+          "active_when": {
+            "knob": "lanes_enabled",
+            "eq": true
+          }
+        },
+        {
+          "id": "lane_field_lanes",
+          "label": "Lane fields can land on",
+          "type": "picker",
+          "default": "centre-only",
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": [
+            {
+              "value": "centre-only",
+              "label": "The middle lane only"
+            },
+            {
+              "value": "any",
+              "label": "Any lane"
+            }
+          ],
+          "proposed": [],
+          "status": {
+            "default": "src",
+            "min": null,
+            "max": null,
+            "options": "src",
+            "step": null
+          },
+          "rev": 14,
+          "default_history": [
+            {
+              "rev": 14,
+              "default": "centre-only"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "lanes_enabled"
+          ],
+          "description": "With an even lane_count, 'centre-only' covers both centre lanes (n/2 and n/2+1) (Engine Architect, DSK L43).",
+          "active_when": {
+            "knob": "lanes_enabled",
+            "eq": true
+          }
+        },
+        {
+          "id": "centre_lane",
+          "label": "Centre lane (even lane counts)",
+          "type": "picker",
+          "default": "lower",
+          "min": null,
+          "max": null,
+          "step": null,
+          "options": [
+            {
+              "value": "lower",
+              "label": "Lower (n/2)"
+            },
+            {
+              "value": "upper",
+              "label": "Upper (n/2 + 1)"
+            }
+          ],
+          "proposed": [
+            "default",
+            "options"
+          ],
+          "status": {
+            "default": "PROPOSED",
+            "min": null,
+            "max": null,
+            "options": "PROPOSED",
+            "step": null
+          },
+          "rev": 15,
+          "default_history": [
+            {
+              "rev": 15,
+              "default": "lower"
+            }
+          ],
+          "renamed_from": [],
+          "depends_on": [
+            "lanes_enabled",
+            "lane_count"
+          ],
+          "description": "Used where a behaviour needs one centre lane. lane_field_lanes 'centre-only' covers both centre lanes.",
+          "ruling": {
+            "by": "Engine Architect",
+            "date": "2026-11-09",
+            "note": "L43 even lane counts: a single-centre picker, default lower"
+          },
+          "active_when": {
+            "knob": "lanes_enabled",
+            "eq": true
+          }
+        }
+      ],
+      "presets": [],
+      "events": [
+        {
+          "id": "landedOn",
+          "when": "a move ends on a tile (normal, forced, warp/teleport, summon/placement); passing over never counts (EA 2026-11-09)"
+        },
+        {
+          "id": "pushBlocked",
+          "when": "push_into_walls on and a forced move meets a wall-block, an edge wall or a unit: {unit, blocker, cellsRemaining} (EA 2026-11-09)"
+        },
+        {
+          "id": "enteredLane",
+          "when": "lanes_enabled and a unit's move ends in another lane: {unit, lane} (rule hook, CoS 2026-11-09)"
+        }
+      ],
+      "renamed_from": [],
+      "retired_knobs": [],
+      "menu_order": [
+        {
+          "question": "What does each tile type mean?",
+          "knob_ids": [
+            "tile_types",
+            "lethal_landing_scope"
+          ]
+        },
+        {
+          "question": "Do walls block line of sight, shots and forced moves?",
+          "knob_ids": [
+            "wall_blocks_los",
+            "wall_blocks_shots",
+            "push_into_walls"
+          ]
+        },
+        {
+          "question": "Does the board have lanes?",
+          "knob_ids": [
+            "lanes_enabled"
+          ]
+        },
+        {
+          "question": "How are the lanes laid out?",
+          "knob_ids": [
+            "lane_axis",
+            "lane_count",
+            "lane_field_lanes",
+            "centre_lane"
+          ]
+        }
+      ],
+      "banned_combos": [],
+      "closure": "always",
+      "bans_note": "None known: the rev-13 coverage audit found no invalid knob combination in src or the docs (not an exhaustive proof).",
+      "composable_as": [],
+      "invariants": [
+        "No unit ever occupies a tile with open: false (Engine Architect 2026-11-09)."
+      ]
+    }
+  ]
 }

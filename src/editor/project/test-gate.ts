@@ -14,6 +14,9 @@ const SAY: Readonly<Record<string, string>> = {
 export const sentence = (row: ReportRow): string => SAY[row.code] ?? `Can't play: ${row.code}`;
 /** Map a play-stage throw (`play: seed`, `play: army`) onto the sheet sentence. Other text stays as written. */
 export const playLine = (error: string): string => { const line = SAY[error]; if (line !== undefined) return line; return error === "" ? "Can't play this project" : error; };
+const placed = (v: unknown): number => (Array.isArray(v) ? v.filter((row) => typeof row === "object" && row !== null && !Array.isArray(row)).length : 0);
+/** No team unit on a start tile, no NPC and no enemy. One side only still plays. */
+export const emptyBoard = (docs: { readonly stage: unknown; readonly chosen?: readonly string[] }): boolean => { const stage = docs.stage; if (typeof stage !== "object" || stage === null) return true; const doc = stage as Record<string, unknown>, pool = doc["enemyPool"]; return Math.min(docs.chosen?.length ?? 0, placed(doc["playerSpawns"])) === 0 && placed(doc["neutrals"]) === 0 && placed(typeof pool === "object" && pool !== null ? (pool as Record<string, unknown>)["entries"] : undefined) === 0; };
 export type TestGate = { readonly allowed: true } | { readonly allowed: false; readonly lines: readonly string[] };
 /** Hard rows block. Warnings do not. A read-only load blocks even when the report is empty. */
 export function testGate(report: readonly ReportRow[], readOnly: boolean): TestGate {

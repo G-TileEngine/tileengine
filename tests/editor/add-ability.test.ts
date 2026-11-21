@@ -3,7 +3,7 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { addAbility, addCase, addable, byGoal, updateProject, type AddEntry } from "../../src/editor/unit/add.ts";
+import { addAbility, addCase, addable, byGoal, canUpdate, updateProject, type AddEntry } from "../../src/editor/unit/add.ts";
 import { detach } from "../../src/editor/unit/panel.ts";
 import { readProject } from "../../src/project/load/index.ts";
 import { inOrthogonalReach } from "../../src/rules/battle/range.ts";
@@ -93,7 +93,28 @@ test("diagram comes from the engine", () => {
 });
 test("the Empty template gives that visible reason line", () => {
   const parsed = parseProject(walk("data/templates/empty.tileproj")); assert.equal(parsed.ok, true); if (!parsed.ok) return;
-  const html = diagramHtml(diagramOf(parsed.files, "unit_missing", "line-shot", null));
-  assert.equal(html.includes("play: army"), true); assert.equal(html.includes("reach-grid"), false); assert.equal(html.includes("data-diagram=\"off\""), true);
-  assert.throws(() => diagramCells(parsed.files, "unit_missing", "line-shot", null), (e: unknown) => e instanceof Error && e.message === "play: army");
+  const files = Object.fromEntries(Object.entries(parsed.files).filter(([path]) => !path.startsWith("setups/")));
+  const rootDoc = files["project.json"]; if (isObj(rootDoc) && isObj(rootDoc["project"])) rootDoc["project"] = { ...rootDoc["project"], rules: [] };
+  const html = diagramHtml(diagramOf(files, "unit_missing", "line-shot", null));
+  assert.equal(html.includes("This project has no unit roster yet, so it can&#39;t be played"), true); assert.equal(html.includes("play: army"), false);
+  assert.equal(html.includes("reach-grid"), false); assert.equal(html.includes("data-diagram=\"off\""), true);
+  assert.throws(() => diagramCells(files, "unit_missing", "line-shot", null), (e: unknown) => e instanceof Error && e.message === "play: army");
+});
+test("canUpdate refuses drifted knobs", () => {
+  const bag = demo(), slice = bag["catalogue/slice.json"]; assert.ok(isObj(slice)); if (!isObj(slice)) return;
+  const next = structuredClone(slice), row = (Array.isArray(next["behaviours"]) ? next["behaviours"] : []).find((item) => isObj(item) && item["id"] === "line-shot");
+  const knob = isObj(row) && Array.isArray(row["knobs"]) ? row["knobs"].find((item) => isObj(item) && item["id"] === "range") : undefined;
+  assert.ok(isObj(knob) && typeof knob["max"] === "number"); if (!isObj(knob) || typeof knob["max"] !== "number") return; knob["max"] += 1;
+  assert.equal(canUpdate(next, BUNDLED), false);
+  const rootDoc = bag["project.json"]; assert.ok(isObj(rootDoc) && isObj(rootDoc["project"])); if (!isObj(rootDoc) || !isObj(rootDoc["project"])) return;
+  rootDoc["project"] = { ...rootDoc["project"], catalogueRev: B - 1 }; bag["catalogue/slice.json"] = next;
+  const gate = addCase(bag, BUNDLED); assert.equal(gate.mode, "older"); if (gate.mode !== "older") return;
+  assert.equal(gate.update, false); assert.equal(gate.text, "This project needs a bigger update than the maker can do yet."); assert.equal(updateProject(bag, BUNDLED), null);
+});
+test("addable keeps goal-less primaries", () => {
+  const bundled = structuredClone(BUNDLED);
+  for (const row of bundled.behaviours) { if (row["id"] === "line-shot") delete row["goal"]; if (row["id"] === "basic-attack") row["goal"] = "flying"; }
+  const cards = addable(bundled, WIRED, { setupIds: [] }, {});
+  assert.deepEqual(cards.map((card) => card.id).sort(), ["basic-attack", "line-shot"]);
+  const last = byGoal(cards).at(-1); assert.equal(last?.title, "Other abilities"); assert.deepEqual(last?.cards.map((card) => card.id).sort(), ["basic-attack", "line-shot"]);
 });

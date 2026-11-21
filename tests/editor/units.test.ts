@@ -5,7 +5,8 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { ulid } from "../../src/editor/project/home.ts";
 import { pop, push } from "../../src/editor/stage/undo.ts";
-import { applyRole, deleteUnit, newUnit, renameUnit, resetStat, setStat, shown, unitNameError } from "../../src/editor/unit/units.ts";
+import { applyRole, deleteUnit, newUnit, renameUnit, resetStat, setStat, shown, unitNameError, usedBy } from "../../src/editor/unit/units.ts";
+import { setTeam } from "../../src/editor/unit/team.ts";
 import { readProject } from "../../src/project/load/index.ts";
 import { readUnit } from "../../src/project/read/unit.ts";
 import { parseProject } from "../../tools/maker/project-files.ts";
@@ -40,4 +41,16 @@ test("units", () => {
   const gone = deleteUnit(files, id); assert.equal(gone.ok, true); if (!gone.ok) return; assert.equal(gone.files[`units/${id}.json`], made);
   const before: readonly string[] = [], stack = push([before], before), hidden = [id];
   assert.equal(shown(files, hidden).some((row) => row.id === id), false); const undone = pop(stack); assert.equal(shown(files, undone?.snap ?? hidden).some((row) => row.id === id), true);
+});
+test("on your team writes the loadout", () => {
+  const empty = bag("data/templates/empty.tileproj"), skel = JSON.parse(text("data/templates/unit.json")) as Record<string, unknown>, id = "unit_01TEAM0000000000000000001A";
+  const files: Record<string, Record<string, unknown>> = { ...empty, [`units/${id}.json`]: newUnit(skel, id, "Scout") };
+  const gear = (doc: Record<string, Record<string, unknown>>): { roster: string[]; size: number; required: unknown[] } => (doc["project.json"]?.["project"] as { loadout: { roster: string[]; size: number; required: unknown[] } }).loadout;
+  const stages = JSON.stringify(Object.entries(files).filter(([path]) => path.startsWith("stages/")));
+  assert.equal(gear(files).roster.length, 0);
+  const on = setTeam(files, id, true), once = gear(on);
+  assert.equal(once.roster.at(-1), id); assert.equal(once.roster.length, 1); assert.equal(once.size, 1); assert.deepEqual(once.required, gear(files).required);
+  assert.equal(gear(setTeam(on, id, true)).roster.length, 1); assert.equal(JSON.stringify(Object.entries(on).filter(([path]) => path.startsWith("stages/"))), stages);
+  const off = setTeam(on, id, false); assert.deepEqual(gear(off).roster, []); assert.equal(gear(off).size, 1); assert.equal(deleteUnit(off, id).ok, true); assert.equal(deleteUnit(on, id).ok, false);
+  assert.deepEqual([...usedBy(on, id)], ["Used in your team list. Remove it there first."]);
 });
