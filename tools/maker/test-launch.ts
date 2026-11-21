@@ -1,6 +1,6 @@
 import { prefix, storedRev, type DocText } from "../../src/editor/project/home.ts";
 import { planSave } from "../../src/editor/project/save.ts";
-import { testGate, playLine } from "../../src/editor/project/test-gate.ts";
+import { testGate, playLine, emptyBoard } from "../../src/editor/project/test-gate.ts";
 import { readProject } from "../../src/project/load/index.ts";
 import type { Looks } from "../play-stage/load.ts";
 import { openProject, type PlayOut } from "../play-stage/project.ts";
@@ -22,6 +22,7 @@ function play(input: LaunchBag, text: DocText): Launch {
   if (!gate.allowed) return fail(gate.lines, text, rev);
   const opened = input.stageId === undefined ? openProject(parsed.files) : openProject(parsed.files, input.stageId);
   if (opened.docs === null) return fail([playLine(opened.error)], text, rev);
+  if (emptyBoard(opened.docs)) return fail(["Place a unit on this stage to test it."], text, rev);
   try { input.start(opened.docs, input.aim); } catch (e) { if (!(e instanceof Error)) throw e; return fail([playLine(e.message)], text, rev); }
   showUrl(input.id, stageOf(opened.docs), input.from, input.aim); return { ok: true, files: text, rev };
 }

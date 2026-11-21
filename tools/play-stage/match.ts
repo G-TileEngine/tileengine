@@ -18,9 +18,9 @@ type Btn = { readonly show: boolean; readonly on: boolean };
 export function createMatch(docs?: PlayDocs, moveMs = 200) {
   const body = docs ?? bundledDocs(), play = createPlay(body, moveMs, false), rules = body.rules, lines = body.talk ?? {}, names = body.names ?? {};
   const baseIntend = play.intend, baseSync = play.sync;
-  const win = installOne(WIN_CONDITION, {});
-  if (win.out === null) throw new Error("play: win-condition");
-  const me = play.sides.me, order = play.sides.order, wiped = play.sides.contest ? wipeRule(win.out, order) : null;
+  const win = body.win ?? installOne(WIN_CONDITION, {}).out;
+  if (win === null) throw new Error("play: win-condition");
+  const me = play.sides.me, order = play.sides.order, wiped = play.sides.contest ? wipeRule(win, order) : null;
   let side = me, outcome: Outcome | null = null, talk: Talk | null = null, round = 1, turns = 0, queue: Action[] = [], armed: "unitSelected" | "actMenu" | null = null;
   const spent = new Set<string>();
   const spellList = (id: string): { id: string }[] => {

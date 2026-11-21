@@ -119,7 +119,7 @@ try {
       await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2); await page.waitForTimeout(80);
       await press(page, "Continue"); await press(page, "Create"); await press(page, "Test");
       const got = await page.evaluate(() => ({ app: getComputedStyle(document.querySelector("#app")).display, board: document.querySelector("#board") !== null, text: document.querySelector(".sheet")?.textContent ?? "", test: document.querySelector("[data-act=test]") !== null }));
-      if (got.app === "none" || got.board || !got.text.includes("no unit roster yet") || !got.test) throw new Error(JSON.stringify(got));
+      if (got.app === "none" || got.board || !got.text.includes("Place a unit on this stage to test it") || !got.test) throw new Error(JSON.stringify(got));
     });
     await ctx.close();
   };

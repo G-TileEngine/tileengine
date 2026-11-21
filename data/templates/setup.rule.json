@@ -1,0 +1,21 @@
+{
+  "kind": "behaviour-setup",
+  "formatVersion": 3,
+  "id": "setup_00000000000000000000000000",
+  "rev": 0,
+  "name": "Rule",
+  "behaviourId": "rule",
+  "catalogue": {
+    "rev": 0
+  },
+  "createdAt": "2026-11-21T00:00:00.000Z",
+  "updatedAt": "2026-11-21T00:00:00.000Z",
+  "copiedFrom": null,
+  "answers": {},
+  "orphans": {},
+  "history": {
+    "cap": 200,
+    "baseSeq": 0,
+    "ops": []
+  }
+}
