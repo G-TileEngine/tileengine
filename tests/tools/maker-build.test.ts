@@ -22,7 +22,9 @@ test("maker build stamps, refuses a collision, drops stale folders, and audits t
   const temps = walk(join(maker, stamp, "templates")).map((path) => relative(join(maker, stamp), path).replaceAll("\\", "/")).filter((path) => path !== "templates/files.json").sort();
   assert.deepEqual([...listed.files].sort(), temps);
   for (const file of walk(join(maker, stamp))) { const rel = relative(join(maker, stamp), file).replaceAll("\\", "/"), text = readFileSync(file, "utf8"); assert.equal(rel.endsWith(".ts") || rel.endsWith(".map") || rel.includes("ui-shell") || rel.endsWith("dev.js"), false); if (/\.(js|css|html)$/.test(rel)) assert.equal(/\/\/ dev-only|\bDEV\b|sourceMappingURL|window\.__/.test(text), false); if (rel.endsWith(".js")) for (const spec of text.matchAll(/(?:from|import)\s+"(\.[^"]+)"/g)) assert.equal(statSync(join(dirname(file), spec[1] ?? "")).isFile(), true); }
-  const src = mkdtempSync(join(tmpdir(), "maker-src-")); for (const dir of ["src", "tools", "data", "fixtures"]) cpSync(join(ROOT, dir), join(src, dir), { recursive: true });
+  assert.equal(statSync(join(maker, stamp, "tools/maker/catalogue.json.js")).isFile(), true);
+  assert.equal(walk(join(out, "play-stage")).some((path) => path.endsWith("catalogue.json.js") || path.includes("behaviours.json")), false);
+  const src = mkdtempSync(join(tmpdir(), "maker-src-")); for (const dir of ["src", "tools", "data", "fixtures", "behaviour-library"]) cpSync(join(ROOT, dir), join(src, dir), { recursive: true });
   const proj = join(src, "data/templates/empty.tileproj/project.json"); writeFileSync(proj, readFileSync(proj, "utf8") + "\n");
   const out3 = mkdtempSync(join(tmpdir(), "maker-")); build(out3, SHA, src); const next = readdirSync(join(out3, "maker")).find((name) => name !== "index.html");
   assert.notEqual(next, stamp); writeFileSync(join(maker, stamp, "tokens.css"), "changed"); assert.throws(() => build(out, SHA), /different files/);

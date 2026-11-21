@@ -1,5 +1,7 @@
 import { aimKind, detach, panelOf, resetAnswer, setAnswer, stageFor, type PanelKnob, type PanelModel } from "../../src/editor/unit/panel.ts";
 import { WIRED } from "../../src/rules/behaviours/wired.ts";
+import { addChrome } from "./add-ability.ts";
+import { diagramHtml, diagramOf } from "./unit-diagram.ts";
 import { knobWidget, type KnobSpec } from "./widgets.ts";
 type Obj = Record<string, unknown>;
 const isObj = (v: unknown): v is Obj => typeof v === "object" && v !== null && !Array.isArray(v);
@@ -8,6 +10,7 @@ const amp = String.fromCharCode(38);
 const esc = (t: string): string => t.replace(/[&<>"']/g, (ch) => ch === amp ? amp + "amp;" : ch === "<" ? amp + "lt;" : ch === ">" ? amp + "gt;" : ch === '"' ? amp + "quot;" : amp + "#39;");
 let openId = "";
 export function abilityShut(): void { openId = ""; }
+export function abilityOpen(id: string): void { openId = id; }
 export type AbilityPlay = { readonly unitId: string; readonly abilityId?: string; readonly aim?: "basic" | "spell"; readonly stageId: string };
 export type AbilityEdit = { readonly keep: true } | { readonly play: AbilityPlay } | { readonly bag: Record<string, Obj>; readonly toast: string };
 const specOf = (knob: PanelKnob): KnobSpec => ({ id: knob.id, label: knob.label, type: knob.type, ...(knob.min === undefined ? {} : { min: knob.min }), ...(knob.max === undefined ? {} : { max: knob.max }), ...(knob.step === undefined ? {} : { step: knob.step }), ...(knob.max_len === undefined ? {} : { max_len: knob.max_len }), ...(knob.options === undefined ? {} : { options: knob.options }), ...(knob.builtin === undefined ? {} : { builtin: knob.builtin }) });
@@ -33,7 +36,8 @@ export function abilityView(bag: Record<string, Obj>, unit: Obj, readOnly: boole
   const open = bag[`setups/${openId}.json`];
   if (openId !== "" && isObj(open) && typeof open["behaviourId"] === "string") {
     const model = panelOf(slice, WIRED, open["behaviourId"], isObj(open["answers"]) ? open["answers"] : {});
-    return `<h2>Abilities</h2><button type="button" class="btn ghost" data-act="a:shut">Back</button><h2>${esc(model.name)}</h2>${panelHtml(model)}${rowsOf(bag, unit, slice, openId)}`;
+    const marks = diagramHtml(diagramOf(bag, id, open["behaviourId"], isObj(open["answers"]) ? open["answers"] : null));
+    return `<h2>Abilities</h2><button type="button" class="btn ghost" data-act="a:shut">Back</button><h2>${esc(model.name)}</h2>${panelHtml(model)}${marks}${rowsOf(bag, unit, slice, openId)}`;
   }
   const cards = ids.flatMap((sid) => {
     const setup = bag[`setups/${sid}.json`]; if (!isObj(setup) || typeof setup["behaviourId"] !== "string") return [];
@@ -44,7 +48,7 @@ export function abilityView(bag: Record<string, Obj>, unit: Obj, readOnly: boole
     return [`<div class="card" data-role="card"><button type="button" class="grow card-hit" data-act="a:open:${esc(sid)}"><span class="name">${esc(model.name)}</span></button>${test}${drop}</div>`];
   }).join("");
   const whole = placed === null ? `<p>Place this unit on a stage to test it.</p>` : `<button type="button" class="btn" data-act="a:test">▶ Test</button>`;
-  return `<h2>Abilities</h2>${cards}${whole}`;
+  return `<h2>Abilities</h2>${cards}${addChrome(bag, unit, readOnly)}${whole}`;
 }
 function clamp(knob: PanelKnob, value: number): number {
   const min = knob.min ?? value, max = knob.max ?? value, step = knob.step !== undefined && knob.step > 0 ? knob.step : 1;

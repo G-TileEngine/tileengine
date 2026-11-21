@@ -23,7 +23,7 @@
 .scrim { position: fixed; inset: 0; z-index: 5; background: var(--scrim); display: flex; align-items: flex-end; justify-content: center; }
 .sheet { width: min(390px, 100%); max-height: 85vh; overflow: auto; background: var(--surface); color: var(--ink); border-radius: 16px 16px 12px 12px; box-shadow: var(--sheet-shadow); padding: 16px; display: flex; flex-direction: column; gap: 10px; }
 .sheet h2, .project h2 { margin: 0; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.25; }
-input.name-field { min-height: 48px; border: 2px solid var(--line); border-radius: 12px; padding: 0 12px; background: var(--surface); color: var(--ink); }
+input.name-field { width: 100%; box-sizing: border-box; min-height: 48px; border: 2px solid var(--line); border-radius: 12px; padding: 0 12px; background: var(--surface); color: var(--ink); }
 .test-wrap { margin-top: auto; padding-top: 24px; }
 .test-wrap .btn { width: 100%; min-height: 56px; }
 .dot { display: inline-block; width: 8px; height: 8px; margin-left: 6px; border-radius: 999px; background: var(--accent); }
@@ -43,9 +43,14 @@ input.name-field { min-height: 48px; border: 2px solid var(--line); border-radiu
 .grid.off .cell { border-color: transparent; } .cell.on { outline: 3px solid var(--accent); outline-offset: -3px; } .t-floor { background: var(--surface); } .t-water { background: var(--accent-soft); } .t-wall { background: var(--line); } .t-other { background: var(--surface-2); }
 .cell .who, .cell .pill { font-size: 10px; font-weight: 800; } .pill { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); padding: 1px 3px; }
 .cell .star { position: absolute; top: 0; left: 1px; font-size: 10px; font-weight: 800; line-height: 1.2; color: var(--ink); background: var(--surface); }
-.ability, .ability summary { min-height: 48px; max-width: 100%; display: block; }
+.ability { max-width: 100%; }
+.ability summary { min-height: 48px; max-width: 100%; display: block; }
 details.ability:not([open]) > :not(summary) { display: none; }
 .toast.above { top: 16px; bottom: auto; z-index: 6; }
 .dock { display: flex; flex-direction: column; gap: 8px; padding: 8px 16px calc(8px + env(safe-area-inset-bottom)); background: var(--surface); border-top: 1px solid var(--line); } .undo { width: 100%; }
 .chip { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 48px; padding: 6px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--ink); font-size: 0.78rem; font-weight: 600; }
 input.knob { box-sizing: border-box; display: block; width: 100%; height: 48px; min-height: 48px; min-width: 48px; accent-color: var(--accent); }
+.reach-grid { display: grid; grid-template-columns: repeat(7, 36px); grid-template-rows: repeat(7, 16px); gap: 2px; width: 264px; height: 124px; flex: none; align-self: flex-start; }
+.reach-grid span { width: 36px; height: 16px; min-height: 16px; overflow: hidden; border-radius: 3px; background: var(--surface-2); color: var(--ink); font-size: 8px; line-height: 16px; text-align: center; }
+.reach-grid span.on { background: var(--accent-soft); color: var(--ink); }
+button.card.ability-add { flex-direction: column; align-items: flex-start; }
