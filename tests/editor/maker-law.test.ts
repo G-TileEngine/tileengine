@@ -30,6 +30,9 @@ test("maker law holds, tokens match, and each plant fails", () => {
   assert.match(css, /button, input \{ font: inherit; \}/);
   const fallback = ["tools/maker/test-launch.ts", "tools/play-stage/page.ts"].map((rel) => readFileSync(join(root, rel), "utf8")).join("\n"), plant = /\?\? DEMO|\?\? openBundled\(|\|\| openBundled\(/;
   assert.equal(plant.test(fallback), false); assert.equal(plant.test("return docs ?? openBundled(files)"), true);
+  const addPlant = (text: string): string[] => text.split("\n").flatMap((line, i) => { const goal = /["'](?:move|attack|defend|support|spells|status|ai)["']/.test(line), ident = /["'][a-z0-9]+(?:-[a-z0-9]+)+["']/.test(line); return [/["']group["']/.test(line) ? `${i + 1} group` : "", goal && ident ? `${i + 1} goal-id` : ""].filter((hit) => hit !== ""); });
+  for (const rel of ["src/editor/unit/add.ts", "tools/maker/add-ability.ts"]) assert.deepEqual(addPlant(readFileSync(join(root, rel), "utf8")), [], rel);
+  assert.deepEqual(addPlant('const x = { "line-shot": "attack" };\nconst y = "group";\n'), ["1 goal-id", "2 group"]);
   const dir = mkdtempSync(join(root, "src/editor/stage/law-"));
   for (const [name, text] of [["colour.ts", "export const x = '#fff';\n"], ["kind.ts", "export const a = { \"kind\": \"tile-project\" }; export const b = { \"kind\": \"map\" };\n"], ["doc.ts", "export const v = \"formatVersion\";\n"], ["unquoted.ts", "export const d = { kind: \"behaviour-setup\" };\n"], ["silent.ts", "export function x(): void { try { throw new Error('x'); } catch { /* no */ } }\n"]] as const) { writeFileSync(join(dir, name), text); assert.ok(lawHits(dir).some((hit) => hit.includes(name)), name); rmSync(join(dir, name)); }
   rmSync(dir, { recursive: true });

@@ -16,7 +16,7 @@ export function planSave(stored: DocText, next: DocText, expectedRev: number, no
   if (changed.length === 0) return { ok: true, writes: [] };
   const render = (path: string, manifestDoc: boolean): string => {
     const text = (manifestDoc ? next[path] ?? stored[path] : next[path]) ?? "";
-    if (!manifestDoc && !DOC.test(path) && path !== "catalogue/slice.json") return text;
+    if (path === "catalogue/slice.json" || (!manifestDoc && !DOC.test(path))) return text;
     let doc: unknown; try { doc = JSON.parse(text) as unknown; } catch { throw new Error(path); }
     if (!isObj(doc)) throw new Error(path);
     if (manifestDoc && isObj(doc["project"])) { doc["project"]["rev"] = rev + 1; doc["project"]["updatedAt"] = now; } else { if (typeof doc["rev"] === "number") doc["rev"] += 1; doc["updatedAt"] = now; }

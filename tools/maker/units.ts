@@ -1,4 +1,5 @@
-import { abilityAct, abilityShut, abilityView, type AbilityPlay } from "./ability-panel.ts";
+import { abilityAct, abilityOpen, abilityShut, abilityView, type AbilityPlay } from "./ability-panel.ts";
+import { addClick, addShut } from "./add-ability.ts";
 import { planSave } from "../../src/editor/project/save.ts";
 import { prefix, ulid } from "../../src/editor/project/home.ts";
 import { applyRole, deleteUnit, newUnit, renameUnit, resetStat, setStat, shown, unitNameError } from "../../src/editor/unit/units.ts";
@@ -22,13 +23,14 @@ export function rememberUnit(doc: unknown): void { if (!isObj(doc)) throw new Er
 export function bindUnits(id: string): void { if (sess.project !== id) sess = blank(id); }
 export function unitLine(value: string): void { sess.name = value; }
 export function unitEditing(): boolean { return sess.mode === "edit" || sess.mode === "rename" || sess.mode === "role"; }
-export function openUnit(id: string): void { abilityShut(); sess.unit = id; sess.mode = "edit"; sess.hint = ""; }
+export function openUnit(id: string): void { abilityShut(); addShut(); sess.unit = id; sess.mode = "edit"; sess.hint = ""; }
 function bagOf(files: DocText): Record<string, Obj> | null {
   const got = parseProject(files); if (!got.ok) return null; const bag: Record<string, Obj> = {};
   for (const [path, doc] of Object.entries(got.files)) if (isObj(doc)) bag[path] = doc; return bag;
 }
-function texts(stored: DocText, before: Record<string, Obj>, after: Record<string, Obj>): DocText {
-  const next: Record<string, string> = { ...stored }; for (const [path, doc] of Object.entries(after)) if (before[path] !== doc) next[path] = JSON.stringify(doc); return next;
+function texts(stored: DocText, before: Record<string, Obj>, after: Record<string, Obj>, slice = ""): DocText {
+  const next: Record<string, string> = { ...stored }; for (const [path, doc] of Object.entries(after)) if (before[path] !== doc) next[path] = JSON.stringify(doc);
+  if (slice !== "") next["catalogue/slice.json"] = slice; return next;
 }
 async function commit(io: UnitIo, stored: DocText, rev: number, next: DocText): Promise<{ readonly ok: true; readonly files: DocText; readonly rev: number } | { readonly ok: false; readonly message: string }> {
   const plan = planSave(stored, next, rev, io.now); if (!plan.ok) return { ok: false, message: plan.message };
@@ -63,9 +65,9 @@ function specOf(knob: Obj): KnobSpec | null {
 }
 function ownNum(unit: Obj, key: string): number | null { const stats = isObj(unit["stats"]) ? unit["stats"] : null, bag = stats === null ? undefined : stats[key]; return isObj(bag) && typeof bag["value"] === "number" ? bag["value"] : null; }
 const kept = (host: Host): UnitHit => ({ files: host.files, rev: host.rev, banner: null, dirty: host.dirty });
-async function save(io: UnitIo, host: Host, before: Record<string, Obj>, after: Record<string, Obj>, toast: string): Promise<UnitHit> {
+async function save(io: UnitIo, host: Host, before: Record<string, Obj>, after: Record<string, Obj>, toast: string, slice = ""): Promise<UnitHit> {
   const prev = sess.stack; sess.stack = [{ files: host.files, hidden: [...sess.hidden] }];
-  const wrote = await commit(io, host.files, host.rev, texts(host.files, before, after));
+  const wrote = await commit(io, host.files, host.rev, texts(host.files, before, after, slice));
   if (!wrote.ok) { sess.stack = prev; return { files: host.files, rev: host.rev, banner: wrote.message, dirty: true }; }
   return { files: wrote.files, rev: wrote.rev, banner: null, dirty: false, toast };
 }
@@ -118,11 +120,17 @@ function clamp(knob: Obj, value: number): number {
 }
 export async function unitClick(act: string, host: Host, io: UnitIo): Promise<UnitHit> {
   if (act === "u:close") { sess.mode = sess.mode === "rename" || sess.mode === "role" ? "edit" : null; sess.hint = ""; sess.lines = []; return kept(host); }
-  if (act === "u:back") { sess.mode = null; sess.hint = ""; return kept(host); }
+  if (act === "u:back") { sess.mode = null; sess.hint = ""; addShut(); return kept(host); }
   if (act === "u:undo") return undo(io, host);
   if (host.readOnly) return { ...kept(host), banner: "Made with a newer TileEngine. Open only." };
-  if (act.startsWith("a:") || act.startsWith("k:")) {
+  if (act.startsWith("a:") || act.startsWith("k:") || act.startsWith("g:")) {
     const live = bagOf(host.files); if (live === null) return { ...kept(host), banner: "Can't open this project" };
+    if (act.startsWith("g:")) {
+      const id = act.startsWith("g:add:") ? `setup_${ulid(Date.parse(io.now), io.bytes())}` : "";
+      const hit = addClick(act, live, sess.unit, id);
+      if ("bag" in hit) { if (hit.open !== undefined) abilityOpen(hit.open); return save(io, host, live, hit.bag, hit.toast, hit.slice); }
+      return kept(host);
+    }
     const hit = abilityAct(act, live, sess.unit);
     if ("play" in hit) return { ...kept(host), play: hit.play };
     if ("bag" in hit) return save(io, host, live, hit.bag, hit.toast);
@@ -131,7 +139,7 @@ export async function unitClick(act: string, host: Host, io: UnitIo): Promise<Un
   if (act === "u:add") { sess.mode = "add"; sess.name = "New unit"; sess.hint = ""; return kept(host); }
   if (act === "u:role") { sess.mode = "role"; return kept(host); }
   if (act === "u:rename") { const bag = bagOf(host.files), hit = bag === null ? null : unitDoc(bag, sess.unit); sess.name = hit !== null && typeof hit.doc["name"] === "string" ? hit.doc["name"] : ""; sess.hint = ""; sess.mode = "rename"; return kept(host); }
-  if (act.startsWith("u:open:")) { abilityShut(); sess.unit = act.slice(7); sess.mode = "edit"; sess.hint = ""; return kept(host); }
+  if (act.startsWith("u:open:")) { abilityShut(); addShut(); sess.unit = act.slice(7); sess.mode = "edit"; sess.hint = ""; return kept(host); }
   if (act.startsWith("u:menu:")) { const bag = bagOf(host.files), id = act.slice(7), hit = bag === null ? null : unitDoc(bag, id); sess.unit = id; sess.name = hit !== null && typeof hit.doc["name"] === "string" ? hit.doc["name"] : "Unit"; sess.mode = "menu"; return kept(host); }
   const bag = bagOf(host.files); if (bag === null) return { ...kept(host), banner: "Can't open this project" };
   if (act === "u:create" || act === "u:save-name") {
