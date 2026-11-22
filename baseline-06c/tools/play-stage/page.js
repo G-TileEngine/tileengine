@@ -1,0 +1,78 @@
+import { createDriver,                               } from "../../src/runtime/host/raf-driver.js";
+import { createLighting, fitView } from "../../src/runtime/render/index.js";
+import { createSceneLink } from "../../src/runtime/scene/world-scene.js";
+import { inOrthogonalReach } from "../../src/rules/battle/range.js";
+import { boardBox, fit, TILE } from "./board.js";
+import { centreOn, clamp, createCam, seatCam, tickCam,              } from "./camera-touch.js";
+import { createHud, XP_H } from "./hud.js";
+import { litPlan, picturesOf, sourceOf } from "./looks.js";
+import { createMatch, DEFAULT_SPELL_REACH } from "./match.js";
+import { openBundled } from "./project.js";
+import { createTouch } from "./touch.js";
+
+                                                                                                                   
+export function startMatch(docs                                                     , back             , aim           )       {
+const canvas = document.querySelector("#board");
+if (!(canvas instanceof HTMLCanvasElement)) throw new Error("play: #board");
+const match = createMatch(docs);
+const link = createSceneLink(sourceOf((id) => match.pixels(id))), lighting = createLighting(), pixels = picturesOf((id) => match.pixels(id), link);
+const cam          = createCam(1);
+let seated = false;
+const dpr = ()         => devicePixelRatio || 1;
+const band = ()                                                                        => {
+  const ratio = dpr(), devW = canvas.clientWidth * ratio, devH = canvas.clientHeight * ratio;
+  return { ...fit(devW, devH, match.world.grid.cols, match.world.grid.rows, ratio), devW, devH };
+};
+const seat = ()       => { const box = band(); if (canvas.clientWidth > 0) { seatCam(cam, box.s, dpr()); seated = true; } };
+const env = { requestAnimationFrame: (cb                      ) => requestAnimationFrame(cb), cancelAnimationFrame: (id        ) => cancelAnimationFrame(id), document, OffscreenCanvas, ResizeObserver, get devicePixelRatio() { return devicePixelRatio; } }           ;
+const load = (id        )                           => {
+  const px = pixels(id);
+  if (px === undefined) return Promise.reject(new Error(id));
+  const baked = new OffscreenCanvas(px.w, px.h), g = baked.getContext("2d");
+  if (g === null) return Promise.reject(new Error(id));
+  const image = new ImageData(new Uint8ClampedArray(px.data), px.w, px.h);
+  g.putImageData(image, 0, 0);
+  return Promise.resolve(baked);
+};
+const hud = createHud({
+  choose: (kind) => match.choose(kind), wait: () => match.wait(), endTurn: () => match.endTurn(), menu: () => undefined,
+  restart: () => { if (back !== undefined) { driver.dispose(); back(); } else location.reload(); }, closeTalk: () => match.closeTalk(), recentre: () => { const at = match.recentreTarget(); if (at === null) return; const b = band(), f = fitView(b.devW, b.devH, cam.s, TILE, TILE); centreOn(cam, at, f, 0, TILE, 0); clamp(cam, f, match.world.grid.cols, match.world.grid.rows); },
+});
+const driver = createDriver({
+  env, canvas: canvas              , clock: match.world.clock, clear: "#0d1220", load, pixels,
+  view: () => {
+    if (!seated) seat();
+    const box = band(), shown = fitView(box.devW, box.devH, cam.s, TILE, TILE);
+    if (match.followId !== null) { const u = match.world.units.get(match.followId); if (u !== undefined) tickCam(cam, 16, u.at, shown); }
+    hud.render(match.view());
+    return { scene: link.scene(match.scene(), { tMs: match.world.clock.now(), stepMs: match.world.clock.stepMs }), lights: litPlan(lighting, match.looks, link.lit), shake: link.shake, x: cam.x, y: cam.y, s: cam.s };
+  },
+});
+const touch = createTouch({ match, cam, box: () => { const ratio = dpr(), rect = canvas.getBoundingClientRect(), raw = canvas.width === 300 && canvas.height === 150, devW = !raw && canvas.width > 0 ? canvas.width : canvas.clientWidth * ratio, devH = !raw && canvas.height > 0 ? canvas.height : canvas.clientHeight * ratio; return { devW, devH, kx: rect.width > 0 && !raw && canvas.width > 0 ? canvas.width / rect.width : ratio, ky: rect.height > 0 && !raw && canvas.height > 0 ? canvas.height / rect.height : ratio, cols: match.world.grid.cols, rows: match.world.grid.rows }; } });
+for (const k of ["pointerdown", "pointermove", "pointerup", "pointercancel", "lostpointercapture"]         ) canvas.addEventListener(k, (e) => { const p = { id: e.pointerId, offsetX: e.offsetX, offsetY: e.offsetY, clientX: e.clientX, clientY: e.clientY, timeStamp: e.timeStamp, pointerType: e.pointerType }; if (k === "pointerdown") { canvas.setPointerCapture(e.pointerId); touch.down(p); } else if (k === "pointermove") touch.move(p); else if (k === "pointerup") touch.up(p); else touch.cancel(p); });
+const place = ()       => { const box = boardBox(innerHeight - (match.view().xp === null ? 0 : XP_H)); Object.assign(canvas.style, { position: "fixed", left: "0", right: "0", width: "100%", top: `${box.top}px`, height: `${box.height}px`, touchAction: "none" }); };
+place(); addEventListener("resize", () => { place(); seated = false; });
+seat();
+if (aim?.unitId !== undefined) {
+  const mine = match.world.units.all().find((u) => u.alive && u.unitId === aim.unitId && u.side === match.sides.me);
+  if (mine === undefined) {
+    const body = match.world.units.all().find((u) => u.alive && u.unitId === aim.unitId);
+    if (body !== undefined) { const b = band(), shown = fitView(b.devW, b.devH, cam.s, TILE, TILE); centreOn(cam, body.at, shown, 0, TILE, 0); clamp(cam, shown, match.world.grid.cols, match.world.grid.rows); }
+  } else {
+    match.feed({ type: "SelectUnit", unitId: mine.id });
+    if (aim.aim === "basic" || aim.aim === "spell") {
+      const kind = aim.aim;
+      if (match.choose(kind) !== null) match.intend({ type: "ChooseAction", actionId: kind, unitId: mine.id });
+      const table = kind === "spell" ? docs.rules.abilities?.[mine.unitId]?.[0]?.reach : docs.rules.reach?.[mine.unitId];
+      const reach = typeof table === "number" && Number.isInteger(table) && table >= 1 ? table : kind === "spell" ? DEFAULT_SPELL_REACH : match.step.reach;
+      const cells                             = [];
+      for (let r = 0; r < match.world.grid.rows; r += 1) for (let c = 0; c < match.world.grid.cols; c += 1) if (inOrthogonalReach(mine.at, { c, r }, reach)) cells.push({ c, r });
+      match.aims = cells; match.aimKind = kind;
+    }
+  }
+}
+if (back !== undefined) { const btn = document.createElement("button"); btn.id = "back-maker"; btn.type = "button"; btn.textContent = "Back to maker"; btn.addEventListener("click", () => { driver.dispose(); back(); }); const top = document.querySelector("#top"); if (top !== null) top.prepend(btn); }
+driver.start();
+}
+const bootCanvas = document.querySelector("#board");
+if (bootCanvas instanceof HTMLCanvasElement) { const opened = openBundled(); if (opened.docs === null) document.body.textContent = opened.error; else startMatch(opened.docs); }

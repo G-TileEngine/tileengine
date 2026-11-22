@@ -1,0 +1,46 @@
+export default {
+  "kind": "behaviour-setup",
+  "formatVersion": 3,
+  "id": "setup_01M7XPE6006A10000000000000",
+  "rev": 1,
+  "name": "Army",
+  "behaviourId": "unit-roster",
+  "catalogue": {
+    "rev": 30
+  },
+  "createdAt": "2026-11-21T00:00:00.000Z",
+  "updatedAt": "2026-11-21T00:00:00.000Z",
+  "copiedFrom": null,
+  "answers": {
+    "board_cols": {
+      "source": "default"
+    },
+    "board_rows": {
+      "source": "default"
+    },
+    "piece_count": {
+      "source": "default"
+    },
+    "unit_hp": {
+      "source": "default"
+    },
+    "unit_atk": {
+      "source": "default"
+    },
+    "opening_row": {
+      "source": "default"
+    },
+    "clip_cues": {
+      "source": "default"
+    },
+    "team_colour": {
+      "source": "default"
+    }
+  },
+  "orphans": {},
+  "history": {
+    "cap": 200,
+    "baseSeq": 0,
+    "ops": []
+  }
+}

@@ -1,0 +1,45 @@
+                                                 
+import { PLAIN_NODES } from "./limits.js";
+
+export const NOT_PLAIN                = Symbol("NOT_PLAIN");
+const SKIP = new Set(["__proto__", "constructor", "prototype"]);
+export const isRecord = (v         )                                         => typeof v === "object" && v !== null && !Array.isArray(v);
+
+function walk(v         , depth        , left               , seen             )          {
+  if (left.n <= 0) return NOT_PLAIN;
+  left.n -= 1;
+  if (typeof v === "number") return Object.is(v, -0) ? 0 : v;
+  if (v === null || v === undefined || typeof v === "string" || typeof v === "boolean") return v;
+  if (typeof v === "bigint") return NOT_PLAIN;
+  if (typeof v !== "object" || seen.has(v)) return typeof v !== "object" ? undefined : NOT_PLAIN;
+  const proto = Object.getPrototypeOf(v)                 , arr = Array.isArray(v);
+  if (depth <= 0 || (arr ? proto !== Array.prototype : proto !== Object.prototype && proto !== null)) return NOT_PLAIN;
+  seen.add(v);
+  const box                                      = arr ? [] : {};
+  if (arr) {
+    const n = (v                      ).length;
+    if (!Number.isInteger(n) || n < 0 || n > left.n) return NOT_PLAIN;
+    for (let i = 0; i < n; i += 1) {
+      if (!Object.hasOwn(v, i)) return NOT_PLAIN;
+      const item = walk((v             )[i], depth - 1, left, seen);
+      if (item === NOT_PLAIN) return NOT_PLAIN;
+      (box             ).push(item);
+    }
+  } else for (const key of Object.keys(v)) {
+    if (SKIP.has(key)) continue;
+    const item = walk((v                           )[key], depth - 1, left, seen);
+    if (item === NOT_PLAIN) return NOT_PLAIN;
+    if (item !== undefined) (box                           )[key] = item;
+  }
+  seen.delete(v);
+  return Object.freeze(box);
+}
+
+export function plainCopy(value         , depth        , nodes = PLAIN_NODES)          {
+  const left = nodes >= 0 ? Math.min(nodes, PLAIN_NODES) : 0;
+  try { return walk(value, depth, { n: left }, new Set()); } catch { return NOT_PLAIN; }
+}
+export function cellOf(v         )            {
+  const copy = plainCopy(v, 1);
+  return isRecord(copy) && Number.isInteger(copy.c) && Number.isInteger(copy.r) ? copy       : null;
+}

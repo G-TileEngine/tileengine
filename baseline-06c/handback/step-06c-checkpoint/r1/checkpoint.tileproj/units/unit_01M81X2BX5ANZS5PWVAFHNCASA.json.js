@@ -1,0 +1,1 @@
+export default {"kind":"unit","formatVersion":2,"id":"unit_01M81X2BX5ANZS5PWVAFHNCASA","rev":4,"name":"Hero","sprite":null,"setupIds":["setup_01M81X2F2HQQ17D2CWYR72DC9B"],"stats":{"unit_hp":{"value":20,"rev":1},"unit_atk":{"value":2,"rev":1}},"history":{"cap":200,"baseSeq":0,"ops":[]},"createdAt":"2026-11-18T00:00:00Z","updatedAt":"2026-11-22T15:12:53.841Z"}

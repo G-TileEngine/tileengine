@@ -1,0 +1,48 @@
+export default {
+  "kind": "tile-project",
+  "formatVersion": 6,
+  "project": {
+    "id": "project_01JDAP00000000000000000001",
+    "rev": 1,
+    "name": "Demo",
+    "createdAt": "2026-11-18T00:00:00Z",
+    "updatedAt": "2026-11-18T00:00:00Z",
+    "copiedFrom": null,
+    "catalogueRev": 30,
+    "settings": {
+      "wrapEdges": false
+    },
+    "difficulty": {
+      "hp": 1,
+      "damage": 1,
+      "appliesTo": "enemies"
+    },
+    "stages": [
+      "stage_01JDAS00000000000000000001"
+    ],
+    "rules": [
+      "setup_01JDAT00000000000000000002",
+      "setup_01JDAT00000000000000000003"
+    ],
+    "loadout": {
+      "roster": [
+        "unit_01JDAN00000000000000000001",
+        "unit_01JDAN00000000000000000002",
+        "unit_01JDAN00000000000000000003"
+      ],
+      "size": 3,
+      "required": [
+        "unit_01JDAN00000000000000000001"
+      ]
+    },
+    "render": {
+      "excludedStages": [],
+      "targets": [
+        "browser"
+      ],
+      "proceduralShip": "auto",
+      "credits": true
+    },
+    "assets": {}
+  }
+}

@@ -1,0 +1,112 @@
+import { readManifest, readMap, readSetup, readStage, readUnit,                 } from "../read/index.js";
+import { mapEntryDrops, placementDrops } from "./drops.js";
+import { migrateProject, versionRows } from "./migrate.js";
+import { knownKind,                                                                                                 } from "./types.js";
+
+                                   
+const isObj = (v         )           => typeof v === "object" && v !== null && !Array.isArray(v);
+const LIMITS = { picks: 8, waveUnits: 16 }         ;
+const row = (code        , severity          , path        , detail         )            => (detail === undefined ? { code, severity, path } : { code, severity, path, detail });
+const sort = (rows                      )              => [...rows].sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : a.code < b.code ? -1 : a.code > b.code ? 1 : 0));
+const idOf = (doc     )                => (typeof doc["id"] === "string" ? doc["id"] : null);
+const list = (v         )                     => (Array.isArray(v) ? v : []);
+
+function note(res                     , path        , rows             )       {
+  if (res.ok) return;
+  const stats = !res.needsMigration && res.error === "bad field stats";
+  rows.push(row("invalidValue", "hard", stats ? `${path}#/stats` : path, res.needsMigration ? "needsMigration" : res.error));
+}
+function has(bag                                   , id         , path        , rows             )       {
+  if (typeof id === "string" && !Object.hasOwn(bag, id)) rows.push(row("brokenRef", "hard", path, id));
+}
+
+function refs(manifest     , at                                  , maps                               , stages                               , units                               , setups                               , rows             )       {
+  const project = isObj(manifest["project"]) ? manifest["project"] : {};
+  const gear = isObj(project["loadout"]) ? project["loadout"] : {};
+  list(project["stages"]).forEach((id, i) => has(stages, id, `project.json#/project/stages/${i}`, rows));
+  list(project["rules"]).forEach((id, i) => has(setups, id, `project.json#/project/rules/${i}`, rows));
+  list(gear["roster"]).forEach((id, i) => has(units, id, `project.json#/project/loadout/roster/${i}`, rows));
+  list(gear["required"]).forEach((id, i) => has(units, id, `project.json#/project/loadout/required/${i}`, rows));
+  for (const [id, stage] of Object.entries(stages)) {
+    const path = at[id] ?? `stages/${id}.json`;
+    const pool = isObj(stage["enemyPool"]) ? stage["enemyPool"] : {};
+    has(maps, stage["mapRef"], `${path}#/mapRef`, rows);
+    list(stage["rules"]).forEach((sid, i) => has(setups, sid, `${path}#/rules/${i}`, rows));
+    list(stage["neutrals"]).forEach((n, i) => { if (!isObj(n)) return; has(units, n["unitId"], `${path}#/neutrals/${i}/unitId`, rows); list(n["setupIds"]).forEach((sid, j) => has(setups, sid, `${path}#/neutrals/${i}/setupIds/${j}`, rows)); });
+    list(pool["entries"]).forEach((e, i) => { if (isObj(e)) has(units, e["unitId"], `${path}#/enemyPool/entries/${i}/unitId`, rows); });
+  }
+  for (const [id, unit] of Object.entries(units)) list(unit["setupIds"]).forEach((sid, i) => has(setups, sid, `units/${id}.json#/setupIds/${i}`, rows));
+}
+
+function knobAt(slice     , behaviourId         , key        )             {
+  if (typeof behaviourId !== "string") return null;
+  for (const b of list(slice["behaviours"])) if (isObj(b) && b["id"] === behaviourId) for (const knob of list(b["knobs"])) if (isObj(knob) && knob["id"] === key) return knob;
+  return null;
+}
+function warns(slice     , projectRev         , maps                               , setups                               , rows             )       {
+  const known = new Set(list(slice["behaviours"]).filter(isObj).map((b) => b["id"]));
+  const tiles = new Set        ();
+  for (const b of list(slice["behaviours"])) if (isObj(b) && b["id"] === "terrain") for (const knob of list(b["knobs"])) if (isObj(knob) && knob["id"] === "tile_types") for (const item of list(knob["default"])) if (isObj(item) && typeof item["id"] === "string") tiles.add(item["id"]);
+  if (slice["catalogue_rev"] !== undefined && slice["catalogue_rev"] !== projectRev) rows.push(row("catalogueRevMismatch", "warning", "catalogue/slice.json#/catalogue_rev"));
+  for (const [id, setup] of Object.entries(setups)) {
+    const path = `setups/${id}.json`, answers = isObj(setup["answers"]) ? setup["answers"] : {};
+    if (isObj(setup["catalogue"]) && setup["catalogue"]["rev"] !== projectRev) rows.push(row("catalogueRevMismatch", "warning", `${path}#/catalogue/rev`));
+    if (known.size > 0 && typeof setup["behaviourId"] === "string" && !known.has(setup["behaviourId"])) rows.push(row("unknownRef", "warning", `${path}#/behaviourId`, setup["behaviourId"]));
+    const ns = isObj(answers["custom_ns"]) ? answers["custom_ns"]["value"] : undefined, ew = isObj(answers["custom_ew"]) ? answers["custom_ew"]["value"] : undefined, mode = isObj(answers["reach_mode"]) ? answers["reach_mode"]["value"] : undefined;
+    if (setup["behaviourId"] === "basic-attack" && mode === "custom-cross" && typeof ns === "number" && typeof ew === "number" && ns !== ew) rows.push(row("layerNotApplied", "warning", `${path}#/answers/custom_ns`, "min(ns,ew)"));
+    if (setup["behaviourId"] === "basic-attack" && isObj(answers["damage"]) && answers["damage"]["source"] !== "default" && answers["damage"]["source"] !== undefined) rows.push(row("layerNotApplied", "warning", `${path}#/answers/damage`, "unit_atk"));
+    for (const key of Object.keys(answers)) {
+      const ans = answers[key]; if (!isObj(ans) || !Object.hasOwn(ans, "value")) continue;
+      const knob = knobAt(slice, setup["behaviourId"], key); if (knob === null) continue;
+      const value = ans["value"], type = knob["type"], where = `${path}#/answers/${key}/value`;
+      const bad = type === "slider" ? typeof value !== "number" || !Number.isFinite(value) : type === "toggle" ? typeof value !== "boolean" : type === "text" || type === "ref" ? typeof value !== "string" : type === "picker" ? typeof value !== "string" || (Array.isArray(knob["options"]) && !knob["options"].some((opt) => (isObj(opt) && Object.hasOwn(opt, "value") ? opt["value"] : opt) === value)) : type === "list" ? !Array.isArray(value) || value.some((item) => !isObj(item) || typeof item["id"] !== "string" || typeof item["label"] !== "string") : false;
+      if (bad) rows.push(row("invalidValue", "hard", where));
+      if (type === "text" && typeof value === "string" && typeof knob["max_len"] === "number" && [...value].length > knob["max_len"]) rows.push(row("outOfRange", "warning", where));
+      if (type === "slider" && typeof value === "number" && ((typeof knob["min"] === "number" && value < knob["min"]) || (typeof knob["max"] === "number" && value > knob["max"]))) rows.push(row("outOfRange", "warning", where));
+    }
+  }
+  for (const [id, map] of Object.entries(maps)) {
+    const palette = isObj(map["logic"]) && isObj(map["logic"]["palette"]) ? map["logic"]["palette"] : {};
+    for (const key of Object.keys(palette)) { const name = palette[key]; if (tiles.size > 0 && typeof name === "string" && !tiles.has(name)) rows.push(row("unknownRef", "warning", `maps/${id}.json#/logic/palette/${key}`, name)); }
+  }
+}
+
+/** Pure project read. Never throws, never writes, never mutates `files`. */
+export function readProject(files              )              {
+  if (!isObj(files) || !isObj(files["project.json"])) return { ok: false, readOnly: true, project: null, report: [row("notAProject", "hard", "project.json", "missing project.json")] };
+  const gate = versionRows(files);
+  if (gate.length > 0) return { ok: false, readOnly: true, project: null, report: sort(gate) };
+  let migrated                                                       ;
+  try { migrated = migrateProject(files); } catch { return { ok: false, readOnly: true, project: null, report: [row("invalidValue", "hard", "project.json", "unreadable")] }; }
+  const docs = migrated.files, rows              = [...migrated.report];
+  const maps                      = {}, stages                      = {}, units                      = {}, setups                      = {}, unknownFiles                          = {}, stageAt                         = {}, mapAt                         = {};
+  let slice      = {}, manifest      = {};
+  for (const path of Object.keys(docs)) {
+    const doc = docs[path], slot = knownKind(path);
+    if (slot === null) { unknownFiles[path] = doc; rows.push(row("unknownFile", "warning", path)); continue; }
+    if (!isObj(doc)) { rows.push(row("invalidValue", "hard", path, "not an object")); continue; }
+    const id = idOf(doc);
+    if (slot === "tile-project") { manifest = doc; if ("index" in doc) rows.push(row("indexIgnored", "info", `${path}#/index`)); note(readManifest(doc), path, rows); }
+    else if (slot === "catalogue-slice") slice = doc;
+    else if (slot === "map") {
+      if (id !== null) { maps[id] = doc; mapAt[id] = path; }
+      const n = typeof doc["cols"] === "number" && typeof doc["rows"] === "number" ? doc["cols"] * doc["rows"] : -1;
+      const terrain = isObj(doc["logic"]) && Array.isArray(doc["logic"]["terrain"]) ? doc["logic"]["terrain"] : null;
+      const badLen = terrain !== null && terrain.length !== n;
+      if (badLen && terrain !== null) rows.push(row("terrainLength", "hard", `${path}#/logic/terrain`, `found ${terrain.length}`));
+      if (list(doc["layers"]).some((layer) => isObj(layer) && Array.isArray(layer["tiles"]) && layer["tiles"].length !== n)) rows.push(row("terrainLength", "hard", `${path}#/layers`));
+      if (!badLen) note(readMap(doc), path, rows);
+    } else if (slot === "stage") { if (id !== null) { stages[id] = doc; stageAt[id] = path; } note(readStage(doc, LIMITS), path, rows); }
+    else if (slot === "unit") { if (id !== null) units[id] = doc; note(readUnit(doc), path, rows); }
+    else { if (id !== null) setups[id] = doc; note(readSetup(doc), path, rows); }
+  }
+  if (!Object.hasOwn(docs, "catalogue/slice.json")) rows.push(row("invalidValue", "hard", "catalogue/slice.json", "missing"));
+  const manifestDoc = docs["project.json"];
+  const project = isObj(manifestDoc) && isObj(manifestDoc["project"]) ? manifestDoc["project"] : {};
+  refs(isObj(manifestDoc) ? manifestDoc : {}, stageAt, maps, stages, units, setups, rows);
+  warns(slice, project["catalogueRev"], maps, setups, rows);
+  rows.push(...placementDrops(stages, stageAt, maps, slice), ...mapEntryDrops(maps, mapAt));
+  const hard = rows.some((r) => r.severity === "hard");
+  const store               = { manifest, slice, maps, stages, units, setups, unknownFiles };
+  return { ok: !hard, readOnly: false, project: store, report: sort(rows) };
+}
