@@ -5,4 +5,5 @@ export const WIRED: Readonly<Record<string, readonly string[]>> = {
   "line-shot": ["range", "damage"],
   talk: ["line"],
   "win-condition": ["wipe_wins"],
+  "xp-levels": ["levels", "thresholds", "xp_move"],
 };

@@ -33,6 +33,9 @@ test("maker law holds, tokens match, and each plant fails", () => {
   const addPlant = (text: string): string[] => text.split("\n").flatMap((line, i) => { const goal = /["'](?:move|attack|defend|support|spells|status|ai)["']/.test(line), ident = /["'][a-z0-9]+(?:-[a-z0-9]+)+["']/.test(line); return [/["']group["']/.test(line) ? `${i + 1} group` : "", goal && ident ? `${i + 1} goal-id` : ""].filter((hit) => hit !== ""); });
   for (const rel of ["src/editor/unit/add.ts", "tools/maker/add-ability.ts"]) assert.deepEqual(addPlant(readFileSync(join(root, rel), "utf8")), [], rel);
   assert.deepEqual(addPlant('const x = { "line-shot": "attack" };\nconst y = "group";\n'), ["1 goal-id", "2 group"]);
+  const curvePlant = (text: string): string[] => text.split("\n").flatMap((line, i) => /\b(?:17|99|112)\b|\[\s*17\s*,\s*11/.test(line) ? [`${i + 1} curve`] : []);
+  for (const rel of ["src/editor/rules/levels.ts", "tools/maker/levels.ts"]) assert.deepEqual(curvePlant(readFileSync(join(root, rel), "utf8")), [], rel);
+  assert.deepEqual(curvePlant("const t = [17, 11, 13];\nconst n = 112;\nconst m = 99;\n"), ["1 curve", "2 curve", "3 curve"]);
   const dir = mkdtempSync(join(root, "src/editor/stage/law-"));
   for (const [name, text] of [["colour.ts", "export const x = '#fff';\n"], ["kind.ts", "export const a = { \"kind\": \"tile-project\" }; export const b = { \"kind\": \"map\" };\n"], ["doc.ts", "export const v = \"formatVersion\";\n"], ["unquoted.ts", "export const d = { kind: \"behaviour-setup\" };\n"], ["silent.ts", "export function x(): void { try { throw new Error('x'); } catch { /* no */ } }\n"]] as const) { writeFileSync(join(dir, name), text); assert.ok(lawHits(dir).some((hit) => hit.includes(name)), name); rmSync(join(dir, name)); }
   rmSync(dir, { recursive: true });

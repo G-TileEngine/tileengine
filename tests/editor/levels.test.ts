@@ -1,0 +1,68 @@
+import assert from "node:assert/strict";
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
+import { test } from "node:test";
+import { fileURLToPath } from "node:url";
+import { curveOf, levelsOf, setLevels, setThreshold, turnOff, turnOn } from "../../src/editor/rules/levels.ts";
+import { readProject } from "../../src/project/load/index.ts";
+import { sliceOf } from "../../src/project/slice-of.ts";
+import { WIRED } from "../../src/rules/behaviours/wired.ts";
+import { BUNDLED } from "../../tools/maker/catalogue.ts";
+import { levelsAct, levelsSheet } from "../../tools/maker/levels.ts";
+import { parseProject } from "../../tools/maker/project-files.ts";
+import { memoryStore } from "../../tools/maker/store.ts";
+import { playDocsOf } from "../../tools/play-stage/project.ts";
+const root = fileURLToPath(new URL("../..", import.meta.url)), ID = "setup_01JXP00000000000000000001A";
+type Obj = Record<string, unknown>;
+const isObj = (v: unknown): v is Obj => typeof v === "object" && v !== null && !Array.isArray(v);
+const walk = (rel: string): Record<string, string> => { const out: Record<string, string> = {}, go = (at: string, base: string): void => { for (const name of readdirSync(at)) { const path = join(at, name), next = base === "" ? name : `${base}/${name}`; if (statSync(path).isDirectory()) go(path, next); else out[next] = readFileSync(path, "utf8"); } }; go(join(root, rel), ""); return out; };
+const bagOf = (rel: string): Record<string, Obj> => { const parsed = parseProject(walk(rel)); if (!parsed.ok) throw new Error(parsed.message); const bag: Record<string, Obj> = {}; for (const [path, doc] of Object.entries(parsed.files)) if (isObj(doc)) bag[path] = doc; return bag; };
+const skel = (): Obj => { const doc = JSON.parse(readFileSync(join(root, "data/templates/setup.rule.json"), "utf8")) as unknown; if (!isObj(doc)) throw new Error("skel"); return doc; };
+const on = (files: Record<string, Obj>) => { const got = turnOn(files, skel(), ID, BUNDLED); if (got.mode !== "wrote") throw new Error(got.mode); return got; };
+const played = (files: Record<string, Obj>) => { const load = readProject(files); if (!load.ok || load.project === null) throw new Error(load.report.map((row) => row.detail ?? row.code).join(" ")); return playDocsOf(load.project); };
+const setup = (files: Record<string, Obj>): Obj => { const doc = files[`setups/${ID}.json`]; if (!isObj(doc) || !isObj(doc["answers"])) throw new Error("setup"); return doc["answers"]; };
+const rules = (files: Record<string, Obj>): readonly unknown[] => { const rootDoc = files["project.json"]; if (!isObj(rootDoc) || !isObj(rootDoc["project"]) || !Array.isArray(rootDoc["project"]["rules"])) throw new Error("rules"); return rootDoc["project"]["rules"]; };
+test("turn on levels re-cuts the slice", () => {
+  const demo = bagOf("fixtures/demo.tileproj"), slice = demo["catalogue/slice.json"]; assert.equal(levelsOf(demo), null); assert.ok(isObj(slice));
+  const used = (Array.isArray(slice["behaviours"]) ? slice["behaviours"] : []).flatMap((row) => isObj(row) && typeof row["id"] === "string" ? [row["id"]] : []);
+  const got = on(demo); assert.equal(got.slice, sliceOf(BUNDLED, [...used, "xp-levels"])); assert.deepEqual(got.bag["catalogue/slice.json"], JSON.parse(got.slice));
+  assert.equal(rules(got.bag).includes(ID), true);
+  const answers = setup(got.bag), cut = got.bag["catalogue/slice.json"], rows = isObj(cut) && Array.isArray(cut["behaviours"]) ? cut["behaviours"] : [], hit = rows.find((item) => isObj(item) && item["id"] === "xp-levels");
+  const knobs = isObj(hit) && Array.isArray(hit["knobs"]) ? hit["knobs"].flatMap((knob) => isObj(knob) && typeof knob["id"] === "string" && Object.hasOwn(knob, "default") ? [knob["id"]] : []) : [];
+  assert.ok(knobs.length >= 3 && knobs.every((id) => JSON.stringify(answers[id]) === "{\"source\":\"default\"}") && Object.keys(answers).length === knobs.length);
+  const load = readProject(got.bag); assert.equal(load.ok, true); assert.deepEqual([...load.report], []);
+  assert.equal(curveOf(got.bag)?.n, 9); assert.equal(curveOf(got.bag)?.total, 112);
+});
+test("threshold edit stores the whole list", () => {
+  const got = on(bagOf("fixtures/demo.tileproj")), changed = setThreshold(got.bag, 0, 2); assert.equal(changed.mode, "wrote"); if (changed.mode !== "wrote") return;
+  assert.deepEqual(setup(changed.bag)["thresholds"], { source: "user", value: [2, 11, 13, 11, 13, 14, 11, 11, 11], rev: 1 });
+  const back = setThreshold(changed.bag, 0, 17); assert.equal(back.mode, "wrote"); if (back.mode !== "wrote") return;
+  assert.deepEqual(setup(back.bag)["thresholds"], { source: "default" });
+});
+test("list length follows levels", () => {
+  const got = on(bagOf("fixtures/demo.tileproj")), three = setLevels(got.bag, 3); assert.equal(three.mode, "wrote"); if (three.mode !== "wrote") return;
+  assert.deepEqual(setup(three.bag)["thresholds"], { source: "user", value: [17, 11, 13], rev: 1 }); assert.deepEqual(setup(three.bag)["levels"], { source: "user", value: 3, rev: 1 });
+  const five = setLevels(three.bag, 5); assert.equal(five.mode, "wrote"); if (five.mode !== "wrote") return;
+  assert.deepEqual(setup(five.bag)["thresholds"], { source: "user", value: [17, 11, 13, 11, 13], rev: 1 }); assert.deepEqual(setup(five.bag)["levels"], { source: "user", value: 5, rev: 1 });
+  const low = setThreshold(five.bag, 0, 0); assert.equal(low.mode, "wrote"); if (low.mode !== "wrote") return;
+  const high = setThreshold(low.bag, 1, 100); assert.equal(high.mode, "wrote"); if (high.mode !== "wrote") return;
+  const value = setup(high.bag)["thresholds"]; assert.ok(isObj(value) && Array.isArray(value["value"])); if (!isObj(value) || !Array.isArray(value["value"])) return;
+  assert.deepEqual([value["value"][0], value["value"][1]], [1, 99]);
+});
+test("turn off detaches and keeps the file", () => {
+  const got = on(bagOf("fixtures/demo.tileproj")), off = turnOff(got.bag); assert.equal(off.mode, "wrote"); if (off.mode !== "wrote") return;
+  assert.equal(rules(off.bag).includes(ID), false); assert.ok(isObj(off.bag[`setups/${ID}.json`])); assert.equal(levelsOf(off.bag), null);
+  const again = turnOn(off.bag, skel(), "setup_01JXP00000000000000000002A", BUNDLED); assert.equal(again.mode, "wrote"); if (again.mode !== "wrote") return;
+  assert.equal(rules(again.bag).includes(ID), true); assert.equal(again.bag["setups/setup_01JXP00000000000000000002A.json"], undefined);
+});
+test("wired level knobs change the adapter", async () => {
+  assert.deepEqual(WIRED["xp-levels"], ["levels", "thresholds", "xp_move"]);
+  const got = on(bagOf("fixtures/demo.tileproj")), changed = setThreshold(got.bag, 0, 2); assert.equal(changed.mode, "wrote"); if (changed.mode !== "wrote") return;
+  assert.deepEqual(played(changed.bag).levels?.rules.thresholds, [2, 11, 13, 11, 13, 14, 11, 11, 11]);
+  const doc = changed.bag[`setups/${ID}.json`]; if (!isObj(doc) || !isObj(doc["answers"])) return;
+  doc["answers"] = { ...doc["answers"], xp_basic: { source: "user", value: 5, rev: 1 } };
+  assert.deepEqual(played(changed.bag).levels?.rules.xp, { move: 1 });
+  const text: Record<string, string> = {}; for (const [path, file] of Object.entries(changed.bag)) text[path] = JSON.stringify(file);
+  await levelsAct("l:open", { files: text, rev: 0, readOnly: false, dirty: false }, { store: memoryStore(), id: "p", now: "2026-11-21T00:00:00.000Z", bytes: () => new Uint8Array(16) });
+  const html = levelsSheet(text, false); assert.equal(html.includes("xp_basic") || html.includes("XP per basic") || html.includes("Where the XP bar"), false); assert.equal(html.includes("Number of levels"), true);
+});

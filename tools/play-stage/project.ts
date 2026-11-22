@@ -1,6 +1,7 @@
 import { readProject, type ProjectFiles, type ProjectStore } from "../../src/project/load/index.ts";
 import { ruleOf } from "../../src/project/rule-of.ts";
 import { WIN_CONDITION } from "../../src/rules/battle/win.ts";
+import { XP_LEVELS } from "../../src/rules/behaviours/xp-levels.ts";
 import { installOne } from "../../src/rules/behaviours/registry.ts";
 import { TERRAIN } from "../../src/rules/behaviours/terrain.ts";
 import { STEP_PATTERN } from "../../src/rules/move/step-pattern.ts";
@@ -33,6 +34,14 @@ function winOf(store: ProjectStore, stage: Obj): PlayOut["win"] {
   if (hit.source === "default" && !(Array.isArray(store.slice["behaviours"]) && store.slice["behaviours"].some((row) => isObj(row) && row["id"] === "win-condition"))) return undefined;
   return WIN_CONDITION.install({ get: (key) => knob(isObj(setup) ? setup : {}, store.slice, "win-condition", key), unsupported(key, why) { throw new Error(why === undefined ? `play: win-condition ${key}` : `play: win-condition ${key} ${why}`); } });
 }
+function levelsOf(store: ProjectStore, stage: Obj): PlayOut["levels"] {
+  const id = typeof stage["id"] === "string" ? stage["id"] : "", hit = ruleOf({ manifest: store.manifest, stages: store.stages, setups: store.setups }, id, "xp-levels"), setup = hit.setupId === "" ? undefined : store.setups[hit.setupId];
+  if (hit.source === "default") return undefined;
+  if (!isObj(setup)) throw new Error("play: xp-levels");
+  const rules = XP_LEVELS.install({ get: (key) => knob(setup, store.slice, "xp-levels", key), unsupported(key, why) { throw new Error(why === undefined ? `play: xp-levels ${key}` : `play: xp-levels ${key} ${why}`); } });
+  if (rules === null) throw new Error("play: xp-levels");
+  return { rules, pools: {} };
+}
 /** Adapter only. Document JSON is already read by readProject. */
 export function playDocsOf(store: ProjectStore, stageId?: string): PlayOut {
   const cat = store.slice, root = isObj(store.manifest["project"]) ? store.manifest["project"] : {};
@@ -60,8 +69,8 @@ export function playDocsOf(store: ProjectStore, stageId?: string): PlayOut {
   }
   const tiles = installOne(TERRAIN, {}).out?.tiles; if (tiles === undefined) throw new Error("play: terrain");
   const recipes: Record<string, Recipe> = { ...RECIPES }; for (const [id, name] of Object.entries(names)) { const hit = Object.values(RECIPES).find((r) => r.name === name); if (hit !== undefined) recipes[id] = hit; }
-  const host = typeof stage["seed"] === "number" ? stage["seed"] : undefined, cap = Math.min(typeof gear["size"] === "number" ? gear["size"] : chosen.length, Array.isArray(stage["playerSpawns"]) ? stage["playerSpawns"].length : chosen.length), win = winOf(store, stage);
-  return { manifest: store.manifest, map, stage, rules: { base: { hp: hp0, atk: atk0 }, stats, hitClass: "basic", ...(Object.keys(reach).length > 0 ? { reach } : {}), ...(Object.keys(abilities).length > 0 ? { abilities } : {}) }, ...(host === undefined ? {} : { hostSeed: host }), talk, chosen: chosen.slice(0, cap), tiles, names, recipes, ...(win === undefined ? {} : { win }) };
+  const host = typeof stage["seed"] === "number" ? stage["seed"] : undefined, cap = Math.min(typeof gear["size"] === "number" ? gear["size"] : chosen.length, Array.isArray(stage["playerSpawns"]) ? stage["playerSpawns"].length : chosen.length), win = winOf(store, stage), levels = levelsOf(store, stage);
+  return { manifest: store.manifest, map, stage, rules: { base: { hp: hp0, atk: atk0 }, stats, hitClass: "basic", ...(Object.keys(reach).length > 0 ? { reach } : {}), ...(Object.keys(abilities).length > 0 ? { abilities } : {}) }, ...(host === undefined ? {} : { hostSeed: host }), talk, chosen: chosen.slice(0, cap), tiles, names, recipes, ...(win === undefined ? {} : { win }), ...(levels === undefined ? {} : { levels }) };
 }
 export function openProject(files: ProjectFiles, stageId?: string): { docs: (PlayOut & { readonly looks: Looks }) | null; error: string } {
   try {
