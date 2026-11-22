@@ -130,8 +130,10 @@ export function createMatch(docs?: PlayDocs, moveMs = 200) {
       const basic = on ? targetsFor(play.world.grid, play.world.units, unit.id, "basic", rules) : [], interact = on ? targetsFor(play.world.grid, play.world.units, unit.id, "interact", rules) : [], spells = on ? spellList(unit.id) : [];
       const btn = (show: boolean, hot: boolean): Btn => ({ show, on: hot });
       const spellOn = on && spellRef(rules, unit.unitId) !== undefined;
+      const levels = play.world.levels, bars = levels === null ? null : levels.state().bars, bar = bars?.find((row) => row.id === me), at = levels === null ? undefined : levels.rules.thresholds[bar?.level ?? 0];
+      const xp = levels === null ? null : { level: bar?.level ?? 0, now: bar?.xp ?? 0, need: typeof at === "number" ? at : 0, top: bar !== undefined && bar.level >= levels.rules.thresholds.length || typeof at !== "number" };
       return {
-        turn: side === me ? "YOUR TURN" : "ENEMY TURN", side, mine: side === me, name: on ? names[unit.unitId] ?? recipeIn(body.recipes, unit.unitId).name : "", hp, max, selected: on, outcome, turns, talk,
+        turn: side === me ? "YOUR TURN" : "ENEMY TURN", side, mine: side === me, name: on ? names[unit.unitId] ?? recipeIn(body.recipes, unit.unitId).name : "", hp, max, selected: on, outcome, turns, talk, xp,
         actions: { basic: btn(menu, basic.length > 0), spell: btn(menu && spellOn, spells.length > 0), talk: btn(on && interact.length > 0, interact.length > 0), wait: btn(phase === "actMenu", phase === "actMenu"), end: btn(true, true) },
       };
     },
