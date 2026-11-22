@@ -1,0 +1,30 @@
+# QA review: rebuild record step-06b
+
+**Verdict: NOT OK.** Two line fixes, both text-only. The appendix, blob table, stamp, G7 counts, named tests, ranges, traps and attribution are otherwise correct. L15 already records the postmerge pass.
+
+Record: `/workspace/share/step-06b-rebuild/docs/rebuild/step-06b.md`, 1520 lines, sha256 `69619566410863ed51e3f4f7929023e55c3d3a04d37eb99cf66e1142e282d3f8`, hash-object `31063e4bb75a6d9955a583a34ff5c61ee07c4fb6` (checked). Merge `be8ce821a3fcb66230eef179bc10ab0c45e7bba4`: tree `21adb8da4c99a834e62bff3f277b3647646001b9`, parents `f8bbd963` + `40dba5e6`, committed 2026-11-22 07:29 (UK time). `origin/main` is `68a67a56787dcf439554a267a1af987479c5f745` (it adds only `docs/qa/step-06b-review.md`). Postmerge already PASSED (1102/0, pins 5/5, smoke 0 failed). HB blob `dde52dea` (187 lines). V sha256 `46fbd930…`, hash-object `24032d6d`, 36 lines. QA `6a31f507`, 73 lines, on main `68a67a56`.
+
+## Must-fix
+1. **L16, HB cite.** Change `(HB:184, V, QA:8)` to `(HB:26, V:19, QA:8)`. HB:184 is the over-cap list and "Count 310"; it does not state the test floor. HB:26 is `N = 9. Floor 1093 (6a's final count). \`npm test\` 1102/0/0/0.` V:19 is `Floor 1093 + N=9 → 1102`. QA:8 already holds.
+2. **L13, s6b ×3 cite.** Change `s6b ×3 (one under CPU load), S0, s3, s4a and s6a all pass (V, QA:8-14)` to `s6b ×3 (one under CPU load; V:23, HB:43), S0, s3, s4a and s6a all pass (V:23, QA:8-14)`. The ×3 count is in V:23 and HB:43 (idle, CPU-load, idle). QA:8-14 covers 1102, G7 310, and the smokes QA actually ran (s6b solo + CPU-load, plus S0, s3, s4a, s6a), not a third s6b pass.
+
+Recheck only those lines.
+
+## The three 04b/04c traps
+- **(a) Commit before diffing: OK.** L103 says to write the product files to match the blob table, then `git add -A && git commit -m rebuild` on a rebuild branch, before measuring.
+- **(b) Final equality against the merge: OK.** L158 says `git diff be8ce821 HEAD --` over the 14 product paths must be empty, and the blob table is at `be8ce821`. Those blobs must also match code head `62963cea`.
+- **(c) G7 cite: OK.** L17 and L99 name `docs/qa/handback-checklist.md` L26, `BUILD_GUIDE.md` L123 (insertions plus deletions; that file is at the repo root), and guide L82. The official command in L109 is against first parent `f8bbd963`.
+
+## Checked OK
+- **Appendix (scripted):** all 14 file sections match merge `be8ce821` byte for byte. That is 5 full new files against `git show be8ce821:<path>`, and 9 diff + 9 full blocks for the edited files against `git diff 0ac31c87 be8ce821` (as the appendix header says) and `git show be8ce821:<path>`. The three quoted body blocks (`levelsOf` at `project.ts:37-44`, the strip at `match.ts:133-134`, `play: army` at `project.ts:50-51`) also match the merge.
+- **Blob table (L175-188):** all 14 blob ids and line counts match `be8ce821`, and the same blobs are on code head `62963cea`.
+- **Stamp:** `node tools/maker/build.ts <out>` after a real `npm ci` writes **`ec57342595a1`** at merge `be8ce821` and at code head `62963cea` (maker and play-stage stamps).
+- **Facts:** these all match my review, the verify report and the repo:
+  - 1102/0 and N=9. The nine named test titles are present at the merge (`tests/editor/levels.test.ts:25-68`, `tests/tools/play-levels.test.ts:33-48`). Floor 1093 → 1102. Parity seed 24301 still ships on the Empty template stage. Golden `90dde42a…` and S0 sha256 `d528795e` (blob `1f50845a`) are unchanged on the base, the code head, the tip and the merge.
+  - G7 at the merge against first parent `f8bbd963`: 13 files, 294+16=310. At the code head and the tip against product base `0ac31c87`: the same 310. At the merge against `0ac31c87` without `':!docs/**'`: 16 files, 6843+16 (the three 6a docs), as L115-117 say; adding `':!docs/**'` gives the official 310.
+  - Trees `25c65425` / `9bb6a11c` / `21adb8da`. Predicted merge tree onto `f8bbd963` is `21adb8da`. Tip vs code is 7 files, 187 insertions (HANDBACK.md + six pngs).
+  - r1 tip `40dba5e6` / code head `62963cea` was OK TO MERGE (QA `6a31f507`, 73 lines, on main `68a67a56`). Guide r2 `c846699d` (sha256 `a8060239…`, 248 lines) on the merge, main, the base, the tip and the code head.
+  - Dates: base `0ac31c87` 2026-11-21 23:05, `f8bbd963` 23:19, code head 2026-11-22 05:40, tip 06:03, merge 07:29, QA-on-main 07:29 (UK time).
+- **Ranges:** every cited range ends on the closing brace or the full construct: `levelsSection` at `tools/maker/levels.ts:20-27`, Off/On at `:25` / `:26`, `setLevels` at `src/editor/rules/levels.ts:51-56`, `resetCurve` at `:61`, `turnOff` at `:50`, `wired.ts:8`, `levelsOf` at `project.ts:37-44` / the default omit at `:39`, `PlayDocs` at `load.ts:23`, the `docsToInput` pass at `:27`, `match.ts:133-134`, `hud.ts:34`, `page.ts:54`, `play: army` at `project.ts:50-51` (moved down from :41-42), and the nine named tests at `levels.test.ts:25-35`, `:36-41`, `:42-51`, `:52-57`, `:58-68` and `play-levels.test.ts:33-38`, `:39-42`, `:43-47`, `:48` (the last is a one-line test). Smoke cites L16-17, L24, L39-42, L68, L88 match. The remaining numbered HB/QA/V cites I checked (QA:3, 8, 16, 21, 23, 67-70, 68, 69, 70, 72-73; HB:3, 4, 37, 41, 43, 159-168, 165-166, 171, 180, 181, 182, 184; guide L35, L37, L82, L165-176, L180, L183, L189-191) point at the line that says the claim. Version/UA claims are sourced: HB:41 is the Playwright headless shell; HB:4 is Node v22.23.3; Chrome `156.0.8078.47` is attributed to QA and CoS (QA:11, QA:69, V:23, V:31), not to HB.
+- **Attribution:** the record never labels a CoS, UX, EA, DSK or builder choice as a CEO ruling. "Chief Of Staff" appears as the verify-report source. D11, D22 and D26 are cited as themselves, not as CEO rulings.
+- **Carries into later steps:** match QA:67-70. Check 8 has one collection point; Chrome/Node note; 4a/4b/4c carries still open; the Empty `play: army` throw is correctly recorded at `project.ts:50-51` after `levelsOf` was inserted (QA:70 still had the 6a line numbers :41-42; the record updates them and does not put that old range in QA's mouth); D22 effect ids and the `catalogue.ts` regen are not this step.
