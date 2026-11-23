@@ -3,13 +3,15 @@ import { planSave } from "../../src/editor/project/save.ts";
 import { testGate, playLine, emptyBoard } from "../../src/editor/project/test-gate.ts";
 import { readProject } from "../../src/project/load/index.ts";
 import type { Looks } from "../play-stage/load.ts";
-import { openProject, type PlayOut } from "../play-stage/project.ts";
+import { openProject, arriveIn, type PlayOut } from "../play-stage/project.ts";
+import type { LinkEvent } from "../../src/rules/session/links.ts";
 import { parseProject } from "./project-files.ts";
 import { commitWrites, readTree, type MakerStore } from "./store.ts";
 export type PlayReady = PlayOut & { readonly looks: Looks };
 export type AimAt = { readonly unitId?: string; readonly abilityId?: string; readonly aim?: "basic" | "spell" };
+export type Next = (from: PlayReady, link: LinkEvent) => { readonly docs: PlayReady | null; readonly error: string };
 export type Launch = { readonly ok: true; readonly files: DocText; readonly rev: number } | { readonly ok: false; readonly lines: readonly string[]; readonly files: DocText; readonly rev: number };
-type Start = (docs: PlayReady, aim?: AimAt) => void;
+type Start = (docs: PlayReady, aim?: AimAt, next?: Next) => void;
 export type LaunchBag = { readonly store: MakerStore; readonly id: string; readonly from: string; readonly stageId?: string; readonly aim?: AimAt; readonly start: Start };
 export const backScreen = (from: string | null): "home" | "trash" | "project" | "stage" => from === "home" || from === "trash" || from === "stage" ? from : "project";
 const fail = (lines: readonly string[], files: DocText, rev: number): Launch => ({ ok: false, lines, files, rev });
@@ -23,7 +25,7 @@ function play(input: LaunchBag, text: DocText): Launch {
   const opened = input.stageId === undefined ? openProject(parsed.files) : openProject(parsed.files, input.stageId);
   if (opened.docs === null) return fail([playLine(opened.error)], text, rev);
   if (emptyBoard(opened.docs)) return fail(["Place a unit on this stage to test it."], text, rev);
-  try { input.start(opened.docs, input.aim); } catch (e) { if (!(e instanceof Error)) throw e; return fail([playLine(e.message)], text, rev); }
+  try { input.start(opened.docs, input.aim, (from, link) => arriveIn(parsed.files, from, link)); } catch (e) { if (!(e instanceof Error)) throw e; return fail([playLine(e.message)], text, rev); }
   showUrl(input.id, stageOf(opened.docs), input.from, input.aim); return { ok: true, files: text, rev };
 }
 /** Read a saved folder and start its stage. No demo fallback. */

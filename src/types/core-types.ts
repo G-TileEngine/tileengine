@@ -159,6 +159,12 @@ export type CoreEnemyPool =
   | { readonly mode: "waves"; readonly spawns: ReadonlyArray<SpawnSq>;
       readonly waves: ReadonlyArray<{ readonly turn: number; readonly entries: ReadonlyArray<{ readonly unitId: UnitId; readonly count: number }> }> };   // STABLE
 
+export type LinkType = "stairs" | "door" | "gate";                              // MAY-MOVE (DSK D27): label only in step 7; same engine rule for all
+export type CoreLink = {
+  readonly type: LinkType;                                                      // MAY-MOVE
+  readonly at: Sq;                                                              // MAY-MOVE: cell on this stage's map
+  readonly to: string;                                                          // MAY-MOVE: target stage id (brokenRef hard if missing)
+};
 export type CoreStage = VersionGuard<"stage"> & {
   readonly id: string;                                                          // STABLE: stage id
   readonly rev: number;                                                         // STABLE
@@ -177,6 +183,7 @@ export type CoreStage = VersionGuard<"stage"> & {
     readonly enemyPool?: SideId;                                                //   default "rival"
     readonly neutrals?: SideId;                                                 //   default "neutral"
   };
+  readonly links?: ReadonlyArray<CoreLink>;                                     // MAY-MOVE (DSK D27, step 7): absent = []; at most one per cell
   readonly enemyPool: CoreEnemyPool;                                            // STABLE
   readonly loadout: CoreLoadout | null;                                         // STABLE: null = use project loadout
   readonly rules: ReadonlyArray<string>;                                        // STABLE: setup ids; replace project rules per behaviour

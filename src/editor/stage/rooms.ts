@@ -1,3 +1,4 @@
+import { linksTo } from "./links.ts";
 type Obj = Record<string, unknown>;
 const isObj = (v: unknown): v is Obj => typeof v === "object" && v !== null && !Array.isArray(v);
 const list = (v: unknown): readonly unknown[] => (Array.isArray(v) ? v : []);
@@ -7,7 +8,7 @@ const inner = (doc: Obj): Obj => (isObj(doc["project"]) ? doc["project"] : {});
 export function docsIn(files: Record<string, Obj>, folder: "stages" | "maps"): { readonly path: string; readonly doc: Obj }[] {
   return Object.entries(files).flatMap(([path, doc]) => (path.startsWith(`${folder}/`) && isObj(doc) && typeof doc["id"] === "string" ? [{ path, doc }] : []));
 }
-/** Live stages (project.stages) whose mapRef is this id. Step 7 adds link targets. */
+/** Live stages (project.stages) whose mapRef is this id. Links target stages, not maps, so this stays mapRef-only. */
 export function refsTo(files: Record<string, Obj>, id: string): readonly string[] {
   const stages = docsIn(files, "stages");
   return list(inner(rootOf(files))["stages"]).flatMap((sid) => {
@@ -40,6 +41,7 @@ export function renameDoc(files: Record<string, Obj>, path: string, name: string
 export function deleteStage(files: Record<string, Obj>, stageId: string): { readonly ok: true; readonly files: Record<string, Obj> } | { readonly ok: false; readonly reason: string } {
   const stages = list(inner(rootOf(files))["stages"]).filter((id): id is string => typeof id === "string");
   if (!stages.includes(stageId) || stages.length <= 1) return { ok: false, reason: "A game needs at least one stage" };
+  const named = linksTo(files, stageId); if (named.length > 0) return { ok: false, reason: `A link on ${named.join(", ")} leads here. Remove it first.` };
   const root = clone(rootOf(files)), proj = { ...inner(root) }; proj["stages"] = stages.filter((id) => id !== stageId);
   if (isObj(proj["render"]) && Array.isArray(proj["render"]["excludedStages"])) { const render = { ...proj["render"] }; render["excludedStages"] = list(render["excludedStages"]).filter((id) => id !== stageId); proj["render"] = render; }
   root["project"] = proj; return { ok: true, files: { ...files, "project.json": root } };

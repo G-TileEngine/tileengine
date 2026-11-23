@@ -26,6 +26,7 @@ export function placementDrops(stages: Readonly<Record<string, Doc>>, stageAt: R
       ["playerSpawns", true, list(stage["playerSpawns"])],
       ["neutrals", false, list(stage["neutrals"])],
       ["enemyPool/entries", false, isObj(stage["enemyPool"]) && stage["enemyPool"]["mode"] === "fixed" ? list(stage["enemyPool"]["entries"]) : []],
+      ["links", false, list(stage["links"])],
     ];
     for (const [name, direct, entries] of lists) for (let i = 0; i < entries.length; i += 1) {
       const entry = entries[i]; if (!isObj(entry)) continue;
