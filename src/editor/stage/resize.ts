@@ -1,6 +1,6 @@
 type Obj = Record<string, unknown>;
 type Sq = { readonly c: number; readonly r: number };
-export type PlaceDrop = { readonly code: "placementDropped"; readonly stageId: string; readonly list: "playerSpawns" | "neutrals" | "enemyPool"; readonly index: number; readonly reason: "outsideMap"; readonly path: string; readonly sq: Sq | null; readonly unitId?: string };
+export type PlaceDrop = { readonly code: "placementDropped"; readonly stageId: string; readonly list: "playerSpawns" | "neutrals" | "enemyPool" | "links"; readonly index: number; readonly reason: "outsideMap"; readonly path: string; readonly sq: Sq | null; readonly unitId?: string };
 export type EdgeDrop = { readonly code: "mapEntryDropped"; readonly mapId: string; readonly field: "edges"; readonly index: number; readonly reason: "outsideMap"; readonly path: string };
 export type Drop = PlaceDrop | EdgeDrop;
 const isObj = (v: unknown): v is Obj => typeof v === "object" && v !== null && !Array.isArray(v);
@@ -43,11 +43,11 @@ export function resizeMap(mapPath: string, map: Obj, stages: readonly { readonly
       const bag = pool && isObj(doc["enemyPool"]) ? doc["enemyPool"] : null;
       const entries = pool ? (bag !== null && bag["mode"] === "fixed" ? list(bag["entries"]) : []) : list(doc[key]);
       if (pool && (bag === null || bag["mode"] !== "fixed")) return;
-      const got = trim(entries, direct, cols, rows, path, pool ? "enemyPool" : key === "neutrals" ? "neutrals" : "playerSpawns", stageId);
+      const got = trim(entries, direct, cols, rows, path, pool ? "enemyPool" : key === "neutrals" ? "neutrals" : key === "links" ? "links" : "playerSpawns", stageId);
       drops.push(...got.drops); if (!got.changed) return;
       if (pool && bag !== null) put("enemyPool", { ...bag, entries: got.kept }); else put(key, got.kept);
     };
-    cut("playerSpawns", true, false); cut("neutrals", false, false); cut("enemyPool", false, true); return { path, doc: next ?? doc };
+    cut("playerSpawns", true, false); cut("neutrals", false, false); cut("enemyPool", false, true); cut("links", false, false); return { path, doc: next ?? doc };
   });
   const logic = isObj(map["logic"]) ? map["logic"] : {}, palette = isObj(logic["palette"]) ? { ...logic["palette"] } : {}, edges = list(logic["edges"]), keptEdges: unknown[] = [];
   edges.forEach((edge, i) => {

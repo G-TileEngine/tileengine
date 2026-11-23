@@ -1,4 +1,4 @@
-import type { CoreEnemyPool, CoreLoadout, CoreStage, Facing, SpawnSq } from "../../types/core-types.ts";
+import type { CoreEnemyPool, CoreLink, CoreLoadout, CoreStage, Facing, SpawnSq } from "../../types/core-types.ts";
 import { CURRENT_FORMAT_VERSIONS, bad, checkVersion, guarded, isInt, isObj, isStr, strs, type ReadFail, type ReadResult } from "./guard.ts";
 import { UINT32_MAX, docLimits, fitted, overCap, tooMany, type DocLimits } from "./limits.ts";
 
@@ -32,6 +32,13 @@ function neutrals(v: unknown): CoreStage["neutrals"] | null {
   if (!Array.isArray(v)) return null;
   const out: CoreStage["neutrals"][number][] = [];
   for (const x of v) { if (!isObj(x) || !isStr(x.unitId)) return null; const at = cell(x.at); const f = face(x.facing); const side = optStr(x.side); if (at === null || !f.ok || side === null) return null; out.push({ unitId: x.unitId, at, ...(f.facing === undefined ? {} : { facing: f.facing }), ...(side === undefined ? {} : { side }) }); }
+  return out;
+}
+function links(v: unknown): CoreLink[] | undefined | null {
+  if (v === undefined) return undefined;
+  if (!Array.isArray(v)) return null;
+  const out: CoreLink[] = [];
+  for (const x of v) { if (!isObj(x) || (x.type !== "stairs" && x.type !== "door" && x.type !== "gate") || !isStr(x.to)) return null; const at = cell(x.at); if (at === null) return null; out.push({ type: x.type, at, to: x.to }); }
   return out;
 }
 function pool(v: unknown): CoreEnemyPool | null {
@@ -70,6 +77,7 @@ function take(limits: StageLimits): { picks: number; waveUnits: number; doc: Doc
 function countOf(json: Record<string, unknown>, lim: DocLimits): ReadFail | null {
   if (tooMany(json.neutrals, lim.spots)) return overCap("neutrals");
   if (tooMany(json.playerSpawns, lim.spots)) return overCap("playerSpawns");
+  if (tooMany(json.links, lim.spots)) return overCap("links");
   const pool = json.enemyPool; if (!isObj(pool)) return null; const list = pool.mode === "fixed" ? pool.entries : pool.spawns;
   if ((pool.mode === "fixed" || pool.mode === "weighted" || pool.mode === "waves") && tooMany(list, lim.spots)) return overCap("enemyPool");
   if (pool.mode === "weighted" && tooMany(pool.entries, lim.spots)) return overCap("enemyPool");
@@ -93,6 +101,7 @@ function readStageDoc(json: unknown, lim: ReturnType<typeof take>): ReadResult<C
   const early = countOf(json, lim.doc); if (early !== null) return early;
   const playerSpawns = spawns(json.playerSpawns); if (playerSpawns === null) return bad("playerSpawns");
   const neutral = neutrals(json.neutrals); if (neutral === null) return bad("neutrals");
+  const linkList = links(json.links); if (linkList === null) return bad("links");
   const rawSeed = json.seed;
   const seed = rawSeed === undefined ? undefined : rawSeed === null ? null : typeof rawSeed === "number" && Number.isInteger(rawSeed) && rawSeed >= 0 && rawSeed <= UINT32_MAX ? (rawSeed === 0 ? 0 : rawSeed) : undefined;
   if (rawSeed !== undefined && seed === undefined) return bad("seed");
@@ -104,6 +113,6 @@ function readStageDoc(json: unknown, lim: ReturnType<typeof take>): ReadResult<C
   return fitted({
     kind: "stage", formatVersion: CURRENT_FORMAT_VERSIONS.stage, id: json.id, rev: json.rev, mapRef: json.mapRef,
     playerSpawns, neutrals: neutral, enemyPool, loadout: gear, rules,
-    ...(seed === undefined ? {} : { seed }), ...(sides === undefined ? {} : { sides }),
+    ...(seed === undefined ? {} : { seed }), ...(sides === undefined ? {} : { sides }), ...(linkList === undefined ? {} : { links: linkList }),
   }, lim.doc, []);
 }

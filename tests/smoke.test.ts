@@ -11,5 +11,5 @@ test("smoke: engine root exports name and version", () => {
 
 test("smoke: core-types.ts is the pinned DSK copy", () => {
   const sha = createHash("sha256").update(readFileSync("src/types/core-types.ts")).digest("hex");
-  assert.equal(sha, "d6d0869644f3c9876aa1101d8a7248f8b5a18b3beabcb0b191c9c42fec88a366");
+  assert.equal(sha, "fd27de06c035ab8c3767a31ad0cf2bf75fa74ca200487a6e2ea762f2d90e747d");
 });

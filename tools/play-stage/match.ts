@@ -5,6 +5,7 @@ import { walkTo } from "../../src/rules/move/path.ts";
 import { submit } from "../../src/sim/actions.ts";
 import type { DoorIntent } from "../../src/sim/types.ts";
 import type { Outcome } from "../../src/state/index.ts";
+import { linkAt, linkEvent, type LinkEvent } from "../../src/rules/session/links.ts";
 import type { Sq } from "../../src/types/core-types.ts";
 import { createPlay, spellRef } from "./board.ts";
 import { recipeIn, type PlayDocs } from "./load.ts";
@@ -75,7 +76,8 @@ export function createMatch(docs?: PlayDocs, moveMs = 200) {
     go({ type: "UNIT_DONE", next: "idle" });
     play.followId = null;
   };
-  play.landed(() => { if (side === me) return; go({ type: "WAIT" }); go({ type: "UNIT_DONE", next: "idle" }); pump(); });
+  let tell: ((link: LinkEvent) => void) | null = null;
+  play.landed(() => { if (side !== me) { go({ type: "WAIT" }); go({ type: "UNIT_DONE", next: "idle" }); pump(); return; } const who = play.selected === null ? undefined : play.world.units.get(play.selected), hit = who === undefined ? null : linkAt(body.links ?? [], who.at); if (hit === null) return; const from = body.stage; tell?.(linkEvent(hit, typeof from === "object" && from !== null && "id" in from && typeof from.id === "string" ? from.id : "")); });
   const wipe = (): void => { play.aims = []; talk = null; play.focus(null); play.followId = null; };
   const back = (): "unitSelected" | "actMenu" | null => {
     if (play.world.phases.battle !== "targeting") return null;
@@ -115,6 +117,7 @@ export function createMatch(docs?: PlayDocs, moveMs = 200) {
       wipe(); turns += 1; if (finish()) return; if (side !== me) { queue = [...play.bot(play.world, side)]; pump(); }
     },
     closeTalk() { talk = null; if (play.world.phases.battle === "actMenu") spend(); play.focus(null); },
+    onLink(fn: (link: LinkEvent) => void): void { tell = fn; },
     recentreTarget(): Sq | null {
       const cur = play.selected === null ? undefined : play.world.units.get(play.selected);
       if (cur !== undefined && cur.alive) return { c: cur.at.c, r: cur.at.r };

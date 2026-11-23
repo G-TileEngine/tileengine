@@ -3,13 +3,14 @@ import { prefix, ulid, type DocText } from "../../src/editor/project/home.ts";
 import { planSave } from "../../src/editor/project/save.ts";
 import { paintCells, startNew } from "../../src/editor/stage/paint.ts";
 import { addEnemy, addNeutral, addSpawn, attachTalk, infoText, moveEntry, placeRows, refuse, removeEntry, standHere, type PlaceList } from "../../src/editor/stage/place.ts";
+import { addLink, linkOn, removeLink } from "../../src/editor/stage/links.ts";
 import { closedType, sheetRows, typeLabel, type SheetRow } from "../../src/editor/stage/sheet.ts";
 import { fillTalk, talkKnobs, talkLimit } from "../../src/editor/stage/talk.ts";
 import { canUndo, pop, push } from "../../src/editor/stage/undo.ts";
 import type { ProjectFiles } from "../../src/project/load/types.ts";
 import { parseProject } from "./project-files.ts";
 import { rulesSheet } from "./rules-panel.ts";
-import { askSheet, moveChip, placeButtons, talkSheet, unitButtons, unitPicker } from "./stage-sheets.ts";
+import { askSheet, goesSheet, LINK_LABEL, moveChip, placeButtons, talkSheet, unitButtons, unitPicker } from "./stage-sheets.ts";
 import { commitWrites, readTree, type MakerStore } from "./store.ts";
 type Obj = Record<string, unknown>;
 type Cell = { readonly c: number; readonly r: number };
@@ -23,8 +24,8 @@ const isObj = (v: unknown): v is Obj => typeof v === "object" && v !== null && !
 const list = (v: unknown): readonly unknown[] => (Array.isArray(v) ? v : []);
 const amp = String.fromCharCode(38);
 const esc = (t: string): string => t.replace(/[&<>"']/g, (ch) => ch === amp ? amp + "amp;" : ch === "<" ? amp + "lt;" : ch === ">" ? amp + "gt;" : ch === '"' ? amp + "quot;" : amp + "#39;");
-type Sess = { id: string; project: string; draft: Obj | null; path: string | null; stagePath: string | null; painting: string | null; label: string; stack: unknown[]; gridOn: boolean; sheet: Cell | null; view: boolean; confirm: boolean; note: string | null; sel: Cell | null; moving: Spot | null; pick: PlaceList | null; ask: number | null; talking: boolean; line: string };
-const blank = (id: string, project: string): Sess => ({ id, project, draft: null, path: null, stagePath: null, painting: null, label: "", stack: [], gridOn: true, sheet: null, view: false, confirm: false, note: null, sel: null, moving: null, pick: null, ask: null, talking: false, line: "" });
+type Sess = { id: string; project: string; draft: Obj | null; path: string | null; stagePath: string | null; painting: string | null; label: string; stack: unknown[]; gridOn: boolean; sheet: Cell | null; view: boolean; confirm: boolean; note: string | null; sel: Cell | null; moving: Spot | null; pick: PlaceList | null; ask: number | null; talking: boolean; line: string; link: "stairs" | "door" | "gate" | null };
+const blank = (id: string, project: string): Sess => ({ id, project, draft: null, path: null, stagePath: null, painting: null, label: "", stack: [], gridOn: true, sheet: null, view: false, confirm: false, note: null, sel: null, moving: null, pick: null, ask: null, talking: false, line: "", link: null });
 let sess: Sess = blank("", ""), skeleton: Obj | null = null;
 export function bindStage(id: string, project: string): void { if (sess.id !== id || sess.project !== project) sess = blank(id, project); }
 export function rememberTalk(doc: unknown): void { if (isObj(doc)) skeleton = doc; }
@@ -93,15 +94,15 @@ function bundle(files: DocText, stageId: string): { readonly parsed: ProjectFile
   sess.path = map.path; sess.stagePath = stage.path; return { parsed: parsed.files, stage: stage.doc, map: sess.draft ?? (structuredClone(map.doc) as Obj), slice };
 }
 function tone(id: string): string { return id === "floor" || id === "water" ? id : id === "wall-block" ? "wall" : "other"; }
-function cellsHtml(map: Obj, slice: Obj, placed: readonly Mark[], sel: Cell | null): string {
+function cellsHtml(map: Obj, slice: Obj, stage: Obj, placed: readonly Mark[], sel: Cell | null): string {
   const cols = typeof map["cols"] === "number" ? map["cols"] : 0, rows = typeof map["rows"] === "number" ? map["rows"] : 0;
   let html = `<div class="grid${sess.gridOn ? "" : " off"}" style="grid-template-columns:repeat(${cols},48px)">`;
   for (let r = 0; r < rows; r += 1) for (let c = 0; c < cols; c += 1) {
     const id = tileId(map, c, r), label = typeLabel(slice, id), mark = placed.find((item) => item.c === c && item.r === r) ?? null;
-    const text = mark !== null || label.length > 5 ? label.slice(0, 1) : label, on = sel !== null && sel.c === c && sel.r === r ? " on" : "";
+    const hit = list(stage["links"]).find((link) => isObj(link) && isObj(link["at"]) && link["at"]["c"] === c && link["at"]["r"] === r), word = isObj(hit) && hit["type"] === "stairs" ? "Stairs" : isObj(hit) && hit["type"] === "door" ? "Door" : isObj(hit) && hit["type"] === "gate" ? "Gate" : "", glyph = word === "Stairs" ? "S↗" : word === "Door" ? "D↗" : word === "Gate" ? "G↗" : "", text = glyph !== "" && mark === null ? glyph : mark !== null || label.length > 5 ? label.slice(0, 1) : label, on = sel !== null && sel.c === c && sel.r === r ? " on" : "";
     const who = mark === null ? "" : `<span class="who">${esc(mark.letter)}</span><span class="pill">${esc(mark.pill)}</span>`;
     const star = mark !== null && mark.n >= 1 ? `<span class="star">✦${mark.n}</span>` : "";
-    html += `<button type="button" class="cell t-${tone(id)}${on}" data-act="s:cell:${c},${r}" data-tile="${esc(id)}" aria-label="${esc(label)}${mark === null ? "" : `, ${mark.name}, ${mark.pill}`}"><span>${esc(text)}</span>${who}${star}</button>`;
+    html += `<button type="button" class="cell t-${tone(id)}${on}" data-act="s:cell:${c},${r}" data-tile="${esc(id)}" aria-label="${esc(label)}${mark === null ? "" : `, ${mark.name}, ${mark.pill}`}${word === "" ? "" : `, ${word}`}"><span>${esc(text)}</span>${who}${star}</button>`;
   }
   return `${html}</div>`;
 }
@@ -145,13 +146,15 @@ export function stageScreen(stageId: string, host: Host): string {
   const start = host.readOnly ? "" : `<button type="button" class="btn ghost" data-act="s:fresh">Start new</button>`;
   const bar = `<header class="topbar wrap"><button type="button" class="btn ghost" data-act="s:back">Back</button><h1>${esc(name)}${dot}</h1><button type="button" class="btn ghost" data-act="s:view">View</button><button type="button" class="btn ghost" data-act="r:open">Rules</button>${start}<button type="button" class="btn" data-act="s:test">Test</button></header>`;
   const cell = sess.sheet, mark = cell === null ? null : placed.find((item) => same(item, cell)) ?? null;
+  const names = stageRows(host.files), linked = mark === null && cell !== null ? linkOn(got.stage, cell.c, cell.r) : null, linkType = linked !== null && (linked["type"] === "stairs" || linked["type"] === "door" || linked["type"] === "gate") ? linked["type"] : null;
   const rows = sheetRows(got.slice, mark !== null);
   const group = (title: SheetRow["group"]): string => { const mine = rows.filter((row) => row.group === title); return mine.length === 0 ? "" : `<p class="sub">${title}</p>${mine.map((row) => `<button type="button" class="choice" data-act="s:type:${esc(row.id)}">${esc(row.label)}</button>`).join("")}`; };
-  const stood = mark === null ? "" : `${unitButtons(mark.pill === "NPC", mark.id !== "" && stageFor(got.parsed, mark.id) !== null)}`;
-  const place = mark === null && cell !== null && !closedType(got.slice, tileId(got.map, cell.c, cell.r)) ? placeButtons(placeRows(got.stage)) : "";
-  const title = mark === null ? "Add here" : `${esc(mark.name)} · ${esc(teamOf(mark.pill))}`;
+  const stood = linkType !== null ? `<button type="button" class="btn" data-act="s:unlink">Remove link</button>` : mark === null ? "" : `${unitButtons(mark.pill === "NPC", mark.id !== "" && stageFor(got.parsed, mark.id) !== null)}`;
+  const place = linkType === null && mark === null && cell !== null && !closedType(got.slice, tileId(got.map, cell.c, cell.r)) ? placeButtons(placeRows(got.stage)) : "";
+  const linkBtns = place !== "" && names.some((row) => row.id !== stageId) ? `<p class="sub">Link</p>${(["stairs", "door", "gate"] as const).map((type) => `<button type="button" class="btn" data-act="s:link:${type}">${LINK_LABEL[type]}</button>`).join("")}` : "";
+  const title = linkType !== null ? `${esc(LINK_LABEL[linkType])} to ${esc(typeof linked?.["to"] === "string" ? names.find((row) => row.id === linked["to"])?.name ?? "Stage" : "")}` : mark === null ? "Add here" : `${esc(mark.name)} · ${esc(teamOf(mark.pill))}`;
   const where = mark === null && cell !== null ? `<p class="sub">Tile ${cell.c},${cell.r}</p>` : "";
-  const sheet = host.readOnly || cell === null ? "" : `<div class="scrim"><div class="sheet" role="dialog"><h2>${title}</h2>${where}${stood}${place}${group("Ground")}${group("Terrain")}<button type="button" class="btn ghost" data-act="s:close">Close</button></div></div>`;
+  const sheet = host.readOnly || cell === null ? "" : `<div class="scrim"><div class="sheet" role="dialog"><h2>${title}</h2>${where}${stood}${place}${linkBtns}${group("Ground")}${group("Terrain")}<button type="button" class="btn ghost" data-act="s:close">Close</button></div></div>`;
   const view = sess.view ? `<div class="scrim"><div class="sheet" role="dialog"><h2>View</h2><button type="button" class="choice" data-act="s:grid">Grid lines: ${sess.gridOn ? "On" : "Off"}</button><button type="button" class="btn ghost" data-act="s:close">Close</button></div></div>` : "";
   const confirm = !host.readOnly && sess.confirm ? `<div class="scrim"><div class="sheet" role="dialog"><h2>Start new</h2><p>Every tile goes back to Floor, and every NPC and enemy is removed. Your team's start tiles stay. You can Undo this.</p><button type="button" class="btn danger" data-act="s:fresh-go">Start new</button><button type="button" class="btn ghost" data-act="s:close">Cancel</button></div></div>` : "";
   const undo = host.readOnly ? "" : `<button type="button" class="btn ghost undo" data-act="s:undo"${canUndo(sess.stack) ? "" : " disabled"}>${canUndo(sess.stack) ? "Undo" : "Nothing to undo"}</button>`;
@@ -163,13 +166,13 @@ export function stageScreen(stageId: string, host: Host): string {
   const who = sess.ask === null ? "" : askName(got.parsed, got.stage, sess.ask);
   const ask = sess.ask === null ? "" : sess.talking ? talkSheet(who, talkLimit(got.slice), sess.line) : askSheet(who);
   const pick = sess.pick === null ? "" : unitPicker(unitChoices(got.parsed));
-  return `${bar}<div class="body stage">${banner}${info}${note}${cellsHtml(got.map, got.slice, placed, sess.sel)}</div>${dock}${sheet}${pick}${ask}${view}${confirm}${rulesSheet(host.files, stageId, host.readOnly)}`;
+  return `${bar}<div class="body stage">${banner}${info}${note}${cellsHtml(got.map, got.slice, got.stage, placed, sess.sel)}</div>${dock}${sheet}${sess.link === null ? "" : goesSheet(LINK_LABEL[sess.link], names.filter((row) => row.id !== stageId))}${pick}${ask}${view}${confirm}${rulesSheet(host.files, stageId, host.readOnly)}`;
 }
 function kept(host: Host): StageOut { return { ...host, leave: false, test: false }; }
 export async function stageClick(act: string, stageId: string, host: Host, io: Io): Promise<StageOut> {
   if (act === "s:back") { if (host.readOnly || sess.draft === null) return { ...host, leave: true, test: false }; const saved = await writeMap(io, host.files, host.rev, sess.draft); return saved.ok ? { ...host, files: saved.files, rev: saved.rev, dirty: saved.dirty, banner: host.readOnly ? host.banner : null, leave: true, test: false } : { ...host, dirty: true, banner: saved.message, leave: false, test: false }; }
   if (act === "s:test") return { ...host, leave: false, test: true };
-  if (act === "s:close") { sess.sheet = null; sess.view = false; sess.confirm = false; sess.pick = null; sess.ask = null; sess.talking = false; return kept(host); }
+  if (act === "s:close") { sess.sheet = null; sess.view = false; sess.confirm = false; sess.pick = null; sess.ask = null; sess.talking = false; sess.link = null; return kept(host); }
   if (act === "s:view") { sess.view = true; sess.sheet = null; sess.confirm = false; return kept(host); }
   if (act === "s:grid") { sess.gridOn = !sess.gridOn; return kept(host); }
   if (host.readOnly) return kept(host);
@@ -178,7 +181,7 @@ export async function stageClick(act: string, stageId: string, host: Host, io: I
   if (act === "s:fresh") { sess.confirm = true; sess.sheet = null; sess.view = false; return kept(host); }
   if (act === "s:undo") {
     const item = pop(sess.stack); if (item === null) return kept(host);
-    sess.stack = item.rest; sess.painting = null; sess.label = ""; sess.sheet = null; sess.confirm = false; sess.note = null; sess.moving = null; sess.pick = null; sess.ask = null; sess.talking = false;
+    sess.stack = item.rest; sess.painting = null; sess.label = ""; sess.sheet = null; sess.confirm = false; sess.note = null; sess.moving = null; sess.pick = null; sess.ask = null; sess.talking = false; sess.link = null;
     const snap = item.snap;
     if (isObj(snap) && typeof snap["cols"] === "number") {
       sess.draft = snap; const saved = await writeMap(io, host.files, host.rev, snap);
@@ -234,6 +237,9 @@ export async function stageClick(act: string, stageId: string, host: Host, io: I
   }
   const here = (): Mark | null => sess.sheet === null ? null : placed.find((item) => sess.sheet !== null && same(item, sess.sheet)) ?? null;
   if (act === "s:place:spawn" && sess.sheet !== null) { const at = sess.sheet; sess.sheet = null; return commitStage(io, host, addSpawn(got.stage, at), got.stage); }
+  if (act.startsWith("s:link:") && sess.sheet !== null) { const type = act.slice(7); if (type !== "stairs" && type !== "door" && type !== "gate") return kept(host); sess.link = type; return kept(host); }
+  if (act.startsWith("s:to:") && sess.link !== null && sess.sheet !== null) { const id = act.slice(5); if (!stageRows(host.files).some((row) => row.id === id)) return kept(host); const next = addLink(got.stage, sess.link, sess.sheet.c, sess.sheet.r, id); if (next === null) return kept(host); sess.link = null; sess.sheet = null; return commitStage(io, host, next, got.stage); }
+  if (act === "s:unlink" && sess.sheet !== null) { const at = sess.sheet; sess.link = null; sess.sheet = null; return commitStage(io, host, removeLink(got.stage, at.c, at.r), got.stage); }
   if (act === "s:place:npc" || act === "s:place:enemy") { if (sess.sheet === null) return kept(host); sess.pick = act.endsWith("enemy") ? "enemy" : "npc"; return kept(host); }
   if (act.startsWith("s:unit:") && sess.pick !== null && sess.sheet !== null) {
     const id = act.slice(7), at = sess.sheet;
