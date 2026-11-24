@@ -119,7 +119,7 @@ export function createMatch(docs?: PlayDocs, moveMs = 200) {
     },
     closeTalk() { talk = null; if (play.world.phases.battle === "actMenu") spend(); play.focus(null); },
     onLink(fn: (link: LinkEvent) => void): void { tell = fn; },
-    party() { const rules = play.world.rules; if (rules === null) throw new Error("play: party needs rules"); const hp: Record<string, number> = Object.create(null); for (const row of rules.state().units) { const u = play.world.units.get(row.id); if (u !== undefined && u.alive && u.side === me && !Object.hasOwn(hp, u.unitId)) hp[u.unitId] = row.hp; } const levels = play.world.levels; return partyOf(play.world.units.all(), hp, me, levels === null ? null : levels.state().bars); },
+    party() { const rules = play.world.rules; if (rules === null) throw new Error("play: party needs rules"); const hp: Record<string, number> = Object.create(null); for (const row of rules.state().units) { const u = play.world.units.get(row.id); if (u !== undefined && u.alive && u.side === me && !Object.hasOwn(hp, u.unitId)) hp[u.unitId] = row.hp; } const levels = play.world.levels, got = partyOf(play.world.units.all(), hp, me, levels === null ? null : levels.state().bars), extra = (body.bench ?? []).filter((m) => !got.members.some((row) => row.unitId === m.unitId)); return extra.length === 0 ? got : { ...got, members: [...got.members, ...extra] }; },
     recentreTarget(): Sq | null {
       const cur = play.selected === null ? undefined : play.world.units.get(play.selected);
       if (cur !== undefined && cur.alive) return { c: cur.at.c, r: cur.at.r };
@@ -138,7 +138,7 @@ export function createMatch(docs?: PlayDocs, moveMs = 200) {
       const levels = play.world.levels, bars = levels === null ? null : levels.state().bars, bar = bars?.find((row) => row.id === me), at = levels === null ? undefined : levels.rules.thresholds[bar?.level ?? 0];
       const xp = levels === null ? null : { level: bar?.level ?? 0, now: bar?.xp ?? 0, need: typeof at === "number" ? at : 0, top: bar !== undefined && bar.level >= levels.rules.thresholds.length || typeof at !== "number" };
       return {
-        turn: side === me ? "YOUR TURN" : "ENEMY TURN", side, mine: side === me, name: on ? names[unit.unitId] ?? recipeIn(body.recipes, unit.unitId).name : "", hp, max, selected: on, outcome, turns, talk, xp,
+        turn: side === me ? "YOUR TURN" : "ENEMY TURN", side, mine: side === me, name: on ? names[unit.unitId] ?? recipeIn(body.recipes, unit.unitId).name : "", hp, max, selected: on, outcome, turns, talk, xp, note: body.bench === undefined || body.bench.length === 0 ? null : `Not placed: ${body.bench.length} of your team had no free cell. They stay with the party.`,
         actions: { basic: btn(menu, basic.length > 0), spell: btn(menu && spellOn, spells.length > 0), talk: btn(on && interact.length > 0, interact.length > 0), wait: btn(phase === "actMenu", phase === "actMenu"), end: btn(true, true) },
       };
     },
