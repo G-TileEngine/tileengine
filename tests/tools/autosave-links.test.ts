@@ -1,10 +1,22 @@
-import assert from "node:assert/strict"; import { test } from "node:test";
-import { createRng } from "../../src/core/rng/index.ts"; import { setAutosave } from "../../src/editor/stage/links.ts"; import { deleteStage, setStart } from "../../src/editor/stage/rooms.ts";
-import { readProject, type ProjectFiles } from "../../src/project/load/index.ts"; import { readManifest, readStage } from "../../src/project/read/index.ts"; import { readSession, sessionSave, settleSession } from "../../src/project/read/session.ts";
-import { createLevels } from "../../src/rules/levels/index.ts"; import { arrival, autosaves } from "../../src/rules/session/links.ts"; import { partyOf } from "../../src/rules/session/party.ts";
-import { SAVE_MIGRATIONS, type SaveChains } from "../../src/sim/migrations/save/index.ts"; import type { SaveHeader, SessionParty } from "../../src/types/core-types.ts";
-import { shopFiles } from "../../tools/baseline/checkpoint.ts"; import { readAutosave, slotOf, writeAutosave } from "../../tools/maker/session.ts"; import { memoryStore, type MakerStore } from "../../tools/maker/store.ts";
-import { createMatch } from "../../tools/play-stage/match.ts"; import { arriveIn, openProject } from "../../tools/play-stage/project.ts";
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { createRng } from "../../src/core/rng/index.ts";
+import { setAutosave } from "../../src/editor/stage/links.ts";
+import { deleteStage, setStart } from "../../src/editor/stage/rooms.ts";
+import { readProject, type ProjectFiles } from "../../src/project/load/index.ts";
+import { readManifest, readStage } from "../../src/project/read/index.ts";
+import { readSession, sessionSave, settleSession } from "../../src/project/read/session.ts";
+import { createLevels } from "../../src/rules/levels/index.ts";
+import { arrival, autosaves } from "../../src/rules/session/links.ts";
+import { partyOf } from "../../src/rules/session/party.ts";
+import { SAVE_MIGRATIONS, type SaveChains } from "../../src/sim/migrations/save/index.ts";
+import type { SaveHeader, SessionParty } from "../../src/types/core-types.ts";
+import { openShop, shopFiles } from "../../tools/baseline/checkpoint.ts";
+import { readout } from "../../tools/baseline/readout.ts";
+import { readAutosave, slotOf, writeAutosave } from "../../tools/maker/session.ts";
+import { memoryStore, type MakerStore } from "../../tools/maker/store.ts";
+import { createMatch } from "../../tools/play-stage/match.ts";
+import { arriveIn, openProject } from "../../tools/play-stage/project.ts";
 const S1 = "stage_01JDES00000000000000000001", S2 = "stage_01JDES00000000000000000002", H = "unit_01M81X2BX5ANZS5PWVAFHNCASA", R = "unit_01M81X2PKRZ2NQKAHDV247ZRX3", ID = "project_01M81X22DNRFYKC2MHE6JECEM3";
 type Obj = Record<string, unknown>; type Match = ReturnType<typeof createMatch>;
 const isObj = (v: unknown): v is Obj => typeof v === "object" && v !== null && !Array.isArray(v), bad = (e: unknown, message: string): boolean => e instanceof Error && e.message === message;
@@ -88,4 +100,28 @@ test("step 8 session save (D28): v1 only, migrated first by migrateSave, mismatc
   const settled = settleSession(sessionSave(header, "gone-from", "gone-to", party(2, [{ unitId: H, hp: 2 }, { unitId: "missing", hp: 3 }])), [S1, S2], [H, R], S2);
   assert.equal(settled.to, S2); assert.equal(settled.from, null); assert.deepEqual(settled.party.members, [{ unitId: H, hp: 2 }]); assert.equal(settled.notes.length === 3 && settled.notes.every((n) => n.code === "saveRefDropped"), true);
   assert.deepEqual(atOf(createMatch(open(shopFiles(), settled.from, settled.to, settled.party), 200), H, "player"), [{ c: 0, r: 4 }]);
+});
+const nook = (open: readonly number[]): ProjectFiles => {
+  const files = shopFiles(), mapPath = "maps/map_01JDEM00000000000000000002.json", map = files[mapPath], stagePath = `stages/${S2}.json`, stage = files[stagePath], logic = isObj(map) ? map["logic"] : undefined, cells = isObj(logic) && Array.isArray(logic["terrain"]) ? logic["terrain"] : null;
+  if (cells === null || !isObj(map) || !isObj(logic) || !isObj(stage)) throw new Error("nook");
+  return { ...files, [mapPath]: { ...map, logic: { ...logic, terrain: cells.map((_, i) => open.includes(i) ? 0 : 1) } }, [stagePath]: { ...stage, enemyPool: { mode: "fixed", entries: [{ unitId: R, at: { c: 1, r: 4 } }] } } };
+};
+test("step 8 baseline ?scene=shop: two floors joined by stairs, and the readout adds stage changes and the worst post-swap frame", () => {
+  const opened = openShop(); assert.equal(opened.error, ""); if (opened.docs === null) throw new Error(opened.error); assert.equal(createMatch(opened.docs, 0).sides.contest, false);
+  const down = shopFiles()[`stages/${S1}.json`], up = shopFiles()[`stages/${S2}.json`]; if (!isObj(down) || !isObj(up) || !Array.isArray(down["links"]) || !Array.isArray(up["links"])) throw new Error("stairs");
+  const a = down["links"][0], b = up["links"][0]; assert.equal(isObj(a) && a["to"], S2); assert.equal(isObj(b) && b["to"], S1);
+  const gaps = [16, 16, 40, 61, 16, 16, 30], row = readout({ gaps, elapsedMs: 1000, canvasMb: 1, heapMb: null, dpr: 1, swaps: [2, 5], scene: "shop" });
+  assert.equal(row.endsWith("stage changes 2\nworst ms in 3 frames after a swap 61.0"), true); assert.equal(row.includes("over 50 ms 1 of 7"), true); assert.equal(row.startsWith("baseline 06c · Shop stairs (?scene=shop)\n"), true);
+  const plain = readout({ gaps, elapsedMs: 1000, canvasMb: 1, heapMb: null, dpr: 1 }); assert.equal(plain.includes("stage changes"), false); assert.equal(plain.includes("after a swap"), false); assert.equal(plain.startsWith("baseline 06c · Skirmish (checkpoint.tileproj)\n"), true);
+});
+test("step 8b spill: 2 chosen and 1 free spawn, so the second member spills to the nearest free walkable cell (BFS from the arrival cell) and survives an autosave round-trip", async () => {
+  const carried = party(20, [{ unitId: H, hp: 20 }, { unitId: R, hp: 2 }]), docs = open(nook([24, 25, 29]), S1, S2, carried), m = createMatch(docs, 200);
+  assert.deepEqual(atOf(m, H, m.sides.me), [{ c: 0, r: 4 }]); assert.deepEqual(atOf(m, R, m.sides.me), [{ c: 5, r: 4 }]); assert.deepEqual(m.party().members, carried.members); assert.equal(m.view().note, null);
+  const store = memoryStore(), wrote = await writeAutosave(store, header, S1, S2, m.party()), back = await readAutosave(store, want); assert.equal(wrote.ok, true); assert.equal(back?.ok, true); if (back !== null && back.ok) assert.deepEqual(back.save.party.members, carried.members);
+});
+test("step 8b no room: with no free walkable cell on the stage, the member stays off the board but in the party, with the notPlaced notice and one notice row", async () => {
+  const carried = party(20, [{ unitId: H, hp: 20 }, { unitId: R, hp: 2 }]), docs = open(nook([24, 25]), S1, S2, carried), m = createMatch(docs, 200);
+  assert.deepEqual(atOf(m, R, m.sides.me), []); assert.deepEqual(docs.bench, [{ unitId: R, hp: 2 }]); assert.deepEqual(m.party().members, carried.members);
+  assert.equal(m.world.notices.some((n) => n.code === "notPlaced"), true); assert.equal(m.view().note?.startsWith("Not placed: 1 of your team had no free cell"), true);
+  const store = memoryStore(); assert.equal((await writeAutosave(store, header, S1, S2, m.party())).ok, true); const kept = await readAutosave(store, want); assert.equal(kept?.ok, true); if (kept !== null && kept.ok) assert.deepEqual(kept.save.party.members, carried.members);
 });

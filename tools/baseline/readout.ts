@@ -12,7 +12,7 @@ export function canvasMbOf(sizes: readonly { readonly width: number; readonly he
 export function heapPeakOf(peak: number | null, used: number | undefined): number | null {
   return typeof used === "number" && Number.isFinite(used) ? Math.max(peak ?? 0, used / 1_048_576) : peak;
 }
-export function readout(input: { readonly gaps: readonly number[]; readonly elapsedMs: number; readonly canvasMb: number; readonly heapMb: number | null; readonly dpr: number }): string {
-  const f = framesOf(input.gaps), heap = input.heapMb === null ? "n/a" : input.heapMb.toFixed(1), head = input.elapsedMs >= RUN_MS ? "DONE\n" : "";
-  return `${head}baseline 06c · Skirmish (checkpoint.tileproj)\nframe ms p50 ${f.p50.toFixed(1)} p95 ${f.p95.toFixed(1)} max ${f.max.toFixed(1)}\ndropped (>25 ms) ${f.dropped} over 50 ms ${f.over50} of ${f.n}\ncanvas MB ${input.canvasMb.toFixed(1)} · dpr ${input.dpr.toFixed(1)}\nheap MB peak ${heap}\n${GC_LINE}`;
+export function readout(input: { readonly gaps: readonly number[]; readonly elapsedMs: number; readonly canvasMb: number; readonly heapMb: number | null; readonly dpr: number; readonly swaps?: readonly number[]; readonly scene?: string }): string {
+  const f = framesOf(input.gaps), heap = input.heapMb === null ? "n/a" : input.heapMb.toFixed(1), head = input.elapsedMs >= RUN_MS ? "DONE\n" : "", worst = (input.swaps ?? []).reduce((m, i) => Math.max(m, input.gaps[i] ?? 0, input.gaps[i + 1] ?? 0, input.gaps[i + 2] ?? 0), 0);
+  return `${head}${input.scene === "shop" ? "baseline 06c · Shop stairs (?scene=shop)" : "baseline 06c · Skirmish (checkpoint.tileproj)"}\nframe ms p50 ${f.p50.toFixed(1)} p95 ${f.p95.toFixed(1)} max ${f.max.toFixed(1)}\ndropped (>25 ms) ${f.dropped} over 50 ms ${f.over50} of ${f.n}\ncanvas MB ${input.canvasMb.toFixed(1)} · dpr ${input.dpr.toFixed(1)}\nheap MB peak ${heap}\n${GC_LINE}${input.swaps === undefined ? "" : `\nstage changes ${input.swaps.length}\nworst ms in 3 frames after a swap ${worst.toFixed(1)}`}`;
 }
