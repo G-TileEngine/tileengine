@@ -1,0 +1,1 @@
+export default {"kind":"stage","formatVersion":2,"id":"stage_01JDEM00000000000000000003","rev":3,"name":"Blank","mapRef":"map_01JDEM00000000000000000002","seed":24301,"playerSpawns":[{"c":0,"r":0}],"neutrals":[],"enemyPool":{"mode":"fixed","entries":[{"unitId":"unit_01M81X2PKRZ2NQKAHDV247ZRX3","at":{"c":5,"r":5}}]},"loadout":null,"rules":[],"updatedAt":"2026-11-22T15:13:10.577Z"}

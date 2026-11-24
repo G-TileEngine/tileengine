@@ -1,0 +1,1 @@
+export default {"kind":"stage","formatVersion":2,"id":"stage_01JDES00000000000000000002","rev":1,"name":"Upstairs","mapRef":"map_01JDEM00000000000000000002","seed":24301,"playerSpawns":[{"c":0,"r":4}],"neutrals":[],"enemyPool":{"mode":"fixed","entries":[]},"loadout":null,"rules":[],"links":[{"type":"stairs","at":{"c":1,"r":4},"to":"stage_01JDES00000000000000000001"}]}

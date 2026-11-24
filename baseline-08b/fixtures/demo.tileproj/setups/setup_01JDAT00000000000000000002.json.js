@@ -1,0 +1,93 @@
+export default {
+  "kind": "behaviour-setup",
+  "formatVersion": 3,
+  "id": "setup_01JDAT00000000000000000002",
+  "rev": 1,
+  "name": "Ability presentation",
+  "behaviourId": "ability-presentation",
+  "catalogue": {
+    "rev": 30
+  },
+  "createdAt": "2026-11-18T00:00:00Z",
+  "updatedAt": "2026-11-18T00:00:00Z",
+  "copiedFrom": null,
+  "answers": {
+    "shortcut": {
+      "source": "user",
+      "value": "all-menu",
+      "rev": 1,
+      "defaultRef": {
+        "rev": 6
+      },
+      "needsReask": null
+    },
+    "basic_style": {
+      "source": "default",
+      "rev": 0,
+      "defaultRef": {
+        "rev": 6
+      },
+      "needsReask": null
+    },
+    "spells_style": {
+      "source": "default",
+      "rev": 0,
+      "defaultRef": {
+        "rev": 6
+      },
+      "needsReask": null
+    },
+    "custom_groups": {
+      "source": "default",
+      "rev": 0,
+      "defaultRef": {
+        "rev": 7
+      },
+      "needsReask": null
+    },
+    "hand_placement": {
+      "source": "default",
+      "rev": 0,
+      "defaultRef": {
+        "rev": 6
+      },
+      "needsReask": null
+    },
+    "team_colours": {
+      "source": "user",
+      "value": [
+        {
+          "id": "player",
+          "label": "Player side",
+          "colour": "#2f6fad"
+        },
+        {
+          "id": "rival",
+          "label": "Rival side",
+          "colour": "#c44a3a"
+        },
+        {
+          "id": "neutral",
+          "label": "Neutral side",
+          "colour": "#c6a15a"
+        },
+        {
+          "id": "wolves",
+          "label": "Wolves",
+          "colour": "#b23b32"
+        }
+      ],
+      "rev": 1,
+      "defaultRef": {
+        "rev": 13
+      },
+      "needsReask": null
+    }
+  },
+  "orphans": {},
+  "history": {
+    "cap": 200,
+    "baseSeq": 1,
+    "ops": []
+  }
+}

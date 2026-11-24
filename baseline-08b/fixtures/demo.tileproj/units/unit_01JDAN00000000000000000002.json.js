@@ -1,0 +1,29 @@
+export default {
+  "kind": "unit",
+  "formatVersion": 2,
+  "id": "unit_01JDAN00000000000000000002",
+  "rev": 1,
+  "name": "Archer",
+  "sprite": null,
+  "setupIds": [
+    "setup_01JDAT00000000000000000004",
+    "setup_01JDAT00000000000000000005"
+  ],
+  "stats": {
+    "unit_hp": {
+      "value": 6,
+      "rev": 1
+    },
+    "unit_atk": {
+      "value": 2,
+      "rev": 1
+    }
+  },
+  "history": {
+    "cap": 200,
+    "baseSeq": 1,
+    "ops": []
+  },
+  "createdAt": "2026-11-18T00:00:00Z",
+  "updatedAt": "2026-11-18T00:00:00Z"
+}

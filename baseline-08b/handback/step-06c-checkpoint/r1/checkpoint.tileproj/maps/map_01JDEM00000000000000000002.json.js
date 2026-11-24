@@ -1,0 +1,1 @@
+export default {"kind":"map","formatVersion":5,"id":"map_01JDEM00000000000000000002","rev":3,"name":"Blank","cols":6,"rows":6,"logic":{"terrain":[0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"palette":{"0":"floor","1":"wall-block"},"edges":[]},"updatedAt":"2026-11-22T15:12:49.796Z"}

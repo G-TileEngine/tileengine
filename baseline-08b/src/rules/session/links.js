@@ -1,0 +1,19 @@
+                                                                        
+export const LINK_TYPES = ["stairs", "door", "gate"]                                       ;
+                                                                                                                                                                        
+export function linkAt(links                     , at    )                  {
+  return links.find((link) => link.at.c === at.c && link.at.r === at.r) ?? null;
+}
+/** `back` is the target's first link in array order whose `to` is the source stage. The fill walks every cell `inside` accepts (it defaults to `free`) and keeps the cells `free` accepts, so a walled-off free cell stays out until a caller widens `inside`. */
+const key = (sq    )         => `${sq.c},${sq.r}`;
+export function arrival(targetLinks                     , fromStageId        , spawns               , size = 0, free                      = () => true, inside                      = free)                {
+  const back = targetLinks.find((link) => link.to === fromStageId);
+  const base = back === undefined ? [...spawns] : [back.at, ...spawns.filter((sq) => sq.c !== back.at.c || sq.r !== back.at.r)];
+  const got = base.filter((sq) => free(sq)); if (size < 1 || got.length >= size) return size < 1 ? got : got.slice(0, size);
+  const origin = base[0]; if (origin === undefined) return got;
+  const seen = new Set(got.map(key)), been = new Set        ([key(origin)]), q       = [origin];
+  while (q.length > 0 && got.length < size) { const cur = q.shift(); if (cur === undefined) break; for (const [dc, dr] of [[0, -1], [1, 0], [0, 1], [-1, 0]]         ) { const n = { c: cur.c + dc, r: cur.r + dr }, id = key(n); if (been.has(id) || Math.abs(n.c - origin.c) + Math.abs(n.r - origin.r) > 512 || !inside(n)) continue; been.add(id); q.push(n); if (free(n) && !seen.has(id)) { seen.add(id); got.push(n); if (got.length >= size) break; } } }
+  return got;
+}
+export function autosaves(link          , contest         )          { return link.autosave === true && !contest; }
+export function linkEvent(link          , from        , contest = false)            { return { type: "link", linkType: link.type, from, to: link.to, at: link.at, autosave: autosaves(link, contest) }; }
