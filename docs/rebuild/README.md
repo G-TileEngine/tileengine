@@ -32,6 +32,7 @@ The step briefs in `docs/maker/steps/` say what each step had to build *before* 
 | 17 | `step-06c.md` tactics checkpoint, Empty to a win | `docs/maker/steps/step-06-levels-win-rules.md` §6c | `68a67a56` | PR #92, merge `be4f47e1`, 1105 tests |
 | 18 | `step-06d.md` phone baseline page | `docs/maker/steps/step-06d-baseline-page.md` | `cbe0dc8a` | PR #93, merge `aa2ef7e3`, 1108 tests |
 | 19 | `step-07.md` stage links and the two-floor shop | `docs/maker/steps/step-07-stage-links.md` | `33538c89` | PR #94, merge `24ab0250`, 1114 tests |
+| 20 | `step-08a.md` autosave at links and the session start | `docs/maker/steps/step-08-autosave-links.md` §8a | `9f7f7e52` (step 8 guide r4 with QA reviews and cn-session staging) | PR #96, merge `a0c1dad2`, 1122 tests |
 
 Follow them strictly in order (rebuild order, not numeric: step 00b starts on the 4a merge, so it sits after `step-04a.md`). Between steps, main also gained docs-only commits; a step's start commit is always the one named in its file.
 
