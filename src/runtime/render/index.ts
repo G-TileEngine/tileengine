@@ -1,4 +1,4 @@
-export { BANDS, type Anchor, type Band, type Cam, type Clip, type DrawCmd, type DrawList, type DrawOp, type Fit, type FrameStamp, type Overlay, type RenderScene, type Renderer, type SceneDot, type Sheet, type Standing, type TileLayer, type TileMotion } from "./types.ts";
+export { BANDS, type Anchor, type Backdrop, type Band, type Cam, type Clip, type DrawCmd, type DrawList, type DrawOp, type Fit, type FrameStamp, type Overlay, type RenderScene, type Renderer, type SceneDot, type Sheet, type Standing, type TileLayer, type TileMotion } from "./types.ts";
 export { backingSize, fitView, scaleRange, snapScale } from "./fit.ts";
 export { clampCamera, easeCamera, px, snapCamera, toDevice } from "./camera.ts";
 export { badMs, clipMs, footAt, frameAt, hash32, instanceOffset } from "./frames.ts";

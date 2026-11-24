@@ -42,9 +42,9 @@ export function dressPx(id: string): Pixels | undefined {
 }
 type Grid = { readonly cols: number; readonly rows: number; tileTypeAt(at: { readonly c: number; readonly r: number }): { readonly id: string } };
 const cycle = (name: string, n: number) => ({ cycle: { ramp: { name, steps: Array.from({ length: n }, (_, i) => i) } } });
-export function dress(grid: Grid, looks?: Looks) {
-  const n = grid.cols * grid.rows, tiles: number[] = [], blocks = new Uint8Array(n);
-  for (let i = 0; i < n; i += 1) { const id = grid.tileTypeAt({ c: i % grid.cols, r: (i / grid.cols) | 0 }).id, tile = id === "water" ? 1 : id === "wall-block" ? 2 : 0; tiles.push(tile); if (tile === 2) blocks[i] = 1; }
+export function dress(grid: Grid, looks?: Looks, bare = false) {
+  const n = grid.cols * grid.rows, tiles: (number | null)[] = [], blocks = new Uint8Array(n);
+  for (let i = 0; i < n; i += 1) { const id = grid.tileTypeAt({ c: i % grid.cols, r: (i / grid.cols) | 0 }).id, tile = id === "water" ? 1 : id === "wall-block" ? 2 : bare ? null : 0; tiles.push(tile); if (tile === 2) blocks[i] = 1; }
   const canopy = looks === undefined ? undefined : Array.from({ length: n }, () => null as number | null);
   if (looks !== undefined && canopy !== undefined) for (const [c, r] of looks.canopy) canopy[r * grid.cols + c] = 0;
   const assets: Record<string, SceneAsset> = { "play:ground": { sheet: { id: "play:ground", columns: 3, fw: TILE, fh: TILE }, styled: true, tileProps: { "1": { motion: cycle("water", 3) } } } };

@@ -22,7 +22,9 @@ export type Standing = { readonly kind: "object" | "unit" | "fxBehind" | "fxFron
 /** Anything drawn above the world: wash, effect air, glow or UI. `x`/`y` are top-left in world art px. */
 export type Overlay = { readonly band: Exclude<Band, "base">; readonly sheet: Sheet; readonly x: number; readonly y: number; readonly frame?: number; readonly clip?: Clip; readonly startMs?: number; readonly op?: DrawOp; readonly selfLit?: boolean; readonly look?: string; readonly scale?: number };
 export type SceneDot = { readonly band: Exclude<Band, "base" | "ui">; readonly x: number; readonly y: number; readonly size: number; readonly colour: string; readonly alpha: number };
-export type RenderScene = { readonly cols: number; readonly rows: number; readonly tileW: number; readonly tileH: number; readonly mapSeed: number; readonly ground: readonly TileLayer[]; readonly above: readonly TileLayer[]; readonly standing: readonly Standing[]; readonly overlays: readonly Overlay[]; readonly dots?: readonly SceneDot[]; readonly dueMs?: number };
+/** A map background picture. `depth` 1 scrolls with the map; 0 stays on screen. Drawn at native size, never scaled. */
+export type Backdrop = { readonly sheet: Sheet; readonly depth: number; readonly repeat: "none" | "x" | "y" | "both" };
+export type RenderScene = { readonly cols: number; readonly rows: number; readonly tileW: number; readonly tileH: number; readonly mapSeed: number; readonly ground: readonly TileLayer[]; readonly above: readonly TileLayer[]; readonly standing: readonly Standing[]; readonly overlays: readonly Overlay[]; readonly dots?: readonly SceneDot[]; readonly dueMs?: number; readonly backdrop?: readonly Backdrop[] };
 export type DrawList = { readonly cmds: readonly DrawCmd[]; readonly dueMs: number };
 /** The draw adapter (ARCH §12.4). Canvas2D (step 28) and WebGL2 (later) implement it; the test backend lives in tests/. */
 export interface Renderer {
