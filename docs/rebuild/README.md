@@ -35,6 +35,7 @@ The step briefs in `docs/maker/steps/` say what each step had to build *before* 
 | 20 | `step-08a.md` autosave at links and the session start | `docs/maker/steps/step-08-autosave-links.md` §8a | `9f7f7e52` (step 8 guide r4 with QA reviews and cn-session staging) | PR #96, merge `a0c1dad2`, 1122 tests |
 | 21 | `step-08b.md` stair phone check and no silent party drop | `docs/maker/steps/step-08b-stair-baseline.md` | `ecd22d80` (8b guide r2 with QA recheck, docs-only on the 8a merge) | PR #98, merge `42cc84b4`, 1125 tests |
 | 22 | `step-09a.md` map backgrounds from project data | `docs/maker/steps/step-09-art-backgrounds.md` | `6e9d624f` (later main after the 9a guide r2 and 08b phone reviews, docs-only over D29 `8ab22996`) | PR #99, merge `ab64d4fb`, 1134 tests |
+| 23 | `step-08c.md` baseline walk draws units | `docs/maker/steps/step-08c-baseline-walk.md` | `02a0a9c5` (9a r1 QA review on the 9a merge; the 8c go-line after 9a) | PR #100, merge `cd48ebdc`, 1135 tests |
 
 Follow them strictly in order (rebuild order, not numeric: step 00b starts on the 4a merge, so it sits after `step-04a.md`). Between steps, main also gained docs-only commits; a step's start commit is always the one named in its file.
 
