@@ -10,8 +10,10 @@ const SAY: Readonly<Record<string, string>> = {
   notAProject: "Can't open: project.json missing",
   "play: seed": "Stage 1 has no seed yet, so it can't be played",
   "play: army": "This project has no unit roster yet, so it can't be played",
+  assetFileMissing: "A picture this project uses is missing",
+  assetHashMismatch: "A picture this project uses doesn't match its file",
 };
-export const sentence = (row: ReportRow): string => SAY[row.code] ?? `Can't play: ${row.code}`;
+export const sentence = (row: ReportRow): string => { const line = SAY[row.code] ?? `Can't play: ${row.code}`; return row.code.startsWith("asset") ? `${line}: ${row.path}` : line; };
 /** Map a play-stage throw (`play: seed`, `play: army`) onto the sheet sentence. Other text stays as written. */
 export const playLine = (error: string): string => { const line = SAY[error]; if (line !== undefined) return line; return error === "" ? "Can't play this project" : error; };
 const placed = (v: unknown): number => (Array.isArray(v) ? v.filter((row) => typeof row === "object" && row !== null && !Array.isArray(row)).length : 0);
