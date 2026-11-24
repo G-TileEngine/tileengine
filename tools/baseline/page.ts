@@ -16,6 +16,6 @@ else {
     if (read.textContent.startsWith("DONE")) lock = true;
   };
   window.requestAnimationFrame = (cb) => host((ts) => { note(ts); cb(ts); });
-  const travel: Parameters<typeof startMatch>[3] = (link, party) => { swaps.push(gaps.length); document.querySelector("#board")?.remove(); document.querySelector("#hud")?.remove(); const next = document.createElement("canvas"); next.id = "board"; document.body.prepend(next); const got = arriveIn(shopFiles(), link.from, link.to, party); if (got.docs !== null) startMatch(got.docs, undefined, undefined, travel); };
+  const travel: Parameters<typeof startMatch>[3] = (link, party) => { const got = arriveIn(shopFiles(), link.from, link.to, party); if (got.docs === null) { read.textContent = got.error; return; } swaps.push(gaps.length); document.querySelector("#board")?.remove(); document.querySelector("#hud")?.remove(); const next = document.createElement("canvas"); next.id = "board"; document.body.prepend(next); startMatch(got.docs, undefined, undefined, travel); };
   if (scene === "shop") startMatch(opened.docs, undefined, undefined, travel); else startMatch(opened.docs);
 }
