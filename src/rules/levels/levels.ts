@@ -13,15 +13,15 @@ function bad(rules: LevelRules, pools: AbilityPools): boolean {
   return (rules.bar !== "side" && rules.bar !== "unit") || top < 1 || !ints(rules.thresholds, 1) || !rules.offerLevels.every((n) => Number.isInteger(n) && n >= 1 && n <= top) || !Number.isInteger(rules.offerSize) || rules.offerSize < 1 || !Number.isInteger(rules.xp.move) || rules.xp.move < 0 || rules.xp.move > 2147483647 || Object.values(pools).some((pool) => !Array.isArray(pool) || pool.some((a) => typeof a !== "string" || a === ""));
 }
 type Live = { id: string; pool: string; xp: number; level: number; banked: number; offer: string[] | null; abilities: string[] };
-function taken(setup: LevelSetup): { rules: LevelRules; pools: AbilityPools; limits: unknown } {
-  const copy = plainCopy(setup, 3);
+function taken(setup: LevelSetup): { rules: LevelRules; pools: AbilityPools; limits: unknown; start: unknown } {
+  const copy = plainCopy(setup, 4);
   if (copy === NOT_PLAIN || !isRecord(copy) || !isRecord(copy.rules) || !isRecord(copy.pools)) throw new RangeError("createLevels: bad rules or pools");
   const rulesIn = copy.rules, poolsIn = copy.pools;
   const bar = rulesIn.bar, thresholds = rulesIn.thresholds, offerLevels = rulesIn.offerLevels, offerSize = rulesIn.offerSize, xpIn = rulesIn.xp;
   if (!Array.isArray(thresholds) || !Array.isArray(offerLevels) || !isRecord(xpIn)) throw new RangeError("createLevels: bad rules or pools");
   const pools: Record<string, readonly string[]> = {}, move = xpIn.move;
   for (const key of Object.keys(poolsIn)) { const pool = poolsIn[key]; if (!Array.isArray(pool)) throw new RangeError("createLevels: bad rules or pools"); pools[key] = pool as readonly string[]; }
-  return { rules: Object.freeze({ bar, thresholds, offerLevels, offerSize, xp: Object.freeze({ move }) }) as LevelRules, pools: Object.freeze(pools), limits: copy.limits };
+  return { rules: Object.freeze({ bar, thresholds, offerLevels, offerSize, xp: Object.freeze({ move }) }) as LevelRules, pools: Object.freeze(pools), limits: copy.limits, start: copy.start };
 }
 function levelLimits(v: unknown): LevelLimits | null {
   const src = v === undefined ? DEFAULT_LEVEL_LIMITS : v; if (!isRecord(src)) return null; const out: Record<string, number> = {};
@@ -33,8 +33,12 @@ function over(rules: LevelRules, pools: AbilityPools, lim: LevelLimits): boolean
 }
 
 export function createLevels(setup: LevelSetup, rng: Rng, emit: (event: BusEvent<NoModeEvents>) => void): Levels {
-  const { rules, pools, limits } = taken(setup); if (bad(rules, pools)) throw new RangeError("createLevels: bad rules or pools"); const lim = levelLimits(limits); if (lim === null) throw new RangeError("createLevels: limits must be whole numbers from 1 to their ceilings"); if (over(rules, pools, lim)) throw new RangeError("createLevels: over the level caps");
+  const { rules, pools, limits, start } = taken(setup); if (bad(rules, pools)) throw new RangeError("createLevels: bad rules or pools");
+  const top = rules.thresholds.length, badStart = !Array.isArray(start) ? start !== undefined : start.some((row) => !isRecord(row) || typeof row.id !== "string" || !Number.isInteger(row.xp) || (row.xp as number) < 0 || !Number.isInteger(row.level) || (row.level as number) < 0 || (row.level as number) > top || !Number.isInteger(row.banked) || (row.banked as number) < 0 || (row.offer !== null && (!Array.isArray(row.offer) || row.offer.some((a) => typeof a !== "string"))) || !Array.isArray(row.abilities) || row.abilities.some((a) => typeof a !== "string"));
+  if (badStart) throw new RangeError("createLevels: bad start");
+  const lim = levelLimits(limits); if (lim === null) throw new RangeError("createLevels: limits must be whole numbers from 1 to their ceilings"); if (over(rules, pools, lim)) throw new RangeError("createLevels: over the level caps");
   const bars = new Map<string, Live>();
+  if (Array.isArray(start)) for (const row of start) { if (!isRecord(row) || typeof row.id !== "string" || typeof row.xp !== "number" || typeof row.level !== "number" || typeof row.banked !== "number") continue; const offer = row.offer === null ? null : Array.isArray(row.offer) ? row.offer.filter((a): a is string => typeof a === "string") : null; const abilities = Array.isArray(row.abilities) ? row.abilities.filter((a): a is string => typeof a === "string") : []; bars.set(row.id, { id: row.id, pool: row.id, xp: row.xp, level: row.level, banked: row.banked, offer, abilities }); }
   const poolOf = (key: string): readonly string[] => (Object.hasOwn(pools, key) ? pools[key] : undefined) ?? [];
   const draw = (have: readonly string[], key: string): string[] => {
     const cands: string[] = [], seen = new Set<string>(have);

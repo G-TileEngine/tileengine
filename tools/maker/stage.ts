@@ -3,7 +3,7 @@ import { prefix, ulid, type DocText } from "../../src/editor/project/home.ts";
 import { planSave } from "../../src/editor/project/save.ts";
 import { paintCells, startNew } from "../../src/editor/stage/paint.ts";
 import { addEnemy, addNeutral, addSpawn, attachTalk, infoText, moveEntry, placeRows, refuse, removeEntry, standHere, type PlaceList } from "../../src/editor/stage/place.ts";
-import { addLink, linkOn, removeLink } from "../../src/editor/stage/links.ts";
+import { addLink, linkOn, removeLink, setAutosave } from "../../src/editor/stage/links.ts";
 import { closedType, sheetRows, typeLabel, type SheetRow } from "../../src/editor/stage/sheet.ts";
 import { fillTalk, talkKnobs, talkLimit } from "../../src/editor/stage/talk.ts";
 import { canUndo, pop, push } from "../../src/editor/stage/undo.ts";
@@ -149,7 +149,7 @@ export function stageScreen(stageId: string, host: Host): string {
   const names = stageRows(host.files), linked = mark === null && cell !== null ? linkOn(got.stage, cell.c, cell.r) : null, linkType = linked !== null && (linked["type"] === "stairs" || linked["type"] === "door" || linked["type"] === "gate") ? linked["type"] : null;
   const rows = sheetRows(got.slice, mark !== null);
   const group = (title: SheetRow["group"]): string => { const mine = rows.filter((row) => row.group === title); return mine.length === 0 ? "" : `<p class="sub">${title}</p>${mine.map((row) => `<button type="button" class="choice" data-act="s:type:${esc(row.id)}">${esc(row.label)}</button>`).join("")}`; };
-  const stood = linkType !== null ? `<button type="button" class="btn" data-act="s:unlink">Remove link</button>` : mark === null ? "" : `${unitButtons(mark.pill === "NPC", mark.id !== "" && stageFor(got.parsed, mark.id) !== null)}`;
+  const stood = linkType !== null ? `<button type="button" class="btn" data-act="s:autosave" aria-pressed="${linked?.["autosave"] === true ? "true" : "false"}">Autosave here: ${linked?.["autosave"] === true ? "On" : "Off"}</button><button type="button" class="btn" data-act="s:unlink">Remove link</button>` : mark === null ? "" : `${unitButtons(mark.pill === "NPC", mark.id !== "" && stageFor(got.parsed, mark.id) !== null)}`;
   const place = linkType === null && mark === null && cell !== null && !closedType(got.slice, tileId(got.map, cell.c, cell.r)) ? placeButtons(placeRows(got.stage)) : "";
   const linkBtns = place !== "" && names.some((row) => row.id !== stageId) ? `<p class="sub">Link</p>${(["stairs", "door", "gate"] as const).map((type) => `<button type="button" class="btn" data-act="s:link:${type}">${LINK_LABEL[type]}</button>`).join("")}` : "";
   const title = linkType !== null ? `${esc(LINK_LABEL[linkType])} to ${esc(typeof linked?.["to"] === "string" ? names.find((row) => row.id === linked["to"])?.name ?? "Stage" : "")}` : mark === null ? "Add here" : `${esc(mark.name)} · ${esc(teamOf(mark.pill))}`;
@@ -240,6 +240,7 @@ export async function stageClick(act: string, stageId: string, host: Host, io: I
   if (act.startsWith("s:link:") && sess.sheet !== null) { const type = act.slice(7); if (type !== "stairs" && type !== "door" && type !== "gate") return kept(host); sess.link = type; return kept(host); }
   if (act.startsWith("s:to:") && sess.link !== null && sess.sheet !== null) { const id = act.slice(5); if (!stageRows(host.files).some((row) => row.id === id)) return kept(host); const next = addLink(got.stage, sess.link, sess.sheet.c, sess.sheet.r, id); if (next === null) return kept(host); sess.link = null; sess.sheet = null; return commitStage(io, host, next, got.stage); }
   if (act === "s:unlink" && sess.sheet !== null) { const at = sess.sheet; sess.link = null; sess.sheet = null; return commitStage(io, host, removeLink(got.stage, at.c, at.r), got.stage); }
+  if (act === "s:autosave" && sess.sheet !== null) { const at = sess.sheet, on = linkOn(got.stage, at.c, at.r)?.["autosave"] === true; return commitStage(io, host, setAutosave(got.stage, at.c, at.r, !on), got.stage); }
   if (act === "s:place:npc" || act === "s:place:enemy") { if (sess.sheet === null) return kept(host); sess.pick = act.endsWith("enemy") ? "enemy" : "npc"; return kept(host); }
   if (act.startsWith("s:unit:") && sess.pick !== null && sess.sheet !== null) {
     const id = act.slice(7), at = sess.sheet;

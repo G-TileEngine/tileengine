@@ -46,19 +46,19 @@ test("stage link: landing on stairs takes the party to the linked stage, arrivin
   go(m, { c: 0, r: 1 }); assert.deepEqual(got.slice(), []); assert.deepEqual(heroAt(m), { c: 0, r: 1 });
   go(m, { c: 1, r: 1 }); go(m, { c: 1, r: 0 });
   assert.equal(got.length, 1); assert.equal(got[0]?.linkType, "stairs"); assert.equal(got[0]?.to, B); assert.deepEqual(got[0]?.at, { c: 1, r: 0 });
-  const up = arriveIn(files, docs, got[0] ?? got[0]); if (up.docs === null) throw new Error(up.error);
+  const up = arriveIn(files, A, B, { side: "player", members: docs.chosen.map((unitId) => ({ unitId, hp: 1000000000 })), bar: null }); if (up.docs === null) throw new Error(up.error);
   const mb = createMatch(up.docs, 200); assert.deepEqual(heroAt(mb), { c: 2, r: 1 }); assert.equal(mb.sides.contest, false);
   const back: LinkEvent[] = []; mb.onLink((ev) => back.push(ev)); go(mb, { c: 3, r: 1 }); go(mb, { c: 2, r: 1 });
   assert.equal(back.length, 1); assert.equal(back[0]?.to, A); assert.deepEqual(back[0]?.at, { c: 2, r: 1 });
-  const down = arriveIn(files, up.docs, back[0] ?? back[0]); if (down.docs === null) throw new Error(down.error);
+  const down = arriveIn(files, B, A, { side: "player", members: up.docs.chosen.map((unitId) => ({ unitId, hp: 1000000000 })), bar: null }); if (down.docs === null) throw new Error(down.error);
   assert.deepEqual(heroAt(createMatch(down.docs, 200)), { c: 1, r: 0 });
   const page = readFileSync("tools/play-stage/page.ts", "utf8");
   assert.equal(page.split("driver.dispose()").length - 1, 1);
   assert.equal(page.includes('const stop = (): void => { driver.dispose(); removeEventListener("resize", onResize); };'), true);
 });
 test("stage link rebuild fits the frame budget", () => {
-  const files = linked(), from = docsOf(files, A), link: LinkEvent = { type: "link", linkType: "stairs", from: A, to: B, at: { c: 1, r: 0 } }, times: number[] = [];
-  for (let i = 0; i < 25; i += 1) { const t0 = performance.now(); const got = arriveIn(files, from, link); if (got.docs === null) throw new Error(got.error); createMatch(got.docs, 200).scene(); times.push(performance.now() - t0); }
+  const files = linked(), from = docsOf(files, A), times: number[] = [];
+  for (let i = 0; i < 25; i += 1) { const t0 = performance.now(); const got = arriveIn(files, A, B, { side: "player", members: from.chosen.map((unitId) => ({ unitId, hp: 1000000000 })), bar: null }); if (got.docs === null) throw new Error(got.error); createMatch(got.docs, 200).scene(); times.push(performance.now() - t0); }
   const sample = times.slice(5).sort((a, b) => a - b), mid = sample.length / 2, median = ((sample[mid - 1] ?? 0) + (sample[mid] ?? 0)) / 2;
   assert.ok(median < 4, String(median));
 });
@@ -97,7 +97,7 @@ test("stage link: arrival is the target's first link back to the source, in arra
   const files = linked(), bPath = `stages/${B}.json`, b = files[bPath]; if (!isObj(b)) throw new Error("b");
   const land = (links: readonly Obj[]): Sq => {
     const from = docsOf({ ...files, [bPath]: { ...b, links } }, A);
-    const got = arriveIn({ ...files, [bPath]: { ...b, links } }, from, { type: "link", linkType: "stairs", from: A, to: B, at: { c: 1, r: 0 } });
+    const got = arriveIn({ ...files, [bPath]: { ...b, links } }, A, B, { side: "player", members: from.chosen.map((unitId) => ({ unitId, hp: 1000000000 })), bar: null });
     if (got.docs === null) throw new Error(got.error); return heroAt(createMatch(got.docs, 200));
   };
   assert.deepEqual(land([{ type: "door", at: { c: 3, r: 1 }, to: A }, { type: "stairs", at: { c: 2, r: 1 }, to: A }]), { c: 3, r: 1 });

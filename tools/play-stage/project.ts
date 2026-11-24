@@ -1,6 +1,9 @@
 import { readProject, type ProjectFiles, type ProjectStore } from "../../src/project/load/index.ts";
-import { readStage } from "../../src/project/read/stage.ts";
-import { arrival, type LinkEvent } from "../../src/rules/session/links.ts";
+import { readMap, readStage } from "../../src/project/read/index.ts";
+import { createGrid } from "../../src/core/grid/index.ts";
+import { arrival } from "../../src/rules/session/links.ts";
+import { carryInto } from "../../src/rules/session/party.ts";
+import type { SessionParty } from "../../src/types/core-types.ts";
 import { ruleOf } from "../../src/project/rule-of.ts";
 import { WIN_CONDITION } from "../../src/rules/battle/win.ts";
 import { XP_LEVELS } from "../../src/rules/behaviours/xp-levels.ts";
@@ -46,8 +49,8 @@ function levelsOf(store: ProjectStore, stage: Obj): PlayOut["levels"] {
 }
 /** Adapter only. Document JSON is already read by readProject. */
 export function playDocsOf(store: ProjectStore, stageId?: string): PlayOut {
-  const cat = store.slice, root = isObj(store.manifest["project"]) ? store.manifest["project"] : {};
-  const stage = store.stages[stageId ?? strs(root["stages"])[0] ?? ""] ?? Object.values(store.stages)[0]; if (stage === undefined) throw new Error("play: stage");
+  const cat = store.slice, root = isObj(store.manifest["project"]) ? store.manifest["project"] : {}, sess = isObj(root["session"]) ? root["session"] : null, start = sess !== null && typeof sess["start"] === "string" ? sess["start"] : undefined;
+  const stage = store.stages[stageId ?? start ?? strs(root["stages"])[0] ?? ""] ?? Object.values(store.stages)[0]; if (stage === undefined) throw new Error("play: stage");
   const core = readStage(stage, { picks: 0, waveUnits: 0 }); if (!core.ok) throw new Error("play: stage");
   const map = store.maps[typeof stage["mapRef"] === "string" ? stage["mapRef"] : ""]; if (map === undefined) throw new Error("play: map");
   const army = Object.values(store.setups).find((s) => s["behaviourId"] === "unit-roster"); if (army === undefined) throw new Error("play: army");
@@ -90,14 +93,16 @@ export function openBundled(): ReturnType<typeof openProject> {
   return { docs: { ...got.docs, looks: DEMO_LOOKS }, error: got.error };
 }
 export const bundledDocs = (): NonNullable<ReturnType<typeof openBundled>["docs"]> => { const got = openBundled(); if (got.docs === null) throw new Error(got.error === "" ? "play: project" : got.error); return got.docs; };
-export function arriveIn(files: ProjectFiles, from: PlayOut, link: LinkEvent): ReturnType<typeof openProject> {
-  const fromId = isObj(from.stage) && typeof from.stage["id"] === "string" ? from.stage["id"] : "";
-  let path = ""; for (const [key, doc] of Object.entries(files)) if (key.startsWith("stages/") && isObj(doc) && doc["id"] === link.to) path = key;
+export function arriveIn(files: ProjectFiles, fromId: string | null, toId: string, party: SessionParty): ReturnType<typeof openProject> {
+  if (fromId === "") throw new Error("play: stage id");
+  let path = ""; for (const [key, doc] of Object.entries(files)) if (key.startsWith("stages/") && isObj(doc) && doc["id"] === toId) path = key;
   const stage = path === "" ? undefined : files[path], read = stage === undefined ? null : readStage(stage, { picks: 0, waveUnits: 0 });
-  if (read === null || !read.ok) return openProject(files, link.to);
-  const spots = read.doc.playerSpawns, next = arrival(read.doc.links ?? [], fromId, spots);
+  if (read === null || !read.ok) return openProject(files, toId);
+  let mapDoc: unknown; for (const [key, doc] of Object.entries(files)) if (key.startsWith("maps/") && isObj(doc) && doc["id"] === read.doc.mapRef) mapDoc = doc;
+  const map = mapDoc === undefined ? null : readMap(mapDoc), tiles = installOne(TERRAIN, {}).out?.tiles, grid = map !== null && map.ok && tiles !== undefined ? createGrid(map.doc, tiles) : null;
+  const taken = new Set<string>(); for (const n of read.doc.neutrals) taken.add(`${n.at.c},${n.at.r}`); const pool = read.doc.enemyPool; if (pool.mode === "fixed") for (const e of pool.entries) taken.add(`${e.at.c},${e.at.r}`); else for (const s of pool.spawns) taken.add(`${s.c},${s.r}`);
+  const free = (sq: { c: number; r: number }): boolean => !taken.has(`${sq.c},${sq.r}`) && grid !== null && grid.isOpen(sq), spots = read.doc.playerSpawns, next = arrival(read.doc.links ?? [], fromId ?? "\u0000", spots, party.members.length, free);
   const playerSpawns = next.map((sq) => { const hit = spots.find((s) => s.c === sq.c && s.r === sq.r); return hit !== undefined && hit.facing !== undefined ? { c: sq.c, r: sq.r, facing: hit.facing } : { c: sq.c, r: sq.r }; });
-  const opened = openProject({ ...files, [path]: { ...(isObj(stage) ? stage : {}), playerSpawns } }, link.to);
-  if (opened.docs === null) return opened;
-  return { docs: { ...opened.docs, chosen: from.chosen.slice(0, playerSpawns.length) }, error: opened.error };
+  const opened = openProject({ ...files, [path]: { ...(isObj(stage) ? stage : {}), playerSpawns } }, toId); if (opened.docs === null) return opened;
+  const side = read.doc.sides?.loadout ?? party.side, carried = carryInto(party, side), rules = { ...opened.docs.rules, carry: carried.carry }, levels = opened.docs.levels === undefined || carried.start === undefined ? opened.docs.levels : { ...opened.docs.levels, start: carried.start }; return { docs: { ...opened.docs, chosen: party.members.map((m) => m.unitId), rules, ...(levels === undefined ? {} : { levels }) }, error: opened.error };
 }
