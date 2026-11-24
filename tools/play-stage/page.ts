@@ -3,6 +3,7 @@ import { createLighting, fitView } from "../../src/runtime/render/index.ts";
 import { createSceneLink } from "../../src/runtime/scene/world-scene.ts";
 import { inOrthogonalReach } from "../../src/rules/battle/range.ts";
 import type { LinkEvent } from "../../src/rules/session/links.ts";
+import type { SessionParty } from "../../src/types/core-types.ts";
 import { boardBox, fit, TILE } from "./board.ts";
 import { centreOn, clamp, createCam, seatCam, tickCam, type PlayCam } from "./camera-touch.ts";
 import { createHud, XP_H } from "./hud.ts";
@@ -13,7 +14,7 @@ import { createTouch } from "./touch.ts";
 import { DEV } from "./dev.ts"; // dev-only
 
 export type StartAim = { readonly unitId?: string; readonly abilityId?: string; readonly aim?: "basic" | "spell" };
-export function startMatch(docs: NonNullable<ReturnType<typeof openBundled>["docs"]>, back?: () => void, aim?: StartAim, travel?: (link: LinkEvent) => void): void {
+export function startMatch(docs: NonNullable<ReturnType<typeof openBundled>["docs"]>, back?: () => void, aim?: StartAim, travel?: (link: LinkEvent, party: SessionParty) => void): void {
 const canvas = document.querySelector("#board");
 if (!(canvas instanceof HTMLCanvasElement)) throw new Error("play: #board");
 const match = createMatch(docs);
@@ -78,7 +79,7 @@ if (aim?.unitId !== undefined) {
   }
 }
 if (DEV) Object.assign(window, { __play: match, __driver: driver, __cam: cam, __hud: hud, __fx: match.fx, __link: link, __docs: docs }); // dev-only
-if (travel !== undefined) match.onLink((link) => { stop(); travel(link); });
+if (travel !== undefined) match.onLink((link) => { const party = match.party(); stop(); travel(link, party); });
 if (back !== undefined) { const btn = document.createElement("button"); btn.id = "back-maker"; btn.type = "button"; btn.textContent = "Back to maker"; btn.addEventListener("click", () => { stop(); back(); }); const top = document.querySelector("#top"); if (top !== null) top.prepend(btn); }
 driver.start();
 }

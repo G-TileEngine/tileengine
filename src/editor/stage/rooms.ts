@@ -41,10 +41,16 @@ export function renameDoc(files: Record<string, Obj>, path: string, name: string
 export function deleteStage(files: Record<string, Obj>, stageId: string): { readonly ok: true; readonly files: Record<string, Obj> } | { readonly ok: false; readonly reason: string } {
   const stages = list(inner(rootOf(files))["stages"]).filter((id): id is string => typeof id === "string");
   if (!stages.includes(stageId) || stages.length <= 1) return { ok: false, reason: "A game needs at least one stage" };
+  if (startOf(files) === stageId) return { ok: false, reason: "The game starts here. Pick another start first." };
   const named = linksTo(files, stageId); if (named.length > 0) return { ok: false, reason: `A link on ${named.join(", ")} leads here. Remove it first.` };
   const root = clone(rootOf(files)), proj = { ...inner(root) }; proj["stages"] = stages.filter((id) => id !== stageId);
   if (isObj(proj["render"]) && Array.isArray(proj["render"]["excludedStages"])) { const render = { ...proj["render"] }; render["excludedStages"] = list(render["excludedStages"]).filter((id) => id !== stageId); proj["render"] = render; }
   root["project"] = proj; return { ok: true, files: { ...files, "project.json": root } };
+}
+export function startOf(files: Record<string, Obj>): string | null { const session = inner(rootOf(files))["session"]; return isObj(session) && typeof session["start"] === "string" ? session["start"] : null; }
+export function setStart(files: Record<string, Obj>, stageId: string): Record<string, Obj> {
+  const stages = list(inner(rootOf(files))["stages"]).filter((id): id is string => typeof id === "string"); if (!stages.includes(stageId)) return files;
+  const root = clone(rootOf(files)), proj = { ...inner(root) }; proj["session"] = { start: stageId }; root["project"] = proj; return { ...files, "project.json": root };
 }
 export function deleteMap(files: Record<string, Obj>, mapId: string): { readonly ok: true } | { readonly ok: false; readonly usedBy: readonly string[] } {
   const usedBy = refsTo(files, mapId); return usedBy.length > 0 ? { ok: false, usedBy } : { ok: true };

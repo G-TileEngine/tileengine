@@ -27,7 +27,9 @@ function readManifestDoc(json: unknown, lim: DocLimits): ReadResult<CoreProjectM
   const got = loadout(p.loadout); const stages = strs(p.stages); const rules = strs(p.rules);
   const settings = p.settings; const occ = isObj(settings) ? occupancy(settings.occupancy) : null;
   if (!isStr(p.id) || !isInt(p.rev, 0) || !isInt(p.catalogueRev, 0) || !isObj(settings) || typeof settings.wrapEdges !== "boolean" || occ === null || stages === null || rules === null || got === null) return bad("project");
+  const session = p.session === undefined ? undefined : isObj(p.session) && isStr(p.session.start) ? { start: p.session.start } : null;
+  if (session === null) return bad("session");
   const base = { wrapEdges: settings.wrapEdges };
-  const project = { id: p.id, rev: p.rev, catalogueRev: p.catalogueRev, settings: occ === undefined ? base : { ...base, occupancy: occ }, stages, rules, loadout: got };
+  const project = { id: p.id, rev: p.rev, catalogueRev: p.catalogueRev, settings: occ === undefined ? base : { ...base, occupancy: occ }, stages, rules, loadout: got, ...(session === undefined ? {} : { session }) };
   return fitted({ kind: "tile-project", formatVersion: CURRENT_FORMAT_VERSIONS["tile-project"], project }, lim, []);
 }

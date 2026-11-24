@@ -1,6 +1,6 @@
 import { checkName, prefix, ulid, type DocText } from "../../src/editor/project/home.ts";
 import { planSave } from "../../src/editor/project/save.ts";
-import { addStage, deleteMap, deleteStage, docsIn, refsTo, renameDoc } from "../../src/editor/stage/rooms.ts";
+import { addStage, deleteMap, deleteStage, docsIn, refsTo, renameDoc, setStart } from "../../src/editor/stage/rooms.ts";
 import { resizeMap, type Drop } from "../../src/editor/stage/resize.ts";
 import { parseProject } from "./project-files.ts";
 import { commitWrites, readTree, type MakerStore } from "./store.ts";
@@ -71,7 +71,7 @@ export function roomSheet(files: DocText): string {
     const uses = maps.map(({ doc }) => `<button type="button" class="btn" data-act="r:use:${esc(String(doc["id"]))}">Use map: ${esc(typeof doc["name"] === "string" ? doc["name"] : "Map")}</button>`).join("");
     return `<div class="scrim"><div class="sheet" role="dialog"><h2>Add stage</h2><button type="button" class="btn" data-act="r:new">New map</button>${uses}${close}</div></div>`;
   }
-  if (sess.mode === "menu") return `<div class="scrim"><div class="sheet" role="dialog"><h2>${esc(sess.name || "Edit")}</h2><button type="button" class="btn" data-act="r:rename">Rename</button>${sess.which === "map" ? `<button type="button" class="btn" data-act="r:resize">Resize</button>` : ""}<button type="button" class="btn danger" data-act="r:delete">Delete</button>${close}</div></div>`;
+  if (sess.mode === "menu") return `<div class="scrim"><div class="sheet" role="dialog"><h2>${esc(sess.name || "Edit")}</h2><button type="button" class="btn" data-act="r:rename">Rename</button>${sess.which === "stage" ? `<button type="button" class="btn" data-act="r:start">Game starts here</button>` : `<button type="button" class="btn" data-act="r:resize">Resize</button>`}<button type="button" class="btn danger" data-act="r:delete">Delete</button>${close}</div></div>`;
   if (sess.mode === "rename") return `<div class="scrim"><div class="sheet" role="dialog"><h2>Rename</h2><input class="name-field" data-room value="${esc(sess.name)}" aria-label="Name"><button type="button" class="btn" data-act="r:save-name">Save</button>${close}</div></div>`;
   if (sess.mode === "ask") return `<div class="scrim"><div class="sheet" role="dialog"><h2>Resize</h2>${sess.lines.map((line) => `<p>${esc(line)}</p>`).join("")}<button type="button" class="btn danger" data-act="r:anyway">Resize anyway</button><button type="button" class="btn ghost" data-act="r:close">Cancel</button></div></div>`;
   const big = sess.cols > 256 || sess.rows > 256 ? `<p>Big maps may stutter on phones</p>` : "";
@@ -106,6 +106,7 @@ export async function roomClick(act: string, host: Host, io: RoomIo): Promise<Ro
   }
   if (act.startsWith("r:step:")) { const parts = act.split(":"), delta = Number(parts[3]); if (parts[2] === "c") sess.cols = Math.max(1, sess.cols + delta); else sess.rows = Math.max(1, sess.rows + delta); return kept(host, null); }
   const bag = bagOf(host.files); if (bag === null) return kept(host, "Can't open this project");
+  if (act === "r:start" && sess.which === "stage") { const after = setStart(bag, sess.target); return after === bag ? kept(host, null) : save(io, host, bag, after, "Changed · Undo"); }
   if (act === "r:new" || act.startsWith("r:use:")) {
     const sk = skels(io.empty); if (sk === null) return kept(host, "Can't open: templates");
     const stageId = `stage_${ulid(Date.parse(io.now), io.bytes())}`, existing = act.startsWith("r:use:") ? act.slice(6) : null, mapId = existing ?? `map_${ulid(Date.parse(io.now), io.bytes())}`;

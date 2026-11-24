@@ -38,7 +38,7 @@ function links(v: unknown): CoreLink[] | undefined | null {
   if (v === undefined) return undefined;
   if (!Array.isArray(v)) return null;
   const out: CoreLink[] = [];
-  for (const x of v) { if (!isObj(x) || (x.type !== "stairs" && x.type !== "door" && x.type !== "gate") || !isStr(x.to)) return null; const at = cell(x.at); if (at === null) return null; out.push({ type: x.type, at, to: x.to }); }
+  for (const x of v) { if (!isObj(x) || (x.type !== "stairs" && x.type !== "door" && x.type !== "gate") || !isStr(x.to) || (x.autosave !== undefined && typeof x.autosave !== "boolean")) return null; const at = cell(x.at); if (at === null) return null; out.push({ type: x.type, at, to: x.to, ...(x.autosave === true ? { autosave: true } : {}) }); }
   return out;
 }
 function pool(v: unknown): CoreEnemyPool | null {

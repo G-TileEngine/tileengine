@@ -25,6 +25,7 @@ function refs(manifest: Obj, at: Readonly<Record<string, string>>, maps: Readonl
   const gear = isObj(project["loadout"]) ? project["loadout"] : {};
   list(project["stages"]).forEach((id, i) => has(stages, id, `project.json#/project/stages/${i}`, rows));
   list(project["rules"]).forEach((id, i) => has(setups, id, `project.json#/project/rules/${i}`, rows));
+  if (isObj(project["session"])) has(stages, project["session"]["start"], "project.json#/project/session/start", rows);
   list(gear["roster"]).forEach((id, i) => has(units, id, `project.json#/project/loadout/roster/${i}`, rows));
   list(gear["required"]).forEach((id, i) => has(units, id, `project.json#/project/loadout/required/${i}`, rows));
   for (const [id, stage] of Object.entries(stages)) {

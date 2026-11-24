@@ -33,18 +33,18 @@ test("save opt-ins (step 24)", () => {
   assert.equal(code(text, { ...src, engineVersion: "9" }, { allowProjectMismatch: true }) === "saveEngineMismatch-" && code(text, { ...src, projectHash: "other" }, { allowEngineMismatch: true }) === "saveProjectMismatch-", true);
 });
 test("save migrations path (step 24)", () => {
-  assert.deepEqual(Object.keys(SAVE_MIGRATIONS).sort(), ["match-save", "save"]);
-  assert.equal(Object.keys(SAVE_MIGRATIONS.save).length + Object.keys(SAVE_MIGRATIONS["match-save"]).length === 0, true);
+  assert.deepEqual(Object.keys(SAVE_MIGRATIONS).sort(), ["match-save", "save", "session-save"]);
+  assert.equal(Object.keys(SAVE_MIGRATIONS.save).length + Object.keys(SAVE_MIGRATIONS["match-save"]).length + Object.keys(SAVE_MIGRATIONS["session-save"]).length === 0, true);
   const { text } = play(); const old = (n: number): string => patch(text, (s) => { s.formatVersion = n; });
   assert.equal(code(old(0)) === "saveFormatOlder+" && code(old(-3)) === "saveFormatOlder+", true);
   const s = { kind: "match-save" as const, formatVersion: 1 as const };
-  const chains: SaveChains = { save: { 0: () => ({ kind: "save", formatVersion: 1 }) }, "match-save": { 0: () => ({ kind: "match-save", formatVersion: 1 }) } };
+  const chains: SaveChains = { save: { 0: () => ({ kind: "save", formatVersion: 1 }) }, "match-save": { 0: () => ({ kind: "match-save", formatVersion: 1 }) }, "session-save": {} };
   assert.equal(migrateSave("match-save", s, 0) === null && migrateSave("match-save", s, 1) === s && (migrateSave("save", s, 0, 1, chains) as { kind: string }).kind === "save" && (migrateSave("match-save", s, 0, 1, chains) as { kind: string }).kind === "match-save", true);
   assert.equal(code(text) === "ok" && code(old(2)) === "saveFormatNewer-" && code(text, { ...input("stage-fixed"), projectHash: "x" }) === "saveProjectMismatch-", true);
 });
 test("the migrations hook is contained (step 24)", () => {
   const { src, world, text } = play(); const body = patch(text, (s) => { s.formatVersion = 0; });
-  const reg = (step: SaveChains["match-save"][number]): SaveChains => ({ save: {}, "match-save": { 0: step } });
+  const reg = (step: SaveChains["match-save"][number]): SaveChains => ({ save: {}, "match-save": { 0: step }, "session-save": {} });
   const failed = (step: SaveChains["match-save"][number]): boolean => code(body, src, undefined, reg(step)) === "saveMigrationFailed+";
   const trap = (): Record<string, unknown> => { const o: Record<string, unknown> = { kind: "match-save", formatVersion: 1 }; Object.defineProperty(o, "log", { enumerable: true, get() { throw new Error("g"); } }); return o; };
   assert.equal(failed(() => { throw new Error("x"); }) && failed(() => new Proxy({}, { get() { throw new Error("x"); } }) as never) && failed(trap), true);
@@ -52,7 +52,7 @@ test("the migrations hook is contained (step 24)", () => {
   assert.equal([() => 5, () => null, () => "s", () => [], () => (() => undefined), () => ({ kind: "match-save", formatVersion: 1, map: new Map() })].every((fn) => failed(fn as never)), true);
   const honest = loadSave(src, body, undefined, reg(() => JSON.parse(text) as Record<string, unknown>));
   assert.equal(honest.ok && shot(honest.world) === shot(world), true);
-  assert.equal(code(body, src, undefined, { save: { 0: () => JSON.parse(text) as Record<string, unknown> }, "match-save": {} }) === "saveFormatOlder+", true);
+  assert.equal(code(body, src, undefined, { save: { 0: () => JSON.parse(text) as Record<string, unknown> }, "match-save": {}, "session-save": {} }) === "saveFormatOlder+", true);
 });
 test("tamper reach (step 24)", () => {
   const { src, text } = play();

@@ -164,6 +164,7 @@ export type CoreLink = {
   readonly type: LinkType;                                                      // MAY-MOVE
   readonly at: Sq;                                                              // MAY-MOVE: cell on this stage's map
   readonly to: string;                                                          // MAY-MOVE: target stage id (brokenRef hard if missing)
+  readonly autosave?: boolean;                                                  // MAY-MOVE (DSK D28): step 8 toggle; absent = off, never written false
 };
 export type CoreStage = VersionGuard<"stage"> & {
   readonly id: string;                                                          // STABLE: stage id
@@ -236,6 +237,7 @@ export type CoreProject = {
   readonly stages: ReadonlyArray<string>;               // STABLE: stage ids, in order
   readonly rules: ReadonlyArray<string>;                // STABLE: project-wide setup ids (≤ 1 per behaviour)
   readonly loadout: CoreLoadout;                        // STABLE
+  readonly session?: { readonly start: string };        // MAY-MOVE (DSK D28): new-game start stage id; absent = stages[0]
 };
 
 export type CoreProjectManifest = VersionGuard<"tile-project"> & {
@@ -319,6 +321,10 @@ export const UI_EVENT_KEYS = { "ui.click": true } as const satisfies
 export type SaveHeader = { readonly projectHash: string; readonly engineVersion: string; readonly projectId: string; readonly savedAt: string };
 /** `match-save` v1 (project-format §6.9.1, CN-009): the log is the truth, the snapshot a check value. MAY-MOVE. */
 export type MatchSave = { readonly kind: "match-save"; readonly formatVersion: 1; readonly header: SaveHeader; readonly log: string; readonly snapshot: unknown };
+/** `session-save` v1 (project-format §6.9.2, DSK D28): the safe-point save at a link (no sim snapshot, no log). MAY-MOVE. */
+export type SessionSave = { readonly kind: "session-save"; readonly formatVersion: 1; readonly header: SaveHeader; readonly from: string; readonly to: string; readonly party: SessionParty };
+/** The carried party: living members, each unitId once, in spawn order (hp ≥ 1); the side's level bar minus its id, or null. MAY-MOVE. */
+export type SessionParty = { readonly side: SideId; readonly members: ReadonlyArray<{ readonly unitId: UnitId; readonly hp: number }>; readonly bar: { readonly xp: number; readonly level: number; readonly banked: number; readonly offer: ReadonlyArray<string> | null; readonly abilities: ReadonlyArray<string> } | null };
 
 // ================================================================ EFFECTS V2 TYPES (effect documents; render only)
 // Post-H2 batch CN-E1–E5 (setup-format r26 §2.10.1.9, §2.10.2.12, §2.10.3.4–5; CN-014, CN-015, CN-017). Additive only.

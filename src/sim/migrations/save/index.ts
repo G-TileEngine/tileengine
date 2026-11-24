@@ -1,8 +1,9 @@
 export type SaveStep = (doc: Readonly<Record<string, unknown>>) => Readonly<Record<string, unknown>>;
-export type SaveChains = Readonly<Record<"save" | "match-save", Readonly<Record<number, SaveStep>>>>;
+export type SaveKind = "save" | "match-save" | "session-save";
+export type SaveChains = Readonly<Record<SaveKind, Readonly<Record<number, SaveStep>>>>;
 export const SAVE_FORMAT = 1;
-export const SAVE_MIGRATIONS: SaveChains = Object.freeze({ save: Object.freeze({}), "match-save": Object.freeze({}) });
-export function migrateSave(kind: "save" | "match-save", doc: Readonly<Record<string, unknown>>, from: number, to = SAVE_FORMAT, chains: SaveChains = SAVE_MIGRATIONS): Readonly<Record<string, unknown>> | null {
+export const SAVE_MIGRATIONS: SaveChains = Object.freeze({ save: Object.freeze({}), "match-save": Object.freeze({}), "session-save": Object.freeze({}) });
+export function migrateSave(kind: SaveKind, doc: Readonly<Record<string, unknown>>, from: number, to = SAVE_FORMAT, chains: SaveChains = SAVE_MIGRATIONS): Readonly<Record<string, unknown>> | null {
   let cur = doc; const steps = chains[kind];
   for (let v = from; v < to; v += 1) {
     const step = steps[v]; if (step === undefined) return null;
