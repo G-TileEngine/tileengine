@@ -45,6 +45,12 @@ export function buildDrawList(scene             , fit     , cam     , tMs       
       }
     }
   };
+  for (const layer of scene.backdrop ?? []) {
+    const sh = layer.sheet; if (!(sh.fw > 0) || !(sh.fh > 0)) continue;
+    const ox = Math.floor(viewX0 * (1 - layer.depth)), oy = Math.floor(viewY0 * (1 - layer.depth)), rx = layer.repeat === "x" || layer.repeat === "both", ry = layer.repeat === "y" || layer.repeat === "both";
+    const xStart = rx ? ox + Math.floor((viewX0 - ox) / sh.fw) * sh.fw - sh.fw : ox, yStart = ry ? oy + Math.floor((viewY0 - oy) / sh.fh) * sh.fh - sh.fh : oy, xEnd = rx ? viewX1 + sh.fw : ox + 1, yEnd = ry ? viewY1 + sh.fh : oy + 1;
+    for (let y = yStart; y < yEnd; y += sh.fh) for (let x = xStart; x < xEnd; x += sh.fw) push("base", sh, () => ({ frame: 0, nextMs: Infinity }), x, y, "normal", false);
+  }
   cells(scene.ground);
   const paint = (list                    )       => {
     for (const { o } of list.map((o, i) => ({ o, i })).sort((a, b) => BANDS.indexOf(a.o.band) - BANDS.indexOf(b.o.band) || a.i - b.i)) {

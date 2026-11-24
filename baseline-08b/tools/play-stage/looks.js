@@ -37,14 +37,14 @@ export function dressPx(id        )                     {
   if (id === "play:brazier") return strip([hex(FLAME_RAMP[0])]);
   if (!id.startsWith("play:anim:")) return undefined;
   const body = id.slice("play:anim:".length), cut = body.lastIndexOf("@"), recipeId = cut < 0 ? body : body.slice(0, cut), paint = cut < 0 ? "neutral" : body.slice(cut + 1);
-  if (!Object.values(RECIPES).some((row) => row.id === recipeId) || !Object.hasOwn(TEAM, paint)) return undefined;
+  if (!(Object.values(RECIPES).some((row) => row.id === recipeId) || recipeId.startsWith("starter:unknown-")) || !Object.hasOwn(TEAM, paint)) return undefined;
   return animPx(paint === "player" ? TEAM.player : paint === "enemy" ? TEAM.enemy : TEAM.neutral);
 }
                                                                                                                                                   
 const cycle = (name        , n        ) => ({ cycle: { ramp: { name, steps: Array.from({ length: n }, (_, i) => i) } } });
-export function dress(grid      , looks        ) {
-  const n = grid.cols * grid.rows, tiles           = [], blocks = new Uint8Array(n);
-  for (let i = 0; i < n; i += 1) { const id = grid.tileTypeAt({ c: i % grid.cols, r: (i / grid.cols) | 0 }).id, tile = id === "water" ? 1 : id === "wall-block" ? 2 : 0; tiles.push(tile); if (tile === 2) blocks[i] = 1; }
+export function dress(grid      , looks        , bare = false) {
+  const n = grid.cols * grid.rows, tiles                    = [], blocks = new Uint8Array(n);
+  for (let i = 0; i < n; i += 1) { const id = grid.tileTypeAt({ c: i % grid.cols, r: (i / grid.cols) | 0 }).id, tile = id === "water" ? 1 : id === "wall-block" ? 2 : bare ? null : 0; tiles.push(tile); if (tile === 2) blocks[i] = 1; }
   const canopy = looks === undefined ? undefined : Array.from({ length: n }, () => null                 );
   if (looks !== undefined && canopy !== undefined) for (const [c, r] of looks.canopy) canopy[r * grid.cols + c] = 0;
   const assets                             = { "play:ground": { sheet: { id: "play:ground", columns: 3, fw: TILE, fh: TILE }, styled: true, tileProps: { "1": { motion: cycle("water", 3) } } } };

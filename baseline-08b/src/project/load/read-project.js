@@ -38,6 +38,7 @@ function refs(manifest     , at                                  , maps         
     list(stage["links"]).forEach((l, i) => { if (!isObj(l)) return; const where = `${path}#/links/${i}/to`; if (l["to"] === id) rows.push(row("brokenRef", "hard", where, id)); else has(stages, l["to"], where, rows); });
   }
   for (const [id, unit] of Object.entries(units)) list(unit["setupIds"]).forEach((sid, i) => has(setups, sid, `units/${id}.json#/setupIds/${i}`, rows));
+  const assets = isObj(project["assets"]) ? project["assets"] : {}; for (const [id, map] of Object.entries(maps)) list(isObj(map["background"]) ? map["background"]["layers"] : undefined).forEach((layer, i) => { if (isObj(layer)) has(assets, layer["assetId"], `maps/${id}.json#/background/layers/${i}/assetId`, rows); });
 }
 
 function knobAt(slice     , behaviourId         , key        )             {
@@ -45,7 +46,9 @@ function knobAt(slice     , behaviourId         , key        )             {
   for (const b of list(slice["behaviours"])) if (isObj(b) && b["id"] === behaviourId) for (const knob of list(b["knobs"])) if (isObj(knob) && knob["id"] === key) return knob;
   return null;
 }
-function warns(slice     , projectRev         , maps                               , setups                               , rows             )       {
+function warns(slice     , project     , maps                               , setups                               , rows             )       {
+  const projectRev = project["catalogueRev"], settings = isObj(project["settings"]) ? project["settings"] : {}, advanced = settings["advancedRender"] === true, camera = isObj(settings["camera"]) ? settings["camera"] : {};
+  if (!advanced && camera["pixelPerfect"] === false) rows.push(row("advancedRenderInactive", "info", "project.json#/project/settings/camera/pixelPerfect", "pixelPerfect"));
   const known = new Set(list(slice["behaviours"]).filter(isObj).map((b) => b["id"]));
   const tiles = new Set        ();
   for (const b of list(slice["behaviours"])) if (isObj(b) && b["id"] === "terrain") for (const knob of list(b["knobs"])) if (isObj(knob) && knob["id"] === "tile_types") for (const item of list(knob["default"])) if (isObj(item) && typeof item["id"] === "string") tiles.add(item["id"]);
@@ -70,6 +73,8 @@ function warns(slice     , projectRev         , maps                            
   for (const [id, map] of Object.entries(maps)) {
     const palette = isObj(map["logic"]) && isObj(map["logic"]["palette"]) ? map["logic"]["palette"] : {};
     for (const key of Object.keys(palette)) { const name = palette[key]; if (tiles.size > 0 && typeof name === "string" && !tiles.has(name)) rows.push(row("unknownRef", "warning", `maps/${id}.json#/logic/palette/${key}`, name)); }
+    const layers = list(isObj(map["background"]) ? map["background"]["layers"] : undefined); if (layers.length > 3) rows.push(row("overCap", "warning", `maps/${id}.json#/background/layers`, String(layers.length)));
+    layers.forEach((layer, i) => { if (!isObj(layer)) return; const depth = layer["depth"]; if (typeof depth === "number" && (depth < 0 || depth > 1)) rows.push(row("outOfRange", "warning", `maps/${id}.json#/background/layers/${i}/depth`)); if (!advanced && (layer["fit"] === "cover" || layer["fit"] === "stretch")) rows.push(row("advancedRenderInactive", "info", `maps/${id}.json#/background/layers/${i}/fit`, "fit")); });
   }
 }
 
@@ -106,7 +111,7 @@ export function readProject(files              )              {
   const manifestDoc = docs["project.json"];
   const project = isObj(manifestDoc) && isObj(manifestDoc["project"]) ? manifestDoc["project"] : {};
   refs(isObj(manifestDoc) ? manifestDoc : {}, stageAt, maps, stages, units, setups, rows);
-  warns(slice, project["catalogueRev"], maps, setups, rows);
+  warns(slice, project, maps, setups, rows);
   rows.push(...placementDrops(stages, stageAt, maps, slice), ...mapEntryDrops(maps, mapAt));
   const hard = rows.some((r) => r.severity === "hard");
   const store               = { manifest, slice, maps, stages, units, setups, unknownFiles };

@@ -1,4 +1,4 @@
-export { BANDS,                                                                                                                                                                                                                                            } from "./types.js";
+export { BANDS,                                                                                                                                                                                                                                                           } from "./types.js";
 export { backingSize, fitView, scaleRange, snapScale } from "./fit.js";
 export { clampCamera, easeCamera, px, snapCamera, toDevice } from "./camera.js";
 export { badMs, clipMs, footAt, frameAt, hash32, instanceOffset } from "./frames.js";

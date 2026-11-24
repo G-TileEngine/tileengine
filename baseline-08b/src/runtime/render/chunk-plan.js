@@ -11,7 +11,8 @@ export function chunkedList(scene             , fit     , cam     , tMs        ,
   let dueMs = Infinity;
   const add = (list          )       => { for (const cmd of list.cmds) cmds.push(cmd); if (list.dueMs < dueMs) dueMs = list.dueMs; };
   const x0 = Math.floor(cam.devX / fit.s), y0 = Math.floor(cam.devY / fit.s), x1 = x0 + fit.artW + 1, y1 = y0 + fit.artH + 1;
-  const one = (layer           , above         )           => buildDrawList({ ...scene, ground: above ? [] : [layer], above: above ? [layer] : [], standing: [], overlays: [], dots: [] }, fit, cam, tMs, stepMs);
+  const { backdrop, ...quiet } = scene;
+  const one = (layer           , above         )           => buildDrawList({ ...quiet, ground: above ? [] : [layer], above: above ? [layer] : [], standing: [], overlays: [], dots: [] }, fit, cam, tMs, stepMs);
   const paint = (rows                      , above         )       => {
     for (let li = 0; li < rows.length; li += 1) {
       const layer = rows[li];
@@ -30,9 +31,10 @@ export function chunkedList(scene             , fit     , cam     , tMs        ,
       add(one({ ...layer, tiles: anim }, above));
     }
   };
+  if (backdrop !== undefined && backdrop.length > 0) add(buildDrawList({ ...scene, ground: [], above: [], standing: [], overlays: [], dots: [] }, fit, cam, tMs, stepMs));
   paint(scene.ground, false);
-  add(buildDrawList({ ...scene, ground: [], above: [], overlays: [], dots: [] }, fit, cam, tMs, stepMs));
+  add(buildDrawList({ ...quiet, ground: [], above: [], overlays: [], dots: [] }, fit, cam, tMs, stepMs));
   paint(scene.above, true);
-  add(buildDrawList({ ...scene, ground: [], above: [], standing: [] }, fit, cam, tMs, stepMs));
+  add(buildDrawList({ ...quiet, ground: [], above: [], standing: [] }, fit, cam, tMs, stepMs));
   return { cmds, dueMs };
 }

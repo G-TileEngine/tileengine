@@ -75,7 +75,8 @@ export function createPlay(docs           , moveMs = 200, autoWait = true) {
   const player = createPlayer(world, { side: sides.me, moveMs, nextId: () => `p${n += 1}`, step, spellOf: (id) => { const u = world.units.get(id); return u === undefined ? undefined : spellRef(body.rules, u.unitId); } });
   const bot = botAbilityPriority({ setup: body.rules, stepReach: step.reach, actionsPerTurn: budget.actionsPerTurn });
   const gestures = createGestureMapper({ cellPx: TILE, tapMaxPx: 12, holdMs: 500 }, { cols: world.grid.cols, rows: world.grid.rows, unitAt: (at) => world.units.occupantAt(at) });
-  const fx = createPlayFx(body.effects), looks = dress(world.grid, body.looks), paint = new Map                                                                 (), seen = new Map                ();
+  const fx = createPlayFx(body.effects), paint = new Map                                                                 (), seen = new Map                ();
+  let looks = dress(world.grid, body.looks);
   for (const u of world.units.all()) { const recipeId = recipeIn(body.recipes, u.unitId).id, tone = paintOf(u.side, sides.me), prior = seen.get(recipeId); if (prior === undefined) seen.set(recipeId, tone); paint.set(u.id, { sprite: prior === undefined || prior === tone ? recipeId : `${recipeId}@${tone}`, asset: unitAsset(`${recipeId}@${tone}`) }); }
   let selected                = null, pending            = null, reach       = [], preview       = [], walk              = null, aims       = [], aimKind                    = "basic", followId                = null, onLand                      = null;
   let route                                  = (intent) => intend(intent);
@@ -118,6 +119,7 @@ export function createPlay(docs           , moveMs = 200, autoWait = true) {
   };
   return {
     world, step, intend, sync, bot, pixels: pixelsOf, autoWait, go, fx, looks, sides,
+    bare()       { looks = dress(world.grid, body.looks, true); },
     focus(id               )       { selected = id; pending = null; preview = []; mark(); },
     arm(next      )       { walk = next; sync(); },
     landed(fn                     )       { onLand = fn; },

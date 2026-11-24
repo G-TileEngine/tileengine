@@ -22,7 +22,9 @@ export const BANDS = ["base", "fxGround", "wash", "fxAir", "glow", "flash", "ui"
 /** Anything drawn above the world: wash, effect air, glow or UI. `x`/`y` are top-left in world art px. */
                                                                                                                                                                                                                                                                                                            
                                                                                                                                                                                        
-                                                                                                                                                                                                                                                                                                                                                                               
+/** A map background picture. `depth` 1 scrolls with the map; 0 stays on screen. Drawn at native size, never scaled. */
+                                                                                                                       
+                                                                                                                                                                                                                                                                                                                                                                                                                        
                                                                                      
 /** The draw adapter (ARCH §12.4). Canvas2D (step 28) and WebGL2 (later) implement it; the test backend lives in tests/. */
                            
