@@ -6,10 +6,10 @@ import type { ProjectFiles, ReportRow } from "../../src/project/load/types.ts";
 import { assetRows } from "./asset-check.ts";
 import { parseProject } from "./project-files.ts";
 import { commitWrites, type MakerStore } from "./store.ts";
-import { fits, readPicture } from "../play-stage/picture.ts";
+import { fits, MAX_SIDE, readPicture } from "../play-stage/picture.ts";
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 const amp = String.fromCharCode(38), esc = (t: string): string => t.replace(/[&<>"']/g, (ch) => ch === amp ? `${amp}amp;` : ch === "<" ? `${amp}lt;` : ch === ">" ? `${amp}gt;` : ch === '"' ? `${amp}quot;` : `${amp}#39;`);
-export type ArtRow = { readonly code: "uploadTypeUnsupported"; readonly severity: "hard"; readonly path: string; readonly detail: string };
+export type ArtRow = { readonly code: "uploadTypeUnsupported" | "uploadTooLarge"; readonly severity: "hard"; readonly path: string; readonly detail: string };
 export type ArtResult = { readonly ok: true; readonly files: DocText; readonly rev: number } | { readonly ok: false; readonly line: string; readonly row?: ArtRow };
 let shown = false, note: string | null = null, lines: readonly string[] = [];
 export const showArt = (): void => { shown = true; note = null; }, hideArt = (): void => { shown = false; note = null; }, setArtNote = (line: string | null): void => { note = line; }, setArtLines = (next: readonly string[]): void => { lines = next; };
@@ -31,7 +31,7 @@ export async function uploadBytes(file: Blob): Promise<Uint8Array> {
 export async function addPicture(store: MakerStore, id: string, files: DocText, rev: number, stageId: string, now: string, fileName: string, bytes: Uint8Array): Promise<ArtResult> {
   const pic = readPicture(bytes);
   if (!pic.ok) return { ok: false, line: typeLine(fileName, pic.sniffed), row: { code: "uploadTypeUnsupported", severity: "hard", path: fileName, detail: pic.sniffed } };
-  if (!fits(pic.w, pic.h)) return { ok: false, line: `${fileName} is too big: ${pic.w} × ${pic.h} px. A picture can be at most 4096 px a side. Nothing was saved.` };
+  if (!fits(pic.w, pic.h)) return { ok: false, line: `${fileName} is too big: ${pic.w} × ${pic.h} px. A picture can be at most 4096 px a side. Nothing was saved.`, row: { code: "uploadTooLarge", severity: "hard", path: fileName, detail: JSON.stringify({ w: pic.w, h: pic.h, max: MAX_SIDE }) } };
   const parsed = parseProject(files); if (!parsed.ok) return { ok: false, line: parsed.message };
   const found = locate(parsed.files, stageId); if (found === null) return { ok: false, line: "Can't open this map" };
   const assetId = `asset_${hex(await crypto.subtle.digest("SHA-256", new Uint8Array(bytes))).slice(0, 16)}`, stem = fileName.replace(/\.[^./\\]+$/, "").slice(0, 64), name = stem === "" ? "Picture" : stem;
