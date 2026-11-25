@@ -35,7 +35,24 @@ function bake(id: string, rgb: number, letter: string): Pixels {
   if (rows !== undefined) for (let y = 0; y < rows.length; y += 1) { const bits = rows[y] ?? 0; for (let x = 0; x < 5; x += 1) if ((bits & (1 << (4 - x))) !== 0) { const o = ((y + 4) * TILE + (x + 5)) * 4; data[o] = 248; data[o + 1] = 244; data[o + 2] = 230; data[o + 3] = 255; } }
   const px = { w: TILE, h: TILE, data }; cache.set(id, px); return px;
 }
+const SHAPE: Readonly<Record<string, readonly number[]>> = {
+  stairs: [0, 0, 0, 15360, 15360, 15360, 0, 16320, 16320, 16320, 0, 16380, 16380, 16380, 0, 0],
+  door: [0, 0, 4080, 4080, 3120, 3120, 3120, 3120, 4080, 4080, 4080, 4080, 4080, 4080, 0, 0],
+  gate: [0, 0, 0, 8184, 4680, 4680, 4680, 4680, 4680, 4680, 4680, 4680, 8184, 0, 0, 0],
+  link: [0, 0, 0, 128, 448, 992, 2032, 4088, 2032, 992, 448, 128, 0, 0, 0, 0],
+};
+function linkPx(kind: string): Pixels | undefined {
+  const rows = SHAPE[kind]; if (rows === undefined) return undefined;
+  const id = `play:link-${kind}`, hit = cache.get(id); if (hit !== undefined) return hit;
+  const data = new Uint8ClampedArray(16 * 16 * 4), bit = (x: number, y: number): boolean => x >= 0 && y >= 0 && x < 16 && y < 16 && ((rows[y] ?? 0) & (1 << x)) !== 0;
+  for (let y = 0; y < 16; y += 1) for (let x = 0; x < 16; x += 1) {
+    const lit = bit(x, y); let edge = false; if (!lit) for (let dy = -1; dy <= 1 && !edge; dy += 1) for (let dx = -1; dx <= 1; dx += 1) if ((dx !== 0 || dy !== 0) && bit(x + dx, y + dy)) edge = true;
+    if (!lit && !edge) continue; const o = (y * 16 + x) * 4; data[o] = lit ? 248 : 16; data[o + 1] = lit ? 244 : 20; data[o + 2] = lit ? 230 : 28; data[o + 3] = 255;
+  }
+  const px = { w: 16, h: 16, data }; cache.set(id, px); return px;
+}
 export function pixelsOf(id: string): Pixels | undefined {
+  if (id.startsWith("play:link-")) return linkPx(id.slice(10));
   const dressed = dressPx(id); if (dressed !== undefined) return dressed;
   const sparked = fxPx(id); if (sparked !== undefined) return sparked;
   if (id === "play:floor") return bake(id, 0x243044, "");
@@ -77,6 +94,7 @@ export function createPlay(docs?: PlayDocs, moveMs = 200, autoWait = true) {
   const gestures = createGestureMapper({ cellPx: TILE, tapMaxPx: 12, holdMs: 500 }, { cols: world.grid.cols, rows: world.grid.rows, unitAt: (at) => world.units.occupantAt(at) });
   const fx = createPlayFx(body.effects), paint = new Map<string, { readonly sprite: string; readonly asset: SceneAsset }>(), seen = new Map<string, string>();
   let looks = dress(world.grid, body.looks), artBox: Record<string, SceneAsset> | null = null, artKey = "";
+  const marks = (body.links ?? []).map((link) => ({ band: "fxGround" as const, sheet: { id: `play:link-${Object.hasOwn(SHAPE, link.type) ? link.type : "link"}`, columns: 1, fw: 16, fh: 16 }, x: link.at.c * TILE, y: link.at.r * TILE }));
   for (const u of world.units.all()) { const recipeId = recipeIn(body.recipes, u.unitId).id, tone = paintOf(u.side, sides.me), prior = seen.get(recipeId); if (prior === undefined) seen.set(recipeId, tone); paint.set(u.id, { sprite: prior === undefined || prior === tone ? recipeId : `${recipeId}@${tone}`, asset: unitAsset(`${recipeId}@${tone}`) }); }
   let selected: string | null = null, pending: Sq | null = null, reach: Sq[] = [], preview: Sq[] = [], walk: Walk | null = null, aims: Sq[] = [], aimKind: "basic" | "spell" = "basic", followId: string | null = null, onLand: (() => void) | null = null;
   let route: (intent: DoorIntent) => unknown = (intent) => intend(intent);
@@ -132,7 +150,7 @@ export function createPlay(docs?: PlayDocs, moveMs = 200, autoWait = true) {
     scene() {
       sync();
       const aimSheet = aimKind === "spell" ? AIM_S : AIM_A, aimOver = world.phases.battle === "targeting" ? aims.map((c) => ({ band: "fxGround" as const, sheet: aimSheet, x: c.c * TILE, y: c.r * TILE })) : [];
-      const overlays = selected === null ? aimOver : [...reach.map((c) => ({ band: "fxGround" as const, sheet: REACH, x: c.c * TILE, y: c.r * TILE })), ...preview.map((c) => ({ band: "fxGround" as const, sheet: PATH, x: c.c * TILE, y: c.r * TILE })), ...aimOver];
+      const overlays = selected === null && world.phases.battle !== "targeting" ? marks : [...(selected === null ? [] : reach.map((c) => ({ band: "fxGround" as const, sheet: REACH, x: c.c * TILE, y: c.r * TILE }))), ...(selected === null ? [] : preview.map((c) => ({ band: "fxGround" as const, sheet: PATH, x: c.c * TILE, y: c.r * TILE }))), ...aimOver, ...marks];
       const key = world.units.all().map((u) => paint.get(u.id)?.sprite ?? "").join("\0"); if (artBox === null || artKey !== key) { artKey = key; artBox = { ...looks.assets, "play:fx": { sheet: { id: "play:fx", columns: 4, fw: TILE, fh: TILE } } }; }
       const assets = artBox;
       const units = world.units.all().map((u) => { const row = paint.get(u.id); if (row === undefined) throw new Error("play: paint"); assets[row.sprite] = row.asset; return { id: u.id, sprite: row.sprite, at: { c: u.at.c, r: u.at.r }, offset: u.offset, facing: u.facing, alive: u.alive }; });
