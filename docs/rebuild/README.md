@@ -38,6 +38,7 @@ The step briefs in `docs/maker/steps/` say what each step had to build *before* 
 | 23 | `step-08c.md` baseline walk draws units | `docs/maker/steps/step-08c-baseline-walk.md` | `02a0a9c5` (9a r1 QA review on the 9a merge; the 8c go-line after 9a) | PR #100, merge `cd48ebdc`, 1135 tests |
 | 24 | `step-09b.md` background upload editor | `docs/maker/steps/step-09b-art-upload.md` | `8572cd05` (9b r2 and 9c r1 guides + QA review, docs-only on `2a6146ae`) | PR #101, merge `a1d01698`, 1141 tests |
 | 25 | `step-09c.md` link markers on the play board | `docs/maker/steps/step-09c-link-markers.md` | `21763070` (9b r1 QA review on the 9b merge; the 9c go-line). Merge first parent `df771fef` | PR #102, merge `9088feb2`, 1142 tests |
+| 26 | `step-10a.md` carries before the engine effect path | `docs/maker/steps/step-10a-carries.md` | `31f4c0c4` (10a r2 guide + QA reviews; the 10a go-line). Merge first parent `751994a7` | PR #103, merge `c3e056ff`, 1146 tests |
 
 Follow them strictly in order (rebuild order, not numeric: step 00b starts on the 4a merge, so it sits after `step-04a.md`). Between steps, main also gained docs-only commits; a step's start commit is always the one named in its file.
 
