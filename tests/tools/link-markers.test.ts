@@ -1,0 +1,26 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { toDevice } from "../../src/runtime/render/camera.ts";
+import { chunkedList, fitView, snapCamera } from "../../src/runtime/render/index.ts";
+import { createSceneLink } from "../../src/runtime/scene/world-scene.ts";
+import { openShop } from "../../tools/baseline/checkpoint.ts";
+import { pixelsOf, TILE } from "../../tools/play-stage/board.ts";
+import { sourceOf } from "../../tools/play-stage/looks.ts";
+import { createMatch } from "../../tools/play-stage/match.ts";
+const opaque = (id: string): number => { const px = pixelsOf(id); if (px === undefined) return -1; let n = 0; for (let i = 3; i < px.data.length; i += 4) if ((px.data[i] ?? 0) > 0) n += 1; return n; };
+test("step 9c link markers: the shop's stairs at c1,r4 draw a marker above the floor and below the units, and it stays on while a unit is selected", () => {
+  const opened = openShop(); assert.equal(opened.error, ""); assert.notEqual(opened.docs, null); if (opened.docs === null) return;
+  const m = createMatch(opened.docs), fit = fitView(390 * 3, 600 * 3, m.world.grid.cols, TILE, TILE), cam = snapCamera(0, 0, fit.s);
+  const link = createSceneLink(sourceOf((id) => m.pixels(id))), at = toDevice(TILE, 4 * TILE, cam, fit);
+  const draw = (): ReturnType<typeof chunkedList>["cmds"] => chunkedList(link.scene(m.scene(), { tMs: 0, stepMs: 10 }), fit, cam, 0, 10).cmds;
+  const marker = (cmds: ReturnType<typeof draw>): typeof cmds => cmds.filter((c) => c.sheet === "play:link-stairs" && c.band === "fxGround" && c.dx === at.x && c.dy === at.y);
+  const idle = m.scene(); assert.equal(idle.overlays, m.scene().overlays); assert.equal(marker(draw()).length, 1);
+  const hero = m.world.units.all().find((u) => u.alive && u.at.c === 0 && u.at.r === 4); assert.notEqual(hero, undefined); if (hero === undefined) return;
+  m.intend({ type: "SelectUnit", unitId: hero.id }); assert.ok(m.reach.length > 0);
+  const over = m.scene().overlays, last = over[over.length - 1];
+  assert.equal(last?.sheet.id, "play:link-stairs"); assert.equal(last?.band, "fxGround"); assert.equal(last?.x, TILE); assert.equal(last?.y, 4 * TILE);
+  assert.equal(marker(draw()).length, 1);
+  const stairs = opaque("play:link-stairs"); assert.ok(stairs > 20 && stairs < 256);
+  assert.ok(opaque("play:link-door") > 0 && opaque("play:link-gate") > 0 && opaque("play:link-link") > 0);
+  assert.equal(pixelsOf("play:link-nope"), undefined);
+});
