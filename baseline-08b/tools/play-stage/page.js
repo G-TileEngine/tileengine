@@ -4,6 +4,7 @@ import { createSceneLink } from "../../src/runtime/scene/world-scene.js";
 import { inOrthogonalReach } from "../../src/rules/battle/range.js";
                                                                   
                                                                   
+import { loadLayer } from "./backdrop.js";
 import { boardBox, fit, TILE } from "./board.js";
 import { centreOn, clamp, createCam, seatCam, tickCam,              } from "./camera-touch.js";
 import { createHud, XP_H } from "./hud.js";
@@ -56,13 +57,7 @@ const driver = createDriver({
     return { scene, lights: litPlan(lighting, match.looks, link.lit), shake: link.shake, x: cam.x, y: cam.y, s: cam.s };
   },
 });
-void Promise.all((docs.backdrop ?? []).map(async (layer) => {
-  try {
-    const blob = docs.art === undefined ? null : await docs.art(layer.file);
-    if (blob === null) { misses.push(`Background picture missing: ${layer.file}`); driver.stats.failed += 1; return null; }
-    const bmp = await createImageBitmap(blob), canvas = new OffscreenCanvas(bmp.width, bmp.height), g = canvas.getContext("2d"); if (g === null) throw new Error(layer.file); g.imageSmoothingEnabled = false; g.drawImage(bmp, 0, 0); sheets.set(layer.assetId, canvas); return { sheet: { id: layer.assetId, columns: 1, fw: bmp.width, fh: bmp.height }, depth: layer.depth, repeat: layer.repeat };
-  } catch { misses.push(`Background picture ${layer.file} couldn't be opened`); driver.stats.failed += 1; return null; }
-})).then((rows) => { const list = rows.flatMap((row) => row === null ? [] : [row]); painted = list; held = null; if (list.length > 0) match.bare(); });
+void Promise.all((docs.backdrop ?? []).map((layer) => loadLayer(layer, docs.art, (blob) => createImageBitmap(blob), (bmp) => { const canvas = new OffscreenCanvas(bmp.width, bmp.height), g = canvas.getContext("2d"); if (g === null) throw new Error(layer.file); g.imageSmoothingEnabled = false; g.drawImage(bmp, 0, 0); sheets.set(layer.assetId, canvas); }))).then((rows) => { for (const row of rows) if (row.miss !== null) { misses.push(row.miss); driver.stats.failed += 1; } const list = rows.flatMap((row) => row.row === null ? [] : [row.row]); painted = list; held = null; if (list.length > 0) match.bare(); });
 const touch = createTouch({ match, cam, box: () => { const ratio = dpr(), rect = canvas.getBoundingClientRect(), raw = canvas.width === 300 && canvas.height === 150, devW = !raw && canvas.width > 0 ? canvas.width : canvas.clientWidth * ratio, devH = !raw && canvas.height > 0 ? canvas.height : canvas.clientHeight * ratio; return { devW, devH, kx: rect.width > 0 && !raw && canvas.width > 0 ? canvas.width / rect.width : ratio, ky: rect.height > 0 && !raw && canvas.height > 0 ? canvas.height / rect.height : ratio, cols: match.world.grid.cols, rows: match.world.grid.rows }; } });
 for (const k of ["pointerdown", "pointermove", "pointerup", "pointercancel", "lostpointercapture"]         ) canvas.addEventListener(k, (e) => { const p = { id: e.pointerId, offsetX: e.offsetX, offsetY: e.offsetY, clientX: e.clientX, clientY: e.clientY, timeStamp: e.timeStamp, pointerType: e.pointerType }; if (k === "pointerdown") { canvas.setPointerCapture(e.pointerId); touch.down(p); } else if (k === "pointermove") touch.move(p); else if (k === "pointerup") touch.up(p); else touch.cancel(p); });
 const place = ()       => { const box = boardBox(innerHeight - (match.view().xp === null ? 0 : XP_H)); Object.assign(canvas.style, { position: "fixed", left: "0", right: "0", width: "100%", top: `${box.top}px`, height: `${box.height}px`, touchAction: "none" }); };

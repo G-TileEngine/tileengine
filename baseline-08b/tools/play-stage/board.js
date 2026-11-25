@@ -35,7 +35,24 @@ function bake(id        , rgb        , letter        )         {
   if (rows !== undefined) for (let y = 0; y < rows.length; y += 1) { const bits = rows[y] ?? 0; for (let x = 0; x < 5; x += 1) if ((bits & (1 << (4 - x))) !== 0) { const o = ((y + 4) * TILE + (x + 5)) * 4; data[o] = 248; data[o + 1] = 244; data[o + 2] = 230; data[o + 3] = 255; } }
   const px = { w: TILE, h: TILE, data }; cache.set(id, px); return px;
 }
+const SHAPE                                              = {
+  stairs: [0, 0, 0, 15360, 15360, 15360, 0, 16320, 16320, 16320, 0, 16380, 16380, 16380, 0, 0],
+  door: [0, 0, 4080, 4080, 3120, 3120, 3120, 3120, 4080, 4080, 4080, 4080, 4080, 4080, 0, 0],
+  gate: [0, 0, 0, 8184, 4680, 4680, 4680, 4680, 4680, 4680, 4680, 4680, 8184, 0, 0, 0],
+  link: [0, 0, 0, 128, 448, 992, 2032, 4088, 2032, 992, 448, 128, 0, 0, 0, 0],
+};
+function linkPx(kind        )                     {
+  const rows = SHAPE[kind]; if (rows === undefined) return undefined;
+  const id = `play:link-${kind}`, hit = cache.get(id); if (hit !== undefined) return hit;
+  const data = new Uint8ClampedArray(16 * 16 * 4), bit = (x        , y        )          => x >= 0 && y >= 0 && x < 16 && y < 16 && ((rows[y] ?? 0) & (1 << x)) !== 0;
+  for (let y = 0; y < 16; y += 1) for (let x = 0; x < 16; x += 1) {
+    const lit = bit(x, y); let edge = false; if (!lit) for (let dy = -1; dy <= 1 && !edge; dy += 1) for (let dx = -1; dx <= 1; dx += 1) if ((dx !== 0 || dy !== 0) && bit(x + dx, y + dy)) edge = true;
+    if (!lit && !edge) continue; const o = (y * 16 + x) * 4; data[o] = lit ? 248 : 16; data[o + 1] = lit ? 244 : 20; data[o + 2] = lit ? 230 : 28; data[o + 3] = 255;
+  }
+  const px = { w: 16, h: 16, data }; cache.set(id, px); return px;
+}
 export function pixelsOf(id        )                     {
+  if (id.startsWith("play:link-")) return linkPx(id.slice(10));
   const dressed = dressPx(id); if (dressed !== undefined) return dressed;
   const sparked = fxPx(id); if (sparked !== undefined) return sparked;
   if (id === "play:floor") return bake(id, 0x243044, "");
@@ -76,7 +93,8 @@ export function createPlay(docs           , moveMs = 200, autoWait = true) {
   const bot = botAbilityPriority({ setup: body.rules, stepReach: step.reach, actionsPerTurn: budget.actionsPerTurn });
   const gestures = createGestureMapper({ cellPx: TILE, tapMaxPx: 12, holdMs: 500 }, { cols: world.grid.cols, rows: world.grid.rows, unitAt: (at) => world.units.occupantAt(at) });
   const fx = createPlayFx(body.effects), paint = new Map                                                                 (), seen = new Map                ();
-  let looks = dress(world.grid, body.looks);
+  let looks = dress(world.grid, body.looks), artBox                                    = null, artKey = "";
+  const marks = (body.links ?? []).map((link) => ({ band: "fxGround"         , sheet: { id: `play:link-${Object.hasOwn(SHAPE, link.type) ? link.type : "link"}`, columns: 1, fw: 16, fh: 16 }, x: link.at.c * TILE, y: link.at.r * TILE }));
   for (const u of world.units.all()) { const recipeId = recipeIn(body.recipes, u.unitId).id, tone = paintOf(u.side, sides.me), prior = seen.get(recipeId); if (prior === undefined) seen.set(recipeId, tone); paint.set(u.id, { sprite: prior === undefined || prior === tone ? recipeId : `${recipeId}@${tone}`, asset: unitAsset(`${recipeId}@${tone}`) }); }
   let selected                = null, pending            = null, reach       = [], preview       = [], walk              = null, aims       = [], aimKind                    = "basic", followId                = null, onLand                      = null;
   let route                                  = (intent) => intend(intent);
@@ -119,7 +137,7 @@ export function createPlay(docs           , moveMs = 200, autoWait = true) {
   };
   return {
     world, step, intend, sync, bot, pixels: pixelsOf, autoWait, go, fx, looks, sides,
-    bare()       { looks = dress(world.grid, body.looks, true); },
+    bare()       { looks = dress(world.grid, body.looks, true); artBox = null; },
     focus(id               )       { selected = id; pending = null; preview = []; mark(); },
     arm(next      )       { walk = next; sync(); },
     landed(fn                     )       { onLand = fn; },
@@ -132,8 +150,9 @@ export function createPlay(docs           , moveMs = 200, autoWait = true) {
     scene() {
       sync();
       const aimSheet = aimKind === "spell" ? AIM_S : AIM_A, aimOver = world.phases.battle === "targeting" ? aims.map((c) => ({ band: "fxGround"         , sheet: aimSheet, x: c.c * TILE, y: c.r * TILE })) : [];
-      const overlays = selected === null ? aimOver : [...reach.map((c) => ({ band: "fxGround"         , sheet: REACH, x: c.c * TILE, y: c.r * TILE })), ...preview.map((c) => ({ band: "fxGround"         , sheet: PATH, x: c.c * TILE, y: c.r * TILE })), ...aimOver];
-      const assets                             = { ...looks.assets, "play:fx": { sheet: { id: "play:fx", columns: 4, fw: TILE, fh: TILE } } };
+      const overlays = selected === null && world.phases.battle !== "targeting" ? marks : [...(selected === null ? [] : reach.map((c) => ({ band: "fxGround"         , sheet: REACH, x: c.c * TILE, y: c.r * TILE }))), ...(selected === null ? [] : preview.map((c) => ({ band: "fxGround"         , sheet: PATH, x: c.c * TILE, y: c.r * TILE }))), ...aimOver, ...marks];
+      const key = world.units.all().map((u) => paint.get(u.id)?.sprite ?? "").join("\0"); if (artBox === null || artKey !== key) { artKey = key; artBox = { ...looks.assets, "play:fx": { sheet: { id: "play:fx", columns: 4, fw: TILE, fh: TILE } } }; }
+      const assets = artBox;
       const units = world.units.all().map((u) => { const row = paint.get(u.id); if (row === undefined) throw new Error("play: paint"); assets[row.sprite] = row.asset; return { id: u.id, sprite: row.sprite, at: { c: u.at.c, r: u.at.r }, offset: u.offset, facing: u.facing, alive: u.alive }; });
       return { cols: world.grid.cols, rows: world.grid.rows, tileW: TILE, tileH: TILE, mapSeed: world.seed, assets, layers: looks.layers, units, objects: looks.objects, overlays, effects: fx.ingest(world.log, world.clock.stepMs, world.clock.now()), style: looks.style, waterTiles: looks.waterTiles, seeThroughCanopy: true          };
     },
