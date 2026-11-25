@@ -12,7 +12,7 @@ function usedIds(project: Record<string, unknown>, files: Readonly<Record<string
 }
 /** H4 at Test only. Hard when a selected stage's map names the asset, else a warning. The index entry is kept. */
 export async function assetRows(store: MakerStore, folder: string, files: Readonly<Record<string, unknown>>): Promise<ReportRow[]> {
-  let docs = files; try { docs = migrateProject(files).files; } catch { docs = files; }
+  let docs = files; try { docs = migrateProject(files).files; } catch { return [{ code: "invalidValue", severity: "hard", path: "project.json", detail: "unreadable" }]; }
   const root = docs["project.json"], project = isObj(root) && isObj(root["project"]) ? root["project"] : {}, assets = isObj(project["assets"]) ? project["assets"] : {}, used = usedIds(project, docs), pre = folder.endsWith("/") ? folder : `${folder}/`, rows: ReportRow[] = [];
   for (const [id, meta] of Object.entries(assets)) {
     if (!isObj(meta) || typeof meta["ext"] !== "string") continue;

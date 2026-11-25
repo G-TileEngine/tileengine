@@ -92,7 +92,7 @@ export function createPlay(docs?: PlayDocs, moveMs = 200, autoWait = true) {
   const player = createPlayer(world, { side: sides.me, moveMs, nextId: () => `p${n += 1}`, step, spellOf: (id) => { const u = world.units.get(id); return u === undefined ? undefined : spellRef(body.rules, u.unitId); } });
   const bot = botAbilityPriority({ setup: body.rules, stepReach: step.reach, actionsPerTurn: budget.actionsPerTurn });
   const gestures = createGestureMapper({ cellPx: TILE, tapMaxPx: 12, holdMs: 500 }, { cols: world.grid.cols, rows: world.grid.rows, unitAt: (at) => world.units.occupantAt(at) });
-  const fx = createPlayFx(body.effects), paint = new Map<string, { readonly sprite: string; readonly asset: SceneAsset }>(), seen = new Map<string, string>();
+  const fx = createPlayFx(body.effects, (caster, ref) => { const id = world.units.get(caster)?.unitId; return id === undefined || body.fxOf === undefined ? undefined : body.fxOf[`${id}|${ref}`]; }), paint = new Map<string, { readonly sprite: string; readonly asset: SceneAsset }>(), seen = new Map<string, string>();
   let looks = dress(world.grid, body.looks), artBox: Record<string, SceneAsset> | null = null, artKey = "";
   const marks = (body.links ?? []).map((link) => ({ band: "fxGround" as const, sheet: { id: `play:link-${Object.hasOwn(SHAPE, link.type) ? link.type : "link"}`, columns: 1, fw: 16, fh: 16 }, x: link.at.c * TILE, y: link.at.r * TILE }));
   for (const u of world.units.all()) { const recipeId = recipeIn(body.recipes, u.unitId).id, tone = paintOf(u.side, sides.me), prior = seen.get(recipeId); if (prior === undefined) seen.set(recipeId, tone); paint.set(u.id, { sprite: prior === undefined || prior === tone ? recipeId : `${recipeId}@${tone}`, asset: unitAsset(`${recipeId}@${tone}`) }); }

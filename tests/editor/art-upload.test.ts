@@ -59,7 +59,7 @@ test("upload refusals write nothing: other types are uploadTypeUnsupported {file
   assert.equal(gif.line, "Can't use cat.png: it's a gif file. Use a PNG, JPG or WebP picture.");
   assert.deepEqual(gif.row, { code: "uploadTypeUnsupported", severity: "hard", path: "cat.png", detail: "gif" });
   const wide = await addPicture(store, PID, files, rev, STAGE, NOW, "wide.png", png(5000, 10));
-  assert.equal(wide.ok, false); if (wide.ok) return; assert.equal(wide.line, "wide.png is too big: 5000 × 10 px. A picture can be at most 4096 px a side. Nothing was saved."); assert.equal(wide.row, undefined);
+  assert.equal(wide.ok, false); if (wide.ok) return; assert.equal(wide.line, "wide.png is too big: 5000 × 10 px. A picture can be at most 4096 px a side. Nothing was saved."); assert.deepEqual(wide.row, { code: "uploadTooLarge", severity: "hard", path: "wide.png", detail: JSON.stringify({ w: 5000, h: 10, max: 4096 }) });
   assert.equal(shot(store), before); assert.deepEqual(await store.list(`${prefix(PID)}assets/`), []); assert.equal(files["project.json"], textOf(root)["project.json"]);
 });
 test("background sheet: lines show this map's D29 asset rows (hard when a played stage uses it), and Remove takes the layer off but keeps the asset", async () => {

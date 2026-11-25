@@ -46,10 +46,11 @@ function knobAt(slice: Obj, behaviourId: unknown, key: string): Obj | null {
   for (const b of list(slice["behaviours"])) if (isObj(b) && b["id"] === behaviourId) for (const knob of list(b["knobs"])) if (isObj(knob) && knob["id"] === key) return knob;
   return null;
 }
-function warns(slice: Obj, project: Obj, maps: Readonly<Record<string, Doc>>, setups: Readonly<Record<string, Doc>>, rows: ReportRow[]): void {
+function warns(slice: Obj, project: Obj, maps: Readonly<Record<string, Doc>>, setups: Readonly<Record<string, Doc>>, effects: Readonly<Record<string, Doc>>, rows: ReportRow[]): void {
   const projectRev = project["catalogueRev"], settings = isObj(project["settings"]) ? project["settings"] : {}, advanced = settings["advancedRender"] === true, camera = isObj(settings["camera"]) ? settings["camera"] : {};
   if (!advanced && camera["pixelPerfect"] === false) rows.push(row("advancedRenderInactive", "info", "project.json#/project/settings/camera/pixelPerfect", "pixelPerfect"));
   const known = new Set(list(slice["behaviours"]).filter(isObj).map((b) => b["id"]));
+  const builtins = new Set<string>(); for (const b of list(slice["behaviours"])) if (isObj(b) && b["id"] === "effect") for (const preset of list(b["presets"])) if (isObj(preset) && typeof preset["id"] === "string") builtins.add(preset["id"]);
   const tiles = new Set<string>();
   for (const b of list(slice["behaviours"])) if (isObj(b) && b["id"] === "terrain") for (const knob of list(b["knobs"])) if (isObj(knob) && knob["id"] === "tile_types") for (const item of list(knob["default"])) if (isObj(item) && typeof item["id"] === "string") tiles.add(item["id"]);
   if (slice["catalogue_rev"] !== undefined && slice["catalogue_rev"] !== projectRev) rows.push(row("catalogueRevMismatch", "warning", "catalogue/slice.json#/catalogue_rev"));
@@ -60,6 +61,7 @@ function warns(slice: Obj, project: Obj, maps: Readonly<Record<string, Doc>>, se
     const ns = isObj(answers["custom_ns"]) ? answers["custom_ns"]["value"] : undefined, ew = isObj(answers["custom_ew"]) ? answers["custom_ew"]["value"] : undefined, mode = isObj(answers["reach_mode"]) ? answers["reach_mode"]["value"] : undefined;
     if (setup["behaviourId"] === "basic-attack" && mode === "custom-cross" && typeof ns === "number" && typeof ew === "number" && ns !== ew) rows.push(row("layerNotApplied", "warning", `${path}#/answers/custom_ns`, "min(ns,ew)"));
     if (setup["behaviourId"] === "basic-attack" && isObj(answers["damage"]) && answers["damage"]["source"] !== "default" && answers["damage"]["source"] !== undefined) rows.push(row("layerNotApplied", "warning", `${path}#/answers/damage`, "unit_atk"));
+    const fx = isObj(answers["effect"]) ? answers["effect"]["value"] : undefined; if (typeof fx === "string" && fx !== "none" && !Object.hasOwn(effects, fx)) { const bare = fx.startsWith("builtin:effect/") ? fx.slice("builtin:effect/".length) : fx; if (!builtins.has(bare)) rows.push(row("unknownRef", "warning", `${path}#/answers/effect/value`, fx)); }
     for (const key of Object.keys(answers)) {
       const ans = answers[key]; if (!isObj(ans) || !Object.hasOwn(ans, "value")) continue;
       const knob = knobAt(slice, setup["behaviourId"], key); if (knob === null) continue;
@@ -86,11 +88,11 @@ export function readProject(files: ProjectFiles): ProjectLoad {
   let migrated: { files: ProjectFiles; report: readonly ReportRow[] };
   try { migrated = migrateProject(files); } catch { return { ok: false, readOnly: true, project: null, report: [row("invalidValue", "hard", "project.json", "unreadable")] }; }
   const docs = migrated.files, rows: ReportRow[] = [...migrated.report];
-  const maps: Record<string, Doc> = {}, stages: Record<string, Doc> = {}, units: Record<string, Doc> = {}, setups: Record<string, Doc> = {}, unknownFiles: Record<string, unknown> = {}, stageAt: Record<string, string> = {}, mapAt: Record<string, string> = {};
+  const maps: Record<string, Doc> = {}, stages: Record<string, Doc> = {}, units: Record<string, Doc> = {}, setups: Record<string, Doc> = {}, effects: Record<string, Doc> = {}, unknownFiles: Record<string, unknown> = {}, stageAt: Record<string, string> = {}, mapAt: Record<string, string> = {};
   let slice: Doc = {}, manifest: Doc = {};
   for (const path of Object.keys(docs)) {
     const doc = docs[path], slot = knownKind(path);
-    if (slot === null) { unknownFiles[path] = doc; rows.push(row("unknownFile", "warning", path)); continue; }
+    if (slot === null) { if (path.startsWith("effects/.deleted/")) continue; unknownFiles[path] = doc; rows.push(row("unknownFile", "warning", path)); continue; }
     if (!isObj(doc)) { rows.push(row("invalidValue", "hard", path, "not an object")); continue; }
     const id = idOf(doc);
     if (slot === "tile-project") { manifest = doc; if ("index" in doc) rows.push(row("indexIgnored", "info", `${path}#/index`)); note(readManifest(doc), path, rows); }
@@ -105,15 +107,15 @@ export function readProject(files: ProjectFiles): ProjectLoad {
       if (!badLen) note(readMap(doc), path, rows);
     } else if (slot === "stage") { if (id !== null) { stages[id] = doc; stageAt[id] = path; } note(readStage(doc, LIMITS), path, rows); }
     else if (slot === "unit") { if (id !== null) units[id] = doc; note(readUnit(doc), path, rows); }
-    else { if (id !== null) setups[id] = doc; note(readSetup(doc), path, rows); }
+    else { if (path.startsWith("effects/")) { if (doc["behaviourId"] !== "effect") { unknownFiles[path] = doc; rows.push(row("unknownFile", "warning", path, "behaviourId")); continue; } if (/^setup_[0-9A-HJKMNP-TV-Z]{26}$/.test(id ?? "")) rows.push(row("legacyEffectId", "info", path)); else if (!/^effect_[0-9A-HJKMNP-TV-Z]{26}$/.test(id ?? "")) rows.push(row("badEffectId", "warning", path)); if (id !== null) effects[id] = doc; note(readSetup(doc), path, rows); } else { if (id !== null) setups[id] = doc; note(readSetup(doc), path, rows); } }
   }
   if (!Object.hasOwn(docs, "catalogue/slice.json")) rows.push(row("invalidValue", "hard", "catalogue/slice.json", "missing"));
   const manifestDoc = docs["project.json"];
   const project = isObj(manifestDoc) && isObj(manifestDoc["project"]) ? manifestDoc["project"] : {};
   refs(isObj(manifestDoc) ? manifestDoc : {}, stageAt, maps, stages, units, setups, rows);
-  warns(slice, project, maps, setups, rows);
+  warns(slice, project, maps, setups, effects, rows);
   rows.push(...placementDrops(stages, stageAt, maps, slice), ...mapEntryDrops(maps, mapAt));
   const hard = rows.some((r) => r.severity === "hard");
-  const store: ProjectStore = { manifest, slice, maps, stages, units, setups, unknownFiles };
+  const store: ProjectStore = { manifest, slice, maps, stages, units, setups, effects, unknownFiles };
   return { ok: !hard, readOnly: false, project: store, report: sort(rows) };
 }
