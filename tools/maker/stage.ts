@@ -28,6 +28,7 @@ type Sess = { id: string; project: string; draft: Obj | null; path: string | nul
 const blank = (id: string, project: string): Sess => ({ id, project, draft: null, path: null, stagePath: null, painting: null, label: "", stack: [], gridOn: true, sheet: null, view: false, confirm: false, note: null, sel: null, moving: null, pick: null, ask: null, talking: false, line: "", link: null });
 let sess: Sess = blank("", ""), skeleton: Obj | null = null;
 export function bindStage(id: string, project: string): void { if (sess.id !== id || sess.project !== project) sess = blank(id, project); }
+export const dropUndo = (): void => { sess.stack = []; };
 export function rememberTalk(doc: unknown): void { if (isObj(doc)) skeleton = doc; }
 export function stageLine(value: string, max: number): string { const next = Number.isInteger(max) && max >= 0 ? [...value].slice(0, max).join("") : value; sess.line = next; return next; }
 function same(a: Cell, b: Cell): boolean { return a.c === b.c && a.r === b.r; }
@@ -144,7 +145,7 @@ export function stageScreen(stageId: string, host: Host): string {
   const banner = host.banner === null ? "" : `<p class="banner bad" role="alert"${code === "" ? "" : ` data-error="${code}"`}>${esc(host.banner)} <button type="button" class="btn ghost" data-act="dismiss">Dismiss</button></p>`;
   const dot = host.dirty || sess.draft !== null ? `<span class="dot" aria-label="Unsaved"></span>` : "";
   const start = host.readOnly ? "" : `<button type="button" class="btn ghost" data-act="s:fresh">Start new</button>`;
-  const bar = `<header class="topbar wrap"><button type="button" class="btn ghost" data-act="s:back">Back</button><h1>${esc(name)}${dot}</h1><button type="button" class="btn ghost" data-act="s:view">View</button><button type="button" class="btn ghost" data-act="r:open">Rules</button>${start}<button type="button" class="btn" data-act="s:test">Test</button></header>`;
+  const bar = `<header class="topbar wrap"><button type="button" class="btn ghost" data-act="s:back">Back</button><h1>${esc(name)}${dot}</h1><button type="button" class="btn ghost" data-act="s:view">View</button><button type="button" class="btn ghost" data-act="b:open">Background</button><button type="button" class="btn ghost" data-act="r:open">Rules</button>${start}<button type="button" class="btn" data-act="s:test">Test</button></header>`;
   const cell = sess.sheet, mark = cell === null ? null : placed.find((item) => same(item, cell)) ?? null;
   const names = stageRows(host.files), linked = mark === null && cell !== null ? linkOn(got.stage, cell.c, cell.r) : null, linkType = linked !== null && (linked["type"] === "stairs" || linked["type"] === "door" || linked["type"] === "gate") ? linked["type"] : null;
   const rows = sheetRows(got.slice, mark !== null);
