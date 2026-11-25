@@ -23,6 +23,11 @@ function locate(files: ProjectFiles, stageId: string): { mapPath: string; map: R
 const layersOf = (map: Record<string, unknown>): Record<string, unknown>[] => { const bg = isObj(map["background"]) ? map["background"] : {}; return (Array.isArray(bg["layers"]) ? bg["layers"] : []).filter(isObj); }, hex = (buf: ArrayBuffer): string => [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
 const typeLine = (fileName: string, sniffed: string): string => sniffed === "unknown" ? `Can't use ${fileName}: it's not a picture. Use a PNG, JPG or WebP picture.` : `Can't use ${fileName}: it's a ${sniffed} file. Use a PNG, JPG or WebP picture.`;
 const saved = (files: DocText, rev: number, writes: readonly { readonly path: string; readonly text: string }[]): ArtResult => { let out: DocText = files; for (const w of writes) out = { ...out, [w.path]: w.text }; return { ok: true, files: out, rev: writes.length > 0 ? rev + 1 : rev }; };
+export async function uploadBytes(file: Blob): Promise<Uint8Array> {
+  const head = new Uint8Array(await file.slice(0, 65536).arrayBuffer()), pic = readPicture(head);
+  if (file.size <= head.length || (pic.ok ? !fits(pic.w, pic.h) : !pic.sniffed.startsWith("damaged"))) return head;
+  return new Uint8Array(await file.arrayBuffer());
+}
 export async function addPicture(store: MakerStore, id: string, files: DocText, rev: number, stageId: string, now: string, fileName: string, bytes: Uint8Array): Promise<ArtResult> {
   const pic = readPicture(bytes);
   if (!pic.ok) return { ok: false, line: typeLine(fileName, pic.sniffed), row: { code: "uploadTypeUnsupported", severity: "hard", path: fileName, detail: pic.sniffed } };

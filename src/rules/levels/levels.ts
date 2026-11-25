@@ -1,7 +1,7 @@
 import type { BusEvent, EventRegistry, NoModeEvents } from "../../core/events/index.ts";
 import { NOT_PLAIN, isRecord, plainCopy } from "../../core/plain.ts";
 import type { Rng } from "../../core/rng/index.ts";
-import type { AbilityPools, LevelLimits, LevelRules, LevelSetup, Levels } from "./types.ts";
+import type { AbilityPools, LevelLimits, LevelRules, LevelSetup, LevelStart, Levels } from "./types.ts";
 
 export const LEVEL_EVENTS: EventRegistry<NoModeEvents> = { mode: "levels", types: ["level.reached", "level.unlocked"] };
 export const LEVEL_CEILINGS: LevelLimits = Object.freeze({ levels: 1024, pool: 4096, offer: 64, pools: 4096 }), DEFAULT_LEVEL_LIMITS: LevelLimits = Object.freeze({ levels: 64, pool: 128, offer: 8, pools: 256 });
@@ -38,7 +38,7 @@ export function createLevels(setup: LevelSetup, rng: Rng, emit: (event: BusEvent
   if (badStart) throw new RangeError("createLevels: bad start");
   const lim = levelLimits(limits); if (lim === null) throw new RangeError("createLevels: limits must be whole numbers from 1 to their ceilings"); if (over(rules, pools, lim)) throw new RangeError("createLevels: over the level caps");
   const bars = new Map<string, Live>();
-  if (Array.isArray(start)) for (const row of start) { if (!isRecord(row) || typeof row.id !== "string" || typeof row.xp !== "number" || typeof row.level !== "number" || typeof row.banked !== "number") continue; const offer = row.offer === null ? null : Array.isArray(row.offer) ? row.offer.filter((a): a is string => typeof a === "string") : null; const abilities = Array.isArray(row.abilities) ? row.abilities.filter((a): a is string => typeof a === "string") : []; bars.set(row.id, { id: row.id, pool: row.id, xp: row.xp, level: row.level, banked: row.banked, offer, abilities }); }
+  if (Array.isArray(start)) for (const row of start as readonly LevelStart[]) { const offer = row.offer === null ? null : [...row.offer]; const abilities = [...row.abilities]; bars.set(row.id, { id: row.id, pool: row.id, xp: row.xp, level: row.level, banked: row.banked, offer, abilities }); }
   const poolOf = (key: string): readonly string[] => (Object.hasOwn(pools, key) ? pools[key] : undefined) ?? [];
   const draw = (have: readonly string[], key: string): string[] => {
     const cands: string[] = [], seen = new Set<string>(have);

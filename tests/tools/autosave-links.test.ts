@@ -111,8 +111,8 @@ test("step 8 baseline ?scene=shop: two floors joined by stairs, and the readout 
   const down = shopFiles()[`stages/${S1}.json`], up = shopFiles()[`stages/${S2}.json`]; if (!isObj(down) || !isObj(up) || !Array.isArray(down["links"]) || !Array.isArray(up["links"])) throw new Error("stairs");
   const a = down["links"][0], b = up["links"][0]; assert.equal(isObj(a) && a["to"], S2); assert.equal(isObj(b) && b["to"], S1);
   const gaps = [16, 16, 40, 61, 16, 16, 30], row = readout({ gaps, elapsedMs: 1000, canvasMb: 1, heapMb: null, dpr: 1, swaps: [2, 5], scene: "shop" });
-  assert.equal(row.endsWith("stage changes 2\nworst ms in 3 frames after a swap 61.0"), true); assert.equal(row.includes("over 50 ms 1 of 7"), true); assert.equal(row.startsWith("baseline 06c · Shop stairs (?scene=shop)\n"), true);
-  const plain = readout({ gaps, elapsedMs: 1000, canvasMb: 1, heapMb: null, dpr: 1 }); assert.equal(plain.includes("stage changes"), false); assert.equal(plain.includes("after a swap"), false); assert.equal(plain.startsWith("baseline 06c · Skirmish (checkpoint.tileproj)\n"), true);
+  assert.equal(row.endsWith("stage changes 2\nworst ms in 3 frames after a swap 61.0"), true); assert.equal(row.includes("over 50 ms 1 of 7"), true); assert.equal(row.startsWith("baseline · Shop stairs (?scene=shop)\n"), true);
+  const plain = readout({ gaps, elapsedMs: 1000, canvasMb: 1, heapMb: null, dpr: 1 }); assert.equal(plain.includes("stage changes"), false); assert.equal(plain.includes("after a swap"), false); assert.equal(plain.startsWith("baseline · Skirmish (checkpoint.tileproj)\n"), true);
 });
 test("step 8b spill: 2 chosen and 1 free spawn, so the second member spills to the nearest free walkable cell (BFS from the arrival cell) and survives an autosave round-trip", async () => {
   const carried = party(20, [{ unitId: H, hp: 20 }, { unitId: R, hp: 2 }]), docs = open(nook([24, 25, 29]), S1, S2, carried), m = createMatch(docs, 200);

@@ -42,7 +42,7 @@ const SHAPE: Readonly<Record<string, readonly number[]>> = {
   link: [0, 0, 0, 128, 448, 992, 2032, 4088, 2032, 992, 448, 128, 0, 0, 0, 0],
 };
 function linkPx(kind: string): Pixels | undefined {
-  const rows = SHAPE[kind]; if (rows === undefined) return undefined;
+  const rows = Object.hasOwn(SHAPE, kind) ? SHAPE[kind] : undefined; if (rows === undefined) return undefined;
   const id = `play:link-${kind}`, hit = cache.get(id); if (hit !== undefined) return hit;
   const data = new Uint8ClampedArray(16 * 16 * 4), bit = (x: number, y: number): boolean => x >= 0 && y >= 0 && x < 16 && y < 16 && ((rows[y] ?? 0) & (1 << x)) !== 0;
   for (let y = 0; y < 16; y += 1) for (let x = 0; x < 16; x += 1) {

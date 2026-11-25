@@ -79,7 +79,7 @@ const at = (): string => new Date().toISOString();
 const save = async (): Promise<void> => { const work = live(); if (work === null) return; try {
   const read = ownerOf(ownerFile, await store.read(ownerFile)); if ("error" in read) { say(read.message); return; }
   revs[ownerFile] = read.doc === null ? null : Number(read.doc["rev"]);
-  const id = mint("setup_"), label = work.label, owner = read.doc ?? { kind: "behaviour-setup", formatVersion: 3, id: who, name: who, rev: 0, behaviourId: who, catalogue: { rev: 28 }, createdAt: at(), updatedAt: at(), copiedFrom: null, answers: {}, orphans: {}, history: { cap: 200, baseSeq: 0, ops: [] } };
+  const id = mint("effect_"), label = work.label, owner = read.doc ?? { kind: "behaviour-setup", formatVersion: 3, id: who, name: who, rev: 0, behaviourId: who, catalogue: { rev: 28 }, createdAt: at(), updatedAt: at(), copiedFrom: null, answers: {}, orphans: {}, history: { cap: 200, baseSeq: 0, ops: [] } };
   const out = saveAndUse({ name: `effects/${id}.json`, doc: null, values: work.doc }, { name: ownerFile, doc: owner }, { at: at(), mint, id, label, catalogueRev: 28, taken: [...taken] });
   if ("error" in out) { say(out.message); return; }
   const done = await commit(store, out.docs, revs, { absent: out.absent }); if ("error" in done) { say(`Not saved: ${done.name} changed. Nothing was changed.`); return; }

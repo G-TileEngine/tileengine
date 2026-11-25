@@ -7,15 +7,15 @@ import { canonStep, valuesOf, write, type Row } from "../../src/editor/effect/wr
 import { opfsStore, purgeTrash, type Dir } from "../../tools/effect-designer/store.ts";
 import { B32, minter, ulid } from "../../tools/effect-designer/ulid.ts";
 let n = 0; const mint = (p: string): string => `${p}${String((n += 1)).padStart(4, "0")}`, at = "2026-11-17T02:00:00.000Z";
-const ID = "setup_01JD0000000000000000000001", E = `effects/${ID}.json`, ops = (d: Row | undefined): Row[] => ((d?.["history"] as { ops: Row[] } | undefined)?.ops ?? []);
+const ID = "effect_01JD0000000000000000000001", E = `effects/${ID}.json`, ops = (d: Row | undefined): Row[] => ((d?.["history"] as { ops: Row[] } | undefined)?.ops ?? []);
 const owner0 = (): Row => ({ kind: "behaviour-setup", formatVersion: 3, id: "setup_O", rev: 4, behaviourId: "basic-attack", answers: {}, orphans: {}, history: { cap: 200, baseSeq: 3, ops: [] } });
 const mem = (): Store & { files: Map<string, string> } => { const files = new Map<string, string>(); return { files, read: (k) => Promise.resolve(files.get(k) ?? null), write: (k, t) => { files.set(k, t); return Promise.resolve(); }, remove: (k) => { files.delete(k); return Promise.resolve(); } }; };
 const saved = (): Exclude<ReturnType<typeof saveAndUse>, { error: string }> => { const out = saveAndUse({ name: E, doc: null, values: { shake: 2 } }, { name: "o", doc: owner0() }, { at, mint, id: ID, label: "Fire", catalogueRev: 28 }); if ("error" in out) throw new Error(out.message); return out; };
-test("E7 carries S3: the setup_<ULID> mint is DOM-free; 26 Crockford chars, time first so later sorts later, every random byte used, a bad clock reads 0", () => {
+test("E7 carries S3: the effect_<ULID> mint is DOM-free; 26 Crockford chars, time first so later sorts later, every random byte used, a bad clock reads 0", () => {
   assert.equal(B32, "0123456789ABCDEFGHJKMNPQRSTVWXYZ"); const bytes = Uint8Array.from({ length: 16 }, (_, i) => i * 7 + 1), a = ulid(1_763_340_000_000, bytes);
-  assert.match(`setup_${a}`, SAVE.id); assert.ok(ulid(1_763_340_000_001, bytes) > a); assert.equal(ulid(Number.NaN, new Uint8Array(16)), "0".repeat(26)); assert.equal(ulid(-5, new Uint8Array(16)), "0".repeat(26)); assert.equal(ulid(33.7, new Uint8Array(16)), ulid(33, new Uint8Array(16))); assert.equal(ulid(33.7, new Uint8Array(16)).slice(8, 10), "11");
+  assert.match(`effect_${a}`, SAVE.id); assert.ok(ulid(1_763_340_000_001, bytes) > a); assert.equal(ulid(Number.NaN, new Uint8Array(16)), "0".repeat(26)); assert.equal(ulid(-5, new Uint8Array(16)), "0".repeat(26)); assert.equal(ulid(33.7, new Uint8Array(16)), ulid(33, new Uint8Array(16))); assert.equal(ulid(33.7, new Uint8Array(16)).slice(8, 10), "11");
   for (let i = 0; i < 16; i += 1) { const b = Uint8Array.from(bytes); b[i] = (b[i] ?? 0) + 1; assert.notEqual(ulid(1_763_340_000_000, b), a, `byte ${i} is used`); }
-  const asked: number[] = [], m = minter(() => 32, (k) => { asked.push(k); return new Uint8Array(k).fill(31); }); assert.equal(m("setup_"), `setup_${"0".repeat(8)}10${"Z".repeat(16)}`); assert.deepEqual(asked, [16]);
+  const asked: number[] = [], m = minter(() => 32, (k) => { asked.push(k); return new Uint8Array(k).fill(31); }); assert.equal(m("effect_"), `effect_${"0".repeat(8)}10${"Z".repeat(16)}`); assert.deepEqual(asked, [16]);
 });
 test("E7 carries S2: opfsStore lists a dir's file names sorted (OPFS keys()); a missing dir lists none; another error is thrown", async () => {
   const nf = (): Error => Object.assign(new Error("nf"), { name: "NotFoundError" }), tree: Record<string, string[]> = { "effects/": [".deleted"], "effects/.deleted/": ["b.json", "a.json"] };
