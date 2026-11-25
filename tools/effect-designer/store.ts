@@ -1,5 +1,5 @@
 import { SAVE, type Store } from "../../src/editor/effect/save.ts";
-type FileHandle = { getFile(): Promise<{ text(): Promise<string> }>; createWritable(): Promise<{ write(text: string): Promise<void>; close(): Promise<void> }> };
+type FileHandle = { getFile(): Promise<{ text(): Promise<string> }>; createWritable(): Promise<{ write(text: string): Promise<void>; close(): Promise<void>; abort?(): Promise<void> }> };
 export type Dir = { getDirectoryHandle(name: string, o?: { create?: boolean }): Promise<Dir>; getFileHandle(name: string, o?: { create?: boolean }): Promise<FileHandle>; removeEntry(name: string): Promise<void>; keys?(): AsyncIterable<string> };
 const miss = (e: unknown): boolean => e instanceof Error && e.name === "NotFoundError";
 const JSON_NAME = /^[^/]+\.json$/;

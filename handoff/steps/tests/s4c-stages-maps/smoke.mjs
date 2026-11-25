@@ -51,6 +51,8 @@ try {
     await step("4 refuse map", async () => { await open(`r:menu:map:${MAP}`, "r:delete"); await tap(page, "r:delete"); await waitText(page, "Used by: Demo stage"); await shot("05-refuse"); await tap(page, "r:close"); });
     await step("5 test", async () => {
       await press(page, "Upstairs"); await page.waitForFunction(() => document.querySelectorAll(".cell").length === 1, null, { timeout: 15000 }); await tap(page, "s:test");
+      await waitText(page, "Place a unit on this stage to test it."); const held = await page.evaluate(() => ({ play: window.__play, from: new URLSearchParams(location.search).get("from"), stage: new URLSearchParams(location.search).get("stage") })); if (held.play !== undefined || held.from !== "stage" || held.stage !== id) throw new Error(JSON.stringify(held));
+      await tap(page, "s:cell:0,0"); await waitText(page, "Your team start"); await tap(page, "s:place:spawn"); await page.waitForFunction(() => (document.querySelector('[data-act="s:cell:0,0"]')?.getAttribute("aria-label") ?? "").includes("You"), null, { timeout: 15000 }); await tap(page, "s:test");
       await page.waitForFunction((id) => new URLSearchParams(location.search).get("stage") === id && window.__play !== undefined && window.__play.world.grid.cols === 1 && window.__play.world.grid.rows === 1, id, { timeout: 15000 });
       await page.evaluate(() => window.__hud.hideBanner()); await shot("06-play"); await press(page, "Back to maker");
       await page.waitForFunction(() => document.querySelectorAll(".cell").length === 1, null, { timeout: 15000 });

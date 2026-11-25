@@ -1,6 +1,6 @@
 import type { Notice } from "../../core/notice.ts";
 import { redo, undo, write, WRITER, type Row } from "./writer.ts";
-export const SAVE = { knob: "effect", dir: "effects/", trash: "effects/.deleted/", id: /^setup_[0-9A-HJKMNP-TV-Z]{26}$/, refused: "changed since; undo there first", bad: ["__proto__", "constructor", "prototype"] } as const;
+export const SAVE = { knob: "effect", dir: "effects/", trash: "effects/.deleted/", id: /^effect_[0-9A-HJKMNP-TV-Z]{26}$/, refused: "changed since; undo there first", bad: ["__proto__", "constructor", "prototype"] } as const;
 export type Store = { read(name: string): Promise<string | null>; write(name: string, text: string): Promise<void>; remove(name: string): Promise<void> };
 export type Docs = Readonly<Record<string, Row>>;
 export type Entry = { readonly group: string; readonly docs: readonly string[]; readonly created: readonly string[] };
@@ -32,7 +32,7 @@ export function ownerOf(name: string, text: string | null): { doc: Row | null } 
 }
 export function saveAndUse(effect: { name: string; doc: Row | null; values: Readonly<Record<string, unknown>> }, owner: { name: string; doc: Row }, o: { at: string; mint: (prefix: string) => string; id: string; label: string; catalogueRev: number; taken?: readonly string[] }): { docs: Record<string, Row>; entry: Entry; absent: string[]; notes: Notice[] } | { error: "invalidValue"; message: string } {
   const fresh = effect.doc === null;
-  if (fresh && !(SAVE.id.test(o.id) && !(o.taken ?? []).includes(o.id) && effect.name === `${SAVE.dir}${o.id}.json`)) return { error: "invalidValue", message: "a new effect needs a fresh setup_<ULID> at effects/<id>.json" };
+  if (fresh && !(SAVE.id.test(o.id) && !(o.taken ?? []).includes(o.id) && effect.name === `${SAVE.dir}${o.id}.json`)) return { error: "invalidValue", message: "a new effect needs a fresh effect_<ULID> at effects/<id>.json" };
   const group = o.mint("grp_"), base = fresh ? blankEffect(o.id, o.label, o.at, o.catalogueRev) : effect.doc ?? blankEffect(o.id, o.label, o.at, o.catalogueRev), notes = notesOf(base, effect.values);
   const nextE = write(base, effect.values, { at: o.at, mint: o.mint, group }), nextO = write(owner.doc, { [SAVE.knob]: o.id }, { at: o.at, mint: o.mint, group }), docs: Record<string, Row> = { [effect.name]: nextE, [owner.name]: nextO }, names: string[] = [];
   if (fresh || nextE !== base) names.push(effect.name);

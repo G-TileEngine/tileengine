@@ -24,7 +24,7 @@ test("baseline readout maths on a fixed frame list", () => {
   const bytes = 1170 * 1536 * 4 + 512 * 512 * 4; assert.equal(canvasMbOf([{ width: 1170, height: 1536 }, { width: 512, height: 512 }]), bytes / 1_048_576);
   assert.equal(heapPeakOf(null, undefined), null); assert.equal(heapPeakOf(null, 8 * 1_048_576), 8); assert.equal(heapPeakOf(12, 8 * 1_048_576), 12);
   const early = readout({ gaps: GAPS, elapsedMs: 1000, canvasMb: 1, heapMb: null, dpr: 2 }); assert.equal(early.startsWith("DONE"), false);
-  assert.equal(early, "baseline 06c · Skirmish (checkpoint.tileproj)\nframe ms p50 16.0 p95 55.0 max 55.0\ndropped (>25 ms) 2 over 50 ms 1 of 20\ncanvas MB 1.0 · dpr 2.0\nheap MB peak n/a\nGC: n/a (browsers don't expose it)");
+  assert.equal(early, "baseline · Skirmish (checkpoint.tileproj)\nframe ms p50 16.0 p95 55.0 max 55.0\ndropped (>25 ms) 2 over 50 ms 1 of 20\ncanvas MB 1.0 · dpr 2.0\nheap MB peak n/a\nGC: n/a (browsers don't expose it)");
   const done = readout({ gaps: GAPS, elapsedMs: 60_000, canvasMb: 1, heapMb: 9.25, dpr: 2 }); assert.equal(done.startsWith("DONE\n"), true); assert.equal(done.includes("heap MB peak 9.3"), true);
 });
 test("baseline build ships the checkpoint and no maker or editor code", () => {
