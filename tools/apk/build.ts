@@ -1,8 +1,11 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { gameZip } from "../export/game.ts";
+import { unzipStore } from "../export/zip.ts";
 import { build, refuse, ROOT } from "../play-stage/build.ts";
 
 export const APP_ID = "com.tileengine.play", APP_NAME = "TileEngine", MIN_SDK = 26;
@@ -64,11 +67,24 @@ export function patchMainActivity(android: string): string {
   return dest;
 }
 export function patchGradle(android: string): void {
-  const gradle = join(android, "app/build.gradle");
-  writeFileSync(gradle, readFileSync(gradle, "utf8").replace(/\bminSdk(?:Version)?\s+\d+/g, (hit) => hit.replace(/\d+$/, String(MIN_SDK))));
+  const files = ["app/build.gradle", "variables.gradle"].map((rel) => join(android, rel)).filter((file) => existsSync(file));
+  let saw = false;
+  for (const file of files) {
+    const text = readFileSync(file, "utf8");
+    const re = /\bminSdk(?:Version)?(?:\s*=\s*|\s+)\d+/g;
+    if (re.test(text)) saw = true;
+    re.lastIndex = 0;
+    const next = text.replace(re, (hit) => hit.replace(/\d+$/, String(MIN_SDK)));
+    writeFileSync(file, next);
+  }
+  if (!saw) throw new Error("apk: no minSdk");
   const man = join(android, "app/src/main/AndroidManifest.xml");
-  const xml = readFileSync(man, "utf8");
-  writeFileSync(man, xml.includes('android:screenOrientation="portrait"') ? xml : xml.replace("<activity ", '<activity android:screenOrientation="portrait" '));
+  let xml = readFileSync(man, "utf8").replace(/^[ \t]*<uses-permission android:name="android.permission.INTERNET" \/>\r?\n/gm, "");
+  if (!xml.includes('android:screenOrientation="portrait"')) {
+    if (!/<activity\s/.test(xml)) throw new Error("apk: no activity");
+    xml = xml.replace(/<activity(\s)/, '<activity android:screenOrientation="portrait"$1');
+  }
+  writeFileSync(man, xml);
 }
 export function buildApk(www: string, android: string): void {
   const bad = debugGlobals(www);
@@ -90,5 +106,55 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     if (!existsSync(cap) || !existsSync(android)) { console.error("apk: Capacitor or android/ is missing. CoS/EA run npm i and cap add android in tools/apk on the box."); process.exit(2); }
     try { buildApk(dest ?? join(ROOT, "tools/apk/www"), android); }
     catch (err) { console.error(err instanceof Error ? err.message : String(err)); process.exit(1); }
-  } else { console.error("usage: node tools/apk/build.ts --web <out> | --apk"); process.exit(1); }
+  } else if (flag === "--game") {
+    void runGame(dest, head, dirty);
+  } else { console.error("usage: node tools/apk/build.ts --web <out> | --apk | --game [<zip>]"); process.exit(1); }
+}
+export function gameWww(zip: Uint8Array, www: string): void {
+  if (existsSync(www) && readdirSync(www).length > 0) throw new Error("apk: www is not empty");
+  mkdirSync(www, { recursive: true });
+  for (const entry of unzipStore(zip)) {
+    const dest = join(www, entry.name);
+    const rel = relative(www, dest);
+    if (rel === ".." || rel.startsWith("../") || rel === "") throw new Error(`apk: path leaves www: ${entry.name}`);
+    mkdirSync(dirname(dest), { recursive: true });
+    writeFileSync(dest, entry.data);
+  }
+  const need = ["index.html", "build.json", "project/files.js"];
+  const problems = [...need.filter((name) => !existsSync(join(www, name))).map((name) => `missing ${name}`), ...playOnly(www), ...networkUrls(www), ...debugGlobals(www)];
+  if (problems.length > 0) throw new Error(`apk: ${problems.join(", ")}`);
+}
+export function zipCommit(www: string): string {
+  const text = readFileSync(join(www, "build.json"), "utf8");
+  const commit = /"commit": "([0-9a-f]{40})"/.exec(text)?.[1];
+  if (commit === undefined) throw new Error("apk: no commit");
+  return commit;
+}
+export async function demoZip(commit: string, root: string = ROOT): Promise<Uint8Array> {
+  const dir = mkdtempSync(join(tmpdir(), "apk-play-"));
+  try {
+    build(dir, commit, root, false);
+    const play = Object.fromEntries(listFiles(dir).map((name) => [name, readFileSync(join(dir, name), "utf8")]));
+    const demo = join(root, "fixtures/demo.tileproj");
+    const text = Object.fromEntries(listFiles(demo).map((name) => [name, readFileSync(join(demo, name), "utf8")]));
+    return await gameZip(play, text, {});
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+async function runGame(zipArg: string | undefined, head: string, dirty: string): Promise<void> {
+  try {
+    const why = zipArg === undefined ? refuse(head, undefined, dirty) : null;
+    if (why !== null) {
+      console.error(why);
+      process.exit(1);
+    }
+    const bytes = zipArg === undefined ? await demoZip(head) : new Uint8Array(readFileSync(zipArg));
+    const www = join(ROOT, "tools/apk/www");
+    gameWww(bytes, www);
+    writeMeta(join(ROOT, "tools/apk/artifacts/apk-build.json"), zipCommit(www), treeSha(www));
+  } catch (err) {
+    console.error(err instanceof Error ? err.message : String(err));
+    process.exit(1);
+  }
 }

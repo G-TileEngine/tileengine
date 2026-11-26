@@ -1,0 +1,75 @@
+import assert from "node:assert/strict";
+import { mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { test } from "node:test";
+import { demoZip, gameWww, listFiles, patchGradle, zipCommit } from "../../tools/apk/build.ts";
+import { gameZip } from "../../tools/export/game.ts";
+import { zipStore } from "../../tools/export/zip.ts";
+import { build, ROOT } from "../../tools/play-stage/build.ts";
+const enc = new TextEncoder();
+const dir = (): string => mkdtempSync(join(tmpdir(), "apk-11b-"));
+const readTree = (root: string): Record<string, string> => Object.fromEntries(listFiles(root).map((name) => [name, readFileSync(join(root, name), "utf8")]));
+const files = (rows: readonly (readonly [string, string])[]): Uint8Array => zipStore(rows.map(([name, body]) => ({ name, data: enc.encode(body) })));
+const COMMIT = "c".repeat(40);
+const BASE: readonly (readonly [string, string])[] = [["index.html", "<canvas id=\"board\"></canvas>\n"], ["build.json", `{\n  "commit": "${COMMIT}",\n}\n`], ["project/files.js", "export default {}\n"]];
+test("11b patchGradle on a Capacitor 6 android/ (minSdkVersion = 22 in variables.gradle, a multi-line <activity>, the INTERNET permission) sets minSdk 26 and portrait and drops INTERNET; with no minSdk line or no <activity> it throws", () => {
+  const android = dir();
+  try {
+    mkdirSync(join(android, "app/src/main"), { recursive: true });
+    writeFileSync(join(android, "variables.gradle"), "ext { minSdkVersion = 22 }\n");
+    writeFileSync(join(android, "app/build.gradle"), "android { minSdkVersion 21 }\n");
+    writeFileSync(join(android, "app/src/main/AndroidManifest.xml"), "<manifest>\n    <uses-permission android:name=\"android.permission.INTERNET\" />\n    <application>\n        <activity\n            android:name=\".MainActivity\">\n        </activity>\n    </application>\n</manifest>\n");
+    patchGradle(android);
+    const vars = readFileSync(join(android, "variables.gradle"), "utf8");
+    const gradle = readFileSync(join(android, "app/build.gradle"), "utf8");
+    const man = readFileSync(join(android, "app/src/main/AndroidManifest.xml"), "utf8");
+    assert.equal(vars.includes("minSdkVersion = 26") && gradle.includes("minSdkVersion 26") && man.includes('android:screenOrientation="portrait"') && !man.includes("android.permission.INTERNET"), true);
+    const bare = dir();
+    mkdirSync(join(bare, "app/src/main"), { recursive: true });
+    writeFileSync(join(bare, "app/build.gradle"), "android { compileSdk 34 }\n");
+    writeFileSync(join(bare, "app/src/main/AndroidManifest.xml"), "<manifest><application></application></manifest>\n");
+    assert.throws(() => patchGradle(bare), /apk: no minSdk/);
+    writeFileSync(join(bare, "variables.gradle"), "ext { minSdkVersion = 22 }\n");
+    assert.throws(() => patchGradle(bare), /apk: no activity/);
+    rmSync(bare, { recursive: true, force: true });
+  } finally {
+    rmSync(android, { recursive: true, force: true });
+  }
+});
+test("11b gameWww: a release game export becomes www and passes the play-only, offline and debug checks; a dev export, a zip with no project module, a network URL, an editor file, a path leaving www and a non-empty www are refused", async () => {
+  const playDir = dir();
+  const devDir = dir();
+  const www = dir();
+  build(playDir, COMMIT, ROOT, false);
+  build(devDir, COMMIT, ROOT, true);
+  const demo = readTree(join(ROOT, "fixtures/demo.tileproj"));
+  const release = await gameZip(readTree(playDir), demo, {});
+  const dev = await gameZip(readTree(devDir), demo, {});
+  rmSync(www, { recursive: true, force: true });
+  gameWww(release, www);
+  assert.equal(listFiles(www).includes("index.html") && listFiles(www).includes("build.json") && listFiles(www).includes("project/files.js") && zipCommit(www) === COMMIT, true);
+  assert.throws(() => gameWww(dev, dir()), /apk:/);
+  assert.throws(() => gameWww(files(BASE.filter(([name]) => name !== "project/files.js")), dir()), /missing project\/files\.js/);
+  assert.throws(() => gameWww(files([...BASE, ["net.js", "export const u = \"https://example.com/x\";\n"]]), dir()), /net\.js: https:\/\/example\.com\/x/);
+  assert.throws(() => gameWww(files([...BASE, ["src/editor/x.js", "export default 1;\n"]]), dir()), /src\/editor\/x\.js/);
+  assert.throws(() => gameWww(files([["../out.txt", "no\n"], ...BASE]), dir()), /leaves www: \.\.\/out\.txt/);
+  assert.throws(() => gameWww(release, www), /www is not empty/);
+});
+test("11b demoZip and the scripts: the demo export carries fixtures/demo.tileproj as the project module and its build.json commit, and a failed demo build leaves no temp folder; setup-sdk.sh pins Temurin and cmdline-tools by sha256; debug-apk.sh builds assembleDebug only (no release signing, keystore or store upload) into the gitignored artifacts/, and .gitignore keeps android/, www, artifacts and key files out (eslint skips the first three)", async () => {
+  const commit = "a".repeat(40);
+  const zip = await demoZip(commit);
+  const www = dir();
+  gameWww(zip, www);
+  assert.equal(readFileSync(join(www, "project/files.js"), "utf8").includes("\"name\": \"Demo\"") && zipCommit(www) === commit, true);
+  const before = readdirSync(tmpdir()).filter((name) => name.startsWith("apk-play-"));
+  await assert.rejects(demoZip("not-a-sha"));
+  assert.deepEqual(readdirSync(tmpdir()).filter((name) => name.startsWith("apk-play-")), before);
+  const setup = readFileSync("tools/apk/setup-sdk.sh", "utf8");
+  const sh = readFileSync("tools/apk/debug-apk.sh", "utf8");
+  const ignore = readFileSync(".gitignore", "utf8");
+  const lint = readFileSync("eslint.config.mjs", "utf8");
+  assert.equal(setup.includes("OpenJDK17U-jdk_x64_linux_hotspot_17.0.21.1_2.tar.gz") && setup.includes("0b0ac5eab6db6abaec68c9913bcddb31321e5da411c45073d520d9c125e6f7b4") && setup.includes("commandlinetools-linux-11076708_latest.zip") && setup.includes("2d2d50857e4eb553af5a6dc3ad507a17adf43d115264b1afc116f95c92e5e258") && (setup.match(/sha256sum -c/g) ?? []).length === 2, true);
+  assert.equal(sh.includes("assembleDebug") && sh.includes('--game "$ZIP"') && sh.includes("artifacts/") && !sh.includes("assembleRelease") && !sh.includes("signingConfig") && !sh.includes("keystore") && !/password/i.test(sh) && !sh.includes(".jks"), true);
+  assert.equal(ignore.includes("tools/apk/android") && ignore.includes("tools/apk/www") && ignore.includes("tools/apk/artifacts") && ignore.includes("*.jks") && ignore.includes("*.keystore") && lint.includes("tools/apk/android/**") && lint.includes("tools/apk/www/**") && lint.includes("tools/apk/artifacts/**"), true);
+});
