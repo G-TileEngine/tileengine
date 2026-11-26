@@ -1,0 +1,101 @@
+{
+  "kind": "behaviour-setup",
+  "formatVersion": 3,
+  "behaviourId": "effect",
+  "id": "effect_01JDSH00000000000000000009",
+  "name": "Showcase spark",
+  "rev": 4,
+  "catalogue": {
+    "rev": 30
+  },
+  "createdAt": "2026-11-26T23:50:00Z",
+  "updatedAt": "2026-11-26T23:50:00Z",
+  "copiedFrom": null,
+  "answers": {
+    "steps": {
+      "source": "user",
+      "value": [
+        {
+          "id": "s-1",
+          "kind": "stamp",
+          "seconds": 0.25
+        }
+      ],
+      "rev": 1
+    },
+    "shake": {
+      "source": "user",
+      "value": 2,
+      "rev": 1
+    },
+    "hit_stop_ms": {
+      "source": "user",
+      "value": 120,
+      "rev": 1
+    }
+  },
+  "orphans": {},
+  "history": {
+    "cap": 200,
+    "baseSeq": 0,
+    "ops": [
+      {
+        "seq": 1,
+        "at": "2026-11-26T23:50:00Z",
+        "kind": "set",
+        "changes": [
+          {
+            "knob": "steps",
+            "before": {
+              "source": "default"
+            },
+            "after": {
+              "source": "user",
+              "value": [
+                {
+                  "id": "s-1",
+                  "kind": "stamp",
+                  "seconds": 0.25
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "seq": 2,
+        "at": "2026-11-26T23:50:00Z",
+        "kind": "set",
+        "changes": [
+          {
+            "knob": "shake",
+            "before": {
+              "source": "default"
+            },
+            "after": {
+              "source": "user",
+              "value": 2
+            }
+          }
+        ]
+      },
+      {
+        "seq": 3,
+        "at": "2026-11-26T23:50:00Z",
+        "kind": "set",
+        "changes": [
+          {
+            "knob": "hit_stop_ms",
+            "before": {
+              "source": "default"
+            },
+            "after": {
+              "source": "user",
+              "value": 120
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

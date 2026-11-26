@@ -1,0 +1,63 @@
+{
+  "kind": "behaviour-setup",
+  "formatVersion": 3,
+  "id": "setup_01JDSH00000000000000000012",
+  "rev": 0,
+  "name": "Rule",
+  "behaviourId": "win-condition",
+  "catalogue": {
+    "rev": 30
+  },
+  "createdAt": "2026-11-21T00:00:00.000Z",
+  "updatedAt": "2026-11-21T00:00:00.000Z",
+  "copiedFrom": null,
+  "answers": {
+    "wipe_wins": {
+      "source": "default"
+    },
+    "mutual_wipe": {
+      "source": "user",
+      "value": "last-actor-loses",
+      "rev": 1
+    },
+    "match_minutes": {
+      "source": "default"
+    },
+    "turn_seconds": {
+      "source": "default"
+    },
+    "timeout_rule": {
+      "source": "default"
+    },
+    "draw_handling": {
+      "source": "default"
+    },
+    "clock_loss_rule": {
+      "source": "default"
+    },
+    "behind_order": {
+      "source": "default"
+    },
+    "tiebreak_first": {
+      "source": "default"
+    },
+    "count_summons": {
+      "source": "default"
+    },
+    "count_avatars": {
+      "source": "default"
+    },
+    "tiebreak_second": {
+      "source": "default"
+    },
+    "tiebreak_still_level": {
+      "source": "default"
+    }
+  },
+  "orphans": {},
+  "history": {
+    "cap": 200,
+    "baseSeq": 0,
+    "ops": []
+  }
+}

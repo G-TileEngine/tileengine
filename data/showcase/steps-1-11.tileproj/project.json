@@ -1,0 +1,61 @@
+{
+  "kind": "tile-project",
+  "formatVersion": 6,
+  "project": {
+    "id": "project_01JDSH00000000000000000001",
+    "rev": 1,
+    "name": "Showcase steps 1-11",
+    "createdAt": "2026-11-26T23:50:00Z",
+    "updatedAt": "2026-11-26T23:50:00Z",
+    "copiedFrom": null,
+    "catalogueRev": 30,
+    "settings": {
+      "wrapEdges": false
+    },
+    "difficulty": {
+      "hp": 1,
+      "damage": 1,
+      "appliesTo": "enemies"
+    },
+    "stages": [
+      "stage_01JDAS00000000000000000001",
+      "stage_01JDSH00000000000000000002",
+      "stage_01JDSH00000000000000000003"
+    ],
+    "rules": [
+      "setup_01JDAT00000000000000000002",
+      "setup_01JDAT00000000000000000003",
+      "setup_01JDSH00000000000000000010"
+    ],
+    "loadout": {
+      "roster": [
+        "unit_01JDAN00000000000000000001",
+        "unit_01JDAN00000000000000000002",
+        "unit_01JDAN00000000000000000003"
+      ],
+      "size": 3,
+      "required": [
+        "unit_01JDAN00000000000000000001"
+      ]
+    },
+    "render": {
+      "excludedStages": [],
+      "targets": [
+        "browser"
+      ],
+      "proceduralShip": "auto",
+      "credits": true
+    },
+    "assets": {
+      "asset_0c8c7bfc05fb48c1": {
+        "name": "village",
+        "ext": "png",
+        "origin": {
+          "kind": "upload",
+          "fileName": "village.png"
+        },
+        "kind": "background"
+      }
+    }
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "kind": "stage",
+  "formatVersion": 2,
+  "id": "stage_01JDSH00000000000000000003",
+  "rev": 1,
+  "name": "Siege",
+  "mapRef": "map_01JDSH00000000000000000003",
+  "seed": 24301,
+  "playerSpawns": [
+    {
+      "c": 2,
+      "r": 6
+    },
+    {
+      "c": 3,
+      "r": 6
+    },
+    {
+      "c": 4,
+      "r": 6
+    }
+  ],
+  "neutrals": [
+    {
+      "unitId": "unit_01JDAN00000000000000000007",
+      "at": {
+        "c": 6,
+        "r": 6
+      },
+      "setupIds": [
+        "setup_01JDSH00000000000000000013"
+      ]
+    }
+  ],
+  "enemyPool": {
+    "mode": "fixed",
+    "entries": [
+      {
+        "unitId": "unit_01JDSH00000000000000000008",
+        "at": {
+          "c": 2,
+          "r": 0
+        },
+        "facing": "S"
+      },
+      {
+        "unitId": "unit_01JDSH00000000000000000008",
+        "at": {
+          "c": 4,
+          "r": 0
+        },
+        "facing": "S"
+      }
+    ]
+  },
+  "loadout": null,
+  "rules": [
+    "setup_01JDSH00000000000000000014"
+  ],
+  "overrides": {
+    "setups": {},
+    "units": {}
+  },
+  "difficulty": null,
+  "history": {
+    "cap": 200,
+    "baseSeq": 1,
+    "ops": []
+  },
+  "createdAt": "2026-11-18T00:00:00Z",
+  "updatedAt": "2026-11-18T00:00:00Z",
+  "sides": {
+    "loadout": "heroes",
+    "enemyPool": "raiders"
+  },
+  "links": [
+    {
+      "type": "gate",
+      "at": {
+        "c": 0,
+        "r": 6
+      },
+      "to": "stage_01JDAS00000000000000000001"
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "kind": "behaviour-setup",
+  "formatVersion": 3,
+  "id": "setup_01JDSH00000000000000000010",
+  "rev": 0,
+  "name": "Rule",
+  "behaviourId": "xp-levels",
+  "catalogue": {
+    "rev": 30
+  },
+  "createdAt": "2026-11-21T00:00:00.000Z",
+  "updatedAt": "2026-11-21T00:00:00.000Z",
+  "copiedFrom": null,
+  "answers": {
+    "levels": {
+      "source": "default"
+    },
+    "level_rule": {
+      "source": "default"
+    },
+    "pvp_kills": {
+      "source": "default"
+    },
+    "bar": {
+      "source": "default"
+    },
+    "thresholds": {
+      "source": "user",
+      "value": [
+        3,
+        3,
+        3,
+        11,
+        13,
+        14,
+        11,
+        11,
+        11
+      ],
+      "rev": 1
+    },
+    "xp_move": {
+      "source": "default"
+    },
+    "xp_basic": {
+      "source": "default"
+    },
+    "xp_kill_summon": {
+      "source": "default"
+    },
+    "xp_contest_win": {
+      "source": "default"
+    },
+    "xp_kill_neutral": {
+      "source": "default"
+    },
+    "xp_kill_unit": {
+      "source": "default"
+    },
+    "level_card_offer_levels": {
+      "source": "default"
+    },
+    "ability_unlock_levels": {
+      "source": "default"
+    },
+    "unlock_pick_count": {
+      "source": "default"
+    },
+    "choice_levels": {
+      "source": "default"
+    },
+    "unit_unlock_when": {
+      "source": "default"
+    },
+    "unit_unlock_sides": {
+      "source": "default"
+    },
+    "unit_unlock_levels": {
+      "source": "default"
+    },
+    "unit_unlock_pairs": {
+      "source": "default"
+    },
+    "level_draw_levels": {
+      "source": "default"
+    }
+  },
+  "orphans": {},
+  "history": {
+    "cap": 200,
+    "baseSeq": 0,
+    "ops": []
+  }
+}

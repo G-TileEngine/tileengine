@@ -1,0 +1,52 @@
+{
+  "kind": "behaviour-setup",
+  "formatVersion": 3,
+  "id": "setup_01JDSH00000000000000000011",
+  "rev": 0,
+  "name": "Basic Attack (reach and damage)",
+  "behaviourId": "basic-attack",
+  "catalogue": {
+    "rev": 30
+  },
+  "createdAt": "2026-11-19T00:00:00Z",
+  "updatedAt": "2026-11-19T00:00:00Z",
+  "copiedFrom": null,
+  "answers": {
+    "reach_mode": {
+      "source": "default"
+    },
+    "custom_ns": {
+      "source": "default"
+    },
+    "custom_ew": {
+      "source": "default"
+    },
+    "damage": {
+      "source": "default"
+    },
+    "blocked_by_bodies": {
+      "source": "default"
+    },
+    "enemy_basic_crosses_barrier": {
+      "source": "default"
+    },
+    "ability_group": {
+      "source": "default"
+    },
+    "effect": {
+      "source": "user",
+      "value": "builtin:effect/btf-cut",
+      "rev": 1,
+      "defaultRef": {
+        "rev": 30
+      },
+      "needsReask": null
+    }
+  },
+  "orphans": {},
+  "history": {
+    "cap": 200,
+    "baseSeq": 0,
+    "ops": []
+  }
+}

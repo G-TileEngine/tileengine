@@ -1,0 +1,29 @@
+{
+  "kind": "behaviour-setup",
+  "formatVersion": 3,
+  "id": "setup_01JDSH00000000000000000013",
+  "rev": 0,
+  "name": "Merchant talk",
+  "behaviourId": "talk",
+  "catalogue": {
+    "rev": 30
+  },
+  "createdAt": "2026-11-19T00:00:00Z",
+  "updatedAt": "2026-11-19T00:00:00Z",
+  "copiedFrom": null,
+  "answers": {
+    "line": {
+      "source": "user",
+      "value": "The gate behind you leads home."
+    },
+    "effect": {
+      "source": "default"
+    }
+  },
+  "orphans": {},
+  "history": {
+    "cap": 200,
+    "baseSeq": 0,
+    "ops": []
+  }
+}
