@@ -36,15 +36,23 @@ const houseCue = (entry: { seq: number; tick: number; action: Action }, stepMs: 
   return { id: `cast:${entry.seq}`, atMs: entry.tick * stepMs, caster: action.actor, ref: HOUSE_ATTACK, ...(target === undefined ? {} : { target }) };
 };
 
-export function createPlayFx(docs?: readonly unknown[], pick?: (caster: string, ref: string) => string | undefined) {
+export function createPlayFx(docs?: readonly unknown[], pick?: (caster: string, ref: string) => string | undefined, builtins?: Readonly<Record<string, Readonly<Record<string, unknown>>>>) {
   const table = new Map(stock);
   for (const doc of docs ?? []) { const read = readEffect(doc); if (read.ok) table.set(read.doc.id, { rev: read.doc.rev, values: read.doc.values }); }
+  if (builtins !== undefined)
+    for (const [id, values] of Object.entries(builtins)) table.set(id, { rev: 1, values });
   const engine = createCastFx({ sheetOf: () => FX_SHEET, clipOf: () => FX_CLIP, values: (ref) => table.get(ref) ?? null });
   return {
     engine,
     values: (ref: string) => table.get(ref) ?? null,
     ingest(log: { entries(): readonly { seq: number; tick: number; action: Action }[] }, stepMs: number, now: number) {
-      for (const entry of log.entries()) { const cue = cueFromEntry(entry, stepMs, refOf) ?? houseCue(entry, stepMs); if (cue !== null) engine.cast(pick === undefined ? cue : { ...cue, ref: pick(cue.caster, cue.ref) ?? cue.ref }); }
+      for (const entry of log.entries()) {
+        const cue = cueFromEntry(entry, stepMs, refOf) ?? houseCue(entry, stepMs);
+        if (cue === null) continue;
+        const next = pick?.(cue.caster, cue.ref);
+        const ref = next !== undefined && table.has(next) ? next : cue.ref;
+        engine.cast(pick === undefined ? cue : { ...cue, ref });
+      }
       return engine.effects(now);
     },
   };

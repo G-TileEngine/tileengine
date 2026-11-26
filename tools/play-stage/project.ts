@@ -1,3 +1,4 @@
+import { builtinFx } from "../../src/project/builtin-fx.ts";
 import { readProject, type ProjectFiles, type ProjectStore } from "../../src/project/load/index.ts";
 import { readMap, readStage } from "../../src/project/read/index.ts";
 import { createGrid } from "../../src/core/grid/index.ts";
@@ -49,8 +50,14 @@ function levelsOf(store: ProjectStore, stage: Obj): PlayOut["levels"] {
   if (rules === null) throw new Error("play: xp-levels");
   return { rules, pools: {} };
 }
-function pickFx(store: ProjectStore, id: string, setup: Obj, fxOf: Record<string, string>): void {
-  const behaviour = setup["behaviourId"] === "basic-attack" ? "basic-attack" : setup["behaviourId"] === "line-shot" ? "line-shot" : "", v = behaviour === "" ? undefined : knob(setup, store.slice, behaviour, "effect"); if (typeof v === "string" && Object.hasOwn(store.effects, v)) fxOf[`${id}|${behaviour === "basic-attack" ? HOUSE_ATTACK : "line-shot"}`] = v;
+function pickFx(store: ProjectStore, id: string, setup: Obj, fxOf: Record<string, string>, builtins: Record<string, Obj>): void {
+  const behaviour = setup["behaviourId"] === "basic-attack" ? "basic-attack" : setup["behaviourId"] === "line-shot" ? "line-shot" : "";
+  const v = behaviour === "" ? undefined : knob(setup, store.slice, behaviour, "effect");
+  const key = `${id}|${behaviour === "basic-attack" ? HOUSE_ATTACK : "line-shot"}`;
+  if (typeof v === "string" && Object.hasOwn(store.effects, v)) fxOf[key] = v;
+  const hit = typeof v === "string" && !Object.hasOwn(store.effects, v) ? builtinFx(store.slice, v) : undefined;
+  if (hit !== undefined) fxOf[key] = hit.id;
+  if (hit !== undefined) builtins[hit.id] = hit.values;
 }
 /** Adapter only. Document JSON is already read by readProject. */
 export function playDocsOf(store: ProjectStore, stageId?: string): PlayOut {
@@ -62,6 +69,7 @@ export function playDocsOf(store: ProjectStore, stageId?: string): PlayOut {
   const hp0 = must(num(knob(army, cat, "unit-roster", "unit_hp")), "play: army"), atk0 = must(num(knob(army, cat, "unit-roster", "unit_atk")), "play: army");
   const stepped = installOne(STEP_PATTERN, {}).out; if (stepped === null) throw new Error("play: step");
   const stats: Record<string, { hp: number; atk: number }> = {}, reach: Record<string, number> = {}, abilities: Record<string, { reach: number; damage: number; effectRef: string }[]> = {}, names: Record<string, string> = {}, fxOf: Record<string, string> = {};
+  const builtins: Record<string, Obj> = {};
   for (const [id, unit] of Object.entries(store.units)) {
     const st = isObj(unit["stats"]) ? unit["stats"] : {}, hpBag = st["unit_hp"], atkBag = st["unit_atk"], row = { hp: num(isObj(hpBag) ? hpBag["value"] : undefined) ?? hp0, atk: num(isObj(atkBag) ? atkBag["value"] : undefined) ?? atk0 };
     stats[id] = row; if (typeof unit["name"] === "string") names[id] = unit["name"];
@@ -69,7 +77,7 @@ export function playDocsOf(store: ProjectStore, stageId?: string): PlayOut {
       const setup = store.setups[sid]; if (setup === undefined) continue;
       if (setup["behaviourId"] === "basic-attack") { const mode = knob(setup, cat, "basic-attack", "reach_mode"), ns = num(knob(setup, cat, "basic-attack", "custom_ns")), ew = num(knob(setup, cat, "basic-attack", "custom_ew")), got = mode === "orth-only-1" ? 1 : mode === "custom-cross" ? Math.min(must(ns, "play: reach"), must(ew, "play: reach")) : mode === "same-as-step" ? stepped.reach : undefined; if (got !== undefined) reach[id] = got; }
       if (setup["behaviourId"] === "line-shot") abilities[id] = [...(abilities[id] ?? []), { reach: must(num(knob(setup, cat, "line-shot", "range")), "play: line-shot"), damage: must(num(knob(setup, cat, "line-shot", "damage")), "play: line-shot"), effectRef: "line-shot" }];
-      pickFx(store, id, setup, fxOf);
+      pickFx(store, id, setup, fxOf, builtins);
     }
   }
   const gear = isObj(stage["loadout"]) ? stage["loadout"] : isObj(root["loadout"]) ? root["loadout"] : {}, chosen: string[] = [];
@@ -82,7 +90,7 @@ export function playDocsOf(store: ProjectStore, stageId?: string): PlayOut {
   const tiles = installOne(TERRAIN, {}).out?.tiles; if (tiles === undefined) throw new Error("play: terrain");
   const recipes: Record<string, Recipe> = { ...RECIPES }; for (const [id, name] of Object.entries(names)) { const hit = Object.values(RECIPES).find((r) => r.name === name); if (hit !== undefined) recipes[id] = hit; }
   const host = typeof stage["seed"] === "number" ? stage["seed"] : undefined, cap = Math.min(typeof gear["size"] === "number" ? gear["size"] : chosen.length, Array.isArray(stage["playerSpawns"]) ? stage["playerSpawns"].length : chosen.length), win = winOf(store, stage), levels = levelsOf(store, stage), backdrop = backdropOf(root, map);
-  return { manifest: store.manifest, map, stage, links: core.doc.links ?? [], rules: { base: { hp: hp0, atk: atk0 }, stats, hitClass: "basic", ...(Object.keys(reach).length > 0 ? { reach } : {}), ...(Object.keys(abilities).length > 0 ? { abilities } : {}) }, ...(host === undefined ? {} : { hostSeed: host }), talk, chosen: chosen.slice(0, cap), tiles, names, recipes, ...(win === undefined ? {} : { win }), ...(levels === undefined ? {} : { levels }), ...(backdrop.length === 0 ? {} : { backdrop }), effects: Object.values(store.effects), ...(Object.keys(fxOf).length > 0 ? { fxOf } : {}) };
+  return { manifest: store.manifest, map, stage, links: core.doc.links ?? [], rules: { base: { hp: hp0, atk: atk0 }, stats, hitClass: "basic", ...(Object.keys(reach).length > 0 ? { reach } : {}), ...(Object.keys(abilities).length > 0 ? { abilities } : {}) }, ...(host === undefined ? {} : { hostSeed: host }), talk, chosen: chosen.slice(0, cap), tiles, names, recipes, ...(win === undefined ? {} : { win }), ...(levels === undefined ? {} : { levels }), ...(backdrop.length === 0 ? {} : { backdrop }), effects: Object.values(store.effects), ...(Object.keys(fxOf).length > 0 ? { fxOf } : {}), ...(Object.keys(builtins).length > 0 ? { fxBuiltins: builtins } : {}) };
 }
 export function openProject(files: ProjectFiles, stageId?: string): { docs: (PlayOut & { readonly looks: Looks }) | null; error: string } {
   try {

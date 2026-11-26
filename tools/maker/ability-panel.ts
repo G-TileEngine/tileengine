@@ -1,5 +1,7 @@
 import { aimKind, detach, panelOf, resetAnswer, setAnswer, stageFor, type PanelKnob, type PanelModel } from "../../src/editor/unit/panel.ts";
 import { effectRows } from "../../src/editor/effect/list.ts";
+import { builtinRows, isBuiltin, withFx } from "../../src/editor/effect/builtins.ts";
+import { BUNDLED } from "./catalogue.ts";
 import { WIRED } from "../../src/rules/behaviours/wired.ts";
 import { addChrome } from "./add-ability.ts";
 import { diagramHtml, diagramOf } from "./unit-diagram.ts";
@@ -30,7 +32,14 @@ function rowsOf(bag: Record<string, Obj>, unit: Obj, slice: Obj, skip: string): 
   }
   return html;
 }
-const fxRow = (bag: Record<string, Obj>, behaviourId: string, answers: Obj): string => { if (aimKind(behaviourId) === undefined) return ""; const cur = isObj(answers["effect"]) && answers["effect"]["source"] !== "default" && typeof answers["effect"]["value"] === "string" ? answers["effect"]["value"] : "none"; return `<p class="row">Effect</p><button type="button" class="choice" data-act="a:fx:none" aria-pressed="${cur === "none"}">None</button>${effectRows(bag).map((row) => `<button type="button" class="choice" data-act="a:fx:${esc(row.id)}" aria-pressed="${cur === row.id}">${esc(row.name)}</button>`).join("")}`; };
+const fxRow = (bag: Record<string, Obj>, behaviourId: string, answers: Obj): string => {
+  if (aimKind(behaviourId) === undefined) return "";
+  const cur = isObj(answers["effect"]) && answers["effect"]["source"] !== "default" && typeof answers["effect"]["value"] === "string" ? answers["effect"]["value"] : "none";
+  const saved = effectRows(bag).map((row) => `<button type="button" class="choice" data-act="a:fx:${esc(row.id)}" aria-pressed="${cur === row.id}">${esc(row.name)}</button>`).join("");
+  const built = builtinRows(bag, BUNDLED, behaviourId);
+  const extra = built.length === 0 ? "" : `<p class="row">Built-in</p>${built.map((row) => `<button type="button" class="choice" data-act="a:fx:${esc(row.id)}" aria-pressed="${isBuiltin(cur, row.id)}">${esc(row.name)}</button>`).join("")}`;
+  return `<p class="row">Effect</p><button type="button" class="choice" data-act="a:fx:none" aria-pressed="${cur === "none"}">None</button>${saved}${extra}`;
+};
 export function abilityView(bag: Record<string, Obj>, unit: Obj, readOnly: boolean): string {
   const slice = bag["catalogue/slice.json"]; if (!isObj(slice)) return "";
   const id = typeof unit["id"] === "string" ? unit["id"] : "", placed = stageFor(bag, id), ids = list(unit["setupIds"]).filter((item): item is string => typeof item === "string");
@@ -72,7 +81,20 @@ export function abilityAct(act: string, bag: Record<string, Obj>, unitId: string
   if (!isObj(unit)) return { keep: true };
   if (act === "a:shut") { openId = ""; return { keep: true }; }
   if (act.startsWith("a:open:")) { openId = act.slice(7); return { keep: true }; }
-  if (act.startsWith("a:fx:")) { const value = act.slice(5); if (value !== "none" && !effectRows(bag).some((row) => row.id === value)) return { keep: true }; const setup = bag[`setups/${openId}.json`]; if (!isObj(setup)) return { keep: true }; const answers = isObj(setup["answers"]) ? setup["answers"] : {}; return { bag: { ...bag, [`setups/${openId}.json`]: { ...setup, answers: setAnswer(answers, "effect", value, "none") } }, toast: "Changed · Undo" }; }
+  if (act.startsWith("a:fx:")) {
+    const value = act.slice(5);
+    const setup = bag[`setups/${openId}.json`];
+    if (!isObj(setup) || typeof setup["behaviourId"] !== "string") return { keep: true };
+    const answers = isObj(setup["answers"]) ? setup["answers"] : {};
+    const behaviourId = setup["behaviourId"];
+    if (builtinRows(bag, BUNDLED, behaviourId).some((row) => row.id === value)) {
+      const next = withFx(bag, BUNDLED);
+      if (next === null) return { keep: true };
+      return { bag: { ...next, [`setups/${openId}.json`]: { ...setup, answers: setAnswer(answers, "effect", value, "none") } }, toast: "Changed · Undo" };
+    }
+    if (value !== "none" && !effectRows(bag).some((row) => row.id === value)) return { keep: true };
+    return { bag: { ...bag, [`setups/${openId}.json`]: { ...setup, answers: setAnswer(answers, "effect", value, "none") } }, toast: "Changed · Undo" };
+  }
   if (act === "a:test" || act.startsWith("a:test:")) {
     const stageId = stageFor(bag, unitId); if (stageId === null) return { keep: true };
     const abilityId = act === "a:test" ? undefined : act.slice(7);

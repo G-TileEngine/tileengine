@@ -46,10 +46,10 @@ test("10b asset check (Law 12): when the project can't be migrated, assetRows sa
   const files = { "project.json": { formatVersion: 6, project: { assets: { asset_dead: { ext: "png" } }, stages: ["s"] } }, "stages/s.json": { id: "s", mapRef: "m" }, "maps/m.json": { id: "m", background: { layers: [{ assetId: "asset_dead" }] } }, boom: () => 0 };
   assert.deepEqual(await assetRows(memoryStore(), "proj/", files), [{ code: "invalidValue", severity: "hard", path: "project.json", detail: "unreadable" }]);
 });
-test("10b r2 built-in answers: a bare BTF id matched against the slice's effect presets gives no row and runs stock; with no such preset in the slice it is unknownRef", () => {
+test("10b r2 built-in answers: a bare BTF id matched against the slice's effect presets gives no row and 10d plays it; with no such preset in the slice it is unknownRef", () => {
   const bare = filesOf(); answer(bare, LINE, "btf-purple-drop"); const missing = read(bare); assert.equal(at(missing, "unknownRef", `${LINE}#/answers/effect/value`)[0]?.detail, "btf-purple-drop");
   const files = filesOf(); addEffect(files); answer(files, LINE, "btf-purple-drop"); const load = read(files), docs = playDocsOf(load.project);
-  assert.equal(load.report.some((r) => r.code === "unknownRef" && r.detail === "btf-purple-drop"), false); assert.equal(docs.fxOf?.[`${U.archer}|line-shot`], undefined);
+  assert.equal(load.report.some((r) => r.code === "unknownRef" && r.detail === "btf-purple-drop"), false); assert.equal(docs.fxOf?.[`${U.archer}|line-shot`], "btf-purple-drop");
   assert.equal(createPlayFx(docs.effects, (caster, ref) => docs.fxOf?.[`${caster.split("#")[0]}|${ref}`]).ingest(shot(["line-shot"]), 10, 200).length, 1);
 });
 test("10b r2 alias: builtin:effect/<id> reads as the bare id (no row) and is never rewritten; an alias naming no preset is unknownRef", () => {
