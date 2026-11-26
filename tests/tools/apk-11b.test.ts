@@ -29,9 +29,9 @@ test("11b patchGradle on a Capacitor 6 android/ (minSdkVersion = 22 in variables
     mkdirSync(join(bare, "app/src/main"), { recursive: true });
     writeFileSync(join(bare, "app/build.gradle"), "android { compileSdk 34 }\n");
     writeFileSync(join(bare, "app/src/main/AndroidManifest.xml"), "<manifest><application></application></manifest>\n");
-    assert.throws(() => patchGradle(bare));
+    assert.throws(() => patchGradle(bare), /apk: no minSdk/);
     writeFileSync(join(bare, "variables.gradle"), "ext { minSdkVersion = 22 }\n");
-    assert.throws(() => patchGradle(bare));
+    assert.throws(() => patchGradle(bare), /apk: no activity/);
     rmSync(bare, { recursive: true, force: true });
   } finally {
     rmSync(android, { recursive: true, force: true });

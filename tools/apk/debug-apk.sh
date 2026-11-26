@@ -6,10 +6,14 @@ then
   echo "apk: set JAVA_HOME and ANDROID_HOME (sh tools/apk/setup-sdk.sh <dir>)" >&2
   exit 2
 fi
+ZIP=${1-}
+if [ -n "$ZIP" ]
+then
+  ZIP=$(realpath "$ZIP")
+fi
 cd "$HERE"
 npm install
 rm -rf www
-ZIP=${1-}
 if [ -n "$ZIP" ]
 then
   node build.ts --game "$ZIP"
