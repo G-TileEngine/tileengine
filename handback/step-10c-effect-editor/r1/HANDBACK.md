@@ -1,8 +1,8 @@
 # Hand-back step-10c-effect-editor r1
 Step file: docs/maker/steps/step-10c-effect-editor.md (r2, sha256 5702669dae880fbd1ab45ffe487aabc48178f3723b978010de8c3b9826174593, 110 lines). DSK D22/D22b/D29: handoff/dsk-rulings/2026-11-17-phase1.md L69 (sha256 90df966c864568074981d4efedf7233c394aae5c0bd6a03ade0a666e53fdb9d8, 77 lines). DSK r42 effectNotRule is quoted in the guide. Format r41 sha256 7d89c4f41bf45cd6d24927a63896fcad4a098fba49ce313115e023da0a88b06e §6.7.
-Base commit: 76fd750256e5342f3e6ff691b73b261fd62f3661     Code head: 1fcb138d378667b04573faf910badc5c9c1eacba     Code head tree: c377cca8db0d68c82f829814d6f226c1b7428a99     Branch: step/step-10c-effect-editor-r1-chatA     PR: opened by Chief Of Staff from the branch
+Base commit: 76fd750256e5342f3e6ff691b73b261fd62f3661     Code head: 2d2e4064a1ce280af2f11eefa2d48b7b5be91566     Code head tree: db1f30e3a4e1fa8b5ab33974f255afb7fe7aa674     Branch: step/step-10c-effect-editor-r1-chatA     PR: none yet; CoS opens it
 Node: v22.23.3     npm: 10.9.9     rg: ripgrep 14.1.1 (rev 4649aa9700)
-This file is the docs-only tip. Its sha and tree are quoted in the hand-back message. The code head is the parent of this commit. No product file changes after the code head. Main was not merged. The r2 guide is already on the base (blob from 12b31b1) and was not edited. 10a and 10b are merged as 10ab12d629af2604e7ed828d134eff8aafd9caf7 (PR #104); the go-line base is the later docs commit 76fd7502.
+This file is the docs-only tip. Its sha and tree are quoted in the hand-back message. The code head is the parent of this commit. No product file changes after the code head. The earlier code commit on this branch is 1fcb138d378667b04573faf910badc5c9c1eacba (tree c377cca8db0d68c82f829814d6f226c1b7428a99). The fix commit is 2d2e4064a1ce280af2f11eefa2d48b7b5be91566. Main was not merged. The r2 guide is already on the base (blob from 12b31b1) and was not edited. 10a and 10b are merged as 10ab12d629af2604e7ed828d134eff8aafd9caf7 (PR #104); the go-line base is the later docs commit 76fd7502.
 
 ## Changed files
 ```
@@ -11,12 +11,13 @@ A	src/editor/effect/list.ts
 M	src/project/load/read-project.ts
 A	tests/editor/effects-10c.test.ts
 M	tools/maker/ability-panel.ts
+M	tools/maker/asset-check.ts
 A	tools/maker/effects.ts
 M	tools/maker/home.ts
 ```
-`git diff --shortstat 76fd750256e5342f3e6ff691b73b261fd62f3661..1fcb138d378667b04573faf910badc5c9c1eacba -- . ':!handback/**'` is `7 files changed, 308 insertions(+), 12 deletions(-)`. 308 + 12 = 320. Under 400, and under the caps' sum of 364.
+`git diff --shortstat 76fd750256e5342f3e6ff691b73b261fd62f3661..2d2e4064a1ce280af2f11eefa2d48b7b5be91566 -- . ':!handback/**'` is `8 files changed, 314 insertions(+), 13 deletions(-)`. 314 + 13 = 327. Under 400.
 
-Caps (insertions + deletions, cap in the guide): read-project.ts 9+6−/20, list.ts 52/60, effects.ts 90/90, ability-panel.ts 4+1−/10, home.ts 12+5−/24, effects-10c.test.ts 90/90, smoke.mjs 51/70. No file is over its cap.
+Caps (insertions + deletions, cap in the guide): read-project.ts 9+6−/20, list.ts 52/60, effects.ts 90/90, ability-panel.ts 4+1−/10, home.ts 12+5−/24, effects-10c.test.ts 90/90, smoke.mjs 56/70. `asset-check.ts` is not in the build table. The fix go-line asked for the dead initializer only if it stayed inside the caps: 1+1−. No build-table file is over its cap.
 
 ## Green
 `npm ci` (135 packages; lockfile unchanged) then `npm run green` on this code head exited 0. Floor 1152 + 5 = 1157. Node's test runner prints `ok`, not `✔`.
@@ -31,7 +32,7 @@ typecheck: exit 0. lint: exit 0. deps: exit 0 (no violations, 177 modules, 503 d
 `npx tsc --noEmit -p tools/tsconfig.json` exits 2 with only the 3 base errors: effect-designer `page.ts` L101, and maker `home.ts` twice at L89. `behaviourId` was not moved. Root `tsc --noEmit -p tsconfig.json` exits 0.
 
 ## Smoke
-Every smoke was run alone, then tracked `handback` files were restored (`git checkout -- handback`) and untracked shots removed. Browser for every run: `/opt/pw-browsers/chromium_headless_shell-1248/chrome-headless-shell-linux64/chrome-headless-shell`. s6d and S0 still default to `/usr/bin/google-chrome`, which is not installed; those files were not edited. `CHROME` was set for those two. S0 sha `d528795e50897328c1f300d0bbd5807e3f74cc80ca0f27eed0af6e77f4903941`. s8 sha `0de374426b21b2bd61036b23cc3854e961768fa3754d0aafc2dd9d056657c696`. No retry was needed (s3 step 9 and s8c steps 1–3 passed on the first solo run). s6c's checkpoint fixture was restored before s6d, s8c and s9c.
+Every smoke was run alone, then tracked `handback` files were restored (`git checkout -- handback`) and untracked shots removed. Browser for every run: `/opt/pw-browsers/chromium_headless_shell-1248/chrome-headless-shell-linux64/chrome-headless-shell`. s6d and S0 still default to `/usr/bin/google-chrome`, which is not installed; those files were not edited. `CHROME` was set for those two. S0 sha `d528795e50897328c1f300d0bbd5807e3f74cc80ca0f27eed0af6e77f4903941`. s8 sha `0de374426b21b2bd61036b23cc3854e961768fa3754d0aafc2dd9d056657c696`. No retry was needed (s3 step 9 and s8c steps 1–3 passed on the first solo run). s6c's checkpoint fixture was restored before s6d, s8c and s9c. The other 19 were re-run after the s10c fix, still first try, same counts.
 - S0 `handoff/steps/tests/s0-play-input/touch-smoke.mjs . 8797` — 14 ok, TOUCH SMOKE PASS.
 - s3 `handoff/steps/tests/s3-test/touch-smoke.mjs . 8798` — 18 ok, TOUCH SMOKE PASS.
 - s4a `handoff/steps/tests/s4a-stage-paint/smoke.mjs . 8799` — 16 ok, SMOKE PASS.
@@ -51,8 +52,16 @@ Every smoke was run alone, then tracked `handback` files were restored (`git che
 - s9b `handoff/steps/tests/s9b-art-upload/smoke.mjs . 8813 r1` — 14 ok, SMOKE PASS.
 - s9c `handoff/steps/tests/s9c-link-markers/smoke.mjs . 8814 r1` — 6 ok, SMOKE PASS.
 - s10b `handoff/steps/tests/s10b-effect-data/smoke.mjs . 8815 r1` — 8 ok, SMOKE PASS.
-- s10c `handoff/steps/tests/s10c-effect-editor/smoke.mjs . 8816 r1` — 8 ok, SMOKE PASS (4 at 390 and 4 at 360).
-Mutations, each file restored before the code commit (named tests via `node --test`; the shipped files were byte-compared back and the five named tests passed 5/0):
+- s10c `handoff/steps/tests/s10c-effect-editor/smoke.mjs . 8816 r1` — 8 ok, SMOKE PASS (4 at 390 and 4 at 360). After the fix it was run solo five times in a row, 8 ok every time, no retry:
+```
+run 1 SMOKE PASS
+run 2 SMOKE PASS
+run 3 SMOKE PASS
+run 4 SMOKE PASS
+run 5 SMOKE PASS
+```
+CoS (Node v24) saw 6/2 then 4/4: the timeout was `tap a:test:` after `a:shut`, with the ability panel still open (Test exists only on the closed list) and, at 390, a unit Rename sheet open. Cause: `a:fx` saves, then `paint()` replaces `#app` and the unit `.body` scroll returns to the top. The old `tap` had already measured `a:shut`. The touch then hit `u:rename` (the first control in the unit body at 390), so `a:shut` never ran and step 4 failed because step 3 did. The smoke now waits until the shake answer is pressed, lets the bogus `a:fx` id paint, and only then taps `a:shut` when that button is the element under its own centre and no scrim is up. It waits until `a:shut` is gone, no scrim (no Rename sheet), and `a:test:` is in the DOM, then taps Test. Timeouts were not lengthened. No app file in the build table needed a change.
+Mutations, each file restored before the first code commit (named tests via `node --test`; the shipped files were byte-compared back and the five named tests passed 5/0):
 - `read-project.ts` restored → test 4 (pass 0, fail 1, AssertionError).
 - The pointer cut back to the doc path (`path.split("#")[0]`) → test 4 (pass 0, fail 1, AssertionError).
 - `ability-panel.ts` restored → test 5 (pass 0, fail 1, AssertionError).
@@ -101,23 +110,25 @@ The step file does not pin a shipped-test sha. The new test file, as committed:
 ```
 baed945290b859c8fdd236f94a4c149cc06db47e7292935c8d2bce51e44b08dc  tests/editor/effects-10c.test.ts
 ```
-No other test or smoke was edited. s8 and S0 shas are above.
+No other test was edited. s10c is the only smoke edited. s8 and S0 shas are above. The test file sha is unchanged.
 
 ## Helpers & self-review
 - Helper 8ac2d3eb: asked to review Rules 1–7, the caps, the must-not list, and the effectNotRule pointer, and not to edit. Verdict: no must-fix. Nits left on purpose (caps were already tight): `a:fx:` does not re-check `aimKind` (the row is hidden when `aimKind` is undefined); the sheet mode is set before the save resolves; the one-ability delete warning still says "they'll".
 - Helper 5cd4eb8e: asked to review the named tests and the smoke against every mutation in the guide, and not to edit. Verdict: no must-fix. The mutations above were then run and each failed the test the guide names.
 - A sheet and toggle lookup that used `path.startsWith("effects/")` could also match `effects/.deleted/`. Both lines now require no further slash after `effects/`. That change is in the code head. Green was re-run after it (1157/0).
-- Self-review: Rules 1–7 done. Named tests 1–5 done (sort and users, stamp, duplicate `copiedFrom` / rev 1 / empty changes / " copy", writer rev and play shake 2, reset, picture and bad names, delete to `.deleted/` with unknownRef and stock ingest, toNone, effectNotRule at the four full pointers plus a missing id as brokenRef, maker New / slider / delete / undo, Effect row None plus saved, unknown `a:fx` writes nothing). Done-when: green 1157/0 done; tools tsc only the 3 base errors at page.ts L101 and home.ts L89 done; 320 ≤ 400 and every cap kept done; all 20 smokes PASS at the guide counts done; mutations recorded done; export audit empty done. QA G1 the plants above fail when the matching behaviour is reverted. G2 root typecheck exit 0, no new ignore or any. G3 no new phase writes. G4 no quoted interface changed. G5 nothing in src/core, src/sim, src/rules, tools/play-stage, tools/effect-designer, data, fixtures, or format docs. G6 only the build-table files. G7 320 and each cap kept. G8 no new rAF, timer, or loop. G9 this note. G10 s10c shows an empty list, a new effect with shake 2, Test playing it, then Duplicate, delete-to-none, and Undo, at 390 and 360. Done.
+- Helper 0aeada01: asked to check the s10c race against `paint`, `a:shut`, and `u:rename`, and not to edit. Verdict: no must-fix. The waits close the in-flight paint. A later paint between the hit-test and the touch is not in flight here. Do not preserve scroll in `paint()`.
+- Helper 32888914: asked to check the caps, the two joins, and the `asset-check.ts` carry, and not to edit. Verdict: leaving the joins is the correct stop (91 and 92 would be over). The carry is behavior-preserving. Running total 327. Law 12 and the migrated hard row still pass.
+- Self-review: Rules 1–7 done. Named tests 1–5 done (sort and users, stamp, duplicate `copiedFrom` / rev 1 / empty changes / " copy", writer rev and play shake 2, reset, picture and bad names, delete to `.deleted/` with unknownRef and stock ingest, toNone, effectNotRule at the four full pointers plus a missing id as brokenRef, maker New / slider / delete / undo, Effect row None plus saved, unknown `a:fx` writes nothing). Done-when: green 1157/0 done; tools tsc only the 3 base errors at page.ts L101 and home.ts L89 done; 327 ≤ 400 and every build-table cap kept done; all 20 smokes PASS at the guide counts done; s10c 5/5 after the fix done; mutations recorded done; export audit empty done. QA G1 the plants above fail when the matching behaviour is reverted. G2 root typecheck exit 0, no new ignore or any. G3 no new phase writes. G4 no quoted interface changed. G5 nothing in src/core, src/sim, src/rules, tools/play-stage, tools/effect-designer, data, fixtures, or format docs. G6 the build-table files plus `asset-check.ts`, the one line the fix go-line named. G7 327 and each build-table cap kept. G8 no new rAF, timer, or loop. G9 this note. G10 s10c shows an empty list, a new effect with shake 2, Test playing it, then Duplicate, delete-to-none, and Undo, at 390 and 360, five times. Done.
 
 ## Decisions & deviations
 - The name field is `data-fxname` (the guide spelling) and saves on `change`, not `input`. `applyBag` rebuilds the text map instead of `delete`, because eslint `@typescript-eslint/no-dynamic-delete` rejects that. Same line count.
-- `effects.ts` inlines the prefix-plus-1 id function at the three writer calls (the same mint `levels.ts` uses). The one-line `mint` const was removed so the file is 90, the cap. That is a helper removal, not a wrap of the save logic.
-- The test file is 90, the cap. One import per line. `type Obj` shares a line with `isObj`, and `steps` shares a line with `hist`. The one-use mint and shot helpers are inlined. Those joins were made to meet the cap. The five titles and their asserts are the guide's.
+- `effects.ts` still inlines the prefix-plus-1 id function at the three writer calls. The fix go-line asked to put the `mint` const back. That is one new line, 91 against a cap of 90. The test file still shares `type Obj` with `isObj` and `steps` with `hist`. Splitting those is two new lines, 92 against 90. There is no blank line to put them on. Undoing the joins was stopped and the counts are reported here. Nothing else was wrapped, split, or joined to buy the lines back. The five titles and their asserts are the guide's.
 - `effectNotRule` uses the full pointer `brokenRef` would use (`stages/<id>.json#/rules/<i>`, and the same shape for project rules, unit setupIds, and neutral setupIds). Detail is the id. An id that is not an own key of `effects` still goes to `has`.
 - Duplicate's history op is `{seq: 1, at, kind: "set", changes: [], note: "duplicate"}` (EA ruling). `copiedFrom` is `{setupId, rev, at}` of the original. The name uses `copyName` (" copy" / " copy 2"). A source or new id that is not `effect_<ULID>` returns null. Undo is one deep (`stack = [host.files]`, not pushed), so undoing a delete restores the live file and the answer and leaves the copy.
 - Gone paths stay in the `planSave` plan with their old text, then `store.remove` after `commitWrites`. `planSave` would otherwise write `""`. Effects docs already have the writer rev; `planSave` does not bump effect rev (its doc regex is maps, stages, units, setups). Setups still get that extra bump.
-- The smoke's step 3 also clicks a synthetic `a:fx:` id that is not in `effectRows`, so a missing check fails the Test wait. `LINE` is the setup id `setup_01JDAT00000000000000000005`, not the path. New project stays on the project screen. `u:back` runs before the menu because Back to maker leaves the unit editor open.
-- Sheet and toggle skip any `effects/` path with another slash, so `effects/.deleted/` is not painted. The one-ability warning still says "they'll" (one sentence for 1 and for N). `a:fx:` does not re-check `aimKind`. No new dependency, CSS, rAF, timer, or loop. The toast is the existing 6s "Changed · Undo" / "Deleted · Undo". 320 lines. The audit script was not committed.
+- The smoke's step 3 still dispatches a synthetic `a:fx:` id that is not in `effectRows` (`dispatchEvent`, so it does not focus or scroll), then waits for that paint before `a:shut`. `LINE` is the setup id `setup_01JDAT00000000000000000005`, not the path. New project stays on the project screen. `u:back` runs before the menu because Back to maker leaves the unit editor open. `tap` refuses a control that is not the element under its own centre, and it refuses a control outside an open scrim.
+- `tools/maker/asset-check.ts` drops the dead `let docs = files`. `docs` is assigned only from `migrateProject(files).files`. A throw still returns the one hard `invalidValue` row and never reads `docs`. Success still uses the migrated clone. 1+1−. The Law 12 test and the migrated hard-asset row still pass.
+- Sheet and toggle skip any `effects/` path with another slash, so `effects/.deleted/` is not painted. The one-ability warning still says "they'll" (one sentence for 1 and for N). `a:fx:` does not re-check `aimKind`. No new dependency, CSS, rAF, timer, or loop. The toast is the existing 6s "Changed · Undo" / "Deleted · Undo". 327 lines. The audit script was not committed.
 
 ## Next step
 - Not this step: 10d (the built-in effect library and the Effect row's built-in buttons). Format docs were not edited. No baseline republish: audit counts are unchanged (133 / 147 / 133, loose 146). The builder does not publish.
