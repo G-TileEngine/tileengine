@@ -12,10 +12,12 @@ import { createPlayFx } from "../../tools/play-stage/fx.ts";
 import { openProject, playDocsOf } from "../../tools/play-stage/project.ts";
 import { loadFixture, U } from "../tools/demo-fixture.ts";
 const AT = "2026-11-25T12:00:00.000Z", FX = "effect_01JDB10C00000000000000000A", FY = "effect_01JDB10C00000000000000000D", LEG = "setup_01JDB10C00000000000000000B", COPY = "effect_01JDB10C00000000000000000C", MISS = "setup_01JDB10C00000000000000000Y", LINE = "setups/setup_01JDAT00000000000000000005.json", STAGE = "stages/stage_01JDAS00000000000000000001.json", STAMP = [{ id: "s-1", kind: "stamp", seconds: 0.25 }];
-type Obj = Record<string, unknown>; const isObj = (v: unknown): v is Obj => typeof v === "object" && v !== null && !Array.isArray(v);
+type Obj = Record<string, unknown>;
+const isObj = (v: unknown): v is Obj => typeof v === "object" && v !== null && !Array.isArray(v);
 const bagOf = (): Record<string, Obj> => { const bag: Record<string, Obj> = {}; for (const [k, v] of Object.entries(loadFixture())) if (isObj(v)) bag[k] = structuredClone(v); return bag; };
 const doc = (bag: Record<string, Obj>, id: string): Obj => { const hit = bag[`effects/${id}.json`]; if (!isObj(hit)) throw new Error(id); return hit; };
-const steps = (d: Obj): unknown => { const a = d["answers"]; return isObj(a) && isObj(a["steps"]) ? a["steps"]["value"] : null; }; const hist = (d: Obj): Obj[] => { const h = d["history"]; return isObj(h) && Array.isArray(h["ops"]) ? h["ops"].filter(isObj) : []; };
+const steps = (d: Obj): unknown => { const a = d["answers"]; return isObj(a) && isObj(a["steps"]) ? a["steps"]["value"] : null; };
+const hist = (d: Obj): Obj[] => { const h = d["history"]; return isObj(h) && Array.isArray(h["ops"]) ? h["ops"].filter(isObj) : []; };
 const answer = (bag: Record<string, Obj>, id: string): Record<string, Obj> => { const row = bag[LINE]; if (!isObj(row)) throw new Error("line"); const prev = isObj(row["answers"]) ? row["answers"] : {}; return { ...bag, [LINE]: { ...row, answers: { ...prev, effect: { source: "user", value: id, rev: 1 } } } }; };
 const play = (files: Record<string, Obj>) => { const load = readProject(files); if (load.project === null) throw new Error(load.report.map((r) => `${r.code} ${r.path}`).join(" ")); return playDocsOf(load.project); };
 test("10c effect data: New mints effect_<ULID> with one stamp step and a free name; the list sorts by name then id with its users; Duplicate copies answers under a fresh effect_ id (rev 1, one duplicate op, copiedFrom, ' copy' name) and references stay on the original", () => {
