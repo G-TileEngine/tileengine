@@ -13,7 +13,7 @@ const storeGlobals = ["localStorage", "sessionStorage", "indexedDB"]
   .map((name) => ({ name, message: "Storage only in src/platform." }));
 
 export default tseslint.config(
-  { ignores: ["node_modules/**", "tests/fixtures/**", "dist/**", "handback/**", "ui-shell/**"] },
+  { ignores: ["node_modules/**", "tests/fixtures/**", "dist/**", "handback/**", "ui-shell/**", "tools/apk/android/**", "tools/apk/www/**", "tools/apk/artifacts/**"] },
   ...tseslint.configs.strict,
   {
     files: ["src/**/*.ts"],
