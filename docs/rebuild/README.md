@@ -42,6 +42,7 @@ The step briefs in `docs/maker/steps/` say what each step had to build *before* 
 | 27 | `step-10b.md` effect data (the effects/ slot and Test plays a saved effect) | `docs/maker/steps/step-10b-effect-data.md` | `0673be7e` (the 10b go-line; 10a r1 review). Merge first parent `12b31b1f` | PR #104, merge `10ab12d6`, 1152 tests |
 | 28 | `step-10c.md` the maker's effect editor (Effects list, edit, Duplicate, delete into .deleted/, the Effect row, effectNotRule) | `docs/maker/steps/step-10c-effect-editor.md` | `76fd7502` (the 10c go-line; 10b record). Merge first parent `4f9eb79c` | PR #105, merge `699bdb83`, 1157 tests |
 | 29 | `step-10d.md` built-in effects in the Effect row (the 10 BTF presets, picked by bare id and played in Test) | `docs/maker/steps/step-10d-builtin-effects.md` | `ef25669a` (the 10d go-line; 10d guide r2, after the 10c record). Merge first parent `de22e8af` | PR #106, merge `a8f2e2fd`, 1160 tests |
+| 30 | `step-11a.md` export MVP (Build game downloads the saved project as a playable static web build: the play tree, the saved docs verbatim as project/files.js, the pictures) | `docs/maker/steps/step-11a-export-mvp.md` | `7460ed7a` (the 11a go-line; 11a guide r2 and QA's reviews). Merge first parent `1e5ae398` | PR #107, merge `7d73c74b`, 1165 tests |
 
 Follow them strictly in order (rebuild order, not numeric: step 00b starts on the 4a merge, so it sits after `step-04a.md`). Between steps, main also gained docs-only commits; a step's start commit is always the one named in its file.
 
