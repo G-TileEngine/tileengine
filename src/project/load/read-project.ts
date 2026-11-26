@@ -19,12 +19,15 @@ function note(res: ReadResult<unknown>, path: string, rows: ReportRow[]): void {
 function has(bag: Readonly<Record<string, unknown>>, id: unknown, path: string, rows: ReportRow[]): void {
   if (typeof id === "string" && !Object.hasOwn(bag, id)) rows.push(row("brokenRef", "hard", path, id));
 }
+function rule(effects: Readonly<Record<string, unknown>>, bag: Readonly<Record<string, unknown>>, id: unknown, path: string, rows: ReportRow[]): void {
+  if (typeof id === "string" && Object.hasOwn(effects, id)) rows.push(row("effectNotRule", "warning", path, id)); else has(bag, id, path, rows);
+}
 
-function refs(manifest: Obj, at: Readonly<Record<string, string>>, maps: Readonly<Record<string, Doc>>, stages: Readonly<Record<string, Doc>>, units: Readonly<Record<string, Doc>>, setups: Readonly<Record<string, Doc>>, rows: ReportRow[]): void {
+function refs(manifest: Obj, at: Readonly<Record<string, string>>, maps: Readonly<Record<string, Doc>>, stages: Readonly<Record<string, Doc>>, units: Readonly<Record<string, Doc>>, setups: Readonly<Record<string, Doc>>, effects: Readonly<Record<string, Doc>>, rows: ReportRow[]): void {
   const project = isObj(manifest["project"]) ? manifest["project"] : {};
   const gear = isObj(project["loadout"]) ? project["loadout"] : {};
   list(project["stages"]).forEach((id, i) => has(stages, id, `project.json#/project/stages/${i}`, rows));
-  list(project["rules"]).forEach((id, i) => has(setups, id, `project.json#/project/rules/${i}`, rows));
+  list(project["rules"]).forEach((id, i) => rule(effects, setups, id, `project.json#/project/rules/${i}`, rows));
   if (isObj(project["session"])) has(stages, project["session"]["start"], "project.json#/project/session/start", rows);
   list(gear["roster"]).forEach((id, i) => has(units, id, `project.json#/project/loadout/roster/${i}`, rows));
   list(gear["required"]).forEach((id, i) => has(units, id, `project.json#/project/loadout/required/${i}`, rows));
@@ -32,12 +35,12 @@ function refs(manifest: Obj, at: Readonly<Record<string, string>>, maps: Readonl
     const path = at[id] ?? `stages/${id}.json`;
     const pool = isObj(stage["enemyPool"]) ? stage["enemyPool"] : {};
     has(maps, stage["mapRef"], `${path}#/mapRef`, rows);
-    list(stage["rules"]).forEach((sid, i) => has(setups, sid, `${path}#/rules/${i}`, rows));
-    list(stage["neutrals"]).forEach((n, i) => { if (!isObj(n)) return; has(units, n["unitId"], `${path}#/neutrals/${i}/unitId`, rows); list(n["setupIds"]).forEach((sid, j) => has(setups, sid, `${path}#/neutrals/${i}/setupIds/${j}`, rows)); });
+    list(stage["rules"]).forEach((sid, i) => rule(effects, setups, sid, `${path}#/rules/${i}`, rows));
+    list(stage["neutrals"]).forEach((n, i) => { if (!isObj(n)) return; has(units, n["unitId"], `${path}#/neutrals/${i}/unitId`, rows); list(n["setupIds"]).forEach((sid, j) => rule(effects, setups, sid, `${path}#/neutrals/${i}/setupIds/${j}`, rows)); });
     list(pool["entries"]).forEach((e, i) => { if (isObj(e)) has(units, e["unitId"], `${path}#/enemyPool/entries/${i}/unitId`, rows); });
     list(stage["links"]).forEach((l, i) => { if (!isObj(l)) return; const where = `${path}#/links/${i}/to`; if (l["to"] === id) rows.push(row("brokenRef", "hard", where, id)); else has(stages, l["to"], where, rows); });
   }
-  for (const [id, unit] of Object.entries(units)) list(unit["setupIds"]).forEach((sid, i) => has(setups, sid, `units/${id}.json#/setupIds/${i}`, rows));
+  for (const [id, unit] of Object.entries(units)) list(unit["setupIds"]).forEach((sid, i) => rule(effects, setups, sid, `units/${id}.json#/setupIds/${i}`, rows));
   const assets = isObj(project["assets"]) ? project["assets"] : {}; for (const [id, map] of Object.entries(maps)) list(isObj(map["background"]) ? map["background"]["layers"] : undefined).forEach((layer, i) => { if (isObj(layer)) has(assets, layer["assetId"], `maps/${id}.json#/background/layers/${i}/assetId`, rows); });
 }
 
@@ -112,7 +115,7 @@ export function readProject(files: ProjectFiles): ProjectLoad {
   if (!Object.hasOwn(docs, "catalogue/slice.json")) rows.push(row("invalidValue", "hard", "catalogue/slice.json", "missing"));
   const manifestDoc = docs["project.json"];
   const project = isObj(manifestDoc) && isObj(manifestDoc["project"]) ? manifestDoc["project"] : {};
-  refs(isObj(manifestDoc) ? manifestDoc : {}, stageAt, maps, stages, units, setups, rows);
+  refs(isObj(manifestDoc) ? manifestDoc : {}, stageAt, maps, stages, units, setups, effects, rows);
   warns(slice, project, maps, setups, effects, rows);
   rows.push(...placementDrops(stages, stageAt, maps, slice), ...mapEntryDrops(maps, mapAt));
   const hard = rows.some((r) => r.severity === "hard");
