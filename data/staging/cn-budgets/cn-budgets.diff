@@ -1,0 +1,23 @@
+--- a/src/types/core-types.ts
++++ b/src/types/core-types.ts
+@@ -221,6 +221,12 @@
+  *  (TD); laneSlots = formation slots per lane (idle). MAY-MOVE. */
+ export type OccupancyPolicy = "strict1" | "softStack" | "laneSlots";
+ 
++/** Per-stage budgets (DSK E8, step 11c, CN-029). Read only by the project reader's report (budgetNear / budgetOver);
++ *  the runtime, sim and core never read them. An absent key is not checked. MAY-MOVE. */
++export type BudgetKey = "units" | "activeAi" | "effects" | "stageTiles";
++export type BudgetLimit = { readonly warn: number; readonly limit: number };   // int, 1 ≤ warn ≤ limit
++export type ProjectBudgets = Partial<Readonly<Record<BudgetKey, BudgetLimit>>>;
++
+ export type CoreProject = {
+   readonly id: string;                                  // STABLE
+   readonly rev: number;                                 // STABLE
+@@ -233,6 +239,7 @@
+                                                         //   values are kept inactive with occupancyStageValueIgnored)
+     readonly wrapEdges: boolean;                        // MAY-MOVE: v1 core IGNORES it (warning wrapEdgesIgnored when true);
+                                                         //   future: none | x | y | both, plus LOS and pathing across the seam
++    readonly budgets?: ProjectBudgets;                  // MAY-MOVE (DSK E8, CN-029): absent = nothing checked; no engine default
+   };
+   readonly stages: ReadonlyArray<string>;               // STABLE: stage ids, in order
+   readonly rules: ReadonlyArray<string>;                // STABLE: project-wide setup ids (≤ 1 per behaviour)
