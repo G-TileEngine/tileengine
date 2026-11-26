@@ -12,7 +12,7 @@ await new Promise((ok) => srv.listen(Number(PORT), "127.0.0.1", ok));
 let bad = 0; const check = (name, ok, detail) => { if (!ok) bad += 1; console.log(`${ok ? "ok  " : "FAIL"} ${name}: ${detail}`); };
 const browser = await chromium.launch({ executablePath: process.env.CHROME ?? "/opt/pw-browsers/chromium_headless_shell-1248/chrome-headless-shell-linux64/chrome-headless-shell", headless: true, args: ["--no-sandbox", "--disable-dev-shm-usage"] });
 const ARCHER = "unit_01JDAN00000000000000000002", LINE = "setup_01JDAT00000000000000000005", ID = /^effect_[0-9A-HJKMNP-TV-Z]{26}$/;
-const tap = async (page, act) => { const node = page.locator(`[data-act="${act}"]`).first(); await node.waitFor({ timeout: 15000 }); await node.scrollIntoViewIfNeeded(); const box = await node.boundingBox(); if (box === null) throw new Error(`no ${act}`); await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2); };
+const tap = async (page, act) => { const got = await page.waitForFunction((act) => { const el = document.querySelector(`[data-act="${act}"]`); if (!(el instanceof HTMLElement)) return null; if (document.querySelector(".scrim") !== null && el.closest(".scrim") === null) return null; el.scrollIntoView({ block: "center", inline: "nearest" }); const r = el.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2; const top = document.elementFromPoint(x, y); return top !== null && top.closest("[data-act]") === el ? { x, y } : null; }, act, { timeout: 15000 }); const pos = await got.jsonValue(); if (pos === null || typeof pos.x !== "number") throw new Error(`no ${act}`); await page.touchscreen.tap(pos.x, pos.y); };
 const press = async (page, name) => { const btn = page.getByRole("button", { name }).first(); await btn.waitFor({ timeout: 15000 }); await btn.scrollIntoViewIfNeeded(); const box = await btn.boundingBox(); if (box === null) throw new Error(name); await page.touchscreen.tap(box.x + Math.min(box.width / 2, 24), box.y + box.height / 2); };
 const slide = async (page, sel, value) => { const node = page.locator(sel); await node.waitFor({ timeout: 15000 }); await node.evaluate((el, v) => { el.value = v; el.dispatchEvent(new Event("input", { bubbles: true })); }, value); };
 try {
@@ -31,10 +31,15 @@ try {
       if (!ID.test(id)) throw new Error(id || "no id");
     });
     await step("3 row and test", async () => {
-      await tap(page, "e:close"); await tap(page, `u:open:${ARCHER}`); await tap(page, `a:open:${LINE}`);
-      await page.waitForFunction((id) => document.querySelector(`[data-act="a:fx:${id}"]`) !== null && document.querySelector('[data-act="a:fx:none"]') !== null, id, { timeout: 15000 });
-      await tap(page, `a:fx:${id}`); await page.evaluate(() => { const b = document.createElement("button"); b.setAttribute("data-act", "a:fx:effect_01JDB10C00000000000000000Y"); document.body.appendChild(b); b.click(); b.remove(); });
-      await tap(page, "a:shut"); await tap(page, `a:test:${LINE}`);
+      await tap(page, "e:close"); await page.waitForFunction((archer) => document.querySelector('[data-sheet="effect"]') === null && document.querySelector(".scrim") === null && document.querySelector(`[data-act="u:open:${archer}"]`) !== null, ARCHER, { timeout: 15000 });
+      await tap(page, `u:open:${ARCHER}`); await page.waitForFunction((line) => document.querySelector(".scrim") === null && document.querySelector(`[data-act="a:open:${line}"]`) !== null, LINE, { timeout: 15000 });
+      await tap(page, `a:open:${LINE}`);
+      await page.waitForFunction((id) => document.querySelector(".scrim") === null && document.querySelector(`[data-act="a:fx:${id}"]`) !== null && document.querySelector('[data-act="a:fx:none"]') !== null && document.querySelector('[data-act="a:shut"]') !== null, id, { timeout: 15000 });
+      await tap(page, `a:fx:${id}`); await page.waitForFunction((id) => document.querySelector(`[data-act="a:fx:${id}"]`)?.getAttribute("aria-pressed") === "true" && document.querySelector(".scrim") === null, id, { timeout: 15000 });
+      await page.evaluate(() => new Promise((resolve) => { const root = document.querySelector("#app"), obs = new MutationObserver(() => { obs.disconnect(); resolve(true); }); if (root !== null) obs.observe(root, { childList: true }); const b = document.createElement("button"); b.setAttribute("data-act", "a:fx:effect_01JDB10C00000000000000000Y"); document.body.appendChild(b); b.dispatchEvent(new MouseEvent("click", { bubbles: true })); b.remove(); }));
+      await page.waitForFunction((id) => document.querySelector(".scrim") === null && document.querySelector('[data-act="a:shut"]') !== null && document.querySelector(`[data-act="a:fx:${id}"]`)?.getAttribute("aria-pressed") === "true", id, { timeout: 15000 });
+      await tap(page, "a:shut"); await page.waitForFunction((line) => document.querySelector('[data-act="a:shut"]') === null && document.querySelector(".scrim") === null && document.querySelector(`[data-act="a:test:${line}"]`) !== null, LINE, { timeout: 15000 });
+      await tap(page, `a:test:${LINE}`);
       await page.waitForFunction(({ id, archer }) => window.__docs?.fxOf?.[`${archer}|line-shot`] === id && window.__fx?.values(id)?.values?.shake === 2, { id, archer: ARCHER }, { timeout: 15000 });
     });
     await step("4 dup delete undo", async () => {
