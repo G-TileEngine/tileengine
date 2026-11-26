@@ -10,7 +10,8 @@ import { centreOn, clamp, createCam, seatCam, tickCam, type PlayCam } from "./ca
 import { createHud, XP_H } from "./hud.ts";
 import { litPlan, picturesOf, sourceOf } from "./looks.ts";
 import { createMatch, DEFAULT_SPELL_REACH } from "./match.ts";
-import { openBundled } from "./project.ts";
+import { arriveIn, openBundled, openProject } from "./project.ts";
+import { PROJECT } from "./game.ts";
 import { createTouch } from "./touch.ts";
 import { DEV } from "./dev.ts"; // dev-only
 
@@ -91,4 +92,28 @@ if (back !== undefined) { const btn = document.createElement("button"); btn.id =
 driver.start();
 }
 const bootCanvas = document.querySelector("#board");
-if (bootCanvas instanceof HTMLCanvasElement) { const opened = openBundled(); if (opened.docs === null) document.body.textContent = opened.error; else startMatch(opened.docs); }
+if (bootCanvas instanceof HTMLCanvasElement) {
+  const spec = bootCanvas.getAttribute("data-game");
+  if (spec === null) { const opened = openBundled(); if (opened.docs === null) document.body.textContent = opened.error; else startMatch(opened.docs); }
+  else void runGame(spec);
+}
+async function runGame(spec: string): Promise<void> {
+  try {
+    const mod = await import(new URL(spec, document.baseURI).href) as { default: Parameters<typeof openProject>[0] };
+    const files = mod.default;
+    const opened = openProject(files);
+    if (opened.docs === null) { document.body.textContent = opened.error; return; }
+    const art = (file: string): Promise<Blob | null> => fetch(new URL(`${PROJECT}${file}`, document.baseURI)).then((res) => res.ok ? res.blob() : null);
+    const travel = (link: LinkEvent, party: SessionParty): void => {
+      const got = arriveIn(files, link.from, link.to, party);
+      if (got.docs === null) { document.body.textContent = got.error; return; }
+      document.querySelector("#hud")?.remove();
+      document.querySelector("#board")?.remove();
+      const canvas = document.createElement("canvas");
+      canvas.id = "board";
+      document.body.append(canvas);
+      startMatch({ ...got.docs, art }, undefined, undefined, travel);
+    };
+    startMatch({ ...opened.docs, art }, undefined, undefined, travel);
+  } catch (e) { document.body.textContent = e instanceof Error ? e.message : "Can't open this project"; }
+}
