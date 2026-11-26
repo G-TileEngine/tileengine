@@ -58,7 +58,7 @@ test("11a gameZip: the play tree with its page naming the project module, the pr
   const meta = JSON.parse(textOf(entries.find((entry) => entry.name === "build.json")?.data ?? new Uint8Array())) as { files: Record<string, string> };
   assert.equal(entries.some((entry) => entry.name === "index.html") && entries.some((entry) => entry.name === "build.json") && entries.some((entry) => entry.name === "project/files.js") && entries.some((entry) => entry.name === "project/assets/ok.png") && !entries.some((entry) => entry.name.split("/").includes(".deleted") || entry.name.endsWith(".tmp") || entry.name.endsWith(".txt") || entry.name.startsWith("notes/") || entry.name.startsWith("sprite-recipes/")) && !js.includes("notes/") && !js.includes(".deleted") && !js.includes("scratch.tmp") && textOf(entries.find((entry) => entry.name === "index.html")?.data ?? new Uint8Array()).includes('data-game="project/files.js"') && entries.filter((entry) => entry.name !== "build.json").every((entry) => meta.files[entry.name] === createHash("sha256").update(entry.data).digest("hex")) && clean(entries) && apkOk(entries), true);
 });
-test("11a buildGame: a saved project goes through the Test gate into a zip of the play tree, the saved tree and its assets; a project Test refuses (a hard reader error, a missing picture a stage uses while openProject would still play, or an empty board) builds nothing, and a save that fails stops Build; a missing listed picture, a bad build.json or a page not under /maker/ throws Can't build, shown as the plain reason in the banner (interim until 11a2); playBase maps maker/<stamp>/ to play-stage/<stamp>/", async () => {
+test("11a buildGame: a saved project goes through the Test gate into a zip of the play tree, the saved tree and its assets; a project Test refuses (a hard reader error, a missing picture a stage uses while openProject would still play, or an empty board) builds nothing, and a save that fails stops Build; a missing listed picture, a bad build.json or a page not under /maker/ throws Can't build, shown as the plain reason in the error sheet (11a2); playBase maps maker/<stamp>/ to play-stage/<stamp>/", async () => {
   const store = memoryStore();
   await put(store, demo());
   const built = await buildGame(store, PID, get);
@@ -100,7 +100,7 @@ test("11a buildGame: a saved project goes through the Test gate into a zip of th
   assert.throws(() => playBase("http://127.0.0.1/play/ab/home.js"), /Can't build: \/maker\//);
   assert.equal(playBase("http://127.0.0.1/maker/abc123def456/tools/maker/home.js"), "http://127.0.0.1/play-stage/abc123def456/");
   const home = readFileSync("tools/maker/home.ts", "utf8");
-  assert.equal(/if \(state\.dirty\) await saveCurrent\(\);\n {2}if \(state\.dirty\) return;/.test(home) && /state\.banner = e instanceof Error \? e\.message : "Can't build"/.test(home), true);
+  assert.equal(/if \(state\.dirty\) await saveCurrent\(\);\n {2}if \(state\.dirty\) return;/.test(home) && /built = \{ mode: "error", reason: e instanceof Error \? e\.message : "Can't build" \}/.test(home), true);
 });
 test("11a play boot: Build game straight after opening ships each saved document byte for byte (a raw U+2028 and a v4 map included, nothing from notes/), and the zip's module plays the same as Test (old docs read up in memory by load/migrate.js, DSK E7)", async () => {
   const text = demo();
