@@ -1,6 +1,7 @@
 import { budgetUse, readProject, type BudgetUse } from "../../src/project/load/index.ts";
 import type { BudgetKey } from "../../src/types/core-types.ts";
 import { parseProject } from "./project-files.ts";
+import { icon } from "./icons.ts";
 const KEYS: readonly BudgetKey[] = ["units", "activeAi", "effects", "stageTiles"];
 const LABEL: Readonly<Record<BudgetKey, string>> = { units: "Units", activeAi: "Active AI", effects: "Effects", stageTiles: "Stage size" };
 let open = false;
@@ -36,5 +37,5 @@ export function budgetsRow(files: Readonly<Record<string, string>>): string {
   for (const use of rows) if (use.used > use.limit) over += 1; else if (use.used >= use.warn) near += 1;
   const summary = over > 0 ? `Budgets: ${over} over the limit` : near > 0 ? `Budgets: ${near} near the limit` : "Budgets: all good";
   const body = open ? rows.map(rowHtml).join("") : "";
-  return `<div class="budgets" data-budgets><button type="button" class="btn ghost stage-row" data-act="budgets" aria-expanded="${open ? "true" : "false"}">${summary}</button>${body}</div>`;
+  return `<div class="budgets" data-budgets><button type="button" class="btn ghost stage-row" data-act="budgets" aria-expanded="${open ? "true" : "false"}">${icon("budgets")}${summary}</button>${body}</div>`;
 }

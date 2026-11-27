@@ -91,7 +91,7 @@ test("F1 pickers: every aria-pressed button is a .pick chip or a framed-pill tog
 
 test("F1 toggles: every on/off toggle (rules and knob toggles, Grid lines, Autosave here, On your team) is a two-option § 5 framed pill: the label as text outside the frame, then Off and On, exactly one pressed; only the option that isn't set carries the act; 40 px frame, 48 px options, 30 px accent pill", async () => {
   const off = knobWidget({ id: "wipe", label: "Wipe wins", type: "toggle" }, false);
-  assert.equal(off, '<div class="seg-row"><span class="seg-label">Wipe wins</span><span class="seg" role="group" data-seg="k:toggle:wipe"><button type="button" class="seg-opt" aria-pressed="true" aria-label="Wipe wins: Off"><span>Off</span></button><button type="button" class="seg-opt" aria-pressed="false" aria-label="Wipe wins" data-act="k:toggle:wipe"><span>On</span></button></span></div>');
+  assert.equal(off, '<div class="seg-row"><span class="seg-label">Wipe wins</span><span class="seg" role="group" data-seg="k:toggle:wipe"><button type="button" class="seg-opt" aria-pressed="true" aria-label="Wipe wins: Off"><span>Off</span></button><button type="button" class="seg-opt" aria-pressed="false" aria-label="Wipe wins: On" data-act="k:toggle:wipe"><span>On</span></button></span></div>');
   const { host, io } = await demo("f1seg");
   const view = await stageClick("s:view", STAGE, host, io);
   const before = stageScreen(STAGE, view);
@@ -102,7 +102,7 @@ test("F1 toggles: every on/off toggle (rules and knob toggles, Grid lines, Autos
     assert.deepEqual([options.length, options.filter((tag) => tag.includes('aria-pressed="true"')).length], [2, 1]);
     assert.ok(options.every((tag) => tag.includes('aria-pressed="true"') !== tag.includes('data-act="s:grid"')));
   }
-  assert.notEqual(before.match(/aria-pressed="true" aria-label="Grid lines(: Off)?"/)?.[0], after.match(/aria-pressed="true" aria-label="Grid lines(: Off)?"/)?.[0]);
+  assert.notEqual(before.match(/aria-pressed="true" aria-label="Grid lines: (Off|On)"/)?.[0], after.match(/aria-pressed="true" aria-label="Grid lines: (Off|On)"/)?.[0]);
   const code = sources.map(({ text }) => text).join("\n");
   assert.ok(['seg("Autosave here", ', 'seg("Grid lines", ', 'seg("On your team", ', 'seg(label, value === true, '].every((call) => code.includes(call)));
   assert.match(rule(".seg"), /height: 40px;.*border: 1px solid var\(--seg-line\); border-radius: 12px; background: var\(--surface\);/);

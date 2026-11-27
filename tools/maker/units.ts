@@ -105,7 +105,7 @@ export function unitPage(files: DocText, readOnly: boolean, banner: string | nul
   const roleBtn = readOnly || roles.length === 0 ? "" : `<button type="button" class="btn ghost" data-act="u:role">Start from a role</button>`;
   const roleSheet = sess.mode !== "role" ? "" : `<div class="scrim"><div class="sheet" role="dialog"><h2>Start from a role</h2>${roles.map((role) => `<button type="button" class="btn ghost" data-act="u:apply:${esc(role.id)}">${esc(role.label)}</button>`).join("")}<button type="button" class="btn ghost" data-act="u:close">Close</button></div></div>`;
   const note = banner === null ? "" : `<p class="banner bad" role="alert">${esc(banner)}</p>`;
-  const rename = readOnly ? "" : `<p class="sub">Name</p><button type="button" class="btn ghost" data-act="u:rename">${esc(name)}</button>`;
+  const rename = readOnly ? "" : `<p class="sub">Name</p><button type="button" class="btn ghost" data-act="u:rename">${icon("edit")}${esc(name)}</button>`;
   return `<header class="topbar"><button type="button" class="btn ghost" data-act="u:back">${icon("back")}Back</button><h1>${esc(name)}</h1></header><div class="body">${note}${rename}${roleBtn}${stats}${team}${abilities}</div>${sess.mode === "rename" ? sheet() : ""}${roleSheet}`;
 }
 async function undo(io: UnitIo, host: Host): Promise<UnitHit> {

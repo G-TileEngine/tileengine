@@ -21,7 +21,7 @@ const slider = (id: string, label: string, value: number, min: number, max: numb
 export function levelsSection(files: DocText, readOnly: boolean): string {
   const bag = bagOf(files); if (bag === null) return "";
   const gate = addCase(bag, BUNDLED), head = `<h2>Levels</h2>`;
-  if (readOnly || gate.mode === "newer") return `${head}<div class="card"><p>${esc(gate.mode === "newer" ? gate.text : "Made with a newer TileEngine. Open only.")}</p></div>`;
+  if (readOnly || gate.mode === "newer") return `${head}<div class="card">${thumb("levels")}<p>${esc(gate.mode === "newer" ? gate.text : "Made with a newer TileEngine. Open only.")}</p></div>`;
   if (gate.mode === "older") return `${head}<div class="card">${thumb("levels")}<p>${esc(gate.text)}</p>${gate.update ? `<button type="button" class="btn ghost" data-act="l:update">Update</button>` : ""}</div>`;
   const view = curveOf(bag); if (view === null) return `${head}<div class="card">${thumb("levels")}<span class="name">Levels: Off</span><button type="button" class="btn ghost" data-act="l:on">Turn on levels</button></div>`;
   return `${head}<div class="card">${thumb("levels")}<button type="button" class="grow card-hit" data-act="l:open"><span class="name">Levels: ${view.n} · ${view.total} XP to the top</span></button></div>`;

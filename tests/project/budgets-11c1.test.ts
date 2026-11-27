@@ -121,10 +121,10 @@ test("11c1 maker: the Budgets row after the stages in UX's words: one summary li
   assert.equal(view().includes("Budgets: all good") && view().includes("btn ghost stage-row") && !view().includes('data-budget="'), true);
   budgetsTap(() => undefined);
   const open = view();
-  assert.equal(open.includes('aria-expanded="true"') && ["Units</span> <span>7 of 80</span>", "Active AI</span> <span>2 of 24</span>", "Effects</span> <span>0 of 12</span>", "Stage size</span> <span>54 of 65536</span>"].every((bit) => open.includes(bit)) && !open.includes("\u00b7") && open.split('aria-hidden="true"').length === 5, true);
+  assert.equal(open.includes('aria-expanded="true"') && ["Units</span> <span>7 of 80</span>", "Active AI</span> <span>2 of 24</span>", "Effects</span> <span>0 of 12</span>", "Stage size</span> <span>54 of 65536</span>"].every((bit) => open.includes(bit)) && !open.includes("\u00b7") && (open.match(/<meter [^>]*aria-hidden="true"><\/meter>/g) ?? []).length === 4, true);
   assert.ok(open.indexOf('data-budget="units"') < open.indexOf('data-budget="activeAi"') && open.indexOf('data-budget="activeAi"') < open.indexOf('data-budget="effects"') && open.indexOf('data-budget="effects"') < open.indexOf('data-budget="stageTiles"'));
   setBudgets(files, { units: { warn: 7, limit: 9 }, activeAi: { warn: 1, limit: 1 }, effects: { warn: 8, limit: 12 }, stageTiles: { warn: 16384, limit: 65536 } });
-  assert.equal(view().includes("Budgets: 1 over the limit") && view().includes("7 of 9 \u00b7 near limit") && view().includes("2 of 1 \u00b7 over limit") && view().includes("0 of 12</span>") && view().split('aria-hidden="true"').length === 5, true);
+  assert.equal(view().includes("Budgets: 1 over the limit") && view().includes("7 of 9 \u00b7 near limit") && view().includes("2 of 1 \u00b7 over limit") && view().includes("0 of 12</span>") && (view().match(/<meter [^>]*aria-hidden="true"><\/meter>/g) ?? []).length === 4, true);
   setBudgets(files, { units: { warn: 7, limit: 9 }, activeAi: { warn: 12, limit: 24 }, effects: { warn: 8, limit: 12 }, stageTiles: { warn: 16384, limit: 65536 } });
   assert.equal(view().includes("Budgets: 1 near the limit"), true);
   const clear = bag();
