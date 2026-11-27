@@ -1,5 +1,5 @@
 import { prefix } from "../../src/editor/project/home.ts";
-import { emptyBoard, playLine, testGate } from "../../src/editor/project/test-gate.ts";
+import { emptyBoard, playLine, stageNames, testGate } from "../../src/editor/project/test-gate.ts";
 import { readProject } from "../../src/project/load/index.ts";
 import { gameZip } from "../export/game.ts";
 import { openProject } from "../play-stage/project.ts";
@@ -25,7 +25,7 @@ export async function buildGame(store: MakerStore, id: string, get: (path: strin
   if (!parsed.ok) return { ok: false, lines: [parsed.message] };
   const load = readProject(parsed.files);
   const rows = await assetRows(store, prefix(id), parsed.files);
-  const gate = testGate([...load.report, ...rows], load.readOnly);
+  const gate = testGate([...load.report, ...rows], load.readOnly, stageNames(load));
   if (!gate.allowed) return { ok: false, lines: gate.lines };
   const opened = openProject(parsed.files);
   if (opened.docs === null) return { ok: false, lines: [playLine(opened.error)] };
