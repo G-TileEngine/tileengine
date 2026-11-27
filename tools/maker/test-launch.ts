@@ -1,6 +1,6 @@
 import { prefix, storedRev, type DocText } from "../../src/editor/project/home.ts";
 import { planSave } from "../../src/editor/project/save.ts";
-import { emptyBoard, playLine, stageNames, testGate } from "../../src/editor/project/test-gate.ts";
+import { testGate, playLine, emptyBoard, stageNames } from "../../src/editor/project/test-gate.ts";
 import { readProject } from "../../src/project/load/index.ts";
 import { startOf } from "../../src/editor/stage/rooms.ts";
 import { settleSession } from "../../src/project/read/session.ts";
