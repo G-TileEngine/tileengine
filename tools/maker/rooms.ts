@@ -4,6 +4,7 @@ import { addStage, deleteMap, deleteStage, docsIn, refsTo, renameDoc, setStart }
 import { resizeMap, type Drop } from "../../src/editor/stage/resize.ts";
 import { parseProject } from "./project-files.ts";
 import { commitWrites, readTree, type MakerStore } from "./store.ts";
+import { icon, thumb } from "./icons.ts";
 type Obj = Record<string, unknown>;
 type Snap = { readonly files: DocText; readonly hidden: readonly string[] };
 type Sess = { project: string; mode: "add" | "menu" | "rename" | "resize" | "ask" | "note" | null; which: "stage" | "map"; target: string; cols: number; rows: number; name: string; lines: string[]; hidden: string[]; stack: Snap[] };
@@ -54,10 +55,10 @@ export function roomTail(files: DocText, readOnly: boolean): string {
   const bag = bagOf(files); if (bag === null) return "";
   const maps = docsIn(bag, "maps").filter(({ doc }) => !sess.hidden.includes(String(doc["id"]))).map(({ doc }) => {
     const id = String(doc["id"]), name = typeof doc["name"] === "string" ? doc["name"] : "Map", used = refsTo(bag, id).length;
-    const menu = readOnly ? "" : `<button type="button" class="btn icon" data-act="r:menu:map:${esc(id)}" aria-label="Menu ${esc(name)}">⋯</button>`;
-    return `<div class="card"><div class="grow"><span class="name">${esc(name)}</span><span class="sub">${esc(String(doc["cols"]))} × ${esc(String(doc["rows"]))} · Used by ${used} ${used === 1 ? "stage" : "stages"}</span></div>${menu}</div>`;
+    const menu = readOnly ? "" : `<button type="button" class="btn icon" data-act="r:menu:map:${esc(id)}" aria-label="Menu ${esc(name)}">${icon("more")}</button>`;
+    return `<div class="card">${thumb("grid")}<div class="grow"><span class="name">${esc(name)}</span><span class="sub">${esc(String(doc["cols"]))} × ${esc(String(doc["rows"]))} · Used by ${used} ${used === 1 ? "stage" : "stages"}</span></div>${menu}</div>`;
   }).join("");
-  const add = readOnly ? "" : `<button type="button" class="card new" data-act="r:add"><span class="grow"><span class="name">+ Add stage</span></span></button>`;
+  const add = readOnly ? "" : `<button type="button" class="btn ghost stage-row" data-act="r:add">${icon("plus")}Add stage</button>`;
   const lines = sess.mode === null ? sess.lines.map((line) => `<p class="sub">${esc(line)}</p>`).join("") : "";
   return `${add}<h2>Maps</h2>${maps}${lines}`;
 }
@@ -68,14 +69,14 @@ export function roomSheet(files: DocText): string {
   if (sess.mode === "note") return `<div class="scrim"><div class="sheet" role="dialog"><h2>Can't delete</h2><p>${esc(sess.lines[0] ?? "")}</p>${close}</div></div>`;
   if (sess.mode === "add") {
     const maps = bag === null ? [] : docsIn(bag, "maps").filter(({ doc }) => !sess.hidden.includes(String(doc["id"])));
-    const uses = maps.map(({ doc }) => `<button type="button" class="btn" data-act="r:use:${esc(String(doc["id"]))}">Use map: ${esc(typeof doc["name"] === "string" ? doc["name"] : "Map")}</button>`).join("");
-    return `<div class="scrim"><div class="sheet" role="dialog"><h2>Add stage</h2><button type="button" class="btn" data-act="r:new">New map</button>${uses}${close}</div></div>`;
+    const uses = maps.map(({ doc }) => `<button type="button" class="btn ghost" data-act="r:use:${esc(String(doc["id"]))}">Use map: ${esc(typeof doc["name"] === "string" ? doc["name"] : "Map")}</button>`).join("");
+    return `<div class="scrim"><div class="sheet" role="dialog"><h2>Add stage</h2><button type="button" class="btn ghost" data-act="r:new">New map</button>${uses}${close}</div></div>`;
   }
-  if (sess.mode === "menu") return `<div class="scrim"><div class="sheet" role="dialog"><h2>${esc(sess.name || "Edit")}</h2><button type="button" class="btn" data-act="r:rename">Rename</button>${sess.which === "stage" ? `<button type="button" class="btn" data-act="r:start">Game starts here</button>` : `<button type="button" class="btn" data-act="r:resize">Resize</button>`}<button type="button" class="btn danger" data-act="r:delete">Delete</button>${close}</div></div>`;
-  if (sess.mode === "rename") return `<div class="scrim"><div class="sheet" role="dialog"><h2>Rename</h2><input class="name-field" data-room value="${esc(sess.name)}" aria-label="Name"><button type="button" class="btn" data-act="r:save-name">Save</button>${close}</div></div>`;
+  if (sess.mode === "menu") return `<div class="scrim"><div class="sheet" role="dialog"><h2>${esc(sess.name || "Edit")}</h2><button type="button" class="btn ghost" data-act="r:rename">${icon("edit")}Rename</button>${sess.which === "stage" ? `<button type="button" class="btn ghost" data-act="r:start">Game starts here</button>` : `<button type="button" class="btn ghost" data-act="r:resize">${icon("resize")}Resize</button>`}<button type="button" class="btn danger" data-act="r:delete">Delete</button>${close}</div></div>`;
+  if (sess.mode === "rename") return `<div class="scrim"><div class="sheet" role="dialog"><h2>Rename</h2><input class="name-field" data-room value="${esc(sess.name)}" aria-label="Name"><button type="button" class="btn primary" data-act="r:save-name">${icon("save")}Save</button>${close}</div></div>`;
   if (sess.mode === "ask") return `<div class="scrim"><div class="sheet" role="dialog"><h2>Resize</h2>${sess.lines.map((line) => `<p>${esc(line)}</p>`).join("")}<button type="button" class="btn danger" data-act="r:anyway">Resize anyway</button><button type="button" class="btn ghost" data-act="r:close">Cancel</button></div></div>`;
   const big = sess.cols > 256 || sess.rows > 256 ? `<p>Big maps may stutter on phones</p>` : "";
-  return `<div class="scrim"><div class="sheet" role="dialog"><h2>Resize</h2><p>Columns ${sess.cols}</p><button type="button" class="btn" data-act="r:step:c:-1" aria-label="Fewer columns">−</button><button type="button" class="btn" data-act="r:step:c:1" aria-label="More columns">+</button><p>Rows ${sess.rows}</p><button type="button" class="btn" data-act="r:step:r:-1" aria-label="Fewer rows">−</button><button type="button" class="btn" data-act="r:step:r:1" aria-label="More rows">+</button>${big}<button type="button" class="btn" data-act="r:apply">Apply</button>${close}</div></div>`;
+  return `<div class="scrim"><div class="sheet" role="dialog"><h2>Resize</h2><p>Columns ${sess.cols}</p><button type="button" class="btn ghost" data-act="r:step:c:-1" aria-label="Fewer columns">−</button><button type="button" class="btn ghost" data-act="r:step:c:1" aria-label="More columns">+</button><p>Rows ${sess.rows}</p><button type="button" class="btn ghost" data-act="r:step:r:-1" aria-label="Fewer rows">−</button><button type="button" class="btn ghost" data-act="r:step:r:1" aria-label="More rows">+</button>${big}<button type="button" class="btn primary" data-act="r:apply">Apply</button>${close}</div></div>`;
 }
 function titleOf(files: DocText): string {
   const bag = bagOf(files), path = bag === null ? null : pathOf(bag, sess.which === "map" ? "maps" : "stages", sess.target), doc = path === null || bag === null ? null : bag[path];

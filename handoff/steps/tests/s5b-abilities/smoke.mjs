@@ -70,7 +70,7 @@ try {
     await step("7 nowhere", async () => {
       if (await page.locator('[data-act="u:back"]').count()) await tap(page, "u:back");
       await page.waitForFunction(() => document.querySelector('[data-act="s:back"]') !== null, null, { timeout: 15000 });
-      await tap(page, "s:back"); await waitText(page, "+ Add unit"); await tap(page, "u:add");
+      await tap(page, "s:back"); await waitText(page, "Add unit"); await tap(page, "u:add");
       await page.waitForFunction(() => document.querySelector("[data-unit]") !== null, null, { timeout: 15000 }); await page.locator("[data-unit]").fill("Spare"); await tap(page, "u:create");
       await page.waitForFunction(() => document.querySelector("h1")?.textContent === "Spare" && document.body.innerText.includes("Place this unit on a stage to test it."), null, { timeout: 15000 });
       const shown = await page.evaluate(() => [...document.querySelectorAll("[data-act]")].some((el) => { const act = el.getAttribute("data-act") ?? ""; return act === "a:test" || act.startsWith("a:test:") || act === "s:try"; }));

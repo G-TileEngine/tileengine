@@ -1,4 +1,5 @@
 import { abilityAct, abilityOpen, abilityShut, abilityView, type AbilityPlay } from "./ability-panel.ts";
+import { icon, thumb } from "./icons.ts";
 import { addClick, addShut } from "./add-ability.ts";
 import { planSave } from "../../src/editor/project/save.ts";
 import { prefix, ulid } from "../../src/editor/project/home.ts";
@@ -6,7 +7,7 @@ import { applyRole, deleteUnit, newUnit, renameUnit, resetStat, setStat, shown, 
 import { onTeam, setTeam } from "../../src/editor/unit/team.ts";
 import { parseProject } from "./project-files.ts";
 import { commitWrites, readTree, type MakerStore } from "./store.ts";
-import { knobWidget, type KnobSpec } from "./widgets.ts";
+import { knobWidget, seg, type KnobSpec } from "./widgets.ts";
 type Obj = Record<string, unknown>;
 type DocText = Readonly<Record<string, string>>;
 type Snap = { readonly files: DocText; readonly hidden: readonly string[] };
@@ -83,14 +84,14 @@ function statBlock(unit: Obj, knob: Obj, army: Obj | null): string {
 }
 export function unitTail(files: DocText, readOnly: boolean): string {
   const bag = bagOf(files); if (bag === null) return "";
-  const cards = shown(bag, sess.hidden).map((row) => `<div class="card"><button type="button" class="grow card-hit" data-act="u:open:${esc(row.id)}"><span class="name">${esc(row.name)}</span></button>${readOnly ? "" : `<button type="button" class="btn icon" data-act="u:menu:${esc(row.id)}" aria-label="Menu ${esc(row.name)}">⋯</button>`}</div>`).join("");
-  const add = readOnly ? "" : `<button type="button" class="card new" data-act="u:add"><span class="grow"><span class="name">+ Add unit</span></span></button>`;
+  const cards = shown(bag, sess.hidden).map((row) => `<div class="card">${thumb("units")}<button type="button" class="grow card-hit" data-act="u:open:${esc(row.id)}"><span class="name">${esc(row.name)}</span></button>${readOnly ? "" : `<button type="button" class="btn icon" data-act="u:menu:${esc(row.id)}" aria-label="Menu ${esc(row.name)}">${icon("more")}</button>`}</div>`).join("");
+  const add = readOnly ? "" : `<button type="button" class="btn ghost stage-row" data-act="u:add">${icon("plus")}Add unit</button>`;
   return `<h2>Units</h2>${cards}${add}`;
 }
 function sheet(): string {
   const close = `<button type="button" class="btn ghost" data-act="u:close">Close</button>`;
   if (sess.mode === "note") return `<div class="scrim"><div class="sheet" role="dialog"><h2>Can't delete</h2>${sess.lines.map((line) => `<p>${esc(line)}</p>`).join("")}${close}</div></div>`;
-  if (sess.mode === "add" || sess.mode === "rename") return `<div class="scrim"><div class="sheet" role="dialog"><h2>${sess.mode === "add" ? "Unit name" : "Rename"}</h2><input class="name-field" data-unit value="${esc(sess.name)}" aria-label="Unit name"><p class="hint">${esc(sess.hint || "1-40 characters")}</p><button type="button" class="btn" data-act="${sess.mode === "add" ? "u:create" : "u:save-name"}">${sess.mode === "add" ? "Add" : "Save"}</button>${close}</div></div>`;
+  if (sess.mode === "add" || sess.mode === "rename") return `<div class="scrim"><div class="sheet" role="dialog"><h2>${sess.mode === "add" ? "Unit name" : "Rename"}</h2><input class="name-field" data-unit value="${esc(sess.name)}" aria-label="Unit name"><p class="hint">${esc(sess.hint || "1-40 characters")}</p><button type="button" class="btn primary" data-act="${sess.mode === "add" ? "u:create" : "u:save-name"}">${sess.mode === "add" ? "Add" : `${icon("save")}Save`}</button>${close}</div></div>`;
   if (sess.mode === "menu") return `<div class="scrim"><div class="sheet" role="dialog"><h2>${esc(sess.name || "Unit")}</h2><button type="button" class="btn danger" data-act="u:delete">Delete</button>${close}</div></div>`;
   return "";
 }
@@ -99,13 +100,13 @@ export function unitPage(files: DocText, readOnly: boolean, banner: string | nul
   const bag = bagOf(files), hit = bag === null ? null : unitDoc(bag, sess.unit); if (bag === null || hit === null) return "";
   const { knobs, presets, army } = roster(bag), roles = rolesOf(knobs, presets), name = typeof hit.doc["name"] === "string" ? hit.doc["name"] : "Unit";
   const stats = knobs.filter((knob) => knob["per_unit"] === true && knob["type"] === "slider").map((knob) => statBlock(hit.doc, knob, army)).join("");
-  const team = readOnly ? "" : `<button type="button" class="btn" data-act="t:team" aria-pressed="${onTeam(bag, sess.unit) ? "true" : "false"}" aria-label="On your team">On your team</button><p class="sub">Starts on your team's start tiles, in this order.</p>`;
+  const team = readOnly ? "" : `${seg("On your team", onTeam(bag, sess.unit), "t:team")}<p class="sub">Starts on your team's start tiles, in this order.</p>`;
   const abilities = abilityView(bag, hit.doc, readOnly);
-  const roleBtn = readOnly || roles.length === 0 ? "" : `<button type="button" class="btn" data-act="u:role">Start from a role</button>`;
-  const roleSheet = sess.mode !== "role" ? "" : `<div class="scrim"><div class="sheet" role="dialog"><h2>Start from a role</h2>${roles.map((role) => `<button type="button" class="btn" data-act="u:apply:${esc(role.id)}">${esc(role.label)}</button>`).join("")}<button type="button" class="btn ghost" data-act="u:close">Close</button></div></div>`;
+  const roleBtn = readOnly || roles.length === 0 ? "" : `<button type="button" class="btn ghost" data-act="u:role">Start from a role</button>`;
+  const roleSheet = sess.mode !== "role" ? "" : `<div class="scrim"><div class="sheet" role="dialog"><h2>Start from a role</h2>${roles.map((role) => `<button type="button" class="btn ghost" data-act="u:apply:${esc(role.id)}">${esc(role.label)}</button>`).join("")}<button type="button" class="btn ghost" data-act="u:close">Close</button></div></div>`;
   const note = banner === null ? "" : `<p class="banner bad" role="alert">${esc(banner)}</p>`;
   const rename = readOnly ? "" : `<p class="sub">Name</p><button type="button" class="btn ghost" data-act="u:rename">${esc(name)}</button>`;
-  return `<header class="topbar"><button type="button" class="btn ghost" data-act="u:back">Back</button><h1>${esc(name)}</h1></header><div class="body">${note}${rename}${roleBtn}${stats}${team}${abilities}</div>${sess.mode === "rename" ? sheet() : ""}${roleSheet}`;
+  return `<header class="topbar"><button type="button" class="btn ghost" data-act="u:back">${icon("back")}Back</button><h1>${esc(name)}</h1></header><div class="body">${note}${rename}${roleBtn}${stats}${team}${abilities}</div>${sess.mode === "rename" ? sheet() : ""}${roleSheet}`;
 }
 async function undo(io: UnitIo, host: Host): Promise<UnitHit> {
   const snap = sess.stack.pop(); if (snap === undefined) return { ...kept(host), toast: null };

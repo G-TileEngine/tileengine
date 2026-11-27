@@ -5,6 +5,7 @@ import { addCase, updateProject } from "../../src/editor/unit/add.ts";
 import { BUNDLED } from "./catalogue.ts";
 import { parseProject } from "./project-files.ts";
 import { commitWrites, readTree, type MakerStore } from "./store.ts";
+import { icon, thumb } from "./icons.ts";
 type Obj = Record<string, unknown>;
 type Host = { readonly files: DocText; readonly rev: number; readonly readOnly: boolean; readonly dirty: boolean };
 export type LevelsHit = Host & { readonly banner: string | null; readonly toast?: string | null };
@@ -21,15 +22,15 @@ export function levelsSection(files: DocText, readOnly: boolean): string {
   const bag = bagOf(files); if (bag === null) return "";
   const gate = addCase(bag, BUNDLED), head = `<h2>Levels</h2>`;
   if (readOnly || gate.mode === "newer") return `${head}<div class="card"><p>${esc(gate.mode === "newer" ? gate.text : "Made with a newer TileEngine. Open only.")}</p></div>`;
-  if (gate.mode === "older") return `${head}<div class="card"><p>${esc(gate.text)}</p>${gate.update ? `<button type="button" class="btn" data-act="l:update">Update</button>` : ""}</div>`;
-  const view = curveOf(bag); if (view === null) return `${head}<div class="card"><span class="name">Levels: Off</span><button type="button" class="btn" data-act="l:on">Turn on levels</button></div>`;
-  return `${head}<div class="card"><button type="button" class="grow card-hit" data-act="l:open"><span class="name">Levels: ${view.n} · ${view.total} XP to the top</span></button></div>`;
+  if (gate.mode === "older") return `${head}<div class="card">${thumb("levels")}<p>${esc(gate.text)}</p>${gate.update ? `<button type="button" class="btn ghost" data-act="l:update">Update</button>` : ""}</div>`;
+  const view = curveOf(bag); if (view === null) return `${head}<div class="card">${thumb("levels")}<span class="name">Levels: Off</span><button type="button" class="btn ghost" data-act="l:on">Turn on levels</button></div>`;
+  return `${head}<div class="card">${thumb("levels")}<button type="button" class="grow card-hit" data-act="l:open"><span class="name">Levels: ${view.n} · ${view.total} XP to the top</span></button></div>`;
 }
 export function levelsSheet(files: DocText, readOnly: boolean): string {
   if (!open || readOnly) return "";
   const bag = bagOf(files), view = bag === null ? null : curveOf(bag); if (view === null) return "";
   const rows = view.rows.map((value, i) => `<div data-row="${i}"><label class="sub" for="k-row-${i}">Level ${i + 1}</label><input id="k-row-${i}" class="knob" type="range" min="${view.rowMin}" max="${view.rowMax}" step="1" value="${value}" data-lvl="row-${i}" aria-label="Level ${i + 1}"><span class="sub" data-val="row-${i}">${value} XP</span></div>`).join("");
-  return `<div class="scrim" data-sheet="levels"><div class="sheet" role="dialog"><header class="topbar"><button type="button" class="btn ghost" data-act="l:close">Back</button><h1>Levels</h1></header>${slider("levels", view.levelLabel, view.n, view.levelMin, view.levelMax)}<h2>XP to reach each level</h2>${rows}<button type="button" class="btn ghost" data-act="l:reset">Reset curve</button>${slider("xp_move", view.moveLabel, view.move, view.moveMin, view.moveMax)}<button type="button" class="btn" data-act="test">▶ Test</button><button type="button" class="btn ghost" data-act="l:off">Turn off levels</button></div></div>`;
+  return `<div class="scrim" data-sheet="levels"><div class="sheet" role="dialog"><header class="topbar"><button type="button" class="btn ghost" data-act="l:close">Back</button><h1>Levels</h1></header>${slider("levels", view.levelLabel, view.n, view.levelMin, view.levelMax)}<h2>XP to reach each level</h2>${rows}<button type="button" class="btn ghost" data-act="l:reset">Reset curve</button>${slider("xp_move", view.moveLabel, view.move, view.moveMin, view.moveMax)}<button type="button" class="btn primary" data-act="test">${icon("play")}Test</button><button type="button" class="btn ghost" data-act="l:off">Turn off levels</button></div></div>`;
 }
 const keptHost = (host: Host): LevelsHit => ({ ...host, banner: null });
 const texts = (stored: DocText, before: Record<string, Obj>, after: Record<string, Obj>, slice: string): DocText => { const next: Record<string, string> = { ...stored }; for (const [path, doc] of Object.entries(after)) if (before[path] !== doc) next[path] = JSON.stringify(doc); if (slice !== "") next["catalogue/slice.json"] = slice; return next; };

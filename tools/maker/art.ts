@@ -69,7 +69,7 @@ const layerName = (root: Record<string, unknown>, assetId: string): string => { 
 export function artSheet(files: DocText, stageId: string, readOnly: boolean): string {
   if (!shown) return "";
   const parsed = parseProject(files), found = parsed.ok ? locate(parsed.files, stageId) : null, layers = found === null ? [] : layersOf(found.map);
-  const rows = layers.length === 0 ? `<p>No background yet.</p>` : layers.map((layer, i) => `<p>Layer ${i + 1} · ${esc(found === null || typeof layer["assetId"] !== "string" ? "Picture" : layerName(found.root, layer["assetId"]))}${readOnly ? "" : ` <button type="button" class="btn ghost" data-act="b:del:${i}">Remove</button>`}</p>`).join("");
-  const add = readOnly ? "" : `<label class="btn">Add picture<input type="file" data-art accept="image/png,image/jpeg,image/webp"></label>`;
+  const rows = layers.length === 0 ? `<p>No background yet.</p>` : layers.map((layer, i) => `<p>Layer ${i + 1} · ${esc(found === null || typeof layer["assetId"] !== "string" ? "Picture" : layerName(found.root, layer["assetId"]))}${readOnly ? "" : ` <button type="button" class="btn danger" data-act="b:del:${i}">Remove</button>`}</p>`).join("");
+  const add = readOnly ? "" : `<label class="btn primary">Add picture<input type="file" data-art accept="image/png,image/jpeg,image/webp"></label>`;
   return `<div class="scrim"><div class="sheet" role="dialog"><h2>Background</h2>${note === null ? "" : `<p>${esc(note)}</p>`}${rows}${lines.map((line) => `<p>${esc(line)}</p>`).join("")}${add}<button type="button" class="btn ghost" data-act="b:close">Close</button></div></div>`;
 }

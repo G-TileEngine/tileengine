@@ -14,7 +14,7 @@ export type AddHit = { readonly keep: true } | { readonly bag: Record<string, Ob
 const binsOf = (bag: Obj, unit: Obj) => byGoal(addable(BUNDLED, WIRED, unit, bag));
 function offer(gate: AddCase): string {
   if (gate.mode !== "older") return "";
-  const act = gate.update ? `<button type="button" class="btn" data-act="g:update">Update</button><button type="button" class="btn ghost" data-act="g:close">Not now</button>` : `<button type="button" class="btn ghost" data-act="g:close">Close</button>`;
+  const act = gate.update ? `<button type="button" class="btn primary" data-act="g:update">Update</button><button type="button" class="btn ghost" data-act="g:close">Not now</button>` : `<button type="button" class="btn ghost" data-act="g:close">Close</button>`;
   return `<div class="scrim" data-sheet="offer"><div class="sheet" role="dialog"><h2>Browse by goal</h2><p>${esc(gate.text)}</p>${act}</div></div>`;
 }
 function goals(bag: Obj, unit: Obj): string {
@@ -33,7 +33,7 @@ export function addChrome(bag: Obj, unit: Obj, readOnly: boolean): string {
   const gate = addCase(bag, BUNDLED);
   if (gate.mode === "newer") return `<p class="hint">${esc(gate.text)}</p>`;
   const sheet = view === "offer" ? offer(gate) : view === "goals" ? goals(bag, unit) : view === "cards" ? cards(bag, unit) : "";
-  return `<button type="button" class="btn" data-act="g:open">+ Add ability</button>${sheet}`;
+  return `<button type="button" class="btn ghost" data-act="g:open">+ Add ability</button>${sheet}`;
 }
 export function addClick(act: string, bag: Obj, unitId: string, setupId: string): AddHit {
   const gate = addCase(bag, BUNDLED);
