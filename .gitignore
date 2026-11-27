@@ -12,3 +12,4 @@ tools/apk/android
 tools/apk/artifacts
 *.jks
 *.keystore
+tools/art-bake/out

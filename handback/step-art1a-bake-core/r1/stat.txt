@@ -1,0 +1,10 @@
+ .gitignore                      |   1 +
+ tests/tools/art1a-bake.test.ts  | 125 ++++++++++++++++++++++++++++++++++++++++
+ tools/art-bake/bake.ts          |  46 +++++++++++++++
+ tools/art-bake/package.json     |   7 +++
+ tools/art-bake/palette.json     |  45 +++++++++++++++
+ tools/art-bake/palette.ts       |  21 +++++++
+ tools/art-bake/png.ts           |  21 +++++++
+ tools/art-bake/recipes/crate.ts |  45 +++++++++++++++
+ tools/art-bake/sprite.ts        |  75 ++++++++++++++++++++++++
+ 9 files changed, 386 insertions(+)
