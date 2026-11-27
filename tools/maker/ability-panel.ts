@@ -6,6 +6,7 @@ import { WIRED } from "../../src/rules/behaviours/wired.ts";
 import { addChrome } from "./add-ability.ts";
 import { diagramHtml, diagramOf } from "./unit-diagram.ts";
 import { knobWidget, type KnobSpec } from "./widgets.ts";
+import { icon } from "./icons.ts";
 type Obj = Record<string, unknown>;
 const isObj = (v: unknown): v is Obj => typeof v === "object" && v !== null && !Array.isArray(v);
 const list = (v: unknown): readonly unknown[] => (Array.isArray(v) ? v : []);
@@ -35,10 +36,10 @@ function rowsOf(bag: Record<string, Obj>, unit: Obj, slice: Obj, skip: string): 
 const fxRow = (bag: Record<string, Obj>, behaviourId: string, answers: Obj): string => {
   if (aimKind(behaviourId) === undefined) return "";
   const cur = isObj(answers["effect"]) && answers["effect"]["source"] !== "default" && typeof answers["effect"]["value"] === "string" ? answers["effect"]["value"] : "none";
-  const saved = effectRows(bag).map((row) => `<button type="button" class="choice" data-act="a:fx:${esc(row.id)}" aria-pressed="${cur === row.id}">${esc(row.name)}</button>`).join("");
+  const saved = effectRows(bag).map((row) => `<button type="button" class="pick" data-act="a:fx:${esc(row.id)}" aria-pressed="${cur === row.id}">${esc(row.name)}</button>`).join("");
   const built = builtinRows(bag, BUNDLED, behaviourId);
-  const extra = built.length === 0 ? "" : `<p class="row">Built-in</p>${built.map((row) => `<button type="button" class="choice" data-act="a:fx:${esc(row.id)}" aria-pressed="${isBuiltin(cur, row.id)}">${esc(row.name)}</button>`).join("")}`;
-  return `<p class="row">Effect</p><button type="button" class="choice" data-act="a:fx:none" aria-pressed="${cur === "none"}">None</button>${saved}${extra}`;
+  const extra = built.length === 0 ? "" : `<p class="row">Built-in</p>${built.map((row) => `<button type="button" class="pick" data-act="a:fx:${esc(row.id)}" aria-pressed="${isBuiltin(cur, row.id)}">${esc(row.name)}</button>`).join("")}`;
+  return `<p class="row">Effect</p><button type="button" class="pick" data-act="a:fx:none" aria-pressed="${cur === "none"}">None</button>${saved}${extra}`;
 };
 export function abilityView(bag: Record<string, Obj>, unit: Obj, readOnly: boolean): string {
   const slice = bag["catalogue/slice.json"]; if (!isObj(slice)) return "";
@@ -54,11 +55,11 @@ export function abilityView(bag: Record<string, Obj>, unit: Obj, readOnly: boole
     const setup = bag[`setups/${sid}.json`]; if (!isObj(setup) || typeof setup["behaviourId"] !== "string") return [];
     const model = panelOf(slice, WIRED, setup["behaviourId"], isObj(setup["answers"]) ? setup["answers"] : {});
     if (model.role !== "card") return [];
-    const test = placed === null ? "" : `<button type="button" class="btn" data-act="a:test:${esc(sid)}">Test</button>`;
-    const drop = readOnly ? "" : `<button type="button" class="btn" data-act="a:drop:${esc(sid)}" aria-label="Remove ${esc(model.name)}">×</button>`;
+    const test = placed === null ? "" : `<button type="button" class="btn ghost" data-act="a:test:${esc(sid)}">${icon("play")}Test</button>`;
+    const drop = readOnly ? "" : `<button type="button" class="btn danger" data-act="a:drop:${esc(sid)}" aria-label="Remove ${esc(model.name)}">×</button>`;
     return [`<div class="card" data-role="card"><button type="button" class="grow card-hit" data-act="a:open:${esc(sid)}"><span class="name">${esc(model.name)}</span></button>${test}${drop}</div>`];
   }).join("");
-  const whole = placed === null ? `<p>Place this unit on a stage to test it.</p>` : `<button type="button" class="btn" data-act="a:test">▶ Test</button>`;
+  const whole = placed === null ? `<p>Place this unit on a stage to test it.</p>` : `<button type="button" class="btn primary" data-act="a:test">${icon("play")}Test</button>`;
   return `<h2>Abilities</h2>${cards}${addChrome(bag, unit, readOnly)}${whole}`;
 }
 function clamp(knob: PanelKnob, value: number): number {
