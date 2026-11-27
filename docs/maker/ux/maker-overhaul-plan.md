@@ -106,11 +106,11 @@ UX and the EA write this **placement card** before any step guide is written. Co
 2. ~~Art source~~: **ruled 27 Nov 03:28, corrected 03:34.** The goal is a high-quality default style made by code, with the method open. ART0–ART2 go before F3b (§ (g)). This raises decisions 5–7.
 3. ~~More attacks~~: **ruled 03:53: keep two for now.** F5b is dropped. EA-4's sizing stays on file for later.
 4. ~~11c1~~: **ruled 03:53: yes.** 11c1 finishes and merges, then F0c (CN-029 and the pools gate).
-5. **Art method, picked by eye from the ART0 side-by-side sheet:** M1 3D pre-render, M2 height-lit 2D or M3 better 2D painting. UX leans M2 if it looks as good as M1. Any library a method needs lives only in `tools/art-bake/`, never in the engine or games. § (g).
+5. ~~Art method~~: **ruled 27 Nov 20:14 and 20:16 London (via CoS).** Style B r6b is the best so far and the baseline, though it still needs more rounds (20:14). The method is to port the Python bake recipes to JavaScript in `tools/art-bake/`, so the maker draws the art from recipes (20:16). This replaces M1, M2 and M3, and the 04:57 "M3" card is void. Building on r6b now and swapping in better art later is CoS's recommendation, not a CEO ruling. The details are in `docs/maker/art-style.md`. The EA re-sizes ART1a and ART1b (L73, L147–L150) against it. § (g).
 6–7. ~~Locked set and interim swatches~~: **ruled 03:53: "wait for art to be done first".** No interim swatches or discs, and the locked 9 Nov set is not used as the default (it stays as a reference). The map gets pictures only when the new art is done (F3b after ART2). Until then it keeps today's look under the F1 kit.
 8. ~~APK export~~: **ruled 27 Nov 09:40 (via CoS); follow-ups confirmed 13:57 London.** No APK export from the official engine: Build game (step 36) gives a browser / io-site zip and a store wrap-it-yourself guide; TileEngine never builds, signs or uploads an APK, AAB or IPA. Offline includes opening `index.html` from disk, so the export must be self-contained. The 11b debug APK and a private maker APK (A1/A3) stay internal for the CEO's phone tests, never shipped. Import B1 and backup B2 move to step 36. This is about the engine not exporting APKs, not about the engine app's own store build.
 
-**Still open:** 5 only, which waits for the ART0 sheet.
+**Still open:** none. The tile size (r6b's main bake is 48 px, the plan says 32 px) stays at 32 px unless the CEO rules otherwise.
 
 ## (g) Art quality overhaul: ART0–ART2, before F3b (CEO rulings 27 Nov 03:28 and 03:34)
 **Goal:** a **high-quality default art style, made by code**, for the engine and the games made with it.
