@@ -38,8 +38,14 @@ export function crate(tile: Tile): Grid {
   const ht = tile === 48 ? 17 : 11;
   const hf = tile === 48 ? 21 : 14;
   const g = newGrid(w, ht + hf, "crate");
-  for (let y = 0; y < ht; y++) for (let x = 0; x < w; x++) put(g, x, y, "crate", lidStep(tile, w, ht, b, x, y));
-  for (let y = ht; y < ht + hf; y++) for (let x = 0; x < w; x++) put(g, x, y, "crate", frontStep(tile, w, hf, b, x, y - ht));
-  if (tile === 48) for (const [y, x] of [[ht + 2, 1], [ht + 2, w - 2], [ht + hf - 2, 1], [ht + hf - 2, w - 2], [1, 1], [1, w - 2]] as const) put(g, x, y, "steel8", x < w / 2 ? 5 : 3);
+  for (let y = 0; y < ht; y++) {
+    for (let x = 0; x < w; x++) put(g, x, y, "crate", lidStep(tile, w, ht, b, x, y));
+  }
+  for (let y = ht; y < ht + hf; y++) {
+    for (let x = 0; x < w; x++) put(g, x, y, "crate", frontStep(tile, w, hf, b, x, y - ht));
+  }
+  if (tile === 48) {
+    for (const [y, x] of [[ht + 2, 1], [ht + 2, w - 2], [ht + hf - 2, 1], [ht + hf - 2, w - 2], [1, 1], [1, w - 2]] as const) put(g, x, y, "steel8", x < w / 2 ? 5 : 3);
+  }
   return g;
 }

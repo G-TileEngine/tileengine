@@ -20,30 +20,34 @@ export function gridSprite(grid: Grid): Sprite {
   const h = grid.h + 2;
   const mat: (string | null)[] = Array.from({ length: w * h }, () => null);
   const step: number[] = Array.from({ length: w * h }, () => 0);
-  for (let y = 0; y < grid.h; y++) for (let x = 0; x < grid.w; x++) {
-    const m = grid.mat[y * grid.w + x] ?? null;
-    if (m === null) continue;
-    const top = ramp(m).length - 1;
-    const i = (y + 1) * w + x + 1;
-    mat[i] = m;
-    step[i] = Math.min(Math.max(grid.step[y * grid.w + x] ?? 0, 0), top);
+  for (let y = 0; y < grid.h; y++) {
+    for (let x = 0; x < grid.w; x++) {
+      const m = grid.mat[y * grid.w + x] ?? null;
+      if (m === null) continue;
+      const top = ramp(m).length - 1;
+      const i = (y + 1) * w + x + 1;
+      mat[i] = m;
+      step[i] = Math.min(Math.max(grid.step[y * grid.w + x] ?? 0, 0), top);
+    }
   }
   return { w, h, foot: [Math.floor(w / 2 + 0.5), h - 1], mat, step };
 }
 
 export function outlineOf(s: Sprite): (string | null)[] {
   const out: (string | null)[] = Array.from({ length: s.mat.length }, () => null);
-  for (let y = 0; y < s.h; y++) for (let x = 0; x < s.w; x++) {
-    const i = y * s.w + x;
-    if ((s.mat[i] ?? null) !== null) continue;
-    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
-      const nx = x + dx;
-      const ny = y + dy;
-      if (nx < 0 || ny < 0 || nx >= s.w || ny >= s.h) continue;
-      const nb = s.mat[ny * s.w + nx] ?? null;
-      if (nb === null) continue;
-      out[i] = nb;
-      break;
+  for (let y = 0; y < s.h; y++) {
+    for (let x = 0; x < s.w; x++) {
+      const i = y * s.w + x;
+      if ((s.mat[i] ?? null) !== null) continue;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+        const nx = x + dx;
+        const ny = y + dy;
+        if (nx < 0 || ny < 0 || nx >= s.w || ny >= s.h) continue;
+        const nb = s.mat[ny * s.w + nx] ?? null;
+        if (nb === null) continue;
+        out[i] = nb;
+        break;
+      }
     }
   }
   return out;

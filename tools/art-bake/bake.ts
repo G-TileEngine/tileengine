@@ -24,19 +24,21 @@ export function bakeAll(outDir: string, tiles: readonly Tile[] = DEFAULT_TILES):
   mkdirSync(outDir, { recursive: true });
   const rows: ManifestRow[] = [];
   const hash = createHash("sha256");
-  for (const name of Object.keys(RECIPES)) for (const tile of tiles) {
-    const { sprite, rgba, sha256 } = bakeOne(name, tile);
-    const file = `${name}-${tile}.png`;
-    writeFileSync(join(outDir, file), encodePng(sprite.w, sprite.h, rgba));
-    hash.update(rgba);
-    rows.push({ name, tile, file, w: sprite.w, h: sprite.h, foot: sprite.foot, sha256 });
+  for (const name of Object.keys(RECIPES)) {
+    for (const tile of tiles) {
+      const { sprite, rgba, sha256 } = bakeOne(name, tile);
+      const file = `${name}-${tile}.png`;
+      writeFileSync(join(outDir, file), encodePng(sprite.w, sprite.h, rgba));
+      hash.update(rgba);
+      rows.push({ name, tile, file, w: sprite.w, h: sprite.h, foot: sprite.foot, sha256 });
+    }
   }
   writeFileSync(join(outDir, "manifest.json"), `${JSON.stringify({ style: "B r6b", hash: hash.digest("hex"), sprites: rows }, null, 1)}\n`);
   return rows;
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const outDir = process.argv[2] ?? "tools/art-bake/out";
+  const outDir = process.argv[2] ?? fileURLToPath(new URL("./out", import.meta.url));
   const args = process.argv.slice(3);
   const tiles = args.length === 0 ? DEFAULT_TILES : args.map((arg) => {
     if (arg !== "32" && arg !== "48") throw new Error(`art-bake: tile must be 32 or 48 ("${arg}")`);
