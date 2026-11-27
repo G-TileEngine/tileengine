@@ -1,6 +1,6 @@
 # TileEngine — STATES (mode, play, overlay and battle state tables)
 
-Owner: Engine Architect. Status: **v1.1, 2026-11-09 (Europe/London, UTC+0)** (kit-2: CEO mode order, CN-001 integer ms, untargeted `CHOOSE_ACTION`, PROPOSED idle/TD notes). The mode list, the play sub-states, the overlay list and the grid-tactics phase list are **settled** (not PROPOSED). Event names marked *(EA name)* are the Architect's naming and may be renamed by Change Notice before the step that implements them.
+Owner: Engine Architect. Status: **v1.1, 2026-11-09 (Europe/London, UTC+0)** (kit-2: CEO mode order, CN-001 integer ms, untargeted `CHOOSE_ACTION`, PROPOSED idle/TD notes). The mode list, the play sub-states, the overlay list and the grid-tactics phase list are **settled** (not PROPOSED). Event names marked *(EA name)* are the Architect's naming and may be renamed by Change Notice before the step that implements them. **v1.2 draft, 2026-11-27:** adds the PROPOSED boot splash (§1.0, roadmap step 35s); nothing in §1.0 is settled or implemented.
 
 **Credit:** the mode list, overlays-as-a-stack, play sub-states, the tactics flow (events, from/to, "sets"), the flow/input split, the shared table and the (now parked) RPG/RTS notes all come from **Modes Designer** (`/workspace/tileengine-modes/STATES-input-for-architect.md`, 2026-11-09; constraints M1–M9 from `MODES-v1.md`). The idle-RPG and tower-defence notes in §5 use Modes Designer's final event names from `/workspace/tileengine-modes/STATES-idle-td-events.md` and the hooks of `MODES-v2.md` (2026-11-09).
 
@@ -23,8 +23,8 @@ Implemented by: `step-01-state-tables` (shared table + tactics flow + tactics in
 ## 1. Engine modes (top-level machine)
 | Mode | What it is | In an exported game? |
 |---|---|---|
-| `boot` | asset load and project open | yes |
-| `title` | editor: project picker / recent games. Exported game: the game's own title screen | yes |
+| `boot` | asset load and project open. Exported game: also the splash logos (§1.0, PROPOSED) | yes |
+| `title` | editor: project picker / recent games. Exported game: the game's own title screen, its main menu (Play and Settings, CEO ask; Settings as an overlay is EA, PROPOSED; §1.0) | yes |
 | `wizard` | new-project wizard | no (editor only) |
 | `editor` | the editor, including the Stage/Level Designer | no |
 | `preview` | the runtime with the dev overlay (§1.2 of ARCHITECTURE §4) | no |
@@ -50,6 +50,22 @@ Mode transitions *(EA names; implemented in a later step, `step-NN-mode-table`)*
 
 The exported game's audit (ARCHITECTURE §2) checks that `wizard`, `editor`, `preview`, `render` code is absent; the mode table rows for them are data only.
 
+### 1.0 Boot splash *(PROPOSED, roadmap step 35s)*
+Exported games only. **CEO ask (2026-11-27 14:38 London, via CoS):** tap the app icon, then the TileEngine logo, then the creator's logo (optional), then `title` (the game's main menu, with options like Play and Settings), then Play (`START_PLAY`) to `play.loading` and `play.running`, with assets loading behind the logos. **Everything else in this section is *(EA, PROPOSED)***: the states, the events and the rules below. In an exported game `boot` starts at `boot.splash` on logo 1; the editor keeps `TITLE` from plain `boot`.
+
+| event *(EA name)* | from | to |
+|---|---|---|
+| `NEXT_LOGO` | boot.splash | boot.splash (next logo in the list) |
+| `LOGOS_DONE` | boot.splash | boot.wait |
+| `TITLE` | boot.wait | title |
+
+- *(EA, PROPOSED)* **The logo list is data.** The runtime builds it at boot: the TileEngine logo, then the creator's logo when the project sets one (field shape: DSK, by Change Notice). The runtime picks `NEXT_LOGO` or `LOGOS_DONE` from the list, so each key stays unique and `xGo` has no guards.
+- **Assets load behind the logos** (CEO ask). *(EA, PROPOSED)* The boot preload starts with logo 1; logos never wait for assets. `boot.wait` passes at once when the preload is ready, and `TITLE` fires only then. What the preload covers (the whole project or the first stage) is sized in the step guide.
+- *(EA, PROPOSED)* **No second wait.** `play.loading` reads the same cache and loads only what is still missing, so after a normal boot it passes at once.
+- *(EA, PROPOSED)* **One clock.** Each logo shows for a time from project data (default TBD, UX), counted on the engine's frame clock, never `setTimeout`.
+- *(EA, PROPOSED)* **Test and preview skip it.** The maker's Test and `preview` open the stage directly, with no splash and no title.
+- *(EA, PROPOSED)* From `title`, Settings opens the settings overlay (§2); adding `title` as an overlay host needs a Change Notice when the step lands. `EXIT_PLAY` returns to `title`, never to the splash.
+
 ### 1.1 `play` sub-states
 `play.loading` → `play.running` → `play.result` (`outcome` = `win` | `lose` | `draw`; BTF now allows draws).
 - In **grid tactics**, "running" is the whole tactics battle machine (§3): `BATTLE_READY` goes from `play.loading` straight to `deploy`, and `CHECK_END` goes to `play.result`. Any tactics phase counts as running (`isRunning(phase)` is a lookup, not a stored phase).
@@ -58,7 +74,7 @@ The exported game's audit (ARCHITECTURE §2) checks that `wizard`, `editor`, `pr
 - Preview runs the same play machine inside `preview`.
 
 ## 2. Overlays: a stacked table, not modes
-Pause, settings and save/load sit **over** `editor`, `preview` and `play`. They are a stack, so pause → settings → back to pause works.
+Pause, settings and save/load sit **over** `editor`, `preview` and `play`. Settings also sits over an exported game's `title` (§1.0, EA, PROPOSED). They are a stack, so pause → settings → back to pause works.
 
 | event | from | to |
 |---|---|---|
