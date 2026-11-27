@@ -1,8 +1,5 @@
 import type { ProjectStore, ReportRow } from "./types.ts";
-/** Local copies of CN-029's three types. They become one import from core-types when CN-029 lands. */
-export type BudgetKey = "units" | "activeAi" | "effects" | "stageTiles";
-export type BudgetLimit = { readonly warn: number; readonly limit: number };
-export type ProjectBudgets = Partial<Readonly<Record<BudgetKey, BudgetLimit>>>;
+import type { BudgetKey, BudgetLimit, ProjectBudgets } from "../../types/core-types.ts";
 export type BudgetUse = { readonly stageId: string; readonly budget: BudgetKey; readonly used: number; readonly warn: number; readonly limit: number; readonly w?: number; readonly h?: number };
 const KEYS: readonly BudgetKey[] = ["units", "activeAi", "effects", "stageTiles"];
 type Obj = Record<string, unknown>;

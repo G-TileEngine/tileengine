@@ -1,4 +1,5 @@
-import { budgetUse, readProject, type BudgetKey, type BudgetUse } from "../../src/project/load/index.ts";
+import { budgetUse, readProject, type BudgetUse } from "../../src/project/load/index.ts";
+import type { BudgetKey } from "../../src/types/core-types.ts";
 import { parseProject } from "./project-files.ts";
 const KEYS: readonly BudgetKey[] = ["units", "activeAi", "effects", "stageTiles"];
 const LABEL: Readonly<Record<BudgetKey, string>> = { units: "Units", activeAi: "Active AI", effects: "Effects", stageTiles: "Stage size" };

@@ -1,5 +1,5 @@
 import { builtinFx } from "../../src/project/builtin-fx.ts";
-import { readProject, type ProjectFiles, type ProjectStore } from "../../src/project/load/index.ts";
+import { PLAY_LIMITS, readProject, type ProjectFiles, type ProjectStore } from "../../src/project/load/index.ts";
 import { readMap, readStage } from "../../src/project/read/index.ts";
 import { createGrid } from "../../src/core/grid/index.ts";
 import { arrival } from "../../src/rules/session/links.ts";
@@ -63,7 +63,7 @@ function pickFx(store: ProjectStore, id: string, setup: Obj, fxOf: Record<string
 export function playDocsOf(store: ProjectStore, stageId?: string): PlayOut {
   const cat = store.slice, root = isObj(store.manifest["project"]) ? store.manifest["project"] : {}, sess = isObj(root["session"]) ? root["session"] : null, start = sess !== null && typeof sess["start"] === "string" ? sess["start"] : undefined;
   const stage = store.stages[stageId ?? start ?? strs(root["stages"])[0] ?? ""] ?? Object.values(store.stages)[0]; if (stage === undefined) throw new Error("play: stage");
-  const core = readStage(stage, { picks: 0, waveUnits: 0 }); if (!core.ok) throw new Error("play: stage");
+  const core = readStage(stage, PLAY_LIMITS); if (!core.ok) throw new Error("play: stage");
   const map = store.maps[typeof stage["mapRef"] === "string" ? stage["mapRef"] : ""]; if (map === undefined) throw new Error("play: map");
   const army = Object.values(store.setups).find((s) => s["behaviourId"] === "unit-roster"); if (army === undefined) throw new Error("play: army");
   const hp0 = must(num(knob(army, cat, "unit-roster", "unit_hp")), "play: army"), atk0 = must(num(knob(army, cat, "unit-roster", "unit_atk")), "play: army");
@@ -110,7 +110,7 @@ export const bundledDocs = (): NonNullable<ReturnType<typeof openBundled>["docs"
 export function arriveIn(files: ProjectFiles, fromId: string | null, toId: string, party: SessionParty): ReturnType<typeof openProject> {
   if (fromId === "") throw new Error("play: stage id");
   let path = ""; for (const [key, doc] of Object.entries(files)) if (key.startsWith("stages/") && isObj(doc) && doc["id"] === toId) path = key;
-  const stage = path === "" ? undefined : files[path], read = stage === undefined ? null : readStage(stage, { picks: 0, waveUnits: 0 });
+  const stage = path === "" ? undefined : files[path], read = stage === undefined ? null : readStage(stage, PLAY_LIMITS);
   if (read === null || !read.ok) return openProject(files, toId);
   let mapDoc: unknown; for (const [key, doc] of Object.entries(files)) if (key.startsWith("maps/") && isObj(doc) && doc["id"] === read.doc.mapRef) mapDoc = doc;
   const map = mapDoc === undefined ? null : readMap(mapDoc), tiles = installOne(TERRAIN, {}).out?.tiles, grid = map !== null && map.ok && tiles !== undefined ? createGrid(map.doc, tiles) : null;

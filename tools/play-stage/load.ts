@@ -3,6 +3,7 @@ import type { WinRule } from "../../src/rules/battle/win.ts";
 import type { LevelSetup } from "../../src/rules/levels/index.ts";
 import type { SimInput } from "../../src/sim/types.ts";
 import type { CoreLink, CoreTileType } from "../../src/types/core-types.ts";
+import { PLAY_LIMITS } from "../../src/project/load/index.ts";
 
 export const TILE = 16;
 export const TEAM = { player: 0x2f6fad, enemy: 0xb23b32, neutral: 0xc6a15a } as const;
@@ -24,5 +25,5 @@ export type PlayDocs = { readonly manifest: unknown; readonly map: unknown; read
 export function docsToInput(docs: PlayDocs & { readonly talk: Readonly<Record<string, string>>; readonly chosen: readonly string[]; readonly tiles: readonly CoreTileType[] }): { input: SimInput; talk: Readonly<Record<string, string>> } {
   const stage = docs.stage, fromStage = typeof stage === "object" && stage !== null && "seed" in stage && typeof stage.seed === "number" ? stage.seed : undefined, hostSeed = docs.hostSeed ?? fromStage;
   if (hostSeed === undefined) throw new Error("play: seed");
-  return { input: { manifest: docs.manifest, map: docs.map, stage: docs.stage, rules: docs.rules, tiles: docs.tiles, chosen: docs.chosen, stageLimits: { picks: 0, waveUnits: 0 }, hostSeed, engineVersion: "0.0.0", projectHash: "demo", ...(docs.levels === undefined ? {} : { levels: docs.levels }) }, talk: docs.talk };
+  return { input: { manifest: docs.manifest, map: docs.map, stage: docs.stage, rules: docs.rules, tiles: docs.tiles, chosen: docs.chosen, stageLimits: PLAY_LIMITS, hostSeed, engineVersion: "0.0.0", projectHash: "demo", ...(docs.levels === undefined ? {} : { levels: docs.levels }) }, talk: docs.talk };
 }

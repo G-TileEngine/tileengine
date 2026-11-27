@@ -1,4 +1,6 @@
 import type { ReportRow } from "../../project/load/types.ts";
+import { LIMITS, PLAY_LIMITS } from "../../project/load/index.ts";
+import { readStage } from "../../project/read/index.ts";
 
 /** Hard codes from S1 §8, one sentence each. Warnings are not in this table. */
 const SAY: Readonly<Record<string, string>> = {
@@ -43,9 +45,26 @@ export function stageNames(load: { readonly project: { readonly stages: Readonly
   for (const [id, stage] of Object.entries(stages)) names[id] = typeof stage["name"] === "string" ? stage["name"] : id;
   return names;
 }
+export const poolLine = (stage: string): string => `${stage}: enemies picked at random or sent in waves can't be played yet. Use a fixed enemy list.`;
+export function poolLines(load: { readonly project: { readonly stages: Readonly<Record<string, Readonly<Record<string, unknown>>>> } | null }): readonly string[] {
+  const lines: string[] = [];
+  const stages = load.project === null ? undefined : load.project.stages;
+  if (stages === undefined) {
+    return lines;
+  }
+  const names = stageNames(load);
+  for (const [id, stage] of Object.entries(stages)) {
+    const readerOk = readStage(stage, LIMITS).ok;
+    const playOk = readStage(stage, PLAY_LIMITS).ok;
+    if (readerOk && !playOk) {
+      lines.push(poolLine(names[id] ?? id));
+    }
+  }
+  return lines;
+}
 /** Hard rows block. Warnings do not. A read-only load blocks even when the report is empty. */
-export function testGate(report: readonly ReportRow[], readOnly: boolean, names: Readonly<Record<string, string>> = {}): TestGate {
-  const lines = report.filter((row) => row.severity === "hard").map((row) => (row.code === "budgetOver" ? overLine(row, names) : sentence(row)));
+export function testGate(report: readonly ReportRow[], readOnly: boolean, names: Readonly<Record<string, string>> = {}, more: readonly string[] = []): TestGate {
+  const lines = report.filter((row) => row.severity === "hard").map((row) => (row.code === "budgetOver" ? overLine(row, names) : sentence(row))).concat(more);
   if (!readOnly && lines.length === 0) return { allowed: true };
   return { allowed: false, lines: lines.length > 0 ? lines : [SAY["formatNewer"] ?? "Made with a newer TileEngine. Open only."] };
 }

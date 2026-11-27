@@ -6,7 +6,9 @@ import { knownKind, type Doc, type ProjectFiles, type ProjectLoad, type ProjectS
 
 type Obj = Record<string, unknown>;
 const isObj = (v: unknown): v is Obj => typeof v === "object" && v !== null && !Array.isArray(v);
-const LIMITS = { picks: 8, waveUnits: 16 } as const;
+export const LIMITS = { picks: 8, waveUnits: 16 } as const;
+/** Play places fixed enemy lists only. */
+export const PLAY_LIMITS = { picks: 0, waveUnits: 0 } as const;
 const row = (code: string, severity: Severity, path: string, detail?: string): ReportRow => (detail === undefined ? { code, severity, path } : { code, severity, path, detail });
 const sort = (rows: readonly ReportRow[]): ReportRow[] => [...rows].sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : a.code < b.code ? -1 : a.code > b.code ? 1 : 0));
 const idOf = (doc: Obj): string | null => (typeof doc["id"] === "string" ? doc["id"] : null);
