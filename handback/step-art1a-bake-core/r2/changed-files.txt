@@ -1,0 +1,9 @@
+M	.gitignore
+A	tests/tools/art1a-bake.test.ts
+A	tools/art-bake/bake.ts
+A	tools/art-bake/package.json
+A	tools/art-bake/palette.json
+A	tools/art-bake/palette.ts
+A	tools/art-bake/png.ts
+A	tools/art-bake/recipes/crate.ts
+A	tools/art-bake/sprite.ts
