@@ -29,6 +29,7 @@ input.name-field { width: 100%; box-sizing: border-box; min-height: 48px; border
 .dot { display: inline-block; width: 8px; height: 8px; margin-left: 6px; border-radius: 999px; background: var(--accent); }
 .project .sheet { position: static; width: auto; max-height: none; box-shadow: none; padding: 0; border-radius: 0; background: transparent; }
 .project .sheet p { margin: 0; }
+.project .sheet { flex-shrink: 0; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 @media (min-width: 421px) {
   body { min-height: 100dvh; display: grid; place-items: center; }

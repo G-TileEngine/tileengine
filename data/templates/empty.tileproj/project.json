@@ -10,7 +10,13 @@
     "copiedFrom": null,
     "catalogueRev": 30,
     "settings": {
-      "wrapEdges": false
+      "wrapEdges": false,
+      "budgets": {
+        "units": { "warn": 40, "limit": 80 },
+        "activeAi": { "warn": 12, "limit": 24 },
+        "effects": { "warn": 8, "limit": 12 },
+        "stageTiles": { "warn": 16384, "limit": 65536 }
+      }
     },
     "stages": [
       "stage_01JDEM00000000000000000003"

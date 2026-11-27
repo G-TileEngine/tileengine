@@ -1,5 +1,6 @@
 import { readManifest, readMap, readSetup, readStage, readUnit, type ReadResult } from "../read/index.ts";
 import { mapEntryDrops, placementDrops } from "./drops.ts";
+import { budgetRows } from "./budgets.ts";
 import { migrateProject, versionRows } from "./migrate.ts";
 import { knownKind, type Doc, type ProjectFiles, type ProjectLoad, type ProjectStore, type ReportRow, type Severity } from "./types.ts";
 
@@ -120,5 +121,6 @@ export function readProject(files: ProjectFiles): ProjectLoad {
   rows.push(...placementDrops(stages, stageAt, maps, slice), ...mapEntryDrops(maps, mapAt));
   const hard = rows.some((r) => r.severity === "hard");
   const store: ProjectStore = { manifest, slice, maps, stages, units, setups, effects, unknownFiles };
+  rows.push(...budgetRows(store)); // budgetOver blocks only through testGate, never ok (E9)
   return { ok: !hard, readOnly: false, project: store, report: sort(rows) };
 }

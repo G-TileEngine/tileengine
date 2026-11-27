@@ -1,6 +1,6 @@
 import { prefix, storedRev, type DocText } from "../../src/editor/project/home.ts";
 import { planSave } from "../../src/editor/project/save.ts";
-import { testGate, playLine, emptyBoard } from "../../src/editor/project/test-gate.ts";
+import { emptyBoard, playLine, stageNames, testGate } from "../../src/editor/project/test-gate.ts";
 import { readProject } from "../../src/project/load/index.ts";
 import { startOf } from "../../src/editor/stage/rooms.ts";
 import { settleSession } from "../../src/project/read/session.ts";
@@ -28,7 +28,7 @@ function resumed(files: Parameters<typeof openProject>[0], save: SessionSave): {
 async function play(input: LaunchBag, text: DocText): Promise<Launch> {
   const parsed = parseProject(text);
   if (!parsed.ok) return fail([parsed.message], text, 0);
-  const load = readProject(parsed.files), rows = await assetRows(input.store, prefix(input.id), parsed.files), gate = testGate([...load.report, ...rows], load.readOnly), rev = storedRev(parsed.files);
+  const load = readProject(parsed.files), rows = await assetRows(input.store, prefix(input.id), parsed.files), gate = testGate([...load.report, ...rows], load.readOnly, stageNames(load)), rev = storedRev(parsed.files);
   if (!gate.allowed) return fail(gate.lines, text, rev);
   const opened = input.resume === undefined ? (input.stageId === undefined ? openProject(parsed.files) : openProject(parsed.files, input.stageId)) : resumed(parsed.files, input.resume);
   if (opened.docs === null) return fail([playLine(opened.error)], text, rev);
