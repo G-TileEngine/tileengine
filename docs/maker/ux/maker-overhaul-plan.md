@@ -97,7 +97,8 @@ UX and the EA write this **placement card** before any step guide is written. Co
 ## (e) In-flight and queued work
 - **11c1 (with ChatA now):** let it finish, and merge after QA. About 90% of it is engine rules (budgets read from project data, blocking Test and Build over a hard limit), which the overhaul doesn't change. Its one maker piece is a new Budgets row on the project page (`tools/maker/budgets.ts`, 42 lines), which F2 moves into ☰ Budgets. Holding it would cost a re-trial with nothing gained.
 - **CN-029 and the pools gate:** they land early, in F0c. CN-029 has no screen, and the gate stops Test and Build passing stages that fail in play.
-- **Import B1, 11c2 (app name and icon), phone maker A1/A3, project export B2, and playing weighted pools and waves:** all on hold until F6 passes. Each then needs a placement card and is re-based on the new layout. B1's Import button sits on My games (2 taps from the map). A1/A3 shrink a lot, because F2a and F4 already do most of the phone layout.
+- **11c2 (app name and icon), phone maker A1/A3, and playing weighted pools and waves:** all on hold until F6 passes. Each then needs a placement card and is re-based on the new layout. A1/A3 shrink a lot, because F2a and F4 already do most of the phone layout.
+- **No APK export (CEO 2026-11-27 09:40 London, via CoS; follow-ups confirmed 13:57 London):** Build game (☰ row, F2a; full export at step 36) has two paths: a browser / io-site zip, and a store path that hands the creator the files plus a wrap-it-yourself guide for Google Play or the App Store. The official engine never builds, signs or uploads an APK, AAB or IPA. Offline also means a player can unzip the zip and double-click `index.html` from disk, so the export must be self-contained (no fetch or XHR of local files, and no ES module loads from `file://`; inline or embed data and assets). A1/A3 are an internal debug maker APK for the CEO's own phone tests only, never shipped, never a maker button. The 11b debug APK stays for showcase phone checks, internal dev/test only. **Import B1 and project backup B2 move to step 36**, not earlier. B1's Import button still sits on My games (2 taps from the map) when it lands.
 - **Cozy (12+):** also waits for F6, plus the D1 rule that every new thing ships with a picture.
 
 ## (f) CEO decisions (short)
@@ -107,6 +108,7 @@ UX and the EA write this **placement card** before any step guide is written. Co
 4. ~~11c1~~: **ruled 03:53: yes.** 11c1 finishes and merges, then F0c (CN-029 and the pools gate).
 5. **Art method, picked by eye from the ART0 side-by-side sheet:** M1 3D pre-render, M2 height-lit 2D or M3 better 2D painting. UX leans M2 if it looks as good as M1. Any library a method needs lives only in `tools/art-bake/`, never in the engine or games. § (g).
 6–7. ~~Locked set and interim swatches~~: **ruled 03:53: "wait for art to be done first".** No interim swatches or discs, and the locked 9 Nov set is not used as the default (it stays as a reference). The map gets pictures only when the new art is done (F3b after ART2). Until then it keeps today's look under the F1 kit.
+8. ~~APK export~~: **ruled 27 Nov 09:40 (via CoS); follow-ups confirmed 13:57 London.** No APK export from the official engine: Build game (step 36) gives a browser / io-site zip and a store wrap-it-yourself guide; TileEngine never builds, signs or uploads an APK, AAB or IPA. Offline includes opening `index.html` from disk, so the export must be self-contained. The 11b debug APK and a private maker APK (A1/A3) stay internal for the CEO's phone tests, never shipped. Import B1 and backup B2 move to step 36. This is about the engine not exporting APKs, not about the engine app's own store build.
 
 **Still open:** 5 only, which waits for the ART0 sheet.
 
@@ -238,7 +240,7 @@ Engine Architect (EA-9 for the EA), 2026-11-27 ~03:10 London. Checked on a fresh
 | 8 | F5 see abilities and effects | compact cards, swatches, live preview, "Use it on…" | 300-380 | no | no (needs F1) |
 | 9 | F5b two more attacks | only if the CEO says yes to decision 3 | 300-350 | no | no |
 | 10 | F6 tap-path smoke | walks the screen map | 120-200 | no | no |
-| then | B1, 11c2, A1/A3, B2, pools in play, cozy 12+ | each with a placement card | | | |
+| then | 11c2, A1/A3, pools in play, cozy 12+ (B1 import and B2 backup move to step 36) | each with a placement card | | | |
 
 - **CN-029 (a structural ask for UX).** UX's (e) holds CN-029 until F6. I'd land it right after the merge, inside F0c.
   - It is 11c1's staged budget data. It has no screen, so it needs no placement card.
@@ -259,7 +261,7 @@ Engine Architect (EA-9 for the EA), 2026-11-27 ~03:10 London. Checked on a fresh
 - **Budgets and Build game after F2.** Both become ☰ rows, and F2a moves both.
   - F2a edits only the mount point in `home.ts`. The bodies stay in `tools/maker/budgets.ts` (11c1) and `build-sheet.ts`/`export.ts`.
   - So F2a can't start before the merge.
-- **B1 Import goes on My games.**
+- **B1 Import goes on My games** (when it lands at step 36).
   - Home (the games list) still exists in r2, reached by ☰ → My games or by a first launch.
   - So the Import button sits on My games: 2 taps from the stage editor.
 - **F3 and F4: serial, F3 first.**
