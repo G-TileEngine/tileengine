@@ -28,21 +28,21 @@ try {
     await press(page, "New project"); await press(page, "Continue"); await press(page, "Create"); await press(page, "Demo stage");
     await page.waitForFunction(() => document.querySelectorAll(".cell").length === 54, null, { timeout: 15000 });
     await step("1 rules on", async () => {
-      await tap(page, "r:open"); await page.waitForFunction(() => document.body.innerText.includes("Default rule") && document.querySelector('[data-act="k:toggle:wipe_wins"]')?.getAttribute("aria-pressed") === "true", null, { timeout: 15000 });
+      await tap(page, "r:open"); await page.waitForFunction(() => document.body.innerText.includes("Default rule") && document.querySelector('[data-seg="k:toggle:wipe_wins"] [aria-pressed="true"]')?.textContent === "On", null, { timeout: 15000 });
       await shot("01-rules-on"); tiny.push(...await big());
     });
     await step("2 rules off", async () => {
       await tap(page, "k:toggle:wipe_wins"); await waitText(page, "With this off, nobody wins: Test plays until you leave."); await shot("02-rules-off"); tiny.push(...await big());
       if (width === 360) { await page.waitForFunction(() => document.querySelector(".toast.above") !== null, null, { timeout: 15000 }); const hit = await cover("[data-sheet=rules] .sheet"); if (hit !== "") throw new Error(`toast ${hit}`); await page.waitForFunction(() => document.querySelector(".toast") === null, null, { timeout: 15000 }); }
       await tap(page, "r:close"); await tap(page, "s:back"); await press(page, "Demo stage"); await page.waitForFunction(() => document.querySelectorAll(".cell").length === 54, null, { timeout: 15000 });
-      await tap(page, "r:open"); await page.waitForFunction(() => document.body.innerText.includes("This stage's rule") && document.querySelector('[data-act="k:toggle:wipe_wins"]')?.getAttribute("aria-pressed") === "false", null, { timeout: 15000 });
+      await tap(page, "r:open"); await page.waitForFunction(() => document.body.innerText.includes("This stage's rule") && document.querySelector('[data-seg="k:toggle:wipe_wins"] [aria-pressed="true"]')?.textContent === "Off", null, { timeout: 15000 });
     });
     await step("3 test off", async () => {
       await tap(page, "r:close"); await tap(page, "s:test"); await page.waitForFunction(() => window.__docs?.win?.wipe === false, null, { timeout: 15000 });
       await press(page, "Back to maker"); await page.waitForFunction(() => document.querySelector('[data-act="r:open"]') !== null, null, { timeout: 15000 });
     });
     await step("4 reset", async () => {
-      await tap(page, "r:open"); await tap(page, "r:reset"); await page.waitForFunction(() => document.querySelector('[data-act="k:toggle:wipe_wins"]')?.getAttribute("aria-pressed") === "true", null, { timeout: 15000 });
+      await tap(page, "r:open"); await tap(page, "r:reset"); await page.waitForFunction(() => document.querySelector('[data-seg="k:toggle:wipe_wins"] [aria-pressed="true"]')?.textContent === "On", null, { timeout: 15000 });
       await tap(page, "r:close"); await tap(page, "s:test"); await page.waitForFunction(() => window.__docs?.win?.wipe === true, null, { timeout: 15000 }); if (await wiped() !== true) throw new Error("wipe");
       await press(page, "Back to maker"); await page.waitForFunction(() => document.querySelector('[data-act="s:cell:1,8"]') !== null, null, { timeout: 15000 });
     });

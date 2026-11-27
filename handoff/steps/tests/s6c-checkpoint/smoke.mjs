@@ -78,7 +78,7 @@ try {
       await tap(page, foe); await page.waitForFunction(() => (document.querySelector('[data-act="s:cell:5,5"]')?.getAttribute("aria-label") ?? "").includes("Raider"), null, { timeout: 15000 }); await shot("06-placed");
     });
     await step("7 rules on", async () => {
-      await tap(page, "r:open"); await page.waitForFunction(() => document.querySelector('[data-act="k:toggle:wipe_wins"]')?.getAttribute("aria-pressed") === "true" && document.body.innerText.includes("Win by defeating every enemy") && document.body.innerText.includes("Default rule"), null, { timeout: 15000 });
+      await tap(page, "r:open"); await page.waitForFunction(() => document.querySelector('[data-seg="k:toggle:wipe_wins"] [aria-pressed="true"]')?.textContent === "On" && document.body.innerText.includes("Win by defeating every enemy") && document.body.innerText.includes("Default rule"), null, { timeout: 15000 });
       await see(); await shot("07-rules"); await tap(page, "r:close"); await page.waitForFunction(() => document.querySelector('[data-sheet="rules"]') === null, null, { timeout: 15000 });
     });
     await step("8 victory", async () => {

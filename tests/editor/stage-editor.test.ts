@@ -54,5 +54,5 @@ test("stage editor paints, clears, lists rows, undoes and keeps a failed save", 
   io.store.failOn(`${prefix(id)}${MAP}.tmp`); const failed = await stageClick("s:done", STAGE, pick, io);
   assert.equal(failed.dirty, true); assert.match(failed.banner ?? "", /Couldn't save/); assert.equal(io.store.files.get(`${prefix(id)}${MAP}`), text[MAP]); assert.equal(io.store.files.get(`${prefix(id)}project.json`), text["project.json"]);
   const html = stageScreen(STAGE, failed); assert.match(html, /data-error="writeFailed"/); assert.match(html, /data-tile="water"/); assert.match(html, /class="dot"/); assert.match(html, />Undo</);
-  bindStage(STAGE, "other"); assert.match(stageScreen(STAGE, host), /Nothing to undo/);
+  bindStage(STAGE, "other"); assert.doesNotMatch(stageScreen(STAGE, host), /undo-chip/);
 });

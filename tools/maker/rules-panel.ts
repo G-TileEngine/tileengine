@@ -41,7 +41,7 @@ export function rulesHtml(bag: Record<string, Obj>, stageId: string, readOnly: b
   const close = `<button type="button" class="btn ghost" data-act="r:close">Close</button>`;
   const head = `<div class="scrim" data-sheet="rules"><div class="sheet" role="dialog"><h2>Rules · ${esc(name)}</h2>`;
   if (gate.mode === "newer" || readOnly) return `${head}<p>${esc(gate.mode === "newer" ? gate.text : "Made with a newer TileEngine. Open only.")}</p>${close}</div></div>`;
-  if (gate.mode === "older") { const act = gate.update ? `<button type="button" class="btn" data-act="r:update">Update</button><button type="button" class="btn ghost" data-act="r:close">Not now</button>` : close; return `${head}<p>${esc(gate.text)}</p>${act}</div></div>`; }
+  if (gate.mode === "older") { const act = gate.update ? `<button type="button" class="btn primary" data-act="r:update">Update</button><button type="button" class="btn ghost" data-act="r:close">Not now</button>` : close; return `${head}<p>${esc(gate.text)}</p>${act}</div></div>`; }
   const hit = sourceOf(bag, stageId, "win-condition"), setup = hit.setupId === "" ? undefined : bag[`setups/${hit.setupId}.json`];
   const answers = isObj(setup) && isObj(setup["answers"]) ? setup["answers"] : {};
   const knob = panelOf(viewSlice(bag), WIRED, "win-condition", answers).sections.flatMap((section) => [...section.knobs])[0];

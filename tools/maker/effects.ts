@@ -6,6 +6,7 @@ import { BUNDLED } from "./catalogue.ts";
 import { parseProject } from "./project-files.ts";
 import { commitWrites, readTree, type MakerStore } from "./store.ts";
 import { knobWidget, type KnobSpec } from "./widgets.ts";
+import { icon, thumb } from "./icons.ts";
 type Obj = Record<string, unknown>;
 type Host = { readonly files: DocText; readonly rev: number; readonly readOnly: boolean; readonly dirty: boolean };
 export type EffectsHit = Host & { readonly banner: string | null; readonly toast?: string | null };
@@ -22,19 +23,19 @@ const specOf = (knob: PanelKnob): KnobSpec => ({ id: knob.id, label: knob.label,
 const useLine = (n: number): string => (n === 0 ? "Not used yet" : n === 1 ? "1 ability uses this" : `${n} abilities use this`);
 export function effectsSection(files: DocText, readOnly: boolean): string {
   const bag = bagOf(files); if (bag === null) return "";
-  const rows = effectRows(bag).map((row) => `<div class="card"><button type="button" class="grow card-hit" data-act="e:open:${esc(row.id)}"><span class="name">${esc(row.name)}</span><span class="sub">${useLine(row.used)}</span></button>${readOnly ? "" : `<button type="button" class="btn icon" data-act="e:menu:${esc(row.id)}" aria-label="Menu ${esc(row.name)}">⋯</button>`}</div>`).join("");
-  const add = readOnly ? "" : `<button type="button" class="card new" data-act="e:new"><span class="grow"><span class="name">+ New effect</span></span></button>`;
+  const rows = effectRows(bag).map((row) => `<div class="card">${thumb("effects")}<button type="button" class="grow card-hit" data-act="e:open:${esc(row.id)}"><span class="name">${esc(row.name)}</span><span class="sub">${useLine(row.used)}</span></button>${readOnly ? "" : `<button type="button" class="btn icon" data-act="e:menu:${esc(row.id)}" aria-label="Menu ${esc(row.name)}">${icon("more")}</button>`}</div>`).join("");
+  const add = readOnly ? "" : `<button type="button" class="btn ghost stage-row" data-act="e:new">${icon("plus")}New effect</button>`;
   return `<h2>Effects</h2>${rows}${add}`;
 }
 export function effectsSheet(files: DocText, readOnly: boolean): string {
   if (mode === "closed" || readOnly) return "";
   const bag = bagOf(files); if (bag === null) return "";
   const row = effectRows(bag).find((item) => item.id === openId), name = row?.name ?? "Effect";
-  if (mode === "menu") { const used = row?.used ?? 0, warn = used === 0 ? "" : `<p>${used === 1 ? "1 ability uses" : `${used} abilities use`} this; they'll show None</p>`, none = used === 0 ? "" : `<button type="button" class="btn danger" data-act="e:none">Delete and switch ${used} to None</button>`; return `<div class="scrim" data-sheet="effects"><div class="sheet" role="dialog"><h2>${esc(name)}</h2>${warn}<button type="button" class="btn" data-act="e:dup">Duplicate</button><button type="button" class="btn danger" data-act="e:delete">Delete</button>${none}<button type="button" class="btn ghost" data-act="e:close">Close</button></div></div>`; }
+  if (mode === "menu") { const used = row?.used ?? 0, warn = used === 0 ? "" : `<p>${used === 1 ? "1 ability uses" : `${used} abilities use`} this; they'll show None</p>`, none = used === 0 ? "" : `<button type="button" class="btn danger" data-act="e:none">Delete and switch ${used} to None</button>`; return `<div class="scrim" data-sheet="effects"><div class="sheet" role="dialog"><h2>${esc(name)}</h2>${warn}<button type="button" class="btn ghost" data-act="e:dup">Duplicate</button><button type="button" class="btn danger" data-act="e:delete">Delete</button>${none}<button type="button" class="btn ghost" data-act="e:close">Close</button></div></div>`; }
   let doc: Obj | null = null; for (const [path, item] of Object.entries(bag)) if (path.startsWith("effects/") && !path.slice("effects/".length).includes("/") && item["id"] === openId) doc = item;
   const answers = doc !== null && isObj(doc["answers"]) ? doc["answers"] : {}, knobs = panelOf(BUNDLED, { effect: FX_KNOBS }, "effect", answers).sections.flatMap((section) => [...section.knobs]);
   const body = knobs.map((knob) => `${knobWidget(specOf(knob), knob.value)}<button type="button" class="btn ghost" data-act="e:reset:${esc(knob.id)}">Reset to default</button>`).join("");
-  return `<div class="scrim" data-sheet="effect"><div class="sheet" role="dialog"><header class="topbar"><button type="button" class="btn ghost" data-act="e:close">Back</button><h1>${esc(name)}</h1></header><input class="name-field" data-fxname value="${esc(name)}" aria-label="Effect name">${body}<button type="button" class="btn" data-act="e:dup">Duplicate</button><button type="button" class="btn" data-act="test">▶ Test</button></div></div>`;
+  return `<div class="scrim" data-sheet="effect"><div class="sheet" role="dialog"><header class="topbar"><button type="button" class="btn ghost" data-act="e:close">Back</button><h1>${esc(name)}</h1></header><input class="name-field" data-fxname value="${esc(name)}" aria-label="Effect name">${body}<button type="button" class="btn ghost" data-act="e:dup">Duplicate</button><button type="button" class="btn primary" data-act="test">${icon("play")}Test</button></div></div>`;
 }
 function applyBag(stored: DocText, before: Record<string, Obj>, after: Record<string, Obj>): DocText {
   const next: Record<string, string> = {};

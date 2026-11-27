@@ -30,7 +30,7 @@ try {
     await press(page, "New project"); await press(page, "Continue"); await press(page, "Create"); await waitText(page, "Units");
     await step("1 units", async () => {
       await page.evaluate(() => { const h = [...document.querySelectorAll("h2")].find((n) => n.textContent === "Units"); h?.scrollIntoView({ block: "start" }); });
-      const text = await page.evaluate(() => document.body.innerText); if (NAMES.some((name) => !text.includes(name)) || !text.includes("+ Add unit")) throw new Error(text);
+      const text = await page.evaluate(() => document.body.innerText); if (NAMES.some((name) => !text.includes(name)) || !text.includes("Add unit")) throw new Error(text);
       await shot("01-units"); sheetTiny.push(...await big());
     });
     await step("2 add", async () => {
@@ -38,7 +38,7 @@ try {
       await page.locator("[data-unit]").fill("Scout"); await tap(page, "u:create");
       await page.waitForFunction(() => document.querySelector("h1")?.textContent === "Scout" && document.body.innerText.includes("Start from a role"), null, { timeout: 15000 });
       await shot("03-editor"); sheetTiny.push(...await big());
-      await tap(page, "u:back"); await waitText(page, "+ Add unit");
+      await tap(page, "u:back"); await waitText(page, "Add unit");
       scout = await page.evaluate(() => [...document.querySelectorAll("[data-act]")].map((el) => el.getAttribute("data-act") ?? "").find((act) => act.startsWith("u:open:") && (document.querySelector(`[data-act="${act}"]`)?.textContent ?? "").includes("Scout")) ?? "");
       if (!scout.startsWith("u:open:unit_")) throw new Error(scout || "no scout");
       await tap(page, scout);
