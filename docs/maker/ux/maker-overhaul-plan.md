@@ -69,9 +69,12 @@ r6, 2026-11-27 ~04:15 London. r6 takes the CEO's rulings of 03:53 (via CoS). The
 | F1 | Look kit | One blue button per screen, ghost buttons for the rest, red Delete, about 16 icons, chips with a picked ring, card thumbnails, Undo chip (moves to F4 if F1 runs over 380) | 300–380 | L1, item 3(a) |
 | F2a | Land on the map | Opening a game lands on the stage editor. ☰ sheet, stage switcher, project page deleted, Budgets and Build game move into ☰. 14 smokes and 2 tests rebased | 340–390 | items 1 and 5 |
 | F2b | My games | Hero card, Continue, reopen the last stage | 120–180 | L3 |
-| ART0 | Art method pick (UX, outside the repo) | One side-by-side sheet: the candidate methods plus today's art, using the same 5 things (grass, water, a tree, a house, one unit), at phone size and 4× zoom. The CEO picks by eye | no repo code | § (g) |
-| ART1a | Bake rig core, for the picked method (builder) | Nothing in the app. `tools/art-bake/` with its own `package.json`: runner, camera and light, palette, sheet packer, manifest, hash check, one sample | 300–340 (EA-7.2, sized for M1; EA re-sizes after the pick) | § (g) |
-| ART1b | Frames and edges (builder) | Water and walk frames, the 47-mask autotile edge set | 200–260 (same note) | § (g) |
+| ART0 | Art method pick (UX, outside the repo). **Done: ruled 27 Nov 20:14 and 20:16 London (via CoS):** style B r6b is the baseline, and the Python bake recipes are ported to JavaScript in `tools/art-bake/` (replaces M1, M2 and M3; `docs/maker/art-style.md`) | One side-by-side sheet: the candidate methods plus today's art, using the same 5 things (grass, water, a tree, a house, one unit), at phone size and 4× zoom. The CEO picks by eye | no repo code | § (g) |
+| ART1a | Bake core, for the recipe port (builder) | Nothing in the app. `tools/art-bake/` with its own `package.json` (no dependencies): the pixel-mode sprite (a material and a ramp step per pixel), the sel-out outline, whole-pixel feet, the one palette file (B r6b's 38 ramps), a PNG writer, the runner and manifest (pixel sha256), and one sample recipe, the r6 crate, matching the Python bake pixel for pixel at 32 and 48 px. The Python sources and checkpoint PNGs ride in the kit, outside the count | 387 (EA re-size after ART0, trialled on `fea3098b`) | § (g) |
+| ART1b | Shared blocks and simple props (builder) | Seeded noise (`hash2`, `vnoise`, `fbm`), sphere light, banded ramps, shape fills, the rim pass and contact-shadow shapes; recipes barrel (already pixel-exact in the ART1a trial), rock and lantern | 330–390 (estimate; the EA re-sizes in its kit) | § (g) |
+| ART1c | Stamps, trees and bushes (builder) | The hand-authored stamp grids (leaf clumps, tufts, bush, flowers) and the oak, bush and fence recipes | 350–400 (estimate; the stamp grids count as lines unless QA rules them generated data) | § (g) |
+| ART1d | Houses and units (builder) | Houses with red, slate and wood roofs (shingles, ridge, sills, window boxes, the r6b chimney), and the boy, farmer and knight (its r5 pick) with team colours. May split in two after its trial | 350–400 per part (estimate) | § (g) |
+| ART1e | Ground tiles, water frames and edges (builder) | Grass, path, pond and bank as square tiles, 2 water frames, and the 47-mask autotile edge set (the old ART1b) | 300–380 (estimate) | § (g) |
 | ART2 | First art pack (CEO's eye passes it, at most 2 rounds) | Six ground tiles with edges, animated water, 2 trees, a house, and the 6 units (idle and walk, 4 directions) | art scripts 200–300, plus PNGs (count 0) | § (g) |
 | F3a | Picture plumbing (no screen) | **No visible change**: the map and Test keep today's look. Under the hood the map and Test can read tile and sprite pictures, tiles are 32 px from `map.tile`, template loading is binary-safe, and tall things overlap the row above. Proved with test pictures in fixtures only; the templates gain no pictures | 320–370 | D1 + L2a (EA-2), EA-7.5 |
 | F3b | The ART2 pack goes in | The map and Test show the new art (demo project content). Edges are worked out from the painted terrain. Words move into the View → Simple blocks switch | 150–250 | EA-7.4, EA-7.5 |
@@ -80,6 +83,7 @@ r6, 2026-11-27 ~04:15 London. r6 takes the CEO's rulings of 03:53 (via CoS). The
 | F6 | Tap-path check | A smoke test walks every row of the screen-map table at 390 and 360, failing if a feature takes more taps than listed. Then the CEO's phone walkthrough | 120–200 | rule (d) |
 
 Order (one builder, interleaved; CEO 03:53): F0 and ART0 now → 11c1 merge → F0c → F1 → ART1a → F2a → ART1b → F2b → ART2 → F3a (while the CEO judges ART2) → F3b (after his pass) → F4 → F5 → F6.
+- **Art port steps (EA re-size after ART0, 27 Nov; proposal, open for the CEO):** the EA proposes running ART1c, ART1d and ART1e after ART1b and before ART2. Where they fall among F2b and the F steps is CoS's call with the CEO. Until he rules, the order above is unchanged.
 - **What the map shows meanwhile:** today's look (coloured blocks with words), restyled by F1's buttons and chips. There are no swatches, no discs and no old art, so the first pictures anyone sees are the finished new art.
 - **Does F3a make sense on its own? Yes, as a no-screen step.** F3a and F3b together are about 470–620 lines, which is over the 400 cap, so they must split. F3a changes nothing on screen, so it doesn't break "wait for the art". It runs while the CEO is judging ART2, so the builder isn't idle, and F3b then only adds the pack.
 - If the ART2 pass takes more than one round, F4 can run after F3a and F3b follows. That swap changes nothing on screen, because F4 shows today's look until F3b lands.
@@ -115,40 +119,38 @@ UX and the EA write this **placement card** before any step guide is written. Co
 ## (g) Art quality overhaul: ART0–ART2, before F3b (CEO rulings 27 Nov 03:28 and 03:34)
 **Goal:** a **high-quality default art style, made by code**, for the engine and the games made with it.
 - The prototype's code-drawn art was a good baseline. But trees, houses, water and grass look low quality, so the map must not go live with it (03:28).
-- **The method is open (03:34).** three.js was only the CEO's example that code art can look good, not a request.
+- **The method is ruled (27 Nov 20:16 London, via CoS):** port the Python bake recipes of style B r6b (the baseline, 20:14) to JavaScript in `tools/art-bake/`. This replaces M1, M2 and M3, and the details are in `docs/maker/art-style.md`. (At 03:34 the method was open; three.js was only the CEO's example.)
 
 **Fixed whatever the method:**
 - Art is made once, offline, and saved as PNG pictures (a "bake"). The engine and games only ever load PNGs, as they do today. So the method decides how good the art looks, never how fast it runs on a phone.
 - Everything stays offline, and TileEngine never calls an outside service.
 - Top-down three-quarter view on the **square** grid, 32 px tiles (EA-7.3; Test draws 16 px today, which F3a changes). Tall things (trees, houses, units) overlap the row above, which the engine already draws correctly (EA-7.3).
 
-**The candidate methods**
+**The candidate methods (history: ART0 is ruled, and the recipe port replaced M1, M2 and M3)**
 | Method | How it works | Look quality | Phone performance | Offline | Costs and risks |
 |---|---|---|---|---|---|
-| **M1. 3D pre-render** (three.js or plain WebGL) | Small 3D scenes built from shapes, with one shared light and camera, rendered to PNG in headless Chrome | Highest depth: real light, soft shadows, solid trees and houses, smooth water frames | Same as today (PNG) | Yes | Needs a library in the bake tool only (three.js, MIT; EA-7.1 shows it can be fenced off). Can look like generic 3D unless styled. The EA proved a bake on the box (`ea-shots/art-bake-proof/`) |
-| **M2. Height-lit 2D** ("2.5D") | Code paints each thing as colour plus a height map, then lights it like 3D in plain canvas code | Close to 3D shading with a painted feel. Strong on grass, stone, water ripples and roof tiles | Same (PNG) | Yes | No new library. Builds on the painter we have (autotile, palettes, own PNG writer). Tall shapes (trees, houses) are harder than M1 |
-| **M3. Better 2D painting** (canvas, today's route, improved) | Layered noise, gradients, shading and hand-tuned shapes | Medium-good. Its ceiling showed in the axe and sword tests (scores about 0.60–0.72) | Same (PNG) | Yes | Cheapest, but it's what the CEO judged low quality. Only worth it with a clear new technique |
-| **M4. SVG vector painting** | Shapes with gradients and filters, baked to PNG | Crisp and clean, but flat | Same once baked (live SVG would be slow) | Yes | Tends toward the flat "website" look the CEO rejected for the UI kit |
-| **M5. Shader painting (SDF)** | Small GPU programs describe smooth shapes and soft light, rendered to PNG | High, smooth and stylised | Same (PNG) | Yes | No library, but the hardest to write and maintain, and slow to add each new thing |
+| ~~**M1. 3D pre-render**~~ (replaced) (three.js or plain WebGL) | Small 3D scenes built from shapes, with one shared light and camera, rendered to PNG in headless Chrome | Highest depth: real light, soft shadows, solid trees and houses, smooth water frames | Same as today (PNG) | Yes | Needs a library in the bake tool only (three.js, MIT; EA-7.1 shows it can be fenced off). Can look like generic 3D unless styled. The EA proved a bake on the box (`ea-shots/art-bake-proof/`) |
+| ~~**M2. Height-lit 2D**~~ (replaced) ("2.5D") | Code paints each thing as colour plus a height map, then lights it like 3D in plain canvas code | Close to 3D shading with a painted feel. Strong on grass, stone, water ripples and roof tiles | Same (PNG) | Yes | No new library. Builds on the painter we have (autotile, palettes, own PNG writer). Tall shapes (trees, houses) are harder than M1 |
+| ~~**M3. Better 2D painting**~~ (replaced) (canvas, today's route, improved) | Layered noise, gradients, shading and hand-tuned shapes | Medium-good. Its ceiling showed in the axe and sword tests (scores about 0.60–0.72) | Same (PNG) | Yes | Cheapest, but it's what the CEO judged low quality. Only worth it with a clear new technique |
+| ~~**M4. SVG vector painting**~~ (not taken) | Shapes with gradients and filters, baked to PNG | Crisp and clean, but flat | Same once baked (live SVG would be slow) | Yes | Tends toward the flat "website" look the CEO rejected for the UI kit |
+| ~~**M5. Shader painting (SDF)**~~ (not taken) | Small GPU programs describe smooth shapes and soft light, rendered to PNG | High, smooth and stylised | Same (PNG) | Yes | No library, but the hardest to write and maintain, and slow to add each new thing |
 | ~~Live 3D in the game~~ | WebGL running on the phone | High | **Rejected:** battery, heat, mid-range phones (S21 Ultra target) | Yes | Changes the engine's renderer |
 
-**UX recommendation:** put **M1, M2 and M3** on the ART0 sheet. M4 is left off for its flat look, and M5 for its upkeep.
-- If M1 and M2 look as good as each other by eye, take **M2**: no new library, it reuses our painter, and each new thing is cheaper.
-- If M1 is clearly better, take M1. Its library lives only inside `tools/art-bake/`.
+**UX recommendation (history):** M1, M2 and M3 went on the ART0 sheet. The CEO's ruling replaced all three with the B r6b recipe port.
 
-**The locked 9 Nov set:** replaced as the default. It stays in `painter-proto/locked/` as a reference and isn't shipped in templates. Its palettes (ashroad, moonlit) are the starting colours for whichever method wins. Night versions come later, baked from the same scripts with a night light (cozy 13).
+**The locked 9 Nov set:** replaced as the default. It stays in `painter-proto/locked/` as a reference and isn't shipped in templates. The starting colours are B r6b's ramps (`tools/art-bake/palette.json` from ART1a; art-style.md § 3), and its palettes (ashroad, moonlit) stay as references. Night versions come later, baked from the same scripts with a night light (cozy 13).
 
 **The steps**
-- **ART0, method pick (UX, now, outside the repo, about one session).**
-  - UX drafts `docs/maker/art-style.md`: camera, 32 px square tiles, light direction, palette (six terrain ramps plus fire, frost, holy and venom), outline, and readability at 390 px.
+- **ART0, method pick (done: ruled 27 Nov 20:14 and 20:16 London, via CoS; B r6b is the baseline and its recipes are ported to JavaScript).**
+  - UX wrote `docs/maker/art-style.md` (r3, sha256 `8f62dd28…`): camera, square tiles, light, the B look, palette, the port check and readability at 390 px.
   - **One side-by-side sheet.** Columns: M1, M2, M3 and today's art as the baseline. Rows: the same 5 things (grass, water with 2 frames, a tree, a house, one unit).
   - It's shown at real size on a 390 px phone map and at 4× zoom. The CEO judges by eye.
   - One round; no open-ended iteration (lean usage).
-- **ART1a and ART1b, bake rig for the picked method (builder).**
+- **ART1a to ART1e, the recipe port (builder).**
   - It lives in `tools/art-bake/` with its own `package.json`, as the `tools/pixel-suite/` precedent does (EA-7.1). `npm run green` and the engine's dependencies stay unchanged, and a test fails if a bake library ever reaches the root `package.json`.
-  - ART1a is the core (300–340 lines). ART1b adds frames and the 47-mask edges (200–260 lines).
-  - Those sizes are for M1 (EA-7.2). An M2 rig has no library pin and reuses painter ideas, so the EA re-sizes both after the pick.
-  - The committed PNGs are the master copy. The check re-bakes on the pinned Chrome and fails on any difference.
+  - ART1a is the core and one sample recipe (the r6 crate): 387 lines, trialled. ART1b adds the shared blocks and simple props (330–390), ART1c the stamps, trees and bushes (350–400), ART1d the houses and units (350–400 per part if it splits), and ART1e the ground tiles, water frames and 47-mask edges (300–380). ART1b–ART1e are estimates; the EA re-sizes each in its kit.
+  - Re-sized after the ART0 ruling (EA, 27 Nov): the rig is plain TypeScript run by Node, with no library, no browser and no Chrome pin. Each recipe matches the frozen Python recipe pixel for pixel (the checkpoint sprite PNGs add the scene's haze pass; art-style.md § 5). Each kit carries the Python sources and checkpoint PNGs under `handoff/steps/tests/`, outside the 400 count.
+  - The check runs in green: each step's shipped test re-bakes in memory and pins every sprite's pixel sha256 to the Python bake's. ART2's committed PNGs are the master copy of the pack.
 - **ART2, first pack (art scripts 200–300 lines; PNGs count 0).**
   - The six terrains with autotile edges, animated water (8 frames), 2 trees, a house (F4 places objects), and the 6 units (idle and walk, 4 directions).
   - It uses the format's existing `tileset`, `sprite`, `clips` and `maskSet: blob47` (EA-7.4).
