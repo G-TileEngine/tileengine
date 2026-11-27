@@ -1,0 +1,46 @@
+[
+ {
+  "name": "crate",
+  "tile": 32,
+  "w": 19,
+  "h": 27,
+  "foot": [
+   10,
+   26
+  ],
+  "sha256": "99ef690d60bf8dab906d85236e4a11001152a39445fd2cae787e03fab0fbcc88"
+ },
+ {
+  "name": "crate",
+  "tile": 48,
+  "w": 27,
+  "h": 40,
+  "foot": [
+   14,
+   39
+  ],
+  "sha256": "97047142d2bc1409abb3bd50d5442c5f5c5b522d7bca9c727e9acafb4b8d5984"
+ },
+ {
+  "name": "barrel",
+  "tile": 32,
+  "w": 17,
+  "h": 22,
+  "foot": [
+   9,
+   21
+  ],
+  "sha256": "3cece1b77e15fd21d8f8fcb576729950496d462c590d447b90045e39bec180d2"
+ },
+ {
+  "name": "barrel",
+  "tile": 48,
+  "w": 23,
+  "h": 31,
+  "foot": [
+   12,
+   30
+  ],
+  "sha256": "9be6b10957cab1559e9c920ec7726fe90e41272bfef56c370dbdc6cde1dcf60c"
+ }
+]

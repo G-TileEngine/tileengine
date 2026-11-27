@@ -1,0 +1,884 @@
+{
+ "tile": 48,
+ "stage": {
+  "cols": 12,
+  "rows": 10,
+  "topRows": 1,
+  "w": 576,
+  "h": 528
+ },
+ "source": "b-r6b/style_b6b.py (frozen checkpoint)",
+ "note": "foot = anchor in whole sprite px from the top-left (the point the prop stands on). placed = foot in whole stage px at 48 (stage includes 1 sky row on top). shadow.foot = the same point in the shadow PNG.",
+ "sprites": [
+  {
+   "name": "oak-01",
+   "kind": "tree",
+   "file": "sprites/oak-01.png",
+   "w": 68,
+   "h": 94,
+   "foot": [
+    34,
+    89
+   ],
+   "placed": [
+    22,
+    79
+   ],
+   "uv": [
+    0.45,
+    0.65
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/oak-01-shadow.png",
+    "foot": [
+     10,
+     18
+    ],
+    "w": 53,
+    "h": 27
+   }
+  },
+  {
+   "name": "oak-02",
+   "kind": "tree",
+   "file": "sprites/oak-02.png",
+   "w": 73,
+   "h": 101,
+   "foot": [
+    37,
+    96
+   ],
+   "placed": [
+    65,
+    93
+   ],
+   "uv": [
+    1.35,
+    0.95
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/oak-02-shadow.png",
+    "foot": [
+     10,
+     20
+    ],
+    "w": 56,
+    "h": 30
+   }
+  },
+  {
+   "name": "oak-03",
+   "kind": "tree",
+   "file": "sprites/oak-03.png",
+   "w": 77,
+   "h": 107,
+   "foot": [
+    39,
+    102
+   ],
+   "placed": [
+    8,
+    137
+   ],
+   "uv": [
+    0.15,
+    1.85
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/oak-03-shadow.png",
+    "foot": [
+     11,
+     21
+    ],
+    "w": 60,
+    "h": 31
+   }
+  },
+  {
+   "name": "oak-04",
+   "kind": "tree",
+   "file": "sprites/oak-04.png",
+   "w": 70,
+   "h": 98,
+   "foot": [
+    35,
+    93
+   ],
+   "placed": [
+    50,
+    158
+   ],
+   "uv": [
+    1.05,
+    2.3
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/oak-04-shadow.png",
+    "foot": [
+     10,
+     19
+    ],
+    "w": 54,
+    "h": 28
+   }
+  },
+  {
+   "name": "oak-05",
+   "kind": "tree",
+   "file": "sprites/oak-05.png",
+   "w": 75,
+   "h": 104,
+   "foot": [
+    38,
+    99
+   ],
+   "placed": [
+    94,
+    132
+   ],
+   "uv": [
+    1.95,
+    1.75
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/oak-05-shadow.png",
+    "foot": [
+     10,
+     20
+    ],
+    "w": 57,
+    "h": 30
+   }
+  },
+  {
+   "name": "oak-06",
+   "kind": "tree",
+   "file": "sprites/oak-06.png",
+   "w": 68,
+   "h": 94,
+   "foot": [
+    34,
+    89
+   ],
+   "placed": [
+    24,
+    213
+   ],
+   "uv": [
+    0.5,
+    3.45
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/oak-06-shadow.png",
+    "foot": [
+     10,
+     18
+    ],
+    "w": 53,
+    "h": 27
+   }
+  },
+  {
+   "name": "oak-07",
+   "kind": "tree",
+   "file": "sprites/oak-07.png",
+   "w": 73,
+   "h": 101,
+   "foot": [
+    37,
+    96
+   ],
+   "placed": [
+    73,
+    237
+   ],
+   "uv": [
+    1.5,
+    3.95
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/oak-07-shadow.png",
+    "foot": [
+     10,
+     20
+    ],
+    "w": 56,
+    "h": 30
+   }
+  },
+  {
+   "name": "oak-08",
+   "kind": "tree",
+   "file": "sprites/oak-08.png",
+   "w": 77,
+   "h": 107,
+   "foot": [
+    39,
+    102
+   ],
+   "placed": [
+    13,
+    293
+   ],
+   "uv": [
+    0.25,
+    5.1
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/oak-08-shadow.png",
+    "foot": [
+     11,
+     21
+    ],
+    "w": 60,
+    "h": 31
+   }
+  },
+  {
+   "name": "oak-09",
+   "kind": "tree",
+   "file": "sprites/oak-09.png",
+   "w": 70,
+   "h": 98,
+   "foot": [
+    35,
+    93
+   ],
+   "placed": [
+    55,
+    324
+   ],
+   "uv": [
+    1.15,
+    5.75
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/oak-09-shadow.png",
+    "foot": [
+     10,
+     19
+    ],
+    "w": 54,
+    "h": 28
+   }
+  },
+  {
+   "name": "oak-10",
+   "kind": "tree",
+   "file": "sprites/oak-10.png",
+   "w": 75,
+   "h": 104,
+   "foot": [
+    38,
+    99
+   ],
+   "placed": [
+    27,
+    384
+   ],
+   "uv": [
+    0.55,
+    7.0
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/oak-10-shadow.png",
+    "foot": [
+     10,
+     20
+    ],
+    "w": 57,
+    "h": 30
+   }
+  },
+  {
+   "name": "oak-11",
+   "kind": "tree",
+   "file": "sprites/oak-11.png",
+   "w": 75,
+   "h": 104,
+   "foot": [
+    38,
+    99
+   ],
+   "placed": [
+    543,
+    81
+   ],
+   "uv": [
+    11.3,
+    0.7
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/oak-11-shadow.png",
+    "foot": [
+     10,
+     20
+    ],
+    "w": 57,
+    "h": 30
+   }
+  },
+  {
+   "name": "oak-12",
+   "kind": "tree",
+   "file": "sprites/oak-12.png",
+   "w": 69,
+   "h": 96,
+   "foot": [
+    35,
+    91
+   ],
+   "placed": [
+    109,
+    461
+   ],
+   "uv": [
+    2.25,
+    8.6
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/oak-12-shadow.png",
+    "foot": [
+     10,
+     19
+    ],
+    "w": 53,
+    "h": 28
+   }
+  },
+  {
+   "name": "house-red",
+   "kind": "house",
+   "file": "sprites/house-red.png",
+   "w": 120,
+   "h": 99,
+   "foot": [
+    60,
+    87
+   ],
+   "placed": [
+    240,
+    186
+   ],
+   "uv": [
+    5.0,
+    2.88
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/house-red-shadow.png",
+    "foot": [
+     46,
+     70
+    ],
+    "w": 110,
+    "h": 78
+   }
+  },
+  {
+   "name": "house-slate",
+   "kind": "house",
+   "file": "sprites/house-slate.png",
+   "w": 120,
+   "h": 99,
+   "foot": [
+    60,
+    87
+   ],
+   "placed": [
+    432,
+    138
+   ],
+   "uv": [
+    9.0,
+    1.88
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/house-slate-shadow.png",
+    "foot": [
+     46,
+     70
+    ],
+    "w": 110,
+    "h": 78
+   }
+  },
+  {
+   "name": "house-wood",
+   "kind": "house",
+   "file": "sprites/house-wood.png",
+   "w": 120,
+   "h": 99,
+   "foot": [
+    60,
+    87
+   ],
+   "placed": [
+    336,
+    378
+   ],
+   "uv": [
+    7.0,
+    6.88
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/house-wood-shadow.png",
+    "foot": [
+     46,
+     70
+    ],
+    "w": 110,
+    "h": 78
+   }
+  },
+  {
+   "name": "fence",
+   "kind": "fence",
+   "file": "sprites/fence.png",
+   "w": 192,
+   "h": 27,
+   "foot": [
+    3,
+    23
+   ],
+   "placed": [
+    384,
+    310
+   ],
+   "uv": [
+    8.0,
+    5.45
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/fence-shadow.png",
+    "foot": [
+     1,
+     1
+    ],
+    "w": 195,
+    "h": 8
+   }
+  },
+  {
+   "name": "stone-big-01",
+   "kind": "rock",
+   "file": "sprites/stone-big-01.png",
+   "w": 43,
+   "h": 31,
+   "foot": [
+    20,
+    25
+   ],
+   "placed": [
+    550,
+    350
+   ],
+   "uv": [
+    11.45,
+    6.3
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/stone-big-01-shadow.png",
+    "foot": [
+     12,
+     10
+    ],
+    "w": 41,
+    "h": 18
+   }
+  },
+  {
+   "name": "stone-01",
+   "kind": "rock",
+   "file": "sprites/stone-01.png",
+   "w": 43,
+   "h": 31,
+   "foot": [
+    20,
+    25
+   ],
+   "placed": [
+    130,
+    496
+   ],
+   "uv": [
+    2.7,
+    9.35
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/stone-01-shadow.png",
+    "foot": [
+     9,
+     8
+    ],
+    "w": 31,
+    "h": 14
+   }
+  },
+  {
+   "name": "stone-02",
+   "kind": "rock",
+   "file": "sprites/stone-02.png",
+   "w": 43,
+   "h": 31,
+   "foot": [
+    20,
+    25
+   ],
+   "placed": [
+    348,
+    494
+   ],
+   "uv": [
+    7.25,
+    9.3
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/stone-02-shadow.png",
+    "foot": [
+     9,
+     8
+    ],
+    "w": 31,
+    "h": 14
+   }
+  },
+  {
+   "name": "stone-03",
+   "kind": "rock",
+   "file": "sprites/stone-03.png",
+   "w": 43,
+   "h": 31,
+   "foot": [
+    20,
+    25
+   ],
+   "placed": [
+    178,
+    364
+   ],
+   "uv": [
+    3.7,
+    6.6
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/stone-03-shadow.png",
+    "foot": [
+     9,
+     8
+    ],
+    "w": 31,
+    "h": 14
+   }
+  },
+  {
+   "name": "bush-01",
+   "kind": "bush",
+   "file": "sprites/bush-01.png",
+   "w": 47,
+   "h": 36,
+   "foot": [
+    23,
+    31
+   ],
+   "placed": [
+    158,
+    209
+   ],
+   "uv": [
+    3.3,
+    3.35
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/bush-01-shadow.png",
+    "foot": [
+     12,
+     11
+    ],
+    "w": 40,
+    "h": 18
+   }
+  },
+  {
+   "name": "bush-02",
+   "kind": "bush",
+   "file": "sprites/bush-02.png",
+   "w": 47,
+   "h": 36,
+   "foot": [
+    23,
+    31
+   ],
+   "placed": [
+    508,
+    185
+   ],
+   "uv": [
+    10.6,
+    2.85
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/bush-02-shadow.png",
+    "foot": [
+     12,
+     11
+    ],
+    "w": 40,
+    "h": 18
+   }
+  },
+  {
+   "name": "bush-03",
+   "kind": "bush",
+   "file": "sprites/bush-03.png",
+   "w": 47,
+   "h": 36,
+   "foot": [
+    23,
+    31
+   ],
+   "placed": [
+    314,
+    502
+   ],
+   "uv": [
+    6.55,
+    9.45
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/bush-03-shadow.png",
+    "foot": [
+     12,
+     11
+    ],
+    "w": 40,
+    "h": 18
+   }
+  },
+  {
+   "name": "crate",
+   "kind": "crate",
+   "file": "sprites/crate.png",
+   "w": 27,
+   "h": 40,
+   "foot": [
+    14,
+    39
+   ],
+   "placed": [
+    311,
+    163
+   ],
+   "uv": [
+    6.47,
+    2.4
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/crate-shadow.png",
+    "foot": [
+     14,
+     14
+    ],
+    "w": 35,
+    "h": 21
+   }
+  },
+  {
+   "name": "barrel",
+   "kind": "barrel",
+   "file": "sprites/barrel.png",
+   "w": 23,
+   "h": 31,
+   "foot": [
+    12,
+    30
+   ],
+   "placed": [
+    324,
+    185
+   ],
+   "uv": [
+    6.75,
+    2.85
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/barrel-shadow.png",
+    "foot": [
+     12,
+     13
+    ],
+    "w": 30,
+    "h": 19
+   }
+  },
+  {
+   "name": "lantern",
+   "kind": "lantern",
+   "file": "sprites/lantern.png",
+   "w": 19,
+   "h": 49,
+   "foot": [
+    9,
+    45
+   ],
+   "placed": [
+    218,
+    290
+   ],
+   "uv": [
+    4.55,
+    5.05
+   ],
+   "prop": true,
+   "shadow": {
+    "file": "shadows/lantern-shadow.png",
+    "foot": [
+     3,
+     5
+    ],
+    "w": 19,
+    "h": 9
+   }
+  },
+  {
+   "name": "knight-01",
+   "kind": "knight",
+   "file": "extras/knight-01.png",
+   "w": 54,
+   "h": 62,
+   "foot": [
+    27,
+    61
+   ],
+   "placed": [
+    266,
+    317
+   ],
+   "uv": [
+    5.55,
+    5.6
+   ],
+   "prop": false,
+   "shadow": {
+    "file": "shadows/knight-01-shadow.png",
+    "foot": [
+     18,
+     8
+    ],
+    "w": 40,
+    "h": 15
+   }
+  },
+  {
+   "name": "knight-02",
+   "kind": "knight",
+   "file": "extras/knight-02.png",
+   "w": 54,
+   "h": 62,
+   "foot": [
+    27,
+    61
+   ],
+   "placed": [
+    132,
+    410
+   ],
+   "uv": [
+    2.75,
+    7.55
+   ],
+   "prop": false,
+   "shadow": {
+    "file": "shadows/knight-02-shadow.png",
+    "foot": [
+     18,
+     8
+    ],
+    "w": 40,
+    "h": 15
+   }
+  },
+  {
+   "name": "boy",
+   "kind": "boy",
+   "file": "extras/boy.png",
+   "w": 48,
+   "h": 70,
+   "foot": [
+    24,
+    63
+   ],
+   "placed": [
+    295,
+    425
+   ],
+   "uv": [
+    6.15,
+    7.85
+   ],
+   "prop": false,
+   "shadow": {
+    "file": "shadows/boy-shadow.png",
+    "foot": [
+     12,
+     7
+    ],
+    "w": 32,
+    "h": 14
+   }
+  },
+  {
+   "name": "farmer",
+   "kind": "farmer",
+   "file": "extras/farmer.png",
+   "w": 48,
+   "h": 70,
+   "foot": [
+    24,
+    63
+   ],
+   "placed": [
+    384,
+    173
+   ],
+   "uv": [
+    8.0,
+    2.6
+   ],
+   "prop": false,
+   "shadow": {
+    "file": "shadows/farmer-shadow.png",
+    "foot": [
+     12,
+     7
+    ],
+    "w": 32,
+    "h": 14
+   }
+  }
+ ]
+}
