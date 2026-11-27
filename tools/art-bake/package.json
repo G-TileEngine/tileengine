@@ -1,0 +1,7 @@
+{
+  "name": "tileengine-art-bake",
+  "private": true,
+  "description": "Step ART1a: the B r6b art bake, Python recipes ported to TypeScript (outside green; no dependencies): node bake.ts [out-dir] [32|48 ...]",
+  "type": "module",
+  "scripts": { "bake": "node bake.ts" }
+}
