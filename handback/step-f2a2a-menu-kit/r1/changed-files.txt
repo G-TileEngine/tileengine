@@ -1,0 +1,4 @@
+A	tests/tools/f2a2-menu-kit.test.ts
+M	tools/maker/app.css
+A	tools/maker/game-menu.ts
+M	tools/maker/icons.ts
