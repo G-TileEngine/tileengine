@@ -1,0 +1,10 @@
+ tests/tools/art1a-bake.test.ts        |  8 +--
+ tests/tools/art1b1-shade-core.test.ts | 93 +++++++++++++++++++++++++++++++++++
+ tools/art-bake/bake.ts                |  8 +--
+ tools/art-bake/blocks.ts              | 57 +++++++++++++++++++++
+ tools/art-bake/palette.json           |  2 +
+ tools/art-bake/palette.ts             | 70 +++++++++++++++++++++++++-
+ tools/art-bake/recipes/lantern.ts     | 14 ++++++
+ tools/art-bake/recipes/rock.ts        | 17 +++++++
+ tools/art-bake/sprite.ts              | 88 ++++++++++++++++++++++++++++-----
+ 9 files changed, 338 insertions(+), 19 deletions(-)

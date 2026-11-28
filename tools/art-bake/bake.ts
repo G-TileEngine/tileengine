@@ -3,10 +3,12 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { encodePng } from "./png.ts";
+import { lantern } from "./recipes/lantern.ts";
+import { rock } from "./recipes/rock.ts";
 import { crate } from "./recipes/crate.ts";
-import { colourise, gridSprite, type Grid, type Sprite, type Tile } from "./sprite.ts";
+import { colourise, gridSprite, type Sprite, type Tile } from "./sprite.ts";
 
-export const RECIPES: Readonly<Record<string, (tile: Tile) => Grid>> = { crate };
+export const RECIPES: Readonly<Record<string, (tile: Tile) => Sprite>> = { crate: (tile) => gridSprite(crate(tile)), rock, lantern };
 export const DEFAULT_TILES: readonly Tile[] = [32];
 export type Baked = { readonly sprite: Sprite; readonly rgba: Uint8Array; readonly sha256: string };
 export type ManifestRow = { readonly name: string; readonly tile: Tile; readonly file: string; readonly w: number; readonly h: number; readonly foot: readonly [number, number]; readonly sha256: string };
@@ -14,7 +16,7 @@ export type ManifestRow = { readonly name: string; readonly tile: Tile; readonly
 export function bakeOne(name: string, tile: Tile): Baked {
   const make = RECIPES[name];
   if (make === undefined) throw new Error(`art-bake: no recipe "${name}"`);
-  const sprite = gridSprite(make(tile));
+  const sprite = make(tile);
   const rgba = colourise(sprite);
   const sha256 = createHash("sha256").update(rgba).digest("hex");
   return { sprite, rgba, sha256 };
