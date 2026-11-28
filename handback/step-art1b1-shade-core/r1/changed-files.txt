@@ -1,0 +1,9 @@
+M	tests/tools/art1a-bake.test.ts
+A	tests/tools/art1b1-shade-core.test.ts
+M	tools/art-bake/bake.ts
+A	tools/art-bake/blocks.ts
+M	tools/art-bake/palette.json
+M	tools/art-bake/palette.ts
+A	tools/art-bake/recipes/lantern.ts
+A	tools/art-bake/recipes/rock.ts
+M	tools/art-bake/sprite.ts
