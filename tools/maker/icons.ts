@@ -16,6 +16,12 @@ const PATHS = {
   plus: `<path d="M12 5v14M5 12h14"/>`,
   resize: `<path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/>`,
   budgets: `<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/>`,
+  menu: `<path d="M4 7h16M4 12h16M4 17h16"/>`,
+  down: `<path d="M7 10l5 5 5-5"/>`,
+  close: `<path d="M6 6l12 12M18 6L6 18"/>`,
+  chevron: `<path d="M9 6l6 6-6 6"/>`,
+  check: `<path d="M5 12l5 5 9-10"/>`,
+  games: `<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>`,
 } as const;
 export type IconName = keyof typeof PATHS;
 export const ICON_NAMES = Object.keys(PATHS) as readonly IconName[];
