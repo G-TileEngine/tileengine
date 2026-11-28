@@ -30,7 +30,7 @@ try {
     const big = async () => page.evaluate(() => [...document.querySelectorAll("button, input")].filter((el) => { const b = el.getBoundingClientRect(); return b.width > 0 && b.height > 0 && (b.width < 48 || b.height < 48); }).map((el) => `${el.getAttribute("data-act") ?? el.getAttribute("aria-label") ?? el.tagName} ${Math.round(el.getBoundingClientRect().width)}x${Math.round(el.getBoundingClientRect().height)}`));
     const step = async (name, fn) => { try { await fn(); check(`${name} @${width}`, errs.length === 0, errs.length === 0 ? "ok" : errs.join(" | ")); } catch (e) { check(`${name} @${width}`, false, String(e && e.message ? e.message : e).replace(/\s+/g, " ").slice(0, 400)); } };
     await page.goto(`${origin}/maker/`, { waitUntil: "load" });
-    await press(page, "New project"); await press(page, "Continue"); await press(page, "Create");
+    await press(page, "New project"); await press(page, "Continue"); await press(page, "Create"); await tap(page, "m:menu"); await tap(page, "m:levels");
     await step("1 levels off then on", async () => {
       await page.locator('[data-act="l:on"]').scrollIntoViewIfNeeded(); await waitText(page, "Levels: Off"); await shot("01-levels-off");
       await tap(page, "l:on"); await waitText(page, "Levels: 9 · 112 XP to the top"); await quiet(page); await page.locator('[data-act="l:open"]').scrollIntoViewIfNeeded(); await shot("02-levels-on");
@@ -77,11 +77,11 @@ try {
     });
     await step("6 turn off", async () => {
       await quiet(page); await tap(page, "l:off"); await page.waitForFunction(() => document.body.innerText.includes("Levels: Off") && document.querySelector("[data-sheet=levels]") === null, null, { timeout: 15000 });
-      await quiet(page); await tap(page, "test"); await page.waitForFunction(() => window.__play !== undefined && window.__driver.stats.draws > 0 && document.querySelector("#xp")?.textContent === "" && getComputedStyle(document.querySelector("#xp")).display === "none", null, { timeout: 15000 });
+      await quiet(page); await tap(page, "m:close"); await tap(page, "s:test"); await page.waitForFunction(() => window.__play !== undefined && window.__driver.stats.draws > 0 && document.querySelector("#xp")?.textContent === "" && getComputedStyle(document.querySelector("#xp")).display === "none", null, { timeout: 15000 });
     });
     await step("7 reload", async () => {
-      await press(page, "Back to maker"); await page.waitForFunction(() => document.body.innerText.includes("Levels: Off"), null, { timeout: 15000 });
-      await page.goto(`${origin}/maker/`, { waitUntil: "load" }); await press(page, "My game");
+      await press(page, "Back to maker"); await page.waitForFunction(() => document.querySelector('[data-act="s:test"]') !== null, null, { timeout: 15000 });
+      await page.goto(`${origin}/maker/`, { waitUntil: "load" }); await press(page, "My game"); await tap(page, "m:menu"); await tap(page, "m:levels");
       await waitText(page, "Levels: Off"); await tap(page, "l:on"); await quiet(page); await tap(page, "l:open");
       await page.waitForFunction(() => document.querySelectorAll("[data-row]").length === 3 && ["17 XP", "11 XP", "13 XP"].every((t, i) => document.querySelector(`[data-val="row-${i}"]`)?.textContent === t), null, { timeout: 15000 });
     });

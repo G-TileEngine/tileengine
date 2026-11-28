@@ -21,7 +21,7 @@ try {
     const ctx = await browser.newContext({ viewport: { width, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, colorScheme: "light" });
     const page = await ctx.newPage(); const errs = []; page.on("pageerror", (e) => errs.push(String(e)));
     const step = async (name, fn) => { try { await fn(); check(`${name} @${width}`, errs.length === 0, errs.length === 0 ? "ok" : errs.join(" | ")); } catch (e) { check(`${name} @${width}`, false, String(e && e.message ? e.message : e).split("\n")[0]); } };
-    await page.goto(`${makerOrigin}/maker/`, { waitUntil: "load" }); await press(page, "New project"); await press(page, "Continue"); await press(page, "Create");
+    await page.goto(`${makerOrigin}/maker/`, { waitUntil: "load" }); await press(page, "New project"); await press(page, "Continue"); await press(page, "Create"); await tap(page, "m:menu");
     let gp = null;
     await step("1 zip", async () => {
       await page.waitForFunction(() => document.querySelector('[data-act="build"]') !== null, null, { timeout: 15000 });

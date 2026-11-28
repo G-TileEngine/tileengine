@@ -10,7 +10,7 @@ import { installOne } from "../../src/rules/behaviours/index.ts";
 import { ACTION_BUDGET } from "../../src/rules/turns/action-budget.ts";
 import { botAbilityPriority } from "../../src/rules/turns/bot-ability-priority.ts";
 import { createWorld, runMatch, snapshot } from "../../src/sim/index.ts";
-import { projectScreen } from "../../tools/maker/project.ts";
+import { stageScreen } from "../../tools/maker/stage.ts";
 import { memoryStore } from "../../tools/maker/store.ts";
 import { launchTest, openSaved } from "../../tools/maker/test-launch.ts";
 import { docsToInput } from "../../tools/play-stage/load.ts";
@@ -66,8 +66,8 @@ test("test-launch: save fails, no launch", async () => {
   const got = await launchTest({ store, id, stored, next, rev: storedRev(readJson("data/templates/demo.tileproj")), from: "project", now: NOW, start() { started = true; } });
   assert.equal(started, false); assert.equal(got.ok, false); if (got.ok) return;
   assert.match(got.lines[0] ?? "", /Couldn't save/); assert.equal(store.files.get(`${prefix(id)}project.json`), stored["project.json"]);
-  const html = projectScreen({ name: "Demo", stages: 1, dirty: true, readOnly: false, banner: got.lines[0] ?? null, problems: [] });
-  assert.match(html, /Couldn(?:'|&#39;)t save/); assert.match(html, /data-act="test"/); assert.equal(html.includes("openBundled"), false);
+  const html = stageScreen("stage_01JDAS00000000000000000001", { files: stored, rev: storedRev(readJson("data/templates/demo.tileproj")), readOnly: false, banner: got.lines[0] ?? null, dirty: true });
+  assert.match(html, /Couldn(?:'|&#39;)t save/); assert.match(html, /data-act="s:test"/); assert.equal(html.includes("openBundled"), false);
 });
 test("an unreadable project shows the error and does not launch the demo", async () => {
   const store = memoryStore(); await store.write(`${prefix("bad")}project.json`, "{");

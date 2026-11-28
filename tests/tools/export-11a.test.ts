@@ -100,7 +100,7 @@ test("11a buildGame: a saved project goes through the Test gate into a zip of th
   assert.throws(() => playBase("http://127.0.0.1/play/ab/home.js"), /Can't build: \/maker\//);
   assert.equal(playBase("http://127.0.0.1/maker/abc123def456/tools/maker/home.js"), "http://127.0.0.1/play-stage/abc123def456/");
   const home = readFileSync("tools/maker/home.ts", "utf8");
-  assert.equal(/if \(state\.dirty\) await saveCurrent\(\);\n {2}if \(state\.dirty\) return;/.test(home) && /built = \{ mode: "error", reason: e instanceof Error \? e\.message : "Can't build" \}/.test(home), true);
+  assert.equal(/if \(!await saveStage\(\)\) \{\n {4}paint\(\);\n {4}return;\n {2}\}\n {2}const id = state\.current;/.test(home) && /built = \{ mode: "error", reason: e instanceof Error \? e\.message : "Can't build" \}/.test(home), true);
 });
 test("11a play boot: Build game straight after opening ships each saved document byte for byte (a raw U+2028 and a v4 map included, nothing from notes/), and the zip's module plays the same as Test (old docs read up in memory by load/migrate.js, DSK E7)", async () => {
   const text = demo();

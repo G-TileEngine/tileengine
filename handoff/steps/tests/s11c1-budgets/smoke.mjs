@@ -23,7 +23,7 @@ try {
     const page = await ctx.newPage(); const errs = []; page.on("pageerror", (e) => errs.push(String(e)));
     const step = async (name, fn) => { try { await fn(); check(`${name} @${width}`, errs.length === 0, errs.length === 0 ? "ok" : errs.join(" | ")); } catch (e) { check(`${name} @${width}`, false, String(e && e.message ? e.message : e).split("\n")[0]); } };
     const shot = async (name) => { if (width === 390) await page.screenshot({ path: join(out, `${name}.png`), scale: "css" }); };
-    await page.goto(`${origin}/maker/`, { waitUntil: "load" }); await press(page, "New project"); await press(page, "Continue"); await press(page, "Create");
+    await page.goto(`${origin}/maker/`, { waitUntil: "load" }); await press(page, "New project"); await press(page, "Continue"); await press(page, "Create"); await tap(page, "m:menu");
     await step("1 all good", async () => {
       await page.waitForFunction(() => document.querySelector('[data-act="budgets"]')?.textContent?.includes("Budgets: all good"), null, { timeout: 15000 });
       const pos = await page.evaluate(() => document.querySelector("[data-budgets]")?.nextElementSibling?.getAttribute("data-act") ?? ""); if (pos !== "build") throw new Error(pos || "no row"); await tap(page, "budgets");
@@ -36,11 +36,11 @@ try {
       await page.waitForFunction(() => { const u = document.querySelector('[data-budget="units"]')?.textContent ?? "", a = document.querySelector('[data-budget="activeAi"]')?.textContent ?? "", e = document.querySelector('[data-budget="effects"]')?.textContent ?? ""; return u.includes("7 of 9 · near limit") && a.includes("2 of 1 · over limit") && e.includes("0 of 12") && !e.includes("·") && document.querySelectorAll('meter[aria-hidden="true"]').length === 4; }, null, { timeout: 15000 }); await shot("02-budgets-expanded");
     });
     await step("3 gate", async () => {
-      await page.evaluate(() => { delete window.__play; }); await tap(page, "test");
-      await page.waitForFunction((line) => document.body.innerText.includes("Can't play yet") && document.body.innerText.includes(line) && window.__play === undefined, LINE, { timeout: 15000 }); const h = await page.evaluate(() => document.querySelector(".project .sheet")?.getBoundingClientRect().height ?? 0); if (!(h > 0)) throw new Error(`sheet ${h}`); await shot("03-gate-budget");
-      await tap(page, "fix"); await page.waitForFunction(() => !document.body.innerText.includes("Can't play yet"), null, { timeout: 15000 }); await tap(page, "build");
+      await page.evaluate(() => { delete window.__play; }); await tap(page, "m:close"); await tap(page, "s:test");
+      await page.waitForFunction((line) => (document.querySelector(".banner")?.textContent ?? "").includes(line) && window.__play === undefined, LINE, { timeout: 15000 }); await shot("03-gate-budget");
+      await tap(page, "dismiss"); await page.waitForFunction((line) => !document.body.innerText.includes(line), LINE, { timeout: 15000 }); await tap(page, "m:menu"); await tap(page, "build");
       await page.waitForFunction((line) => document.body.innerText.includes(line) && document.querySelector('[data-sheet="build"]') === null && document.querySelector('[data-act="build"]')?.getAttribute("aria-busy") !== "true", LINE, { timeout: 15000 });
-      await putBudgets(page, NEAR); await tap(page, "fix"); await page.evaluate(() => { delete window.__play; }); await tap(page, "test"); await page.waitForFunction(() => window.__play !== undefined, null, { timeout: 15000 });
+      await putBudgets(page, NEAR); await tap(page, "m:close"); await tap(page, "dismiss"); await page.evaluate(() => { delete window.__play; }); await tap(page, "s:test"); await page.waitForFunction(() => window.__play !== undefined, null, { timeout: 15000 });
     });
     await ctx.close();
   };

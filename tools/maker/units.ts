@@ -88,6 +88,13 @@ export function unitTail(files: DocText, readOnly: boolean): string {
   const add = readOnly ? "" : `<button type="button" class="btn ghost stage-row" data-act="u:add">${icon("plus")}Add unit</button>`;
   return `<h2>Units</h2>${cards}${add}`;
 }
+export function unitCount(files: DocText): number {
+  const bag = bagOf(files);
+  if (bag === null) {
+    return 0;
+  }
+  return shown(bag, sess.hidden).length;
+}
 function sheet(): string {
   const close = `<button type="button" class="btn ghost" data-act="u:close">Close</button>`;
   if (sess.mode === "note") return `<div class="scrim"><div class="sheet" role="dialog"><h2>Can't delete</h2>${sess.lines.map((line) => `<p>${esc(line)}</p>`).join("")}${close}</div></div>`;

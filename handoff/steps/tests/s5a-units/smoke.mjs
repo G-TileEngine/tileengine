@@ -27,7 +27,7 @@ try {
     const step = async (name, fn) => { try { await fn(); const tiny = await big(); check(`${name} @${width}`, errs.length === 0 && tiny.length === 0, errs.length === 0 && tiny.length === 0 ? "ok" : [...errs, ...tiny].join(" | ")); } catch (e) { check(`${name} @${width}`, false, String(e && e.message ? e.message : e).split("\n")[0]); } };
     const setHp = async (n) => { await page.locator('[data-knob="unit_hp"]').evaluate((el, n) => { el.value = String(n); el.dispatchEvent(new Event("input", { bubbles: true })); }, n); await page.waitForFunction((n) => document.querySelector('[data-val="unit_hp"]')?.textContent === String(n), n, { timeout: 15000 }); };
     await page.goto(`${origin}/maker/`, { waitUntil: "load" });
-    await press(page, "New project"); await press(page, "Continue"); await press(page, "Create"); await waitText(page, "Units");
+    await press(page, "New project"); await press(page, "Continue"); await press(page, "Create"); await tap(page, "m:menu"); await tap(page, "m:units"); await waitText(page, "Units");
     await step("1 units", async () => {
       await page.evaluate(() => { const h = [...document.querySelectorAll("h2")].find((n) => n.textContent === "Units"); h?.scrollIntoView({ block: "start" }); });
       const text = await page.evaluate(() => document.body.innerText); if (NAMES.some((name) => !text.includes(name)) || !text.includes("Add unit")) throw new Error(text);
@@ -36,13 +36,13 @@ try {
     await step("2 add", async () => {
       await open("u:add", "u:create"); await page.locator("[data-unit]").waitFor({ timeout: 15000 }); await shot("02-name");
       await page.locator("[data-unit]").fill("Scout"); await tap(page, "u:create");
-      await page.waitForFunction(() => document.querySelector("h1")?.textContent === "Scout" && document.body.innerText.includes("Start from a role"), null, { timeout: 15000 });
+      await page.waitForFunction(() => [...document.querySelectorAll("h1")].some((h) => h.textContent === "Scout") && document.body.innerText.includes("Start from a role"), null, { timeout: 15000 });
       await shot("03-editor"); sheetTiny.push(...await big());
       await tap(page, "u:back"); await waitText(page, "Add unit");
       scout = await page.evaluate(() => [...document.querySelectorAll("[data-act]")].map((el) => el.getAttribute("data-act") ?? "").find((act) => act.startsWith("u:open:") && (document.querySelector(`[data-act="${act}"]`)?.textContent ?? "").includes("Scout")) ?? "");
       if (!scout.startsWith("u:open:unit_")) throw new Error(scout || "no scout");
       await tap(page, scout);
-      await page.waitForFunction(() => document.querySelector("h1")?.textContent === "Scout", null, { timeout: 15000 });
+      await page.waitForFunction(() => [...document.querySelectorAll("h1")].some((h) => h.textContent === "Scout"), null, { timeout: 15000 });
     });
     await step("3 role", async () => {
       await open("u:role", "u:apply:btf-warrior"); await waitText(page, "Warrior (BTF)"); await shot("04-roles");
@@ -63,8 +63,8 @@ try {
       await open(`u:menu:${KNIGHT}`, "u:delete"); await tap(page, "u:delete"); await waitText(page, "Used in your team list. Remove it there first."); await tap(page, "u:close");
     });
     await step("7 reload", async () => {
-      await page.reload({ waitUntil: "load" }); await waitText(page, "My game"); await press(page, "My game"); await waitText(page, "Units"); await tap(page, scout);
-      await page.waitForFunction(() => document.querySelector("h1")?.textContent === "Scout" && document.body.innerText.includes("Same as army") && document.querySelector('[data-val="unit_hp"]')?.textContent === "9", null, { timeout: 15000 });
+      await page.reload({ waitUntil: "load" }); await waitText(page, "My game"); await press(page, "My game"); await tap(page, "m:menu"); await tap(page, "m:units"); await waitText(page, "Units"); await tap(page, scout);
+      await page.waitForFunction(() => [...document.querySelectorAll("h1")].some((h) => h.textContent === "Scout") && document.body.innerText.includes("Same as army") && document.querySelector('[data-val="unit_hp"]')?.textContent === "9", null, { timeout: 15000 });
     });
     check(`8 targets @${width}`, sheetTiny.length === 0, sheetTiny.length === 0 ? "ok" : [...new Set(sheetTiny)].join(" | "));
     await ctx.close();

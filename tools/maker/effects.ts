@@ -27,6 +27,13 @@ export function effectsSection(files: DocText, readOnly: boolean): string {
   const add = readOnly ? "" : `<button type="button" class="btn ghost stage-row" data-act="e:new">${icon("plus")}New effect</button>`;
   return `<h2>Effects</h2>${rows}${add}`;
 }
+export function effectCount(files: DocText): number {
+  const bag = bagOf(files);
+  if (bag === null) {
+    return 0;
+  }
+  return effectRows(bag).length;
+}
 export function effectsSheet(files: DocText, readOnly: boolean): string {
   if (mode === "closed" || readOnly) return "";
   const bag = bagOf(files); if (bag === null) return "";
