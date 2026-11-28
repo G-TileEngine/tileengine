@@ -2,6 +2,8 @@
   "style": "B r6b (CEO 2026-11-27 20:14 and 20:16 London; docs/maker/art-style.md)",
   "outline": { "colour": "#2a1630", "rampWeight": 0.45, "colourWeight": 0.55 },
   "outlineBy": { "leaf": "#1a1628" },
+  "rim": 0.16,
+  "bias": { "steel": -0.16, "stone": -0.1 },
   "ramps": {
     "grass": ["#1f2c2c", "#283e2a", "#365226", "#486624", "#5e7a26", "#7a8a2c", "#9c9a34", "#c4aa4a"],
     "leaf": ["#0e1824", "#12282c", "#173a2e", "#204e26", "#30621f", "#477822", "#64902a", "#8ea832", "#c8c04a"],
