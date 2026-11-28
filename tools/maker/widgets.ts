@@ -7,7 +7,7 @@ const optOf = (item: KnobOpt): { readonly value: string; readonly label: string 
 const num = (v: number | null | undefined): string => (typeof v === "number" ? String(v) : "");
 export function seg(label: string, on: boolean, act: string): string {
   const opt = (word: string, set: boolean, name: string): string => `<button type="button" class="seg-opt" aria-pressed="${set ? "true" : "false"}" aria-label="${name}"${set ? "" : ` data-act="${act}"`}><span>${word}</span></button>`;
-  return `<div class="seg-row"><span class="seg-label">${label}</span><span class="seg" role="group" data-seg="${act}">${opt("Off", !on, `${label}: Off`)}${opt("On", on, label)}</span></div>`;
+  return `<div class="seg-row"><span class="seg-label">${label}</span><span class="seg" role="group" data-seg="${act}">${opt("Off", !on, `${label}: Off`)}${opt("On", on, `${label}: On`)}</span></div>`;
 }
 export function knobWidget(spec: KnobSpec, value: unknown): string {
   const id = esc(spec.id), label = esc(spec.label);

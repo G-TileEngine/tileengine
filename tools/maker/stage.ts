@@ -139,7 +139,7 @@ async function commitStage(io: Io, host: Host, stage: Obj, prior: Obj, extra: Re
 }
 export function stageScreen(stageId: string, host: Host): string {
   const got = bundle(host.files, stageId);
-  if ("error" in got) return `<header class="topbar"><button type="button" class="btn ghost" data-act="s:back">Back</button><h1>Stage</h1></header><div class="body"><p class="banner bad" role="alert">${esc(got.error)}</p></div>`;
+  if ("error" in got) return `<header class="topbar"><button type="button" class="btn ghost" data-act="s:back">${icon("back")}Back</button><h1>Stage</h1></header><div class="body"><p class="banner bad" role="alert">${esc(got.error)}</p></div>`;
   const name = typeof got.stage["name"] === "string" ? got.stage["name"] : "Stage", placed = marks(got.parsed, got.stage);
   let users = 0; for (const [path, doc] of Object.entries(got.parsed)) if (path.startsWith("stages/") && isObj(doc) && doc["mapRef"] === got.stage["mapRef"]) users += 1;
   const note = users > 1 ? `<p class="sub">This map is used by ${users} stages. Painting changes all of them.</p>` : "";

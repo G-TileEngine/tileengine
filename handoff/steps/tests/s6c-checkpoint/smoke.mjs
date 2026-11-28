@@ -54,19 +54,19 @@ try {
       await page.waitForFunction(() => document.querySelector("h1")?.textContent === "Hero", null, { timeout: 15000 });
       await slide(page, '[data-knob="unit_hp"]', "20"); await page.waitForFunction(() => document.querySelector('[data-val="unit_hp"]')?.textContent === "20", null, { timeout: 15000 }); await quiet(page);
       await slide(page, '[data-knob="unit_atk"]', "5"); await page.waitForFunction(() => document.querySelector('[data-val="unit_atk"]')?.textContent === "2", null, { timeout: 15000 }); await quiet(page);
-      await see(); await tap(page, "t:team"); await page.waitForFunction(() => document.querySelector('[aria-label="On your team"]')?.getAttribute("aria-pressed") === "true", null, { timeout: 15000 }); await quiet(page);
+      await see(); await tap(page, "t:team"); await page.waitForFunction(() => document.querySelector('[aria-label="On your team: On"]')?.getAttribute("aria-pressed") === "true", null, { timeout: 15000 }); await quiet(page);
       await tap(page, "g:open"); await page.waitForFunction(() => document.querySelector('[data-sheet="goals"]') !== null, null, { timeout: 15000 }); await see();
       const bin = await page.evaluate(() => document.querySelector('[data-goal="Attack"]')?.getAttribute("data-act") ?? ""); if (bin === "") throw new Error("bin"); await tap(page, bin);
       await page.waitForFunction(() => document.querySelector('[data-sheet="cards"]') !== null, null, { timeout: 15000 }); await see(); await tap(page, "g:add:line-shot");
       await page.waitForFunction(() => document.querySelector('[data-act="a:shut"]') !== null && document.querySelector('[data-knob="range"]')?.value === "3" && document.querySelector('[data-knob="damage"]')?.value === "2", null, { timeout: 15000 }); await see();
-      await tap(page, "a:shut"); await page.waitForFunction(() => document.body.innerText.includes("Line Shot") && document.querySelector('[aria-label="On your team"]')?.getAttribute("aria-pressed") === "true", null, { timeout: 15000 });
-      await page.locator('[aria-label="On your team"]').scrollIntoViewIfNeeded(); await shot("04-hero");
+      await tap(page, "a:shut"); await page.waitForFunction(() => document.body.innerText.includes("Line Shot") && document.querySelector('[aria-label="On your team: On"]')?.getAttribute("aria-pressed") === "true", null, { timeout: 15000 });
+      await page.locator('[aria-label="On your team: On"]').scrollIntoViewIfNeeded(); await shot("04-hero");
       await page.locator('[data-role="card"]').last().scrollIntoViewIfNeeded(); await shot("04b-ability");
     });
     await step("5 raider", async () => {
       await tap(page, "u:back"); await quiet(page); await tap(page, "u:add"); await page.locator("[data-unit]").fill("Raider"); await see(); await tap(page, "u:create");
       await page.waitForFunction(() => document.querySelector("h1")?.textContent === "Raider", null, { timeout: 15000 });
-      await slide(page, '[data-knob="unit_hp"]', "2"); await page.waitForFunction(() => document.querySelector('[data-val="unit_hp"]')?.textContent === "2" && document.querySelector('[data-act="u:reset:unit_hp"]') !== null && document.querySelector('[aria-label="On your team"]')?.getAttribute("aria-pressed") === "false", null, { timeout: 15000 });
+      await slide(page, '[data-knob="unit_hp"]', "2"); await page.waitForFunction(() => document.querySelector('[data-val="unit_hp"]')?.textContent === "2" && document.querySelector('[data-act="u:reset:unit_hp"]') !== null && document.querySelector('[aria-label="On your team: On"]')?.getAttribute("aria-pressed") === "false", null, { timeout: 15000 });
       await see(); await shot("05-raider"); await tap(page, "u:back"); await quiet(page);
     });
     await step("6 place", async () => {
