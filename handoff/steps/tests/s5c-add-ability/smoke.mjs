@@ -25,7 +25,7 @@ try {
     const step = async (name, fn) => { try { await fn(); check(`${name} @${width}`, errs.length === 0, errs.length === 0 ? "ok" : errs.join(" | ")); } catch (e) { check(`${name} @${width}`, false, String(e && e.message ? e.message : e).replace(/\s+/g, " ").slice(0, 240)); } };
     const lineAct = () => page.evaluate(() => [...document.querySelectorAll("[data-add]")].find((el) => (el.getAttribute("data-add") ?? "").includes("Line Shot"))?.getAttribute("data-act") ?? "");
     await page.goto(`${origin}/maker/`, { waitUntil: "load" });
-    await press(page, "New project"); await press(page, "Continue"); await press(page, "Create"); await press(page, "Demo stage");
+    await press(page, "New project"); await press(page, "Continue"); await press(page, "Create"); 
     await page.waitForFunction(() => document.querySelectorAll(".cell").length === 54, null, { timeout: 15000 });
     await tap(page, "s:cell:0,8"); await page.waitForFunction(() => document.querySelector(".sheet h2")?.textContent === "Knight · Your team", null, { timeout: 15000 });
     await tap(page, "s:edit"); await page.waitForFunction(() => document.querySelector('[data-act="g:open"]') !== null, null, { timeout: 15000 });

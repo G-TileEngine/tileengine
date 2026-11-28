@@ -14,14 +14,14 @@ const browser = await chromium.launch({ executablePath: process.env.CHROME ?? "/
 const ARCHER = "unit_01JDAN00000000000000000002", LINE = "setup_01JDAT00000000000000000005", HOLY = "btf-holy-blade";
 const tap = async (page, act) => { const got = await page.waitForFunction((act) => { const el = document.querySelector(`[data-act="${act}"]`); if (!(el instanceof HTMLElement)) return null; if (document.querySelector(".scrim") !== null && el.closest(".scrim") === null) return null; el.scrollIntoView({ block: "center", inline: "nearest" }); const r = el.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2; const top = document.elementFromPoint(x, y); return top !== null && top.closest("[data-act]") === el ? { x, y } : null; }, act, { timeout: 15000 }); const pos = await got.jsonValue(); if (pos === null || typeof pos.x !== "number") throw new Error(`no ${act}`); await page.touchscreen.tap(pos.x, pos.y); };
 const press = async (page, name) => { const btn = page.getByRole("button", { name }).first(); await btn.waitFor({ timeout: 15000 }); await btn.scrollIntoViewIfNeeded(); const box = await btn.boundingBox(); if (box === null) throw new Error(name); await page.touchscreen.tap(box.x + Math.min(box.width / 2, 24), box.y + box.height / 2); };
-const openLine = async (page) => { await tap(page, `u:open:${ARCHER}`); await page.waitForFunction((line) => document.querySelector(".scrim") === null && document.querySelector(`[data-act="a:open:${line}"]`) !== null, LINE, { timeout: 15000 }); await tap(page, `a:open:${LINE}`); await page.waitForFunction((id) => document.querySelector(".scrim") === null && document.querySelector(`[data-act="a:fx:${id}"]`) !== null && document.querySelector('[data-act="a:shut"]') !== null, HOLY, { timeout: 15000 }); };
+const openLine = async (page) => { await tap(page, `u:open:${ARCHER}`); await page.waitForFunction((line) => document.querySelectorAll(".scrim").length < 2 && document.querySelector(`[data-act="a:open:${line}"]`) !== null, LINE, { timeout: 15000 }); await tap(page, `a:open:${LINE}`); await page.waitForFunction((id) => document.querySelectorAll(".scrim").length < 2 && document.querySelector(`[data-act="a:fx:${id}"]`) !== null && document.querySelector('[data-act="a:shut"]') !== null, HOLY, { timeout: 15000 }); };
 try {
   const run = async (width) => {
     const ctx = await browser.newContext({ viewport: { width, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, colorScheme: "light" });
     const page = await ctx.newPage(); const errs = []; page.on("pageerror", (e) => errs.push(String(e)));
     const step = async (name, fn) => { try { await fn(); check(`${name} @${width}`, errs.length === 0, errs.length === 0 ? "ok" : errs.join(" | ")); } catch (e) { check(`${name} @${width}`, false, String(e && e.message ? e.message : e).split("\n")[0]); } };
     await page.goto(`${origin}/maker/`, { waitUntil: "load" });
-    await press(page, "New project"); await press(page, "Continue"); await press(page, "Create");
+    await press(page, "New project"); await press(page, "Continue"); await press(page, "Create"); await tap(page, "m:menu"); await tap(page, "m:units");
     await step("1 builtins", async () => {
       await openLine(page);
       const got = await page.evaluate(() => ({ btf: document.querySelectorAll('[data-act^="a:fx:btf-"]').length, te: document.querySelector('[data-act^="a:fx:te-"]') !== null, head: document.body.innerText.includes("Built-in") }));
@@ -34,11 +34,11 @@ try {
       await page.waitForFunction((line) => document.querySelector('[data-act="a:shut"]') === null && document.querySelector(`[data-act="a:test:${line}"]`) !== null, LINE, { timeout: 15000 });
       await tap(page, "u:back");
       await page.waitForFunction(() => document.querySelector('[data-act="undo"]') !== null, null, { timeout: 15000 });
-      await tap(page, "undo");
+      await tap(page, "m:close"); await tap(page, "undo");
       await page.waitForFunction((id) => { const files = window.__read(), setup = JSON.parse(files["setups/setup_01JDAT00000000000000000005.json"]), slice = JSON.parse(files["catalogue/slice.json"]); return setup.answers?.effect?.value !== id && !slice.behaviours.some((row) => row.id === "effect"); }, HOLY, { timeout: 15000 });
     });
     await step("3 test", async () => {
-      await openLine(page);
+      await tap(page, "m:menu"); await tap(page, "m:units"); await openLine(page);
       await tap(page, `a:fx:${HOLY}`);
       await page.waitForFunction((id) => document.querySelector(`[data-act="a:fx:${id}"]`)?.getAttribute("aria-pressed") === "true", HOLY, { timeout: 15000 });
       await tap(page, "a:shut");

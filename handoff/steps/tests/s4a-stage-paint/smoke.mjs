@@ -21,7 +21,7 @@ try {
     const page = await ctx.newPage(); const errs = []; page.on("pageerror", (e) => errs.push(String(e)));
     const step = async (name, fn) => { try { await fn(); check(`${name} @${width}`, errs.length === 0, errs.length === 0 ? "ok" : errs.join(" | ")); } catch (e) { check(`${name} @${width}`, false, String(e && e.message ? e.message : e)); } };
     await page.goto(`${origin}/maker/`, { waitUntil: "load" });
-    await press(page, "New project"); await press(page, "Continue"); await press(page, "Create"); await press(page, "Demo stage");
+    await press(page, "New project"); await press(page, "Continue"); await press(page, "Create"); await page.waitForSelector(".cell");
     await step("1 grid", async () => { const grid = await page.evaluate(() => { const cells = [...document.querySelectorAll(".cell")]; const box = cells[0].getBoundingClientRect(); return { n: cells.length, w: box.width, h: box.height }; }); if (grid.n !== 54 || grid.w < 48 || grid.h < 48) throw new Error(JSON.stringify(grid)); });
     await step("2 sheet", async () => { await tap(page, "s:cell:0,0"); const got = await page.evaluate(() => { const rows = [...document.querySelectorAll(".sheet .pick")].map((b) => b.textContent); const small = [...document.querySelectorAll("button")].map((b) => b.getBoundingClientRect()).filter((b) => b.width > 0 && (b.width < 48 || b.height < 48)); return { rows, small: small.length, title: document.querySelector(".sheet h2")?.textContent, here: document.body.innerText.includes("Tile 0,0") }; }); if (got.title !== "Add here" || !got.here || got.rows.join("|") !== "Floor|Water|Wall block" || got.small !== 0) throw new Error(JSON.stringify(got)); });
     await step("3 paint", async () => { await tap(page, "s:type:water"); await tap(page, "s:cell:1,0"); await tap(page, "s:done"); await settle(page, () => document.querySelector(".chip") === null); const a = await tile(page, 0, 0), b = await tile(page, 1, 0), chip = await page.locator(".chip").count(); if (a !== "water" || b !== "water" || chip !== 0) throw new Error(`${a} ${b} chip ${chip} ${await page.locator(".banner").textContent()}`); });
@@ -40,7 +40,7 @@ try {
       await tap(page, "s:fresh"); await tap(page, "s:fresh-go"); await settle(page, () => [...document.querySelectorAll(".cell")].every((b) => b.getAttribute("data-tile") === "floor")); const all = await page.evaluate(() => [...document.querySelectorAll(".cell")].every((b) => b.getAttribute("data-tile") === "floor")); if (!all) throw new Error("not floor");
       await tap(page, "s:undo"); await settle(page, () => document.querySelector('[data-act="s:cell:0,0"]')?.getAttribute("data-tile") === "water"); if (await tile(page, 0, 0) !== "water") throw new Error("undo lost water");
     });
-    await step("8 reload", async () => { await page.goto(`${origin}/maker/`, { waitUntil: "load" }); await press(page, "My game"); await press(page, "Demo stage"); const a = await tile(page, 0, 0); if (a !== "water") throw new Error(String(a)); });
+    await step("8 reload", async () => { await page.goto(`${origin}/maker/`, { waitUntil: "load" }); await press(page, "My game"); const a = await tile(page, 0, 0); if (a !== "water") throw new Error(String(a)); });
     await ctx.close();
   };
   await run(390); await run(360);

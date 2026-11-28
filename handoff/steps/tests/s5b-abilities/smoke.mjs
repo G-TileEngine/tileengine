@@ -24,7 +24,7 @@ try {
     const big = async () => page.evaluate(() => [...document.querySelectorAll("button, input")].filter((el) => { const b = el.getBoundingClientRect(); return b.width > 0 && b.height > 0 && (b.width < 48 || b.height < 48); }).map((el) => `${el.getAttribute("data-act") ?? el.getAttribute("aria-label") ?? el.tagName} ${Math.round(el.getBoundingClientRect().width)}x${Math.round(el.getBoundingClientRect().height)}`));
     const step = async (name, fn) => { try { await fn(); check(`${name} @${width}`, errs.length === 0, errs.length === 0 ? "ok" : errs.join(" | ")); } catch (e) { check(`${name} @${width}`, false, String(e && e.message ? e.message : e).split("\n")[0]); } };
     await page.goto(`${origin}/maker/`, { waitUntil: "load" });
-    await press(page, "New project"); await press(page, "Continue"); await press(page, "Create"); await press(page, "Demo stage");
+    await press(page, "New project"); await press(page, "Continue"); await press(page, "Create"); 
     await page.waitForFunction(() => document.querySelectorAll(".cell").length === 54, null, { timeout: 15000 });
     await step("1 sheet", async () => {
       await tap(page, "s:cell:1,8"); await page.waitForFunction(() => document.querySelector(".sheet h2")?.textContent === "Archer · Your team", null, { timeout: 15000 });
@@ -65,14 +65,14 @@ try {
       await tap(page, "s:cell:1,8"); await page.waitForFunction(() => document.querySelector('[data-act="s:edit"]') !== null, null, { timeout: 15000 });
       await tap(page, "s:edit"); await page.waitForFunction(() => document.querySelector('[data-act="a:test"]') !== null, null, { timeout: 15000 });
       await tap(page, "a:test"); await page.waitForFunction((id) => { const play = window.__play, unit = play?.world.units.get(play.selected); return unit?.unitId === id && unit.side === play.sides.me; }, ARCHER, { timeout: 15000 });
-      await press(page, "Back to maker"); await page.waitForFunction(() => document.querySelector('[data-act="u:back"]') !== null || document.querySelector('[data-act="s:back"]') !== null, null, { timeout: 15000 });
+      await press(page, "Back to maker"); await page.waitForFunction(() => document.querySelector('[data-act="u:back"]') !== null || document.querySelector('[data-act="m:menu"]') !== null, null, { timeout: 15000 });
     });
     await step("7 nowhere", async () => {
       if (await page.locator('[data-act="u:back"]').count()) await tap(page, "u:back");
-      await page.waitForFunction(() => document.querySelector('[data-act="s:back"]') !== null, null, { timeout: 15000 });
-      await tap(page, "s:back"); await waitText(page, "Add unit"); await tap(page, "u:add");
+      await page.waitForFunction(() => document.querySelector('[data-act="m:menu"]') !== null, null, { timeout: 15000 });
+      await tap(page, "m:menu"); await tap(page, "m:units"); await waitText(page, "Add unit"); await tap(page, "u:add");
       await page.waitForFunction(() => document.querySelector("[data-unit]") !== null, null, { timeout: 15000 }); await page.locator("[data-unit]").fill("Spare"); await tap(page, "u:create");
-      await page.waitForFunction(() => document.querySelector("h1")?.textContent === "Spare" && document.body.innerText.includes("Place this unit on a stage to test it."), null, { timeout: 15000 });
+      await page.waitForFunction(() => [...document.querySelectorAll("h1")].some((h) => h.textContent === "Spare") && document.body.innerText.includes("Place this unit on a stage to test it."), null, { timeout: 15000 });
       const shown = await page.evaluate(() => [...document.querySelectorAll("[data-act]")].some((el) => { const act = el.getAttribute("data-act") ?? ""; return act === "a:test" || act.startsWith("a:test:") || act === "s:try"; }));
       if (shown) throw new Error("test shown");
     });

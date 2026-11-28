@@ -7,7 +7,7 @@ import { checkName, copyName, duplicate, prefix, projectId, renameTo, restorePla
 import { asWrites, planSave } from "../../src/editor/project/save.ts";
 import { readProject } from "../../src/project/load/index.ts";
 import { parseProject } from "../../tools/maker/project-files.ts";
-import { projectScreen } from "../../tools/maker/project.ts";
+import { gameMenu } from "../../tools/maker/game-menu.ts";
 import { commitWrites, memoryStore, movePrefix, readTree } from "../../tools/maker/store.ts";
 const root = fileURLToPath(new URL("../..", import.meta.url)), NOW = "2026-11-19T00:00:00.000Z";
 const DOC = /^(?:project\.json|catalogue\/slice\.json|(?:maps\/map|stages\/stage|units\/unit|setups\/setup)_[0-9A-HJKMNP-TV-Z]{26}\.json)$/;
@@ -42,5 +42,5 @@ test("names, ids, templates, save, rename, duplicate, trash, stale, corrupt, gre
   const trash = memoryStore(); for (const w of asWrites(made)) await trash.write(`${prefix(idA)}${w.path}`, w.text); const kept = await readTree(trash, prefix(idA));
   await movePrefix(trash, prefix(idA), prefix(idA, true)); await movePrefix(trash, prefix(idA, true), prefix(idA)); assert.deepEqual(await readTree(trash, prefix(idA)), kept);
   await movePrefix(trash, prefix(idA), prefix(idA, true)); for (const w of asWrites(made)) await trash.write(`${prefix(idA)}${w.path}`, w.text); const restored = restorePlan(idA, true, kept, idB, NOW, ["My game"]); assert.notEqual(restored.id, idA); assert.equal(proj(restored.files).copiedFrom?.projectId, idA); assert.deepEqual(restorePlan(idA, false, kept, idB, NOW, []).files, kept);
-  const html = projectScreen({ name: "My game", stages: 1, dirty: true, readOnly: false, banner: null, problems: [] }); assert.match(html, /<button type="button" class="btn primary" data-act="test"><svg class="ico"[^>]*>.*?<\/svg>Test<\/button>/); assert.equal(html.includes("--soon"), false); assert.equal(/onclick|addEventListener/.test(html), false);
+  const html = gameMenu({ name: "My game", stages: 1, units: 0, effects: 0, budgets: "", build: "", dirty: true, readOnly: false, resume: false }); assert.match(html, /<button type="button" class="list-row" data-act="save"><svg class="ico"[^>]*>.*?<\/svg><span class="grow">Save<\/span><span class="meta">Unsaved<\/span>/); assert.equal(html.includes("btn primary"), false); assert.equal(html.includes("--soon"), false); assert.equal(/onclick|addEventListener/.test(html), false);
 });

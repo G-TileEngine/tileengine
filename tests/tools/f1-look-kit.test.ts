@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { prefix, storedRev } from "../../src/editor/project/home.ts";
 import { buildSheet } from "../../tools/maker/build-sheet.ts";
 import { ICON_NAMES, icon } from "../../tools/maker/icons.ts";
-import { projectScreen } from "../../tools/maker/project.ts";
+import { gameMenu, stageSwitcher } from "../../tools/maker/game-menu.ts";
 import { parseProject } from "../../tools/maker/project-files.ts";
 import { bindStage, stageClick, stageScreen, type Host } from "../../tools/maker/stage.ts";
 import { askSheet, goesSheet, placeButtons, talkSheet, unitButtons, unitPicker } from "../../tools/maker/stage-sheets.ts";
@@ -59,14 +59,14 @@ test("F1 button roles: every maker button names its role (btn primary, ghost, da
   assert.ok([["home.ts", "new", "New project"], ["units.ts", "u:add", "Add unit"], ["effects.ts", "e:new", "New effect"]].every(([name, act, words]) => sources.find((file) => file.name === name)?.text.includes(`<button type="button" class="btn ghost stage-row" data-act="${act}">\${icon("plus")}${words}</button>`)));
 });
 
-test("F1 button order: at most one primary per screen and per sheet; Test is the stage's and the project page's primary", async () => {
+test("F1 button order: at most one primary per screen and per sheet; Test is the stage's primary, and the game menu and stage switcher have none", async () => {
   const { host, io } = await demo("f1order");
   const stage = stageScreen(STAGE, host);
   assert.match(stage, /class="btn primary" data-act="s:test"/);
   const cell = await stageClick("s:cell:0,0", STAGE, host, io);
   const view = await stageClick("s:view", STAGE, host, io);
-  const project = projectScreen({ name: "My game", stages: 1, rows: [{ id: STAGE, name: "Stage 1" }], dirty: true, readOnly: false, banner: null, problems: [] });
-  assert.match(project, /class="btn primary" data-act="test"/);
+  const project = gameMenu({ name: "My game", stages: 1, units: 1, effects: 0, budgets: "", build: "", dirty: true, readOnly: false, resume: true }) + stageSwitcher([{ id: STAGE, name: "Stage 1" }], STAGE, false, "");
+  assert.ok(primaries(project).every((n) => n === 0));
   const sheets = [placeButtons([{ id: "npc", label: "NPC" }, { id: "foe", label: "Enemy" }]), goesSheet("Stairs", [{ id: "s2", name: "Two" }]), unitPicker([{ id: "u", name: "Scout" }]), askSheet("Scout"), talkSheet("Scout", 80, "Hi"), unitButtons(true, true), buildSheet({ mode: "ready", file: "g.zip", share: true }), buildSheet({ mode: "error", reason: "x" })];
   for (const html of [stage, stageScreen(STAGE, cell), stageScreen(STAGE, view), project, ...sheets]) assert.ok(primaries(html).every((n) => n <= 1), html);
   assert.equal(primaries(unitButtons(true, true))[0], 0);
@@ -127,9 +127,7 @@ test("F1 icons: one maker file of 24 px line icons (stroke currentColor, fill on
   assert.equal(/[⋯▶]/.test(all), false);
 });
 
-test("F1 card thumbnails: game rows, stage rows, maps, units, effects and levels cards lead with a 48 px thumb", () => {
-  const project = projectScreen({ name: "My game", stages: 1, rows: [{ id: STAGE, name: "Stage 1" }], dirty: false, readOnly: false, banner: null, problems: [] });
-  assert.match(project, /<div class="card"><span class="thumb"><svg class="ico"/);
+test("F1 card thumbnails: game rows, maps, units, effects and levels cards lead with a 48 px thumb", () => {
   for (const [name, kind] of [["home.ts", "stages"], ["rooms.ts", "grid"], ["units.ts", "units"], ["effects.ts", "effects"], ["levels.ts", "levels"]]) assert.ok(sources.find((file) => file.name === name)?.text.includes(`class="card">\${thumb("${kind}")}`), name);
   assert.match(rule(".thumb"), /width: 48px; height: 48px; border-radius: 8px;.*background: var\(--surface-2\); border: 1px solid var\(--line\); color: var\(--muted\);/);
 });

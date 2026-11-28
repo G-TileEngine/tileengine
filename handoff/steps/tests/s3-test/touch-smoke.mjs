@@ -28,7 +28,7 @@ try {
     page.on("request", (r) => { const u = r.url(); if (!(u.startsWith(origin) || u.startsWith("data:") || u.startsWith("blob:"))) ext.push(u); });
     await page.goto(`${origin}/maker/`, { waitUntil: "load" });
     await press(page, "New project"); await press(page, "Continue"); await press(page, "Create");
-    const testAt = await page.locator("[data-act=test]").boundingBox(); if (testAt === null) throw new Error("no test");
+    const testAt = await page.locator('[data-act="s:test"]').boundingBox(); if (testAt === null) throw new Error("no test");
     await press(page, "Test");
     await page.waitForFunction(() => location.search.includes("project=") && window.__play !== undefined && window.__hud !== undefined && window.__driver.stats.draws > 0, null, { timeout: 15000 });
     const opened = await page.evaluate(() => { const p = window.__docs.manifest.project, q = new URLSearchParams(location.search); return { id: p.id, name: p.name, query: q.get("project"), canopy: window.__docs.looks.canopy.length, braziers: window.__docs.looks.braziers.length }; });
@@ -106,19 +106,19 @@ try {
       const small = hud.filter((b) => b.w < 44 || b.h < 44); if (small.length > 0 || !hud.some((b) => b.id === "recentre") || errs.length > 0 || ext.length > 0) throw new Error(JSON.stringify({ small, recentre: hud.some((b) => b.id === "recentre"), errs, ext }));
     });
     await step("8 back to maker", 5000, async () => {
-      const live = await page.evaluate((b) => { const n = document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2); return n instanceof Element && n.closest("[data-act=test]") !== null; }, testAt);
+      const live = await page.evaluate((b) => { const n = document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2); return n instanceof Element && n.closest('[data-act="s:test"]') !== null; }, testAt);
       if (live) throw new Error("test still live");
       const back = await page.locator("#back-maker").boundingBox(); if (back === null || back.width < 48 || back.height < 48) throw new Error("no back");
       await page.touchscreen.tap(back.x + back.width / 2, back.y + back.height / 2);
-      await page.waitForFunction(() => document.querySelector("[data-act=test]") !== null && !location.search.includes("project="));
-      const name = await page.locator("h1").innerText(); if (name !== "My game") throw new Error(name);
+      await page.waitForFunction(() => document.querySelector('[data-act="s:test"]') !== null && !location.search.includes("project="));
+      const name = await page.locator("h1").innerText(); if (name !== "Demo stage") throw new Error(name);
     });
     await step("9 empty blocked", 15000, async () => {
-      await press(page, "Back"); await press(page, "New project");
+      await press(page, "Game menu"); await press(page, "My games"); await press(page, "New project");
       const empty = page.getByRole("button", { name: "Empty", exact: true }); await empty.waitFor({ timeout: 15000 }); const box = await empty.boundingBox(); if (box === null) throw new Error("empty");
       await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2); await page.waitForTimeout(80);
       await press(page, "Continue"); await press(page, "Create"); await press(page, "Test");
-      const got = await page.evaluate(() => ({ app: getComputedStyle(document.querySelector("#app")).display, board: document.querySelector("#board") !== null, text: document.querySelector(".sheet")?.textContent ?? "", test: document.querySelector("[data-act=test]") !== null }));
+      const got = await page.evaluate(() => ({ app: getComputedStyle(document.querySelector("#app")).display, board: document.querySelector("#board") !== null, text: document.querySelector(".banner")?.textContent ?? "", test: document.querySelector('[data-act="s:test"]') !== null }));
       if (got.app === "none" || got.board || !got.text.includes("Place a unit on this stage to test it") || !got.test) throw new Error(JSON.stringify(got));
     });
     await ctx.close();

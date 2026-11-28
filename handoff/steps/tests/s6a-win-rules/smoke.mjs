@@ -25,7 +25,7 @@ try {
     const step = async (name, fn) => { try { await fn(); check(`${name} @${width}`, errs.length === 0, errs.length === 0 ? "ok" : errs.join(" | ")); } catch (e) { check(`${name} @${width}`, false, String(e && e.message ? e.message : e).replace(/\s+/g, " ").slice(0, 240)); } };
     const wiped = () => page.evaluate(() => window.__docs?.win?.wipe);
     await page.goto(`${origin}/maker/`, { waitUntil: "load" });
-    await press(page, "New project"); await press(page, "Continue"); await press(page, "Create"); await press(page, "Demo stage");
+    await press(page, "New project"); await press(page, "Continue"); await press(page, "Create"); 
     await page.waitForFunction(() => document.querySelectorAll(".cell").length === 54, null, { timeout: 15000 });
     await step("1 rules on", async () => {
       await tap(page, "r:open"); await page.waitForFunction(() => document.body.innerText.includes("Default rule") && document.querySelector('[data-seg="k:toggle:wipe_wins"] [aria-pressed="true"]')?.textContent === "On", null, { timeout: 15000 });
@@ -34,7 +34,7 @@ try {
     await step("2 rules off", async () => {
       await tap(page, "k:toggle:wipe_wins"); await waitText(page, "With this off, nobody wins: Test plays until you leave."); await shot("02-rules-off"); tiny.push(...await big());
       if (width === 360) { await page.waitForFunction(() => document.querySelector(".toast.above") !== null, null, { timeout: 15000 }); const hit = await cover("[data-sheet=rules] .sheet"); if (hit !== "") throw new Error(`toast ${hit}`); await page.waitForFunction(() => document.querySelector(".toast") === null, null, { timeout: 15000 }); }
-      await tap(page, "r:close"); await tap(page, "s:back"); await press(page, "Demo stage"); await page.waitForFunction(() => document.querySelectorAll(".cell").length === 54, null, { timeout: 15000 });
+      await tap(page, "r:close"); await tap(page, "m:switch"); await tap(page, "stage:stage_01JDAS00000000000000000001"); await page.waitForFunction(() => document.querySelectorAll(".cell").length === 54, null, { timeout: 15000 });
       await tap(page, "r:open"); await page.waitForFunction(() => document.body.innerText.includes("This stage's rule") && document.querySelector('[data-seg="k:toggle:wipe_wins"] [aria-pressed="true"]')?.textContent === "Off", null, { timeout: 15000 });
     });
     await step("3 test off", async () => {
@@ -55,15 +55,15 @@ try {
       tiny.push(...await big()); if (width === 360) { await tap(page, "t:team"); await page.waitForFunction(() => document.querySelector(".toast.above") !== null, null, { timeout: 15000 }); const hit = await cover(".scrim .sheet"); if (hit !== "") throw new Error(`toast ${hit}`); await page.waitForFunction(() => document.querySelector(".toast") === null, null, { timeout: 15000 }); }
     });
     await step("5 empty hero", async () => {
-      await tap(page, "u:back"); await tap(page, "s:back"); await press(page, "Back"); await press(page, "New project"); await press(page, "Empty", true); await press(page, "Continue"); await press(page, "Create");
-      await tap(page, "u:add"); await page.locator("[data-unit]").fill("Hero"); await tap(page, "u:create");
+      await tap(page, "u:back"); await tap(page, "m:menu"); await tap(page, "m:games"); await press(page, "New project"); await press(page, "Empty", true); await press(page, "Continue"); await press(page, "Create");
+      await tap(page, "m:menu"); await tap(page, "m:units"); await tap(page, "u:add"); await page.locator("[data-unit]").fill("Hero"); await tap(page, "u:create");
       await page.waitForFunction(() => document.querySelector('[data-knob="unit_hp"]')?.value === "9" && document.querySelector('[aria-label="On your team: On"]')?.getAttribute("aria-pressed") === "false", null, { timeout: 15000 });
       await tap(page, "u:role"); await waitText(page, "Warrior (BTF)"); tiny.push(...await big()); await tap(page, "u:close");
       await page.locator('[aria-label="On your team: On"]').scrollIntoViewIfNeeded(); await shot("03-on-your-team"); tiny.push(...await big());
       await tap(page, "t:team"); await page.waitForFunction(() => { const files = window.__read(), gear = JSON.parse(files["project.json"]).project.loadout, id = gear.roster.at(-1); return gear.roster.length === 1 && gear.size === 1 && typeof id === "string" && String(files[`units/${id}.json`] ?? "").includes("Hero"); }, null, { timeout: 15000 });
     });
     await step("6 empty board", async () => {
-      await tap(page, "u:back"); await press(page, "Blank"); await page.waitForFunction(() => document.querySelector('[data-act="s:test"]') !== null, null, { timeout: 15000 });
+      await tap(page, "u:back"); await tap(page, "m:close"); await page.waitForFunction(() => document.querySelector('[data-act="s:test"]') !== null, null, { timeout: 15000 });
       await tap(page, "s:test"); await waitText(page, "Place a unit on this stage to test it.");
       const board = await page.evaluate(() => document.querySelector("#board") !== null || document.querySelector("#app")?.hidden === true); if (board) throw new Error("board");
       await shot("04-empty-board");

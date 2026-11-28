@@ -28,7 +28,7 @@ try {
     const step = async (name, fn) => { try { await fn(); const tiny = await big(); check(`${name} @${width}`, errs.length === 0 && tiny.length === 0, errs.length === 0 && tiny.length === 0 ? "ok" : [...errs, ...tiny].join(" | ")); } catch (e) { check(`${name} @${width}`, false, String(e && e.message ? e.message : e).split("\n")[0]); } };
     const nudge = async (axis, from, to) => { const dir = to < from ? -1 : 1, label = axis === "c" ? "Columns" : "Rows"; for (let n = from; n !== to; n += dir) { await tap(page, `r:step:${axis}:${dir}`); await waitText(page, `${label} ${n + dir}`); } };
     await page.goto(`${origin}/maker/`, { waitUntil: "load" });
-    await press(page, "New project"); await press(page, "Continue"); await press(page, "Create"); await waitText(page, "Demo stage");
+    await press(page, "New project"); await press(page, "Continue"); await press(page, "Create"); await waitText(page, "Demo stage"); await tap(page, "m:switch");
     await step("1 add", async () => {
       await shot("01-project"); await open("r:add", "r:new"); await shot("02-add"); await tap(page, "r:new");
       await page.waitForFunction(() => document.querySelectorAll(".cell").length === 1 && new URLSearchParams(location.search).get("stage") !== null, null, { timeout: 15000 });
@@ -36,17 +36,17 @@ try {
       const text = await page.evaluate(() => document.body.innerText); if (!text.includes("Stage 2") || id === "") throw new Error(text);
     });
     await step("2 rename", async () => {
-      await tap(page, "s:back"); await waitText(page, "Maps"); await open(`r:menu:stage:${id}`, "r:rename"); await open("r:rename", "r:save-name"); await shot("03-rename");
+      await tap(page, "m:switch"); await waitText(page, "Maps"); await open(`r:menu:stage:${id}`, "r:rename"); await open("r:rename", "r:save-name"); await shot("03-rename");
       await page.locator("[data-room]").fill("Upstairs"); await tap(page, "r:save-name");
       await page.waitForFunction((id) => document.body.innerText.includes("Upstairs") && new URLSearchParams(location.search).get("stage") === id, id, { timeout: 15000 });
     });
     await step("3 resize", async () => {
       await open(`r:menu:map:${MAP}`, "r:resize"); await open("r:resize", "r:apply"); await waitText(page, "Columns 6"); await nudge("c", 6, 4); await nudge("r", 9, 4); await drop();
-      await waitText(page, "0,8"); await shot("04-resize"); await tap(page, "r:close"); await gone(page, "Resize anyway"); await press(page, "Demo stage");
-      await page.waitForFunction(() => document.querySelectorAll(".cell").length === 54, null, { timeout: 15000 }); await tap(page, "s:back"); await waitText(page, "Maps");
+      await waitText(page, "0,8"); await shot("04-resize"); await tap(page, "r:close"); await gone(page, "Resize anyway"); await tap(page, `stage:${DEMO}`);
+      await page.waitForFunction(() => document.querySelectorAll(".cell").length === 54, null, { timeout: 15000 }); await tap(page, "m:switch"); await waitText(page, "Maps");
       await open(`r:menu:map:${MAP}`, "r:resize"); await open("r:resize", "r:apply"); await nudge("c", 6, 4); await nudge("r", 9, 4); await drop();
-      await tap(page, "r:anyway"); await waitText(page, "was outside the map and was removed"); await press(page, "Demo stage");
-      await page.waitForFunction(() => document.querySelectorAll(".cell").length === 16, null, { timeout: 15000 }); await tap(page, "s:back"); await waitText(page, "Maps");
+      await tap(page, "r:anyway"); await waitText(page, "was outside the map and was removed"); await tap(page, `stage:${DEMO}`);
+      await page.waitForFunction(() => document.querySelectorAll(".cell").length === 16, null, { timeout: 15000 }); await tap(page, "m:switch"); await waitText(page, "Maps");
     });
     await step("4 refuse map", async () => { await open(`r:menu:map:${MAP}`, "r:delete"); await tap(page, "r:delete"); await waitText(page, "Used by: Demo stage"); await shot("05-refuse"); await tap(page, "r:close"); });
     await step("5 test", async () => {
@@ -58,7 +58,7 @@ try {
       await page.waitForFunction(() => document.querySelectorAll(".cell").length === 1, null, { timeout: 15000 });
     });
     await step("6 undo", async () => {
-      await tap(page, "s:back"); await waitText(page, "Upstairs"); await open(`r:menu:stage:${id}`, "r:delete"); await tap(page, "r:delete");
+      await tap(page, "m:switch"); await waitText(page, "Upstairs"); await open(`r:menu:stage:${id}`, "r:delete"); await tap(page, "r:delete");
       await page.waitForFunction((id) => document.body.innerText.includes("Deleted · Undo") && document.querySelector(`[data-act="stage:${id}"]`) === null, id, { timeout: 15000 });
       await tap(page, "undo"); await page.waitForFunction((id) => document.querySelector(`[data-act="stage:${id}"]`) !== null, id, { timeout: 15000 });
     });
